@@ -1,6 +1,6 @@
 using Avalonia.Controls;
 
-namespace PzLauncher.Views;
+namespace PzLauncher.Desktop.Views;
 
 public partial class MainWindow : Window
 {

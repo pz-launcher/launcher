@@ -1,7 +1,7 @@
 ﻿using Avalonia;
 using System;
 
-namespace PzLauncher;
+namespace PzLauncher.Desktop;
 
 sealed class Program
 {
