@@ -29,8 +29,9 @@ Never touch the developer's real Steam install, home directory, or registry.
 
 ## Rules
 
-- Every error code a service can return has a test asserting `Code` and `Kind`. Never `Message`.
+- Every error code a service can return has a test asserting its `Code`. Never `Message`. `Kind` is asserted once per code, in the factory table in `PzLauncher.Core.Tests/Common/ErrorCodeTests.cs`.
 - Checks over all codes enumerate `ErrorCode`, not a hand-kept list.
+- Keep tests concise: shared arrange/assert helpers live in `TestSupport/` (`PzLauncher.Core.Tests/TestSupport/ResultAssert.cs`, `SteamLayoutBuilder.cs`; `PzLauncher.Desktop.Tests/TestSupport/Fakes.cs`); near-duplicate Facts become one Theory; each behaviour has one owner, the lowest layer that implements it, and higher layers don't re-pin it.
 - Every partial-failure path asserts its warnings; long-running services have a cancellation test.
 - Names: `Method_Scenario_Expected`. Test folders mirror source folders.
 - Deterministic and offline: no network, no real Steam, no wall clock (`FakeTimeProvider`).

@@ -105,8 +105,7 @@ Core only) behind a small internal wrapper, `Steam/SteamKeyValues`:
   plain integer (round-trips), PZ's `installdir`s are fixed names, and PZ beta
   branch names are word-like (`unstable`, `b41multiplayer`). Only a branch
   literally named like `42.0` would display as `42`. Pinned by
-  `GetString_NumberLikeValue_ReturnsLibraryNormalizedText` and
-  `ReadManifestAsync_NumberLikeInstallDirAndBetaKey_ReturnsNormalizedNumbers`.
+  `GetString_NumberLikeValue_ReturnsLibraryNormalizedText`.
   If it ever matters, recover the raw token via
   `KVSerializer.DeserializeWithSourceMap`.
 - The library's KV1 reader is iterative, so deep nesting can't overflow the

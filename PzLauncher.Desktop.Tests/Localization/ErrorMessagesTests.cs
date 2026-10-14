@@ -1,5 +1,6 @@
 using PzLauncher.Core.Common;
 using PzLauncher.Desktop.Localization;
+using PzLauncher.Desktop.Tests.TestSupport;
 
 namespace PzLauncher.Desktop.Tests.Localization;
 
@@ -20,27 +21,14 @@ public class ErrorMessagesTests
     }
 
     [Fact]
-    public void ToUserText_UndefinedCode_FallsBackToMessage()
-    {
-        var text = ErrorMessages.ToUserText(new Error((ErrorCode)int.MaxValue, Fallback, ErrorKind.Unexpected));
-
-        Assert.Equal(Fallback, text);
-    }
+    public void ToUserText_UndefinedCode_FallsBackToMessage() =>
+        Assert.Equal(Fallback, ErrorMessages.ToUserText(new Error((ErrorCode)int.MaxValue, Fallback, ErrorKind.Unexpected)));
 
     [Fact]
-    public void ToUserText_PathDetail_IsIncluded()
-    {
-        var error = new Error(ErrorCode.InstallPathNotFound, Fallback, ErrorKind.NotFound)
-        {
-            Details = new Dictionary<string, string> { ["path"] = @"D:\Games\PZ" },
-        };
-
-        Assert.Contains(@"D:\Games\PZ", ErrorMessages.ToUserText(error), StringComparison.Ordinal);
-    }
+    public void ToUserText_PathDetail_IsIncluded() =>
+        Assert.Contains(@"D:\Games\PZ", ErrorMessages.ToUserText(TestErrors.Create(ErrorCode.InstallPathNotFound, @"D:\Games\PZ")), StringComparison.Ordinal);
 
     [Fact]
-    public void FolderNotLocal_IncludesLocation()
-    {
+    public void FolderNotLocal_IncludesLocation() =>
         Assert.Contains("smb://nas/pz", ErrorMessages.FolderNotLocal("smb://nas/pz"), StringComparison.Ordinal);
-    }
 }

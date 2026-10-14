@@ -40,6 +40,16 @@ public sealed class FakeInstallDetectionService : IInstallDetectionService
     public static InstallScanResult Found(params PzInstall[] installs) => new(installs, []);
 }
 
+public static class TestErrors
+{
+    // ViewModels map errors by Code and Details only, so Kind is arbitrary here.
+    public static Error Create(ErrorCode code, string? path = null) =>
+        new(code, "developer text", ErrorKind.Unexpected)
+        {
+            Details = path is null ? new Dictionary<string, string>() : new Dictionary<string, string> { ["path"] = path },
+        };
+}
+
 public sealed class FakeFolderPicker : IFolderPicker
 {
     public FolderPickResult Next { get; set; } = new FolderPickResult.Cancelled();

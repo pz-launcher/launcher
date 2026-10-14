@@ -7,102 +7,51 @@ public class ResultTests
     private static readonly Error SampleError = new(ErrorCode.SteamNotInstalled, "sample", ErrorKind.NotFound);
 
     [Fact]
-    public void Ok_WithValue_IsSuccessAndHasValue()
+    public void Ok_AndImplicitFromValue_AreEqualSuccesses()
     {
-        var result = Result<int>.Ok(42);
+        Result<string> converted = "v";
 
-        Assert.True(result.IsSuccess);
-        Assert.Equal(42, result.Value);
-        Assert.Null(result.Error);
+        Assert.Equal(Result<string>.Ok("v"), converted);
+        Assert.True(converted.IsSuccess);
+        Assert.Equal("v", converted.Value);
+        Assert.Null(converted.Error);
     }
 
     [Fact]
-    public void Fail_WithError_IsFailureAndHasError()
+    public void Fail_AndImplicitFromError_AreEqualFailures()
     {
-        var result = Result<string>.Fail(SampleError);
+        Result<string> converted = SampleError;
 
-        Assert.False(result.IsSuccess);
-        Assert.Null(result.Value);
-        Assert.Equal(ErrorCode.SteamNotInstalled, result.Error!.Code);
-        Assert.Equal(ErrorKind.NotFound, result.Error.Kind);
+        Assert.Equal(Result<string>.Fail(SampleError), converted);
+        Assert.False(converted.IsSuccess);
+        Assert.Null(converted.Value);
+        Assert.Same(SampleError, converted.Error);
     }
 
     [Fact]
-    public void ImplicitConversion_FromValue_IsSuccess()
-    {
-        Result<string> result = "hello";
+    public void Ok_NullValue_Throws() => Assert.Throws<ArgumentNullException>(() => Result<string>.Ok(null!));
 
-        Assert.True(result.IsSuccess);
-        Assert.Equal("hello", result.Value);
+    [Fact]
+    public void NonGeneric_OkAndImplicitFromError_SetSuccessAndError()
+    {
+        Result failed = SampleError;
+
+        Assert.True(Result.Ok().IsSuccess);
+        Assert.Null(Result.Ok().Error);
+        Assert.False(failed.IsSuccess);
+        Assert.Same(SampleError, failed.Error);
     }
 
     [Fact]
-    public void ImplicitConversion_FromError_IsFailure()
+    public void Default_GenericAndNonGeneric_IsFailureWithUninitializedError()
     {
-        Result<string> result = SampleError;
+        var generic = default(Result<string>);
+        var nonGeneric = default(Result);
 
-        Assert.False(result.IsSuccess);
-        Assert.Same(SampleError, result.Error);
-    }
-
-    [Fact]
-    public void Ok_NullValue_Throws()
-    {
-        Assert.Throws<ArgumentNullException>(() => Result<string>.Ok(null!));
-    }
-
-    [Fact]
-    public void NonGeneric_Ok_IsSuccess()
-    {
-        var result = Result.Ok();
-
-        Assert.True(result.IsSuccess);
-        Assert.Null(result.Error);
-    }
-
-    [Fact]
-    public void Default_Generic_IsFailureWithUninitializedError()
-    {
-        var result = default(Result<string>);
-
-        Assert.False(result.IsSuccess);
-        Assert.Null(result.Value);
-        Assert.Equal(ErrorCode.ResultUninitialized, result.Error.Code);
-        Assert.Equal(ErrorKind.Unexpected, result.Error.Kind);
-    }
-
-    [Fact]
-    public void New_Generic_IsFailureWithUninitializedError()
-    {
-        var result = new Result<int>();
-
-        Assert.False(result.IsSuccess);
-        Assert.Equal(ErrorCode.ResultUninitialized, result.Error.Code);
-    }
-
-    [Fact]
-    public void Default_NonGeneric_IsFailureWithUninitializedError()
-    {
-        var result = default(Result);
-
-        Assert.False(result.IsSuccess);
-        Assert.Equal(ErrorCode.ResultUninitialized, result.Error.Code);
-        Assert.Equal(ErrorKind.Unexpected, result.Error.Kind);
-    }
-
-    [Fact]
-    public void Equality_SameOkValue_AreEqual()
-    {
-        Assert.Equal(Result<int>.Ok(1), Result<int>.Ok(1));
-        Assert.NotEqual(Result<int>.Ok(1), default);
-    }
-
-    [Fact]
-    public void NonGeneric_FromError_IsFailure()
-    {
-        Result result = SampleError;
-
-        Assert.False(result.IsSuccess);
-        Assert.Equal(ErrorCode.SteamNotInstalled, result.Error!.Code);
+        Assert.False(generic.IsSuccess);
+        Assert.Null(generic.Value);
+        Assert.Same(ResultErrors.Uninitialized, generic.Error);
+        Assert.False(nonGeneric.IsSuccess);
+        Assert.Same(ResultErrors.Uninitialized, nonGeneric.Error);
     }
 }

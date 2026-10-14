@@ -12,6 +12,14 @@ public sealed class SteamLayoutBuilder(string baseDirectory)
         return library;
     }
 
+    /// <summary>Creates the "Steam" root and lists it first in its libraryfolders.vdf.</summary>
+    public string CreateSteamRoot(params string[] otherLibraries)
+    {
+        var root = CreateLibrary("Steam");
+        WriteLibraryFolders(root, [root, .. otherLibraries]);
+        return root;
+    }
+
     /// <summary>Escapes backslashes like Steam does.</summary>
     public void WriteLibraryFolders(string steamRoot, params string[] libraryPaths)
     {

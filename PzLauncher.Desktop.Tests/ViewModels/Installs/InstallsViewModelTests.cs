@@ -20,15 +20,34 @@ public class InstallsViewModelTests
 
     private InstallsViewModel CreateViewModel() => new(_service, _picker, new FakePlatformEnvironment());
 
-    [Fact]
-    public async Task ScanAsync_InstallsFound_GoesBusyThenLoaded()
+    private async Task<InstallsViewModel> CreateScannedViewModelAsync(params PzInstall[] found)
     {
-        _service.ScanGate = new TaskCompletionSource();
-        _service.ScanResults.Enqueue(FakeInstallDetectionService.Found(SteamGame, SteamServer));
+        _service.ScanResults.Enqueue(FakeInstallDetectionService.Found(found));
         var vm = CreateViewModel();
+        await vm.ScanCommand.ExecuteAsync(null);
+        return vm;
+    }
+
+    private Task AddFolderAsync(InstallsViewModel vm, string path)
+    {
+        _picker.PickNext(path);
+        return vm.AddFolderCommand.ExecuteAsync(null);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task ScanAsync_Completes_GoesBusyThenLoadedOrEmpty(bool found)
+    {
+        PzInstall[] installs = found ? [SteamGame, SteamServer] : [];
+        _service.ScanGate = new TaskCompletionSource();
+        _service.ScanResults.Enqueue(FakeInstallDetectionService.Found(installs));
+        var vm = CreateViewModel();
+        var changed = new List<string?>();
+        vm.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
+        Assert.False(vm.IsEmpty);
 
         var scan = vm.ScanCommand.ExecuteAsync(null);
-
         Assert.True(vm.IsScanning);
         Assert.False(vm.IsEmpty);
 
@@ -36,75 +55,36 @@ public class InstallsViewModelTests
         await scan;
 
         Assert.False(vm.IsScanning);
-        Assert.False(vm.IsEmpty);
         Assert.True(vm.HasScanned);
-        Assert.Equal([SteamGame, SteamServer], vm.Installs);
+        Assert.Equal(!found, vm.IsEmpty);
+        Assert.Contains(nameof(InstallsViewModel.IsEmpty), changed);
+        Assert.Equal(installs, vm.Installs);
         Assert.Empty(vm.Warnings);
         Assert.Null(vm.ErrorText);
     }
 
     [Fact]
-    public async Task ScanAsync_NothingFound_GoesBusyThenEmpty()
+    public async Task ScanAsync_Warnings_ShownAsUserTextFromErrorCodeAndReplacedOnRescan()
     {
-        _service.ScanGate = new TaskCompletionSource();
-        var vm = CreateViewModel();
-        var changed = new List<string?>();
-        vm.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
-
-        var scan = vm.ScanCommand.ExecuteAsync(null);
-        Assert.True(vm.IsScanning);
-        Assert.False(vm.IsEmpty);
-
-        _service.ScanGate.SetResult();
-        await scan;
-
-        Assert.False(vm.IsScanning);
-        Assert.True(vm.IsEmpty);
-        Assert.Empty(vm.Installs);
-        Assert.Contains(nameof(InstallsViewModel.IsEmpty), changed);
-    }
-
-    [Fact]
-    public void IsEmpty_BeforeFirstScan_IsFalse()
-    {
-        Assert.False(CreateViewModel().IsEmpty);
-    }
-
-    [Fact]
-    public async Task ScanAsync_Warnings_ShownAsUserTextFromErrorCode()
-    {
-        var warning = new Error(ErrorCode.SteamLibraryUnreadable, "developer text", ErrorKind.External)
-        {
-            Details = new Dictionary<string, string> { ["path"] = @"C:\Steam\steamapps\libraryfolders.vdf" },
-        };
+        var warning = TestErrors.Create(ErrorCode.SteamLibraryUnreadable, @"C:\Steam\steamapps\libraryfolders.vdf");
         _service.ScanResults.Enqueue(new InstallScanResult([SteamGame], [warning]));
-        var vm = CreateViewModel();
-
-        await vm.ScanCommand.ExecuteAsync(null);
-
-        var shown = Assert.Single(vm.Warnings);
-        Assert.Equal(ErrorMessages.ToUserText(warning), shown);
-        Assert.Single(vm.Installs);
-    }
-
-    [Fact]
-    public async Task ScanAsync_RescanAfterWarnings_ReplacesWarnings()
-    {
-        _service.ScanResults.Enqueue(new InstallScanResult([], [new Error(ErrorCode.SteamNotInstalled, "x", ErrorKind.NotFound)]));
         _service.ScanResults.Enqueue(FakeInstallDetectionService.Found(SteamGame));
         var vm = CreateViewModel();
 
         await vm.ScanCommand.ExecuteAsync(null);
+
+        Assert.Equal([ErrorMessages.ToUserText(warning)], vm.Warnings);
+        Assert.Equal([SteamGame], vm.Installs);
+
         await vm.ScanCommand.ExecuteAsync(null);
 
         Assert.Empty(vm.Warnings);
-        Assert.Equal([SteamGame], vm.Installs);
     }
 
     [Fact]
     public async Task ScanAsync_ServiceFails_SetsErrorText()
     {
-        var error = new Error(ErrorCode.SteamNotInstalled, "developer text", ErrorKind.NotFound);
+        var error = TestErrors.Create(ErrorCode.SteamNotInstalled);
         _service.ScanResults.Enqueue(Result<InstallScanResult>.Fail(error));
         var vm = CreateViewModel();
 
@@ -130,6 +110,20 @@ public class InstallsViewModelTests
     }
 
     [Fact]
+    public async Task ScanAsync_Rescan_ReplacesSteamEntriesAndKeepsManualOnesSteamDoesNotList()
+    {
+        var vm = await CreateScannedViewModelAsync(SteamGame);
+        await AddFolderAsync(vm, @"D:\Manual\PZ");
+        await AddFolderAsync(vm, SteamServer.RootPath);
+        var manual = vm.Installs[1];
+        _service.ScanResults.Enqueue(FakeInstallDetectionService.Found(SteamServer));
+
+        await vm.ScanCommand.ExecuteAsync(null);
+
+        Assert.Equal([SteamServer, manual], vm.Installs);
+    }
+
+    [Fact]
     public async Task ActivateAsync_CalledTwice_ScansOnce()
     {
         var vm = CreateViewModel();
@@ -144,14 +138,11 @@ public class InstallsViewModelTests
     [Fact]
     public async Task AddFolderAsync_ValidFolder_AddsManualInstall()
     {
-        _service.ScanResults.Enqueue(FakeInstallDetectionService.Found(SteamGame));
-        var vm = CreateViewModel();
-        await vm.ScanCommand.ExecuteAsync(null);
+        var vm = await CreateScannedViewModelAsync(SteamGame);
         var manual = new PzInstall(PzInstallKind.DedicatedServer, @"D:\Servers\PZ", Steam: null);
         _service.Inspect = _ => manual;
-        _picker.PickNext(@"D:\Servers\PZ");
 
-        await vm.AddFolderCommand.ExecuteAsync(null);
+        await AddFolderAsync(vm, @"D:\Servers\PZ");
 
         Assert.Equal([SteamGame, manual], vm.Installs);
         Assert.Null(vm.ErrorText);
@@ -159,33 +150,19 @@ public class InstallsViewModelTests
     }
 
     [Fact]
-    public async Task AddFolderAsync_InspectFails_SetsErrorTextFromCode()
+    public async Task AddFolderAsync_InspectFailsThenSucceeds_ShowsThenClearsErrorText()
     {
-        var error = new Error(ErrorCode.InstallNotAPzInstall, "developer text", ErrorKind.Validation)
-        {
-            Details = new Dictionary<string, string> { ["path"] = @"D:\Random" },
-        };
+        var error = TestErrors.Create(ErrorCode.InstallNotAPzInstall, @"D:\Random");
         _service.Inspect = _ => error;
-        _picker.PickNext(@"D:\Random");
         var vm = CreateViewModel();
 
-        await vm.AddFolderCommand.ExecuteAsync(null);
+        await AddFolderAsync(vm, @"D:\Random");
 
         Assert.Equal(ErrorMessages.ToUserText(error), vm.ErrorText);
         Assert.Empty(vm.Installs);
-    }
-
-    [Fact]
-    public async Task AddFolderAsync_SuccessAfterError_ClearsErrorText()
-    {
-        _service.Inspect = _ => new Error(ErrorCode.InstallPathNotFound, "x", ErrorKind.NotFound);
-        _picker.PickNext(@"D:\Missing");
-        var vm = CreateViewModel();
-        await vm.AddFolderCommand.ExecuteAsync(null);
 
         _service.Inspect = path => new PzInstall(PzInstallKind.Game, path, Steam: null);
-        _picker.PickNext(@"D:\Game");
-        await vm.AddFolderCommand.ExecuteAsync(null);
+        await AddFolderAsync(vm, @"D:\Game");
 
         Assert.Null(vm.ErrorText);
         Assert.Single(vm.Installs);
@@ -194,12 +171,9 @@ public class InstallsViewModelTests
     [Fact]
     public async Task AddFolderAsync_PickerCancelled_ChangesNothing()
     {
-        _service.ScanResults.Enqueue(FakeInstallDetectionService.Found(SteamGame));
-        _service.Inspect = _ => new Error(ErrorCode.InstallInvalidPath, "x", ErrorKind.Validation);
-        _picker.PickNext("bad");
-        var vm = CreateViewModel();
-        await vm.ScanCommand.ExecuteAsync(null);
-        await vm.AddFolderCommand.ExecuteAsync(null);
+        var vm = await CreateScannedViewModelAsync(SteamGame);
+        _service.Inspect = _ => TestErrors.Create(ErrorCode.InstallInvalidPath);
+        await AddFolderAsync(vm, "bad");
         var errorBefore = vm.ErrorText;
         _service.InspectedPaths.Clear();
 
@@ -214,9 +188,7 @@ public class InstallsViewModelTests
     [Fact]
     public async Task AddFolderAsync_PickedFolderNotLocal_SetsErrorTextWithoutInspecting()
     {
-        _service.ScanResults.Enqueue(FakeInstallDetectionService.Found(SteamGame));
-        var vm = CreateViewModel();
-        await vm.ScanCommand.ExecuteAsync(null);
+        var vm = await CreateScannedViewModelAsync(SteamGame);
         _picker.Next = new FolderPickResult.NotLocal("smb://nas/games/pz");
 
         await vm.AddFolderCommand.ExecuteAsync(null);
@@ -229,41 +201,9 @@ public class InstallsViewModelTests
     [Fact]
     public async Task AddFolderAsync_PathAlreadyListed_DoesNotDuplicate()
     {
-        _service.ScanResults.Enqueue(FakeInstallDetectionService.Found(SteamGame));
-        var vm = CreateViewModel();
-        await vm.ScanCommand.ExecuteAsync(null);
-        _picker.PickNext(SteamGame.RootPath.ToUpperInvariant());
+        var vm = await CreateScannedViewModelAsync(SteamGame);
 
-        await vm.AddFolderCommand.ExecuteAsync(null);
-
-        Assert.Equal([SteamGame], vm.Installs);
-    }
-
-    [Fact]
-    public async Task ScanAsync_Rescan_KeepsManualEntriesAndReplacesSteamEntries()
-    {
-        _service.ScanResults.Enqueue(FakeInstallDetectionService.Found(SteamGame));
-        _service.ScanResults.Enqueue(FakeInstallDetectionService.Found(SteamServer));
-        var vm = CreateViewModel();
-        await vm.ScanCommand.ExecuteAsync(null);
-        _picker.PickNext(@"D:\Manual\PZ");
-        await vm.AddFolderCommand.ExecuteAsync(null);
-        var manual = vm.Installs[^1];
-
-        await vm.ScanCommand.ExecuteAsync(null);
-
-        Assert.Equal([SteamServer, manual], vm.Installs);
-    }
-
-    [Fact]
-    public async Task ScanAsync_ManualPathLaterFoundBySteam_ShownOnce()
-    {
-        var vm = CreateViewModel();
-        _picker.PickNext(SteamGame.RootPath);
-        await vm.AddFolderCommand.ExecuteAsync(null);
-        _service.ScanResults.Enqueue(FakeInstallDetectionService.Found(SteamGame));
-
-        await vm.ScanCommand.ExecuteAsync(null);
+        await AddFolderAsync(vm, SteamGame.RootPath.ToUpperInvariant());
 
         Assert.Equal([SteamGame], vm.Installs);
     }

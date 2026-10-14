@@ -8,69 +8,70 @@ public sealed class SteamLibraryReaderTests : IDisposable
 {
     private readonly TempDirectory _temp = new();
     private readonly SteamLibraryReader _reader = new();
+    private readonly string _steamRoot;
+    private readonly string _manifestPath;
+
+    public SteamLibraryReaderTests()
+    {
+        _steamRoot = _temp.CreateDirectory("Steam");
+        _manifestPath = Path.Combine(_temp.Path, "appmanifest_1.acf");
+    }
 
     public void Dispose() => _temp.Dispose();
+
+    private static CancellationToken Ct => TestContext.Current.CancellationToken;
+
+    private Task<Result<IReadOnlyList<string>>> ReadLibraryPathsAsync(string? content)
+    {
+        if (content is not null)
+        {
+            SteamLayoutBuilder.WriteRaw(SteamLibraryReader.LibraryFoldersPath(_steamRoot), content);
+        }
+
+        return _reader.ReadLibraryPathsAsync(_steamRoot, Ct);
+    }
+
+    private Task<Result<SteamAppManifest>> ReadManifestAsync(string content)
+    {
+        SteamLayoutBuilder.WriteRaw(_manifestPath, content);
+        return _reader.ReadManifestAsync(_manifestPath, Ct);
+    }
 
     [Fact]
     public async Task ReadLibraryPathsAsync_RealFile_ReturnsPathsInOrder()
     {
-        var root = _temp.CreateDirectory("Steam");
-        File.Copy(Fixtures.Path("Steam", "libraryfolders.vdf"), SteamLibraryReader.LibraryFoldersPath(EnsureSteamapps(root)));
+        var paths = ResultAssert.Ok(await ReadLibraryPathsAsync(Fixtures.Read("Steam", "libraryfolders.vdf")));
 
-        var result = await _reader.ReadLibraryPathsAsync(root, TestContext.Current.CancellationToken);
-
-        Assert.True(result.IsSuccess);
-        Assert.Equal([@"C:\Program Files (x86)\Steam", @"E:\SteamLibrary"], result.Value);
+        Assert.Equal([@"C:\Program Files (x86)\Steam", @"E:\SteamLibrary"], paths);
     }
 
     [Fact]
     public async Task ReadLibraryPathsAsync_LegacyFormat_ReadsPlainValues()
     {
-        var root = _temp.CreateDirectory("Steam");
-        var lib = Path.Combine(_temp.Path, "Lib").Replace("\\", "\\\\", StringComparison.Ordinal);
-        SteamLayoutBuilder.WriteRaw(
-            SteamLibraryReader.LibraryFoldersPath(root),
-            $"\"LibraryFolders\"\n{{\n\t\"TimeNextStatsReport\"\t\t\"1700000000\"\n\t\"ContentStatsID\"\t\t\"-123\"\n\t\"1\"\t\t\"{lib}\"\n}}\n");
+        var lib = Path.Combine(_temp.Path, "Lib");
 
-        var result = await _reader.ReadLibraryPathsAsync(root, TestContext.Current.CancellationToken);
+        var paths = ResultAssert.Ok(await ReadLibraryPathsAsync(
+            $"\"LibraryFolders\" {{ \"TimeNextStatsReport\" \"1700000000\" \"ContentStatsID\" \"-123\" \"1\" \"{lib.Replace("\\", "\\\\", StringComparison.Ordinal)}\" }}"));
 
-        Assert.True(result.IsSuccess);
-        Assert.Equal([Path.Combine(_temp.Path, "Lib")], result.Value);
+        Assert.Equal([lib], paths);
     }
 
-    [Fact]
-    public async Task ReadLibraryPathsAsync_FileMissing_ReturnsLibraryUnreadable()
+    [Theory]
+    [InlineData(null)]
+    [InlineData("\"something\" { }")]
+    public async Task ReadLibraryPathsAsync_FileMissingOrNoLibraryFoldersBlock_ReturnsLibraryUnreadable(string? content)
     {
-        var root = _temp.CreateDirectory("Steam");
+        var error = ResultAssert.Failed(await ReadLibraryPathsAsync(content), ErrorCode.SteamLibraryUnreadable);
 
-        var result = await _reader.ReadLibraryPathsAsync(root, TestContext.Current.CancellationToken);
-
-        Assert.False(result.IsSuccess);
-        Assert.Equal(ErrorCode.SteamLibraryUnreadable, result.Error!.Code);
-        Assert.Equal(ErrorKind.External, result.Error.Kind);
-        Assert.Equal(SteamLibraryReader.LibraryFoldersPath(root), result.Error.Details["path"]);
-    }
-
-    [Fact]
-    public async Task ReadLibraryPathsAsync_NoLibraryFoldersBlock_ReturnsLibraryUnreadable()
-    {
-        var root = _temp.CreateDirectory("Steam");
-        SteamLayoutBuilder.WriteRaw(SteamLibraryReader.LibraryFoldersPath(root), "\"something\" { }");
-
-        var result = await _reader.ReadLibraryPathsAsync(root, TestContext.Current.CancellationToken);
-
-        Assert.Equal(ErrorCode.SteamLibraryUnreadable, result.Error!.Code);
+        Assert.Equal(SteamLibraryReader.LibraryFoldersPath(_steamRoot), error.Details["path"]);
     }
 
     [Fact]
     public async Task ReadManifestAsync_RealFile_ReadsFields()
     {
-        var path = Fixtures.Path("Steam", "appmanifest_108600.acf");
+        var result = await _reader.ReadManifestAsync(Fixtures.Path("Steam", "appmanifest_108600.acf"), Ct);
 
-        var result = await _reader.ReadManifestAsync(path, TestContext.Current.CancellationToken);
-
-        Assert.True(result.IsSuccess);
-        Assert.Equal(new SteamAppManifest("ProjectZomboid", "25485521", null), result.Value);
+        Assert.Equal(new SteamAppManifest("ProjectZomboid", "25485521", null), ResultAssert.Ok(result));
     }
 
     [Theory]
@@ -83,28 +84,9 @@ public sealed class SteamLibraryReaderTests : IDisposable
     [InlineData("", null)]
     public async Task ReadManifestAsync_BetaKey_ResolvesBranch(string configBlocks, string? expectedBranch)
     {
-        var path = Path.Combine(_temp.Path, "appmanifest_1.acf");
-        SteamLayoutBuilder.WriteRaw(path, $"\"AppState\" {{ \"installdir\" \"Game\" \"buildid\" \"7\" {configBlocks} }}");
+        var result = await ReadManifestAsync($"\"AppState\" {{ \"installdir\" \"Game\" \"buildid\" \"7\" {configBlocks} }}");
 
-        var result = await _reader.ReadManifestAsync(path, TestContext.Current.CancellationToken);
-
-        Assert.True(result.IsSuccess);
-        Assert.Equal(expectedBranch, result.Value.BetaBranch);
-    }
-
-    [Fact]
-    public async Task ReadManifestAsync_NumberLikeInstallDirAndBetaKey_ReturnsNormalizedNumbers()
-    {
-        // Known limitation (design.md "VDF parsing"); pinned so a library upgrade that changes it is noticed.
-        var path = Path.Combine(_temp.Path, "appmanifest_1.acf");
-        SteamLayoutBuilder.WriteRaw(path, "\"AppState\" { \"installdir\" \"007\" \"buildid\" \"0012\" \"UserConfig\" { \"BetaKey\" \"42.0\" } }");
-
-        var result = await _reader.ReadManifestAsync(path, TestContext.Current.CancellationToken);
-
-        Assert.True(result.IsSuccess);
-        Assert.Equal("7", result.Value.InstallDir);
-        Assert.Equal("12", result.Value.BuildId);
-        Assert.Equal("42", result.Value.BetaBranch);
+        Assert.Equal(expectedBranch, ResultAssert.Ok(result).BetaBranch);
     }
 
     [Theory]
@@ -112,61 +94,14 @@ public sealed class SteamLibraryReaderTests : IDisposable
     [InlineData("\"AppState\" { \"installdir\" \"Game\" }")]
     [InlineData("\"AppState\" { \"installdir\" \"Game\" \"buildid\" \"\" }")]
     [InlineData("\"AppState\" { \"installdir\" \"\" }")]
+    [InlineData("\"AppState\" { \"installdir\" \"Pro\0ject\" \"buildid\" \"7\" }")]
     [InlineData("\"Other\" { \"installdir\" \"Game\" }")]
     [InlineData("\"AppState\" { \"installdir\" ")]
-    public async Task ReadManifestAsync_InvalidContent_ReturnsManifestUnreadable(string content)
+    public async Task ReadManifestAsync_InvalidContent_ReturnsManifestUnreadableWithPathAndReason(string content)
     {
-        var path = Path.Combine(_temp.Path, "appmanifest_1.acf");
-        SteamLayoutBuilder.WriteRaw(path, content);
+        var error = ResultAssert.Failed(await ReadManifestAsync(content), ErrorCode.SteamManifestUnreadable);
 
-        var result = await _reader.ReadManifestAsync(path, TestContext.Current.CancellationToken);
-
-        Assert.False(result.IsSuccess);
-        Assert.Equal(ErrorCode.SteamManifestUnreadable, result.Error!.Code);
-        Assert.Equal(ErrorKind.External, result.Error.Kind);
-        Assert.Equal(path, result.Error.Details["path"]);
-    }
-
-    [Fact]
-    public async Task ReadManifestAsync_BuildIdMissing_ReturnsManifestUnreadableWithReason()
-    {
-        var path = Path.Combine(_temp.Path, "appmanifest_1.acf");
-        SteamLayoutBuilder.WriteRaw(path, "\"AppState\" { \"installdir\" \"Game\" }");
-
-        var result = await _reader.ReadManifestAsync(path, TestContext.Current.CancellationToken);
-
-        Assert.Equal(ErrorCode.SteamManifestUnreadable, result.Error!.Code);
-        Assert.Equal(ErrorKind.External, result.Error.Kind);
-        Assert.Equal("missing \"buildid\"", result.Error.Details["reason"]);
-    }
-
-    [Fact]
-    public async Task ReadManifestAsync_MalformedVdf_ReasonComesFromParser()
-    {
-        var path = Path.Combine(_temp.Path, "appmanifest_1.acf");
-        SteamLayoutBuilder.WriteRaw(path, "\"AppState\" { \"installdir\" ");
-
-        var result = await _reader.ReadManifestAsync(path, TestContext.Current.CancellationToken);
-
-        Assert.Equal(ErrorCode.SteamManifestUnreadable, result.Error!.Code);
-        Assert.False(string.IsNullOrWhiteSpace(result.Error.Details["reason"]));
-    }
-
-    [Fact]
-    public async Task ReadManifestAsync_InstallDirWithNulChar_ReturnsManifestUnreadable()
-    {
-        var path = Path.Combine(_temp.Path, "appmanifest_1.acf");
-        SteamLayoutBuilder.WriteRaw(path, "\"AppState\" { \"installdir\" \"Pro\0ject\" }");
-
-        var result = await _reader.ReadManifestAsync(path, TestContext.Current.CancellationToken);
-
-        Assert.Equal(ErrorCode.SteamManifestUnreadable, result.Error!.Code);
-        Assert.Equal(ErrorKind.External, result.Error.Kind);
-    }
-
-    private static string EnsureSteamapps(string root)
-    {
-        Directory.CreateDirectory(Path.Combine(root, "steamapps"));
-        return root;
+        Assert.Equal(_manifestPath, error.Details["path"]);
+        Assert.False(string.IsNullOrWhiteSpace(error.Details["reason"]));
     }
 }

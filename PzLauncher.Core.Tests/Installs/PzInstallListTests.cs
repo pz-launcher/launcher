@@ -17,48 +17,25 @@ public class PzInstallListTests
         new(PzInstallKind.DedicatedServer, @"D:\Servers\PZ", Steam: null);
 
     [Fact]
-    public void Merge_DisjointLists_KeepsPrimaryThenSecondaryOrder()
-    {
-        var merged = PzInstallList.Merge([SteamServer, SteamGame], [ManualServer], StringComparison.Ordinal);
-
-        Assert.Equal([SteamServer, SteamGame, ManualServer], merged);
-    }
+    public void Merge_DisjointLists_KeepsPrimaryThenSecondaryOrder() =>
+        Assert.Equal([SteamServer, SteamGame, ManualServer], PzInstallList.Merge([SteamServer, SteamGame], [ManualServer], StringComparison.Ordinal));
 
     [Fact]
-    public void Merge_SamePathIgnoringCase_KeepsPrimaryEntry()
-    {
-        var merged = PzInstallList.Merge([SteamGame], [ManualGameOtherCasing, ManualServer], StringComparison.OrdinalIgnoreCase);
-
-        Assert.Equal([SteamGame, ManualServer], merged);
-    }
+    public void Merge_SamePathIgnoringCase_KeepsPrimaryEntry() =>
+        Assert.Equal([SteamGame, ManualServer], PzInstallList.Merge([SteamGame], [ManualGameOtherCasing, ManualServer], StringComparison.OrdinalIgnoreCase));
 
     [Fact]
-    public void Merge_CaseSensitiveComparison_KeepsBothSpellings()
-    {
-        var merged = PzInstallList.Merge([SteamGame], [ManualGameOtherCasing], StringComparison.Ordinal);
-
-        Assert.Equal([SteamGame, ManualGameOtherCasing], merged);
-    }
+    public void Merge_CaseSensitiveComparison_KeepsBothSpellings() =>
+        Assert.Equal([SteamGame, ManualGameOtherCasing], PzInstallList.Merge([SteamGame], [ManualGameOtherCasing], StringComparison.Ordinal));
 
     [Fact]
-    public void Merge_DuplicatesWithinPrimary_KeepsFirst()
-    {
-        var merged = PzInstallList.Merge([SteamGame, SteamGame with { Steam = new SteamAppInfo("101", null) }], [], StringComparison.Ordinal);
-
-        Assert.Equal([SteamGame], merged);
-    }
+    public void Merge_DuplicatesWithinPrimary_KeepsFirst() =>
+        Assert.Equal([SteamGame], PzInstallList.Merge([SteamGame, SteamGame with { Steam = new SteamAppInfo("101", null) }], [], StringComparison.Ordinal));
 
     [Theory]
-    [InlineData(StringComparison.OrdinalIgnoreCase, true)]
-    [InlineData(StringComparison.Ordinal, false)]
-    public void ContainsPath_OtherCasing_DependsOnComparison(StringComparison comparison, bool expected)
-    {
-        Assert.Equal(expected, PzInstallList.ContainsPath([SteamGame], ManualGameOtherCasing.RootPath, comparison));
-    }
-
-    [Fact]
-    public void ContainsPath_UnknownPath_IsFalse()
-    {
-        Assert.False(PzInstallList.ContainsPath([SteamGame], ManualServer.RootPath, StringComparison.OrdinalIgnoreCase));
-    }
+    [InlineData(@"e:\steamlibrary\steamapps\common\projectzomboid", StringComparison.OrdinalIgnoreCase, true)]
+    [InlineData(@"e:\steamlibrary\steamapps\common\projectzomboid", StringComparison.Ordinal, false)]
+    [InlineData(@"D:\Servers\PZ", StringComparison.OrdinalIgnoreCase, false)]
+    public void ContainsPath_PathAndComparison_MatchesListedRoots(string path, StringComparison comparison, bool expected) =>
+        Assert.Equal(expected, PzInstallList.ContainsPath([SteamGame], path, comparison));
 }

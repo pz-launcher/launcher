@@ -33,7 +33,7 @@ Adding a code:
 1. Add the member to `ErrorCode` with its wire name.
 2. Add a factory method in `<Feature>Errors`.
 3. Add user text in `PzLauncher.Desktop/Localization/ErrorMessages.cs` (the build fails until you do).
-4. Pin the wire name in `PzLauncher.Core.Tests/Common/ErrorCodeTests.cs`.
+4. Pin the wire name and the factory's `Kind` in `PzLauncher.Core.Tests/Common/ErrorCodeTests.cs`.
 
 ## Where exceptions are caught
 

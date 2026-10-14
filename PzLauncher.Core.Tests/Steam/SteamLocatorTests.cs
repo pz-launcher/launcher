@@ -11,15 +11,30 @@ public sealed class SteamLocatorTests : IDisposable
 
     public void Dispose() => _temp.Dispose();
 
+    private FakePlatformEnvironment Env(PlatformKind os, string? registry = null, string? programFiles = null)
+    {
+        var env = new FakePlatformEnvironment
+        {
+            Os = os,
+            HomeDirectory = _temp.Path,
+            SteamRegistryPath = registry,
+            PathComparison = os == PlatformKind.Windows ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal,
+        };
+        if (programFiles is not null)
+        {
+            env.EnvironmentVariables["ProgramFiles(x86)"] = programFiles;
+        }
+
+        return env;
+    }
+
     [Fact]
     public void GetCandidateRoots_Windows_RegistryFirstThenProgramFiles()
     {
         var registry = Path.Combine(_temp.Path, "RegSteam");
         var programFiles = Path.Combine(_temp.Path, "PF86");
-        var env = new FakePlatformEnvironment { Os = PlatformKind.Windows, SteamRegistryPath = registry };
-        env.EnvironmentVariables["ProgramFiles(x86)"] = programFiles;
 
-        var roots = new SteamLocator(env).GetCandidateRoots();
+        var roots = new SteamLocator(Env(PlatformKind.Windows, registry, programFiles)).GetCandidateRoots();
 
         Assert.Equal([registry, Path.Combine(programFiles, "Steam")], roots);
     }
@@ -28,52 +43,29 @@ public sealed class SteamLocatorTests : IDisposable
     public void GetCandidateRoots_WindowsSameRootDifferentCasingAndSlashes_Deduplicated()
     {
         var programFiles = Path.Combine(_temp.Path, "PF86");
-        var steam = Path.Combine(programFiles, "Steam");
-        var env = new FakePlatformEnvironment
-        {
-            Os = PlatformKind.Windows,
-            PathComparison = StringComparison.OrdinalIgnoreCase,
-            SteamRegistryPath = steam.ToUpperInvariant().Replace('\\', '/') + "/",
-        };
-        env.EnvironmentVariables["ProgramFiles(x86)"] = programFiles;
+        var registry = Path.Combine(programFiles, "Steam").ToUpperInvariant().Replace('\\', '/') + "/";
 
-        var roots = new SteamLocator(env).GetCandidateRoots();
-
-        Assert.Single(roots);
+        Assert.Single(new SteamLocator(Env(PlatformKind.Windows, registry, programFiles)).GetCandidateRoots());
     }
 
-    [Fact]
-    public void GetCandidateRoots_WindowsNothingConfigured_ReturnsEmpty()
-    {
-        var env = new FakePlatformEnvironment { Os = PlatformKind.Windows };
-
-        Assert.Empty(new SteamLocator(env).GetCandidateRoots());
-    }
-
-    [Fact]
-    public void GetCandidateRoots_WindowsRelativeRegistryValue_IsIgnored()
-    {
-        var env = new FakePlatformEnvironment { Os = PlatformKind.Windows, SteamRegistryPath = "relative/steam" };
-
-        Assert.Empty(new SteamLocator(env).GetCandidateRoots());
-    }
+    [Theory]
+    [InlineData(null)]
+    [InlineData("relative/steam")]
+    public void GetCandidateRoots_WindowsNoUsableRegistryOrProgramFiles_ReturnsEmpty(string? registry) =>
+        Assert.Empty(new SteamLocator(Env(PlatformKind.Windows, registry)).GetCandidateRoots());
 
     [Fact]
     public void GetCandidateRoots_MacOS_UsesApplicationSupport()
     {
-        var env = new FakePlatformEnvironment { Os = PlatformKind.MacOS, HomeDirectory = _temp.Path, PathComparison = StringComparison.Ordinal };
-
-        var roots = new SteamLocator(env).GetCandidateRoots();
+        var roots = new SteamLocator(Env(PlatformKind.MacOS)).GetCandidateRoots();
 
         Assert.Equal([Path.Combine(_temp.Path, "Library", "Application Support", "Steam")], roots);
     }
 
     [Fact]
-    public void GetCandidateRoots_Linux_ReturnsNativeThenXdgThenFlatpak()
+    public void GetCandidateRoots_Linux_ReturnsNativeThenXdgThenFlatpakIgnoringRegistry()
     {
-        var env = new FakePlatformEnvironment { Os = PlatformKind.Linux, HomeDirectory = _temp.Path, PathComparison = StringComparison.Ordinal };
-
-        var roots = new SteamLocator(env).GetCandidateRoots();
+        var roots = new SteamLocator(Env(PlatformKind.Linux, registry: Path.Combine(_temp.Path, "Reg"))).GetCandidateRoots();
 
         Assert.Equal(
             [
@@ -85,38 +77,12 @@ public sealed class SteamLocatorTests : IDisposable
     }
 
     [Fact]
-    public void GetCandidateRoots_LinuxIgnoresRegistry()
+    public void FindSteamRoots_KeepsOnlyExistingRootsWithSteamapps()
     {
-        var env = new FakePlatformEnvironment
-        {
-            Os = PlatformKind.Linux,
-            HomeDirectory = _temp.Path,
-            SteamRegistryPath = Path.Combine(_temp.Path, "Reg"),
-        };
-
-        var roots = new SteamLocator(env).GetCandidateRoots();
-
-        Assert.DoesNotContain(Path.Combine(_temp.Path, "Reg"), roots);
-    }
-
-    [Fact]
-    public void FindSteamRoots_KeepsOnlyRootsWithSteamapps()
-    {
-        var env = new FakePlatformEnvironment { Os = PlatformKind.Linux, HomeDirectory = _temp.Path, PathComparison = StringComparison.Ordinal };
         var xdg = _temp.CreateDirectory(".local", "share", "Steam");
         Directory.CreateDirectory(Path.Combine(xdg, "steamapps"));
-        _temp.CreateDirectory(".steam", "steam"); // exists but has no steamapps
+        _temp.CreateDirectory(".steam", "steam"); // exists but has no steamapps; the flatpak root doesn't exist
 
-        var roots = new SteamLocator(env).FindSteamRoots();
-
-        Assert.Equal([xdg], roots);
-    }
-
-    [Fact]
-    public void FindSteamRoots_NoCandidatesExist_ReturnsEmpty()
-    {
-        var env = new FakePlatformEnvironment { Os = PlatformKind.MacOS, HomeDirectory = _temp.Path };
-
-        Assert.Empty(new SteamLocator(env).FindSteamRoots());
+        Assert.Equal([xdg], new SteamLocator(Env(PlatformKind.Linux)).FindSteamRoots());
     }
 }
