@@ -8,7 +8,7 @@
 |-------|-------------|--------|
 | [Architecture](./architecture.md) | Projects, dependency direction, project → spec layer map | Filled |
 | [Coding Rules](./coding-rules.md) | Language-level rules: comments, nullability, async, AOT, type and naming conventions | Filled |
-| [Test Strategy](./test-strategy.md) | Test projects, levels, rules, build/test gate | Filled |
+| [Test Strategy](./test-strategy.md) | Test projects, levels, rules | Filled |
 | [Formatting](./formatting.md) | `dotnet format` this conversation's `.cs` files before the final report | Filled |
 
 Project-specific rules stay in their layer: [core/](../core/index.md)
