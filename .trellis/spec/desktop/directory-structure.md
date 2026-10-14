@@ -9,7 +9,7 @@ PzLauncher.Desktop/
 ├── ViewModels/<Feature>/
 ├── ViewModels/Design/   # previewer-only sample data
 ├── Services/            # UI-only services (interface + Avalonia implementation)
-├── Localization/        # ErrorMessages: Error.Code → user text
+├── Localization/        # Strings resx, language model, ErrorMessages, DisplayNames (see localization.md)
 └── Assets/
 ```
 

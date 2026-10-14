@@ -1,6 +1,7 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:PzLauncher.Desktop.ViewModels"
+        xmlns:views="using:PzLauncher.Desktop.Views"
         xmlns:design="using:PzLauncher.Desktop.ViewModels.Design"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -16,7 +17,7 @@
         <x:Static Member="design:DesignData.Main" />
     </Design.DataContext>
 
-    <!-- The page view is picked by the DataTemplates in App.axaml. -->
-    <ContentControl Content="{Binding CurrentPage}" />
+    <!-- A language switch replaces this MainView, not the window: recreating the OS window flashes. -->
+    <views:MainView />
 
 </Window>

@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Main_Language" xml:space="preserve">
+    <value>語言</value>
+  </data>
+  <data name="Main_FontFamily" xml:space="preserve">
+    <value>fonts:Inter#Inter, Microsoft JhengHei UI, PingFang TC, Noto Sans CJK TC</value>
+    <comment>Not shown text: font family list. Inter for Latin, then CJK fonts in this language's script (Windows, macOS, Linux), so bold weights and glyph shapes match.</comment>
+  </data>
+  <data name="Installs_Title" xml:space="preserve">
+    <value>已安裝</value>
+  </data>
+  <data name="Installs_Rescan" xml:space="preserve">
+    <value>重新掃描</value>
+  </data>
+  <data name="Installs_AddFolder" xml:space="preserve">
+    <value>新增資料夾…</value>
+  </data>
+  <data name="Installs_Empty" xml:space="preserve">
+    <value>找不到 Project Zomboid 的安裝。請透過 Steam 安裝遊戲或專用伺服器，或使用「新增資料夾…」。</value>
+  </data>
+  <data name="Installs_BranchFormat" xml:space="preserve">
+    <value>分支：{0}</value>
+  </data>
+  <data name="Installs_BuildFormat" xml:space="preserve">
+    <value>組建 {0}</value>
+  </data>
+  <data name="Installs_PickFolderTitle" xml:space="preserve">
+    <value>選擇 Project Zomboid 遊戲或伺服器資料夾</value>
+  </data>
+  <data name="InstallKind_Game" xml:space="preserve">
+    <value>遊戲</value>
+  </data>
+  <data name="InstallKind_DedicatedServer" xml:space="preserve">
+    <value>專用伺服器</value>
+  </data>
+  <data name="InstallSource_SteamLibrary" xml:space="preserve">
+    <value>Steam 收藏庫</value>
+  </data>
+  <data name="InstallSource_Manual" xml:space="preserve">
+    <value>手動新增</value>
+  </data>
+  <data name="Dialog_UnexpectedError" xml:space="preserve">
+    <value>發生錯誤。啟動器可能無法正常運作，請重試或重新啟動啟動器。</value>
+  </data>
+  <data name="Dialog_Ok" xml:space="preserve">
+    <value>確定</value>
+  </data>
+  <data name="Error_ResultUninitialized" xml:space="preserve">
+    <value>啟動器內部發生錯誤。請將此問題回報為程式錯誤。</value>
+  </data>
+  <data name="Error_SteamNotInstalled" xml:space="preserve">
+    <value>似乎沒有安裝 Steam，因此無法自動找到安裝。請使用「新增資料夾…」手動新增。</value>
+  </data>
+  <data name="Error_SteamLibraryUnreadable" xml:space="preserve">
+    <value>無法讀取 Steam 收藏庫資料夾清單（{0}）。其他 Steam 收藏庫中的安裝可能不會列出。</value>
+  </data>
+  <data name="Error_SteamManifestUnreadable" xml:space="preserve">
+    <value>無法讀取 Steam 應用程式資訊清單（{0}）。已略過該安裝。</value>
+  </data>
+  <data name="Error_SteamVdfMalformed" xml:space="preserve">
+    <value>某個 Steam 檔案已損毀，無法讀取。</value>
+  </data>
+  <data name="Error_InstallFilesMissing" xml:space="preserve">
+    <value>Steam 顯示 {0} 有一個安裝，但該資料夾不存在。請嘗試在 Steam 中驗證遊戲檔案的完整性。</value>
+  </data>
+  <data name="Error_InstallInvalidPath" xml:space="preserve">
+    <value>這不是有效的資料夾路徑。</value>
+  </data>
+  <data name="Error_InstallPathNotFound" xml:space="preserve">
+    <value>資料夾 {0} 不存在。</value>
+  </data>
+  <data name="Error_InstallPathUnreadable" xml:space="preserve">
+    <value>無法讀取資料夾 {0}。請確認您有開啟它的權限。</value>
+  </data>
+  <data name="Error_InstallNotAPzInstall" xml:space="preserve">
+    <value>{0} 看起來不是 Project Zomboid 遊戲或專用伺服器資料夾。</value>
+  </data>
+  <data name="Error_FolderNotLocal" xml:space="preserve">
+    <value>{0} 不是這台電腦上的資料夾，啟動器無法開啟它。請選擇本機資料夾。</value>
+  </data>
+</root>

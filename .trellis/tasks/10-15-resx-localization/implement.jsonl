@@ -1,0 +1,5 @@
+{"file": ".trellis/spec/desktop/directory-structure.md", "reason": "Desktop layout, MVVM rules (no Avalonia in VMs), composition root"}
+{"file": ".trellis/spec/common/coding-rules.md", "reason": "Comments, nullability, async, AOT (source-gen JSON), no static mutable state"}
+{"file": ".trellis/spec/common/test-strategy.md", "reason": "xUnit v3 rules, fakes, enumerate ErrorCode, naming"}
+{"file": ".trellis/spec/core/error-handling.md", "reason": "Error/ErrorCode contract ErrorMessages renders"}
+{"file": ".trellis/spec/common/formatting.md", "reason": "Formatting conventions"}
