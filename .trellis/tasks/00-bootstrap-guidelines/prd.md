@@ -21,37 +21,24 @@ the rest conversationally.
 
 ## Status (update the checkboxes as you complete each item)
 
-- [ ] Fill backend guidelines
-- [ ] Fill frontend guidelines
-- [ ] Add code examples
+- [x] Restructure layers to match the architecture: `common/` (all projects), `core/` (`PzLauncher.Core`), `desktop/` (`PzLauncher.Desktop`); `server/` comes when `PzLauncher.Server` exists. See `.trellis/spec/common/architecture.md`.
+- [x] Fill common: architecture, coding-rules, test-strategy
+- [x] Fill core: directory-structure, service-api, error-handling
+- [x] Fill desktop: directory-structure
+- [ ] Core: logging conventions, settings/persistence (when that work starts)
+- [ ] Desktop: navigation/shell, styling/theming, localization (when that work starts)
+
+> 2026-10-14: Unfilled Trellis templates were deleted. Spec conventions: `.trellis/spec/common/index.md`.
 
 ---
 
-## Spec files to populate
+## Spec layout
 
-
-### Backend guidelines
-
-| File | What to document |
-|------|------------------|
-| `.trellis/spec/backend/directory-structure.md` | Where different file types go (routes, services, utils) |
-| `.trellis/spec/backend/database-guidelines.md` | ORM, migrations, query patterns, naming conventions |
-| `.trellis/spec/backend/error-handling.md` | How errors are caught, logged, and returned |
-| `.trellis/spec/backend/logging-guidelines.md` | Log levels, format, what to log |
-| `.trellis/spec/backend/quality-guidelines.md` | Code review standards, testing requirements |
-
-
-### Frontend guidelines
-
-| File | What to document |
-|------|------------------|
-| `.trellis/spec/frontend/directory-structure.md` | Component/page/hook organization |
-| `.trellis/spec/frontend/component-guidelines.md` | Component patterns, props conventions |
-| `.trellis/spec/frontend/hook-guidelines.md` | Custom hook naming, patterns |
-| `.trellis/spec/frontend/state-management.md` | State library, patterns, what goes where |
-| `.trellis/spec/frontend/type-safety.md` | TypeScript conventions, type organization |
-| `.trellis/spec/frontend/quality-guidelines.md` | Linting, testing, accessibility |
-
+| Layer | Covers | Index |
+|---|---|---|
+| `common/` | every project | `.trellis/spec/common/index.md` |
+| `core/` | `PzLauncher.Core` | `.trellis/spec/core/index.md` |
+| `desktop/` | `PzLauncher.Desktop` (Avalonia app) | `.trellis/spec/desktop/index.md` |
 
 ### Thinking guides (already populated)
 

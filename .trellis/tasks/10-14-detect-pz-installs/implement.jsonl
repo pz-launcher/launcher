@@ -1,0 +1,7 @@
+{"file": ".trellis/spec/core/directory-structure.md", "reason": "Core feature folder layout, portability rules"}
+{"file": ".trellis/spec/core/service-api.md", "reason": "Service interface, DTO, DI, JSON source-gen conventions"}
+{"file": ".trellis/spec/core/error-handling.md", "reason": "Result<T>, error codes, exception boundaries, warnings"}
+{"file": ".trellis/spec/desktop/directory-structure.md", "reason": "Avalonia app layout, MVVM rules, composition root"}
+{"file": ".trellis/spec/common/test-strategy.md", "reason": "Test projects, helpers, required coverage"}
+{"file": ".trellis/spec/common/coding-rules.md", "reason": "Language-level coding rules: comments, nullability, async, AOT, naming"}
+{"file": ".trellis/spec/common/architecture.md", "reason": "Projects, dependency direction, spec layer map"}
