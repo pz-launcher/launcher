@@ -1,0 +1,18 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:installsVm="using:PzLauncher.Desktop.ViewModels.Installs"
+             xmlns:installsView="using:PzLauncher.Desktop.Views.Installs"
+             x:Class="PzLauncher.Desktop.App"
+             RequestedThemeVariant="Default">
+
+    <!-- One DataTemplate per page: the template's reflection-based ViewLocator isn't AOT-safe. -->
+    <Application.DataTemplates>
+        <DataTemplate DataType="installsVm:InstallsViewModel">
+            <installsView:InstallsView />
+        </DataTemplate>
+    </Application.DataTemplates>
+
+    <Application.Styles>
+        <FluentTheme />
+    </Application.Styles>
+</Application>

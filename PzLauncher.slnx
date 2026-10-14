@@ -1,3 +1,6 @@
 <Solution>
-  <Project Path="PzLauncher/PzLauncher.csproj" />
+  <Project Path="PzLauncher.Core.Tests/PzLauncher.Core.Tests.csproj" />
+  <Project Path="PzLauncher.Core/PzLauncher.Core.csproj" />
+  <Project Path="PzLauncher.Desktop.Tests/PzLauncher.Desktop.Tests.csproj" />
+  <Project Path="PzLauncher.Desktop/PzLauncher.Desktop.csproj" />
 </Solution>
