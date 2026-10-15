@@ -12,12 +12,45 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="Main_Language" xml:space="preserve">
-    <value>語言</value>
-  </data>
   <data name="Main_FontFamily" xml:space="preserve">
     <value>fonts:Inter#Inter, Microsoft JhengHei UI, PingFang TC, Noto Sans CJK TC</value>
     <comment>Not shown text: font family list. Inter for Latin, then CJK fonts in this language's script (Windows, macOS, Linux), so bold weights and glyph shapes match.</comment>
+  </data>
+  <data name="Shell_NavHome" xml:space="preserve">
+    <value>啟動</value>
+  </data>
+  <data name="Shell_NavInstalls" xml:space="preserve">
+    <value>安裝</value>
+  </data>
+  <data name="Shell_NavSettings" xml:space="preserve">
+    <value>設定</value>
+  </data>
+  <data name="Shell_Language" xml:space="preserve">
+    <value>語言</value>
+  </data>
+  <data name="Shell_Minimize" xml:space="preserve">
+    <value>最小化</value>
+  </data>
+  <data name="Shell_Maximize" xml:space="preserve">
+    <value>最大化</value>
+  </data>
+  <data name="Shell_Restore" xml:space="preserve">
+    <value>還原</value>
+  </data>
+  <data name="Shell_Close" xml:space="preserve">
+    <value>關閉</value>
+  </data>
+  <data name="Home_CurrentInstall" xml:space="preserve">
+    <value>目前安裝</value>
+  </data>
+  <data name="Home_NoInstall" xml:space="preserve">
+    <value>未偵測到安裝。請透過 Steam 安裝 Project Zomboid，或在「安裝」頁面新增資料夾。</value>
+  </data>
+  <data name="Home_Launch" xml:space="preserve">
+    <value>啟動遊戲</value>
+  </data>
+  <data name="Home_SelectVersion" xml:space="preserve">
+    <value>版本選擇</value>
   </data>
   <data name="Installs_Title" xml:space="preserve">
     <value>已安裝</value>
@@ -30,6 +63,15 @@
   </data>
   <data name="Installs_Empty" xml:space="preserve">
     <value>找不到 Project Zomboid 的安裝。請透過 Steam 安裝遊戲或專用伺服器，或使用「新增資料夾…」。</value>
+  </data>
+  <data name="Installs_FilterAll" xml:space="preserve">
+    <value>全部</value>
+  </data>
+  <data name="Installs_FilterKindGroup" xml:space="preserve">
+    <value>類型</value>
+  </data>
+  <data name="Installs_FilterEmpty" xml:space="preserve">
+    <value>沒有此類型的安裝。</value>
   </data>
   <data name="Installs_BranchFormat" xml:space="preserve">
     <value>分支：{0}</value>
@@ -90,5 +132,20 @@
   </data>
   <data name="Error_FolderNotLocal" xml:space="preserve">
     <value>{0} 不是這台電腦上的資料夾，啟動器無法開啟它。請選擇本機資料夾。</value>
+  </data>
+  <data name="Settings_LauncherGroup" xml:space="preserve">
+    <value>啟動器</value>
+  </data>
+  <data name="Settings_Appearance" xml:space="preserve">
+    <value>外觀</value>
+  </data>
+  <data name="Settings_Theme" xml:space="preserve">
+    <value>主題</value>
+  </data>
+  <data name="Settings_ThemeLight" xml:space="preserve">
+    <value>淺色</value>
+  </data>
+  <data name="Settings_ThemeDark" xml:space="preserve">
+    <value>深色</value>
   </data>
 </root>

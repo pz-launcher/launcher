@@ -1,0 +1,41 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:PzLauncher.Desktop.ViewModels.Settings"
+             xmlns:themes="using:PzLauncher.Desktop.Themes"
+             xmlns:design="using:PzLauncher.Desktop.ViewModels.Design"
+             xmlns:controls="using:PzLauncher.Desktop.Views.Controls"
+             xmlns:lang="using:PzLauncher.Desktop.Lang"
+             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="560"
+             x:Class="PzLauncher.Desktop.Views.Settings.SettingsView"
+             x:DataType="vm:SettingsViewModel">
+
+    <Design.DataContext>
+        <x:Static Member="design:DesignData.Settings" />
+    </Design.DataContext>
+
+    <Grid ColumnDefinitions="Auto,*">
+        <Border Grid.Column="0" Classes="sidebar left" MinWidth="180">
+            <StackPanel Margin="8" Spacing="2">
+                <TextBlock Classes="sidebarHeader" Text="{x:Static lang:UiText.Settings_LauncherGroup}" />
+                <controls:NavItem Icon="PaintBrush" Content="{x:Static lang:UiText.Settings_Appearance}"
+                                  IsChecked="{Binding Section, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:SettingsSection.Appearance}}" />
+            </StackPanel>
+        </Border>
+
+        <Panel Grid.Column="1" Background="{DynamicResource Shell.ContentBackground}">
+            <StackPanel Margin="24,16" Spacing="12"
+                        IsVisible="{Binding Section, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:SettingsSection.Appearance}}">
+                <TextBlock Text="{x:Static lang:UiText.Settings_Appearance}" FontSize="22" FontWeight="SemiBold" />
+                <TextBlock Text="{x:Static lang:UiText.Settings_Theme}" FontSize="16" FontWeight="SemiBold" />
+                <StackPanel Orientation="Horizontal" Spacing="24">
+                    <RadioButton Content="{x:Static lang:UiText.Settings_ThemeLight}"
+                                 IsChecked="{Binding Theme, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static themes:AppTheme.Light}}" />
+                    <RadioButton Content="{x:Static lang:UiText.Settings_ThemeDark}"
+                                 IsChecked="{Binding Theme, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static themes:AppTheme.Dark}}" />
+                </StackPanel>
+            </StackPanel>
+        </Panel>
+    </Grid>
+</UserControl>

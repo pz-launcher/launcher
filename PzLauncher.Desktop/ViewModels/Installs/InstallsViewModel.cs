@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -38,26 +39,54 @@ public partial class InstallsViewModel : ViewModelBase
         _installDetection = installDetection;
         _folderPicker = folderPicker;
         _platform = platform;
+        VisibleInstalls = [];
 
-        // Never unsubscribed: this view model lives as long as the app (held by the singleton MainViewModel).
+        // Never unsubscribed: this view model is an app-lifetime singleton.
         localization.LanguageChanged += (_, _) => RenderTexts();
     }
 
     public ObservableCollection<PzInstall> Installs { get; } = [];
 
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsFilterEmpty), nameof(ListSelection))]
+    public partial IReadOnlyList<PzInstall> VisibleInstalls { get; private set; }
+
+    [ObservableProperty] public partial InstallsFilter Filter { get; set; }
+
+    /// <summary>Session only. <see cref="Filter"/> never changes it.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ListSelection))]
+    public partial PzInstall? SelectedInstall { get; private set; }
+
+    // The list's selection, derived rather than stored: a ListBox pushes null when the filter hides the selected row
+    // or when a MainView rebuild tears it down, and neither may clear SelectedInstall or the next ListBox's highlight.
+    public PzInstall? ListSelection
+    {
+        get => SelectedInstall is { } selected && VisibleInstalls.Contains(selected) ? selected : null;
+        set
+        {
+            if (value is not null)
+            {
+                SelectedInstall = value;
+            }
+        }
+    }
+
     public ObservableCollection<string> Warnings { get; } = [];
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsEmpty))]
+    [NotifyPropertyChangedFor(nameof(IsEmpty), nameof(IsFilterEmpty))]
     public partial bool IsScanning { get; private set; }
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsEmpty))]
+    [NotifyPropertyChangedFor(nameof(IsEmpty), nameof(IsFilterEmpty))]
     public partial bool HasScanned { get; private set; }
 
     [ObservableProperty] public partial string? ErrorText { get; private set; }
 
     public bool IsEmpty => HasScanned && !IsScanning && Installs.Count == 0;
+
+    public bool IsFilterEmpty => HasScanned && !IsScanning && Installs.Count > 0 && VisibleInstalls.Count == 0;
 
     // The view calls this on every load; only the first call scans.
     [RelayCommand]
@@ -89,11 +118,15 @@ public partial class InstallsViewModel : ViewModelBase
                 return;
             }
 
+            var previous = SelectedInstall;
             Installs.Clear();
             foreach (var install in PzInstallList.Merge(result.Value.Installs, _manualInstalls, _platform.PathComparison))
             {
                 Installs.Add(install);
             }
+
+            SelectedInstall = (previous is null ? null : FindByPath(previous.RootPath)) ?? Installs.FirstOrDefault();
+            RefreshVisibleInstalls();
 
             foreach (var warning in result.Value.Warnings)
             {
@@ -150,6 +183,7 @@ public partial class InstallsViewModel : ViewModelBase
 
             _manualInstalls.Add(result.Value);
             Installs.Add(result.Value);
+            RefreshVisibleInstalls();
             OnPropertyChanged(nameof(IsEmpty));
         }
         catch (OperationCanceledException) when (ct.IsCancellationRequested)
@@ -157,6 +191,22 @@ public partial class InstallsViewModel : ViewModelBase
             // Cancelled: no change.
         }
     }
+
+    partial void OnFilterChanged(InstallsFilter value) => RefreshVisibleInstalls();
+
+    private PzInstall? FindByPath(string rootPath) =>
+        Installs.FirstOrDefault(install => string.Equals(install.RootPath, rootPath, _platform.PathComparison));
+
+    private void RefreshVisibleInstalls() => VisibleInstalls = [.. Installs.Where(Matches)];
+
+#pragma warning disable CS8524 // No discard arm on purpose: CS8509 makes a new InstallsFilter without a rule a build error.
+    private bool Matches(PzInstall install) => Filter switch
+    {
+        InstallsFilter.All => true,
+        InstallsFilter.Game => install.Kind == PzInstallKind.Game,
+        InstallsFilter.DedicatedServer => install.Kind == PzInstallKind.DedicatedServer,
+    };
+#pragma warning restore CS8524
 
     private void ShowError(Func<string>? source)
     {

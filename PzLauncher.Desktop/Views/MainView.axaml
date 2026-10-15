@@ -3,10 +3,12 @@
              xmlns:vm="using:PzLauncher.Desktop.ViewModels"
              xmlns:design="using:PzLauncher.Desktop.ViewModels.Design"
              xmlns:lang="using:PzLauncher.Desktop.Lang"
+             xmlns:controls="using:PzLauncher.Desktop.Views.Controls"
+             xmlns:chrome="using:Avalonia.Controls.Chrome"
              xmlns:ic="using:FluentIcons.Avalonia"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="640"
              x:Class="PzLauncher.Desktop.Views.MainView"
              x:DataType="vm:MainViewModel">
 
@@ -14,25 +16,75 @@
         <x:Static Member="design:DesignData.Main" />
     </Design.DataContext>
 
-    <DockPanel>
-        <Border DockPanel.Dock="Top" BorderBrush="#30808080" BorderThickness="0,0,0,1" Padding="16,4">
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
-                <ic:FluentIcon Icon="Globe" IconVariant="Regular" FontSize="16" VerticalAlignment="Center" />
-                <ComboBox MinWidth="120"
-                          ItemsSource="{Binding Languages}" SelectedItem="{Binding SelectedLanguage}"
-                          ToolTip.Tip="{x:Static lang:UiText.Main_Language}"
-                          AutomationProperties.Name="{x:Static lang:UiText.Main_Language}">
-                    <ComboBox.ItemTemplate>
-                        <DataTemplate x:DataType="vm:LanguageOption">
-                            <TextBlock Text="{Binding NativeName}" />
-                        </DataTemplate>
-                    </ComboBox.ItemTemplate>
-                </ComboBox>
-            </StackPanel>
+    <Grid RowDefinitions="44,*">
+        <!-- Title bar: empty space drags the window and double-click maximizes; interactive children opt out with the User role. -->
+        <Border Grid.Row="0" Background="{DynamicResource Shell.TitleBarBackground}"
+                chrome:WindowDecorationProperties.ElementRole="TitleBar">
+            <Grid ColumnDefinitions="*,Auto,*">
+                <!-- macOS: leave room for the native traffic lights. -->
+                <TextBlock Grid.Column="0" Text="PzLauncher" FontSize="15" FontWeight="SemiBold"
+                           Foreground="{DynamicResource Shell.TitleBarForeground}" VerticalAlignment="Center"
+                           Margin="{OnPlatform Default='16,0,16,0', macOS='84,0,16,0'}" />
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6">
+                    <controls:NavItem Theme="{StaticResource Shell.TitleBarTab}" chrome:WindowDecorationProperties.ElementRole="User"
+                                      Icon="Home" Content="{x:Static lang:UiText.Shell_NavHome}"
+                                      IsChecked="{Binding CurrentPageKind, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:ShellPage.Home}}" />
+                    <controls:NavItem Theme="{StaticResource Shell.TitleBarTab}" chrome:WindowDecorationProperties.ElementRole="User"
+                                      Icon="Box" Content="{x:Static lang:UiText.Shell_NavInstalls}"
+                                      IsChecked="{Binding CurrentPageKind, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:ShellPage.Installs}}" />
+                    <controls:NavItem Theme="{StaticResource Shell.TitleBarTab}" chrome:WindowDecorationProperties.ElementRole="User"
+                                      Icon="Settings" Content="{x:Static lang:UiText.Shell_NavSettings}"
+                                      IsChecked="{Binding CurrentPageKind, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:ShellPage.Settings}}" />
+                </StackPanel>
+
+                <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right">
+                    <!-- No two-way bindings in the menu: picking a language tears this view down, and it must not write back while it goes. -->
+                    <Button x:Name="LanguageButton" Theme="{StaticResource Shell.CaptionButton}" chrome:WindowDecorationProperties.ElementRole="User"
+                            ToolTip.Tip="{x:Static lang:UiText.Shell_Language}"
+                            AutomationProperties.Name="{x:Static lang:UiText.Shell_Language}">
+                        <Button.Flyout>
+                            <MenuFlyout Placement="BottomEdgeAlignedRight" ItemsSource="{Binding LanguageMenu.Languages}">
+                                <MenuFlyout.ItemContainerTheme>
+                                    <ControlTheme TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}" x:DataType="vm:LanguageOption">
+                                        <Setter Property="Header" Value="{Binding NativeName}" />
+                                        <Setter Property="ToggleType" Value="Radio" />
+                                        <Setter Property="IsChecked" Value="{Binding IsCurrent, Mode=OneWay}" />
+                                        <Setter Property="Command" Value="{Binding SelectCommand}" />
+                                    </ControlTheme>
+                                </MenuFlyout.ItemContainerTheme>
+                            </MenuFlyout>
+                        </Button.Flyout>
+                        <ic:FluentIcon Icon="Globe" IconVariant="Regular" FontSize="16" />
+                    </Button>
+
+                    <StackPanel Orientation="Horizontal" IsVisible="{OnPlatform Default=True, macOS=False}">
+                        <Button Theme="{StaticResource Shell.CaptionButton}" chrome:WindowDecorationProperties.ElementRole="MinimizeButton"
+                                Click="OnMinimizeClick"
+                                ToolTip.Tip="{x:Static lang:UiText.Shell_Minimize}"
+                                AutomationProperties.Name="{x:Static lang:UiText.Shell_Minimize}">
+                            <ic:FluentIcon Icon="Subtract" IconVariant="Regular" FontSize="16" />
+                        </Button>
+                        <!-- Tooltip, name, and icon follow the window state: set in code-behind. -->
+                        <Button x:Name="MaximizeButton" Theme="{StaticResource Shell.CaptionButton}"
+                                chrome:WindowDecorationProperties.ElementRole="MaximizeButton"
+                                Click="OnMaximizeClick">
+                            <ic:FluentIcon x:Name="MaximizeIcon" Icon="Maximize" IconVariant="Regular" FontSize="16" />
+                        </Button>
+                        <Button Theme="{StaticResource Shell.CaptionButton}" Classes="close"
+                                chrome:WindowDecorationProperties.ElementRole="CloseButton"
+                                Click="OnCloseClick"
+                                ToolTip.Tip="{x:Static lang:UiText.Shell_Close}"
+                                AutomationProperties.Name="{x:Static lang:UiText.Shell_Close}">
+                            <ic:FluentIcon Icon="Dismiss" IconVariant="Regular" FontSize="16" />
+                        </Button>
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
         </Border>
 
         <!-- The page view is picked by the DataTemplates in App.axaml. -->
-        <ContentControl Content="{Binding CurrentPage}" />
-    </DockPanel>
+        <ContentControl Grid.Row="1" Content="{Binding CurrentPage}" Foreground="{DynamicResource Shell.TextPrimary}" />
+    </Grid>
 
 </UserControl>

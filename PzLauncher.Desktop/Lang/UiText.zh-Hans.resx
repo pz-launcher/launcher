@@ -12,12 +12,45 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="Main_Language" xml:space="preserve">
-    <value>语言</value>
-  </data>
   <data name="Main_FontFamily" xml:space="preserve">
     <value>fonts:Inter#Inter, Microsoft YaHei UI, PingFang SC, Noto Sans CJK SC</value>
     <comment>Not shown text: font family list. Inter for Latin, then CJK fonts in this language's script (Windows, macOS, Linux), so bold weights and glyph shapes match.</comment>
+  </data>
+  <data name="Shell_NavHome" xml:space="preserve">
+    <value>启动</value>
+  </data>
+  <data name="Shell_NavInstalls" xml:space="preserve">
+    <value>安装</value>
+  </data>
+  <data name="Shell_NavSettings" xml:space="preserve">
+    <value>设置</value>
+  </data>
+  <data name="Shell_Language" xml:space="preserve">
+    <value>语言</value>
+  </data>
+  <data name="Shell_Minimize" xml:space="preserve">
+    <value>最小化</value>
+  </data>
+  <data name="Shell_Maximize" xml:space="preserve">
+    <value>最大化</value>
+  </data>
+  <data name="Shell_Restore" xml:space="preserve">
+    <value>还原</value>
+  </data>
+  <data name="Shell_Close" xml:space="preserve">
+    <value>关闭</value>
+  </data>
+  <data name="Home_CurrentInstall" xml:space="preserve">
+    <value>当前安装</value>
+  </data>
+  <data name="Home_NoInstall" xml:space="preserve">
+    <value>未检测到安装。请通过 Steam 安装 Project Zomboid，或在“安装”页面添加文件夹。</value>
+  </data>
+  <data name="Home_Launch" xml:space="preserve">
+    <value>启动游戏</value>
+  </data>
+  <data name="Home_SelectVersion" xml:space="preserve">
+    <value>版本选择</value>
   </data>
   <data name="Installs_Title" xml:space="preserve">
     <value>已安装</value>
@@ -30,6 +63,15 @@
   </data>
   <data name="Installs_Empty" xml:space="preserve">
     <value>未找到 Project Zomboid 的安装。请通过 Steam 安装游戏或专用服务器，或使用“添加文件夹…”。</value>
+  </data>
+  <data name="Installs_FilterAll" xml:space="preserve">
+    <value>全部</value>
+  </data>
+  <data name="Installs_FilterKindGroup" xml:space="preserve">
+    <value>类型</value>
+  </data>
+  <data name="Installs_FilterEmpty" xml:space="preserve">
+    <value>没有此类型的安装。</value>
   </data>
   <data name="Installs_BranchFormat" xml:space="preserve">
     <value>分支：{0}</value>
@@ -90,5 +132,20 @@
   </data>
   <data name="Error_FolderNotLocal" xml:space="preserve">
     <value>{0} 不是这台电脑上的文件夹，启动器无法打开它。请选择本地文件夹。</value>
+  </data>
+  <data name="Settings_LauncherGroup" xml:space="preserve">
+    <value>启动器</value>
+  </data>
+  <data name="Settings_Appearance" xml:space="preserve">
+    <value>外观</value>
+  </data>
+  <data name="Settings_Theme" xml:space="preserve">
+    <value>主题</value>
+  </data>
+  <data name="Settings_ThemeLight" xml:space="preserve">
+    <value>浅色</value>
+  </data>
+  <data name="Settings_ThemeDark" xml:space="preserve">
+    <value>深色</value>
   </data>
 </root>

@@ -5,12 +5,17 @@
         xmlns:design="using:PzLauncher.Desktop.ViewModels.Design"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="640"
         x:Class="PzLauncher.Desktop.Views.MainWindow"
         x:DataType="vm:MainViewModel"
         Icon="/Assets/avalonia-logo.ico"
-        Width="900" Height="600"
+        Width="1000" Height="640" MinWidth="820" MinHeight="520"
+        ExtendClientAreaToDecorationsHint="True"
+        WindowDecorations="{OnPlatform Default=BorderOnly, macOS=Full}"
         Title="PzLauncher">
+
+    <!-- BorderOnly keeps the native resize frame and snap on Windows (and drawn resize borders on Linux) without an
+         OS or drawn title bar; MainView draws its own. macOS needs Full to keep the native traffic lights. -->
 
     <Design.DataContext>
         <!-- Previewer only; at runtime the DataContext comes from DI. -->

@@ -1,0 +1,50 @@
+<!-- Every shell color, per theme variant. Views reference these keys with DynamicResource only, so the
+     light/dark switch applies live and a custom-color feature can override the same keys. -->
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <ResourceDictionary.ThemeDictionaries>
+        <ResourceDictionary x:Key="Light">
+            <SolidColorBrush x:Key="Shell.TitleBarBackground" Color="#7A1C1C" />
+            <SolidColorBrush x:Key="Shell.TitleBarForeground" Color="#EBD9CF" />
+            <SolidColorBrush x:Key="Shell.TitleBarHoverBackground" Color="#24FFFFFF" />
+            <SolidColorBrush x:Key="Shell.NavSelectedBackground" Color="#F7F0E6" />
+            <SolidColorBrush x:Key="Shell.NavSelectedForeground" Color="#7A1C1C" />
+            <SolidColorBrush x:Key="Shell.CaptionCloseHoverBackground" Color="#C42B1C" />
+            <SolidColorBrush x:Key="Shell.CaptionCloseHoverForeground" Color="#FFFFFF" />
+            <SolidColorBrush x:Key="Shell.SidebarBackground" Color="#FBF8F3" />
+            <SolidColorBrush x:Key="Shell.SidebarItemHoverBackground" Color="#F3EDE5" />
+            <SolidColorBrush x:Key="Shell.SidebarItemSelectedBackground" Color="#F3E4E0" />
+            <SolidColorBrush x:Key="Shell.SidebarItemSelectedForeground" Color="#9B2226" />
+            <SolidColorBrush x:Key="Shell.SidebarGroupHeaderForeground" Color="#8C8378" />
+            <SolidColorBrush x:Key="Shell.ContentBackground" Color="#EDE6DB" />
+            <SolidColorBrush x:Key="Shell.Accent" Color="#9B2226" />
+            <SolidColorBrush x:Key="Shell.TextPrimary" Color="#2B2622" />
+            <SolidColorBrush x:Key="Shell.TextMuted" Color="#7D746A" />
+            <SolidColorBrush x:Key="Shell.Border" Color="#CFC6BA" />
+            <SolidColorBrush x:Key="Shell.ErrorForeground" Color="#B3261E" />
+            <SolidColorBrush x:Key="Shell.WarningForeground" Color="#8A5300" />
+        </ResourceDictionary>
+        <ResourceDictionary x:Key="Dark">
+            <SolidColorBrush x:Key="Shell.TitleBarBackground" Color="#1B1917" />
+            <SolidColorBrush x:Key="Shell.TitleBarForeground" Color="#B8AFA2" />
+            <SolidColorBrush x:Key="Shell.TitleBarHoverBackground" Color="#1AFFFFFF" />
+            <SolidColorBrush x:Key="Shell.NavSelectedBackground" Color="#9B2226" />
+            <SolidColorBrush x:Key="Shell.NavSelectedForeground" Color="#F5EFE6" />
+            <SolidColorBrush x:Key="Shell.CaptionCloseHoverBackground" Color="#C42B1C" />
+            <SolidColorBrush x:Key="Shell.CaptionCloseHoverForeground" Color="#FFFFFF" />
+            <SolidColorBrush x:Key="Shell.SidebarBackground" Color="#25221F" />
+            <SolidColorBrush x:Key="Shell.SidebarItemHoverBackground" Color="#2E2A26" />
+            <SolidColorBrush x:Key="Shell.SidebarItemSelectedBackground" Color="#3A2624" />
+            <!-- Lighter than Accent: the accent red is too dark to read on the dark selected background. -->
+            <SolidColorBrush x:Key="Shell.SidebarItemSelectedForeground" Color="#E3817A" />
+            <SolidColorBrush x:Key="Shell.SidebarGroupHeaderForeground" Color="#857D72" />
+            <SolidColorBrush x:Key="Shell.ContentBackground" Color="#2F2B27" />
+            <SolidColorBrush x:Key="Shell.Accent" Color="#9B2226" />
+            <SolidColorBrush x:Key="Shell.TextPrimary" Color="#E8E2D6" />
+            <SolidColorBrush x:Key="Shell.TextMuted" Color="#9C9488" />
+            <SolidColorBrush x:Key="Shell.Border" Color="#4A443D" />
+            <SolidColorBrush x:Key="Shell.ErrorForeground" Color="#F28B82" />
+            <SolidColorBrush x:Key="Shell.WarningForeground" Color="#E0B060" />
+        </ResourceDictionary>
+    </ResourceDictionary.ThemeDictionaries>
+</ResourceDictionary>

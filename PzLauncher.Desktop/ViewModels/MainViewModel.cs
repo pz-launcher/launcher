@@ -1,44 +1,45 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
-using PzLauncher.Desktop.Localization;
-using PzLauncher.Desktop.Services;
+using PzLauncher.Desktop.ViewModels.Home;
 using PzLauncher.Desktop.ViewModels.Installs;
+using PzLauncher.Desktop.ViewModels.Settings;
 
 namespace PzLauncher.Desktop.ViewModels;
 
 public partial class MainViewModel : ViewModelBase
 {
-    private readonly ILocalizationService _localization;
-    private readonly ILanguagePreferenceStore _preferences;
-
-    public MainViewModel(InstallsViewModel installs, ILocalizationService localization, ILanguagePreferenceStore preferences)
+    public MainViewModel(
+        HomeViewModel home,
+        InstallsViewModel installs,
+        SettingsViewModel settings,
+        LanguageMenuViewModel languageMenu)
     {
-        _localization = localization;
-        _preferences = preferences;
-        CurrentPage = installs;
-        SelectedLanguage = Languages.First(option => option.Language == localization.Current);
+        Home = home;
+        Installs = installs;
+        Settings = settings;
+        LanguageMenu = languageMenu;
+
+        // Never unsubscribed: both view models are app-lifetime singletons.
+        home.SelectVersionRequested += (_, _) => CurrentPageKind = ShellPage.Installs;
     }
 
-    public ViewModelBase CurrentPage { get; }
+    public HomeViewModel Home { get; }
 
-    public IReadOnlyList<LanguageOption> Languages { get; } =
-        [.. Enum.GetValues<AppLanguage>().Select(language => new LanguageOption(language, language.NativeName()))];
+    public InstallsViewModel Installs { get; }
 
-    [ObservableProperty] public partial LanguageOption SelectedLanguage { get; set; }
+    public SettingsViewModel Settings { get; }
 
-    partial void OnSelectedLanguageChanged(LanguageOption value)
+    public LanguageMenuViewModel LanguageMenu { get; }
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CurrentPage))]
+    public partial ShellPage CurrentPageKind { get; set; }
+
+#pragma warning disable CS8524 // No discard arm on purpose: CS8509 makes a new ShellPage without a view model a build error.
+    public ViewModelBase CurrentPage => CurrentPageKind switch
     {
-        // The two-way SelectedItem binding can push null while the replaced MainView's ComboBox is torn down.
-        if (value is null || value.Language == _localization.Current)
-        {
-            return;
-        }
-
-        _localization.SetLanguage(value.Language);
-
-        // SaveAsync never throws for I/O, and a failed save must not undo the switch.
-        _ = _preferences.SaveAsync(value.Language);
-    }
+        ShellPage.Home => Home,
+        ShellPage.Installs => Installs,
+        ShellPage.Settings => Settings,
+    };
+#pragma warning restore CS8524
 }

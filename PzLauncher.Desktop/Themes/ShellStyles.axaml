@@ -1,0 +1,110 @@
+<!-- Shell control themes and the shared sidebar style. Colors come from ShellTheme.axaml only. -->
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="using:PzLauncher.Desktop.Views.Controls"
+        xmlns:ic="using:FluentIcons.Avalonia">
+
+    <Styles.Resources>
+        <!-- Default NavItem look: a sidebar entry. -->
+        <ControlTheme x:Key="{x:Type controls:NavItem}" TargetType="controls:NavItem">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{DynamicResource Shell.TextPrimary}" />
+            <Setter Property="Padding" Value="0,8,16,8" />
+            <Setter Property="CornerRadius" Value="4" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Border Background="{TemplateBinding Background}" CornerRadius="{TemplateBinding CornerRadius}"
+                            Padding="{TemplateBinding Padding}">
+                        <Grid ColumnDefinitions="Auto,Auto,*">
+                            <Border Name="PART_Indicator" Width="3" Height="16" CornerRadius="2" Margin="0,0,11,0"
+                                    Background="{DynamicResource Shell.SidebarItemSelectedForeground}" Opacity="0" />
+                            <ic:FluentIcon Grid.Column="1" Icon="{TemplateBinding Icon}" IconVariant="Regular" FontSize="16"
+                                           VerticalAlignment="Center" Margin="0,0,10,0" />
+                            <ContentPresenter Grid.Column="2" Name="PART_ContentPresenter" Content="{TemplateBinding Content}"
+                                              VerticalAlignment="Center" />
+                        </Grid>
+                    </Border>
+                </ControlTemplate>
+            </Setter>
+            <Style Selector="^:pointerover">
+                <Setter Property="Background" Value="{DynamicResource Shell.SidebarItemHoverBackground}" />
+            </Style>
+            <Style Selector="^:checked">
+                <Setter Property="Background" Value="{DynamicResource Shell.SidebarItemSelectedBackground}" />
+                <Setter Property="Foreground" Value="{DynamicResource Shell.SidebarItemSelectedForeground}" />
+                <Style Selector="^ /template/ Border#PART_Indicator">
+                    <Setter Property="Opacity" Value="1" />
+                </Style>
+            </Style>
+        </ControlTheme>
+
+        <ControlTheme x:Key="Shell.TitleBarTab" TargetType="controls:NavItem">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{DynamicResource Shell.TitleBarForeground}" />
+            <Setter Property="Padding" Value="14,5" />
+            <Setter Property="CornerRadius" Value="15" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Border Background="{TemplateBinding Background}" CornerRadius="{TemplateBinding CornerRadius}"
+                            Padding="{TemplateBinding Padding}">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <ic:FluentIcon Icon="{TemplateBinding Icon}" IconVariant="Regular" FontSize="16" VerticalAlignment="Center" />
+                            <ContentPresenter Name="PART_ContentPresenter" Content="{TemplateBinding Content}" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Border>
+                </ControlTemplate>
+            </Setter>
+            <Style Selector="^:pointerover">
+                <Setter Property="Background" Value="{DynamicResource Shell.TitleBarHoverBackground}" />
+            </Style>
+            <Style Selector="^:checked">
+                <Setter Property="Background" Value="{DynamicResource Shell.NavSelectedBackground}" />
+                <Setter Property="Foreground" Value="{DynamicResource Shell.NavSelectedForeground}" />
+                <Setter Property="FontWeight" Value="SemiBold" />
+            </Style>
+        </ControlTheme>
+
+        <ControlTheme x:Key="Shell.CaptionButton" TargetType="Button">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{DynamicResource Shell.TitleBarForeground}" />
+            <Setter Property="Width" Value="46" />
+            <Setter Property="VerticalAlignment" Value="Stretch" />
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Border Background="{TemplateBinding Background}">
+                        <ContentPresenter Name="PART_ContentPresenter" Content="{TemplateBinding Content}"
+                                          HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                </ControlTemplate>
+            </Setter>
+            <Style Selector="^:pointerover">
+                <Setter Property="Background" Value="{DynamicResource Shell.TitleBarHoverBackground}" />
+            </Style>
+            <Style Selector="^.close:pointerover">
+                <Setter Property="Background" Value="{DynamicResource Shell.CaptionCloseHoverBackground}" />
+                <Setter Property="Foreground" Value="{DynamicResource Shell.CaptionCloseHoverForeground}" />
+            </Style>
+        </ControlTheme>
+    </Styles.Resources>
+
+    <!-- Page sidebar: width comes from its content; the divider sits on the edge facing the content. -->
+    <Style Selector="Border.sidebar">
+        <Setter Property="Background" Value="{DynamicResource Shell.SidebarBackground}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Shell.Border}" />
+    </Style>
+    <Style Selector="Border.sidebar.left">
+        <Setter Property="BorderThickness" Value="0,0,1,0" />
+    </Style>
+    <Style Selector="Border.sidebar.right">
+        <Setter Property="BorderThickness" Value="1,0,0,0" />
+    </Style>
+    <Style Selector="TextBlock.sidebarHeader">
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="Foreground" Value="{DynamicResource Shell.SidebarGroupHeaderForeground}" />
+        <Setter Property="Margin" Value="14,14,14,4" />
+    </Style>
+</Styles>
