@@ -76,7 +76,7 @@ public sealed class FakePreferenceStore : IPreferenceStore
 
     public List<AppTheme> SavedThemes { get; } = [];
 
-    public UserPreferences Load() => new(null, null);
+    public UserPreferences Load() => new(null, null, null);
 
     public Task SaveLanguageAsync(AppLanguage language, CancellationToken ct = default)
     {
@@ -89,6 +89,8 @@ public sealed class FakePreferenceStore : IPreferenceStore
         SavedThemes.Add(theme);
         return Task.CompletedTask;
     }
+
+    public Task SaveWindowPlacementAsync(WindowPlacement placement, CancellationToken ct = default) => Task.CompletedTask;
 }
 
 public sealed class FakeThemeService(AppTheme initial) : IThemeService
@@ -102,6 +104,13 @@ public sealed class FakeThemeService(AppTheme initial) : IThemeService
         Current = theme;
         Applied.Add(theme);
     }
+}
+
+public sealed class FakeWindowPlacementService : IWindowPlacementService
+{
+    public int ResetCalls { get; private set; }
+
+    public void ResetToDefault() => ResetCalls++;
 }
 
 public sealed class FakePlatformEnvironment : IPlatformEnvironment

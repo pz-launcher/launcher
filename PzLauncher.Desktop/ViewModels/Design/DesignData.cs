@@ -37,7 +37,7 @@ public static class DesignData
 
     public static HomeViewModel Home { get; } = new(Installs);
 
-    public static SettingsViewModel Settings { get; } = new(new LightThemeService(), Preferences);
+    public static SettingsViewModel Settings { get; } = new(new LightThemeService(), Preferences, new NoWindowPlacement());
 
     public static MainViewModel Main { get; } = new(Home, Installs, Settings, new LanguageMenuViewModel(Localization, Preferences));
 
@@ -73,11 +73,20 @@ public static class DesignData
 
     private sealed class NoPreferenceStore : IPreferenceStore
     {
-        public UserPreferences Load() => new(null, null);
+        public UserPreferences Load() => new(null, null, null);
 
         public Task SaveLanguageAsync(AppLanguage language, CancellationToken ct = default) => Task.CompletedTask;
 
         public Task SaveThemeAsync(AppTheme theme, CancellationToken ct = default) => Task.CompletedTask;
+
+        public Task SaveWindowPlacementAsync(WindowPlacement placement, CancellationToken ct = default) => Task.CompletedTask;
+    }
+
+    private sealed class NoWindowPlacement : IWindowPlacementService
+    {
+        public void ResetToDefault()
+        {
+        }
     }
 
     private sealed class LightThemeService : IThemeService

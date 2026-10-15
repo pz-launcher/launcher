@@ -35,6 +35,8 @@
                     <RadioButton Content="{x:Static lang:UiText.Settings_ThemeDark}"
                                  IsChecked="{Binding Theme, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static themes:AppTheme.Dark}}" />
                 </StackPanel>
+                <TextBlock Text="{x:Static lang:UiText.Settings_Window}" FontSize="16" FontWeight="SemiBold" />
+                <Button Content="{x:Static lang:UiText.Settings_ResetWindowSize}" Command="{Binding ResetWindowSizeCommand}" />
             </StackPanel>
         </Panel>
     </Grid>

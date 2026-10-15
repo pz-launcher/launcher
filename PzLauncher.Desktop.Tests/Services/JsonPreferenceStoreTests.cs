@@ -10,7 +10,15 @@ public sealed class JsonPreferenceStoreTests : IDisposable
 {
     private readonly TempDirectory _temp = new();
 
+    private static readonly WindowPlacement Placement = new(-1910, 30, 1000.5, 640, IsMaximized: true);
+
     public static TheoryData<AppTheme> Themes => [.. Enum.GetValues<AppTheme>()];
+
+    public static TheoryData<WindowPlacement> Placements =>
+    [
+        Placement,
+        new WindowPlacement(120, 80, 820, 520, IsMaximized: false),
+    ];
 
     // In a folder that doesn't exist yet, as on first launch.
     private string FilePath => Path.Combine(_temp.Path, "PzLauncher", "preferences.json");
@@ -31,7 +39,7 @@ public sealed class JsonPreferenceStoreTests : IDisposable
     {
         await CreateStore().SaveLanguageAsync(language, TestContext.Current.CancellationToken);
 
-        Assert.Equal(new UserPreferences(language, null), CreateStore().Load());
+        Assert.Equal(new UserPreferences(language, null, null), CreateStore().Load());
     }
 
     [Theory]
@@ -40,7 +48,16 @@ public sealed class JsonPreferenceStoreTests : IDisposable
     {
         await CreateStore().SaveThemeAsync(theme, TestContext.Current.CancellationToken);
 
-        Assert.Equal(new UserPreferences(null, theme), CreateStore().Load());
+        Assert.Equal(new UserPreferences(null, theme, null), CreateStore().Load());
+    }
+
+    [Theory]
+    [MemberData(nameof(Placements))]
+    public async Task SaveWindowPlacementAsync_ThenLoad_RoundTrips(WindowPlacement placement)
+    {
+        await CreateStore().SaveWindowPlacementAsync(placement, TestContext.Current.CancellationToken);
+
+        Assert.Equal(new UserPreferences(null, null, placement), CreateStore().Load());
     }
 
     [Fact]
@@ -62,6 +79,16 @@ public sealed class JsonPreferenceStoreTests : IDisposable
     }
 
     [Fact]
+    public async Task SaveWindowPlacementAsync_WritesWindowObject()
+    {
+        await CreateStore().SaveWindowPlacementAsync(Placement, TestContext.Current.CancellationToken);
+
+        Assert.Equal(
+            """{"window":{"x":-1910,"y":30,"width":1000.5,"height":640,"maximized":true}}""",
+            await File.ReadAllTextAsync(FilePath, TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
     public async Task SaveLanguageAsync_Twice_LastChoiceWins()
     {
         var store = CreateStore();
@@ -73,60 +100,63 @@ public sealed class JsonPreferenceStoreTests : IDisposable
     }
 
     [Theory]
-    [InlineData(true)]
-    [InlineData(false)]
-    public async Task SaveOneField_FileHoldsTheOther_KeepsBoth(bool themeFirst)
+    [InlineData(0)]
+    [InlineData(1)]
+    [InlineData(2)]
+    public async Task SaveOneField_FileHoldsTheOthers_KeepsAll(int savedLast)
     {
         var ct = TestContext.Current.CancellationToken;
+        Func<Task>[] saves =
+        [
+            () => CreateStore().SaveLanguageAsync(AppLanguage.Russian, ct),
+            () => CreateStore().SaveThemeAsync(AppTheme.Dark, ct),
+            () => CreateStore().SaveWindowPlacementAsync(Placement, ct),
+        ];
 
-        // Separate stores, as across two app runs.
-        if (themeFirst)
+        // Separate stores, as across app runs.
+        foreach (var save in saves.Where((_, i) => i != savedLast).Append(saves[savedLast]))
         {
-            await CreateStore().SaveThemeAsync(AppTheme.Dark, ct);
-            await CreateStore().SaveLanguageAsync(AppLanguage.Russian, ct);
-        }
-        else
-        {
-            await CreateStore().SaveLanguageAsync(AppLanguage.Russian, ct);
-            await CreateStore().SaveThemeAsync(AppTheme.Dark, ct);
+            await save();
         }
 
-        Assert.Equal(new UserPreferences(AppLanguage.Russian, AppTheme.Dark), CreateStore().Load());
+        Assert.Equal(new UserPreferences(AppLanguage.Russian, AppTheme.Dark, Placement), CreateStore().Load());
     }
 
     [Fact]
-    public async Task SaveBothFields_Concurrently_KeepsBoth()
+    public async Task SaveAllFields_Concurrently_KeepsAll()
     {
         var store = CreateStore();
         store.Load();
 
         await Task.WhenAll(
             store.SaveThemeAsync(AppTheme.Dark, TestContext.Current.CancellationToken),
-            store.SaveLanguageAsync(AppLanguage.PortugueseBrazil, TestContext.Current.CancellationToken));
+            store.SaveLanguageAsync(AppLanguage.PortugueseBrazil, TestContext.Current.CancellationToken),
+            store.SaveWindowPlacementAsync(Placement, TestContext.Current.CancellationToken));
 
-        Assert.Equal(new UserPreferences(AppLanguage.PortugueseBrazil, AppTheme.Dark), CreateStore().Load());
+        Assert.Equal(new UserPreferences(AppLanguage.PortugueseBrazil, AppTheme.Dark, Placement), CreateStore().Load());
     }
 
     [Fact]
-    public async Task SaveEitherField_TargetUnwritable_DoesNotThrow()
+    public async Task SaveAnyField_TargetUnwritable_DoesNotThrow()
     {
         Directory.CreateDirectory(FilePath);
 
         await CreateStore().SaveLanguageAsync(AppLanguage.English, TestContext.Current.CancellationToken);
         await CreateStore().SaveThemeAsync(AppTheme.Dark, TestContext.Current.CancellationToken);
+        await CreateStore().SaveWindowPlacementAsync(Placement, TestContext.Current.CancellationToken);
 
-        Assert.Equal(new UserPreferences(null, null), CreateStore().Load());
+        Assert.Equal(new UserPreferences(null, null, null), CreateStore().Load());
     }
 
     [Fact]
-    public void Load_MissingFile_ReturnsNoChoices() => Assert.Equal(new UserPreferences(null, null), CreateStore().Load());
+    public void Load_MissingFile_ReturnsNoChoices() => Assert.Equal(new UserPreferences(null, null, null), CreateStore().Load());
 
     [Fact]
     public void Load_LanguageOnlyFileFromEarlierVersion_LoadsLanguageWithoutTheme()
     {
         WriteFile("""{"language":"ru"}""");
 
-        Assert.Equal(new UserPreferences(AppLanguage.Russian, null), CreateStore().Load());
+        Assert.Equal(new UserPreferences(AppLanguage.Russian, null, null), CreateStore().Load());
     }
 
     [Fact]
@@ -134,7 +164,21 @@ public sealed class JsonPreferenceStoreTests : IDisposable
     {
         WriteFile("""{"language":"ru","theme":"sepia"}""");
 
-        Assert.Equal(new UserPreferences(AppLanguage.Russian, null), CreateStore().Load());
+        Assert.Equal(new UserPreferences(AppLanguage.Russian, null, null), CreateStore().Load());
+    }
+
+    [Theory]
+    [InlineData("""{}""")]
+    [InlineData("""{"y":30,"width":1000,"height":640,"maximized":false}""")]
+    [InlineData("""{"x":10,"y":30,"width":1000,"height":640}""")]
+    [InlineData("""{"x":10,"y":30,"width":0,"height":640,"maximized":false}""")]
+    [InlineData("""{"x":10,"y":30,"width":1000,"height":-640,"maximized":false}""")]
+    [InlineData("""{"x":10,"y":30,"width":1000,"height":null,"maximized":false}""")]
+    public void Load_InvalidWindowPlacement_KeepsOtherFieldsAndReturnsNoPlacement(string window)
+    {
+        WriteFile($$"""{"language":"ru","theme":"dark","window":{{window}}}""");
+
+        Assert.Equal(new UserPreferences(AppLanguage.Russian, AppTheme.Dark, null), CreateStore().Load());
     }
 
     [Theory]
@@ -151,10 +195,13 @@ public sealed class JsonPreferenceStoreTests : IDisposable
     [InlineData("""{"language":"SimplifiedChinese"}""")]
     [InlineData("""{"theme":1}""")]
     [InlineData("""{"theme":"Default"}""")]
+    [InlineData("""{"window":5}""")]
+    [InlineData("""{"window":{"x":"left"}}""")]
+    [InlineData("""{"window":{"x":10,"y":30,"width":NaN,"height":640,"maximized":false}}""")]
     public void Load_CorruptOrUnknownContent_ReturnsNoChoices(string content)
     {
         WriteFile(content);
 
-        Assert.Equal(new UserPreferences(null, null), CreateStore().Load());
+        Assert.Equal(new UserPreferences(null, null, null), CreateStore().Load());
     }
 }
