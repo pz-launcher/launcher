@@ -1,0 +1,38 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:PzLauncher.Desktop.ViewModels"
+             xmlns:design="using:PzLauncher.Desktop.ViewModels.Design"
+             xmlns:lang="using:PzLauncher.Desktop.Lang"
+             xmlns:ic="using:FluentIcons.Avalonia"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="PzLauncher.Desktop.Views.MainView"
+             x:DataType="vm:MainViewModel">
+
+    <Design.DataContext>
+        <x:Static Member="design:DesignData.Main" />
+    </Design.DataContext>
+
+    <DockPanel>
+        <Border DockPanel.Dock="Top" BorderBrush="#30808080" BorderThickness="0,0,0,1" Padding="16,4">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+                <ic:FluentIcon Icon="Globe" IconVariant="Regular" FontSize="16" VerticalAlignment="Center" />
+                <ComboBox MinWidth="120"
+                          ItemsSource="{Binding Languages}" SelectedItem="{Binding SelectedLanguage}"
+                          ToolTip.Tip="{x:Static lang:UiText.Main_Language}"
+                          AutomationProperties.Name="{x:Static lang:UiText.Main_Language}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate x:DataType="vm:LanguageOption">
+                            <TextBlock Text="{Binding NativeName}" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+            </StackPanel>
+        </Border>
+
+        <!-- The page view is picked by the DataTemplates in App.axaml. -->
+        <ContentControl Content="{Binding CurrentPage}" />
+    </DockPanel>
+
+</UserControl>

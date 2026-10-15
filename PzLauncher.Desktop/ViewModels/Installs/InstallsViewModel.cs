@@ -6,21 +6,42 @@ using System.Threading;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using PzLauncher.Core.Common;
 using PzLauncher.Core.Installs;
 using PzLauncher.Core.Platform;
+using PzLauncher.Desktop.Lang;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Services;
 
 namespace PzLauncher.Desktop.ViewModels.Installs;
 
 /// <summary>Manually added folders last for this session only.</summary>
-public partial class InstallsViewModel(
-    IInstallDetectionService installDetection,
-    IFolderPicker folderPicker,
-    IPlatformEnvironment platform) : ViewModelBase
+public partial class InstallsViewModel : ViewModelBase
 {
+    private readonly IInstallDetectionService _installDetection;
+    private readonly IFolderPicker _folderPicker;
+    private readonly IPlatformEnvironment _platform;
     private readonly List<PzInstall> _manualInstalls = [];
+
+    // Sources of the shown texts, kept so a language switch can re-render them.
+    private readonly List<Error> _warningSources = [];
+    private Func<string>? _errorSource;
+
     private bool _activated;
+
+    public InstallsViewModel(
+        IInstallDetectionService installDetection,
+        IFolderPicker folderPicker,
+        IPlatformEnvironment platform,
+        ILocalizationService localization)
+    {
+        _installDetection = installDetection;
+        _folderPicker = folderPicker;
+        _platform = platform;
+
+        // Never unsubscribed: this view model lives as long as the app (held by the singleton MainViewModel).
+        localization.LanguageChanged += (_, _) => RenderTexts();
+    }
 
     public ObservableCollection<PzInstall> Installs { get; } = [];
 
@@ -55,25 +76,28 @@ public partial class InstallsViewModel(
     private async Task ScanAsync(CancellationToken ct)
     {
         IsScanning = true;
-        ErrorText = null;
+        ShowError(null);
         try
         {
-            var result = await installDetection.ScanAsync(ct);
+            var result = await _installDetection.ScanAsync(ct);
+            _warningSources.Clear();
             Warnings.Clear();
             if (!result.IsSuccess)
             {
-                ErrorText = ErrorMessages.ToUserText(result.Error);
+                var error = result.Error;
+                ShowError(() => ErrorMessages.ToUserText(error));
                 return;
             }
 
             Installs.Clear();
-            foreach (var install in PzInstallList.Merge(result.Value.Installs, _manualInstalls, platform.PathComparison))
+            foreach (var install in PzInstallList.Merge(result.Value.Installs, _manualInstalls, _platform.PathComparison))
             {
                 Installs.Add(install);
             }
 
             foreach (var warning in result.Value.Warnings)
             {
+                _warningSources.Add(warning);
                 Warnings.Add(ErrorMessages.ToUserText(warning));
             }
 
@@ -96,7 +120,7 @@ public partial class InstallsViewModel(
         try
         {
             string path;
-            switch (await folderPicker.PickFolderAsync("Select a Project Zomboid game or server folder", ct))
+            switch (await _folderPicker.PickFolderAsync(UiText.Installs_PickFolderTitle, ct))
             {
                 case FolderPickResult.Picked picked:
                     path = picked.Path;
@@ -104,21 +128,22 @@ public partial class InstallsViewModel(
                 case FolderPickResult.Cancelled:
                     return;
                 case FolderPickResult.NotLocal notLocal:
-                    ErrorText = ErrorMessages.FolderNotLocal(notLocal.Location);
+                    ShowError(() => ErrorMessages.FolderNotLocal(notLocal.Location));
                     return;
                 case var other:
                     throw new UnreachableException($"Unhandled {nameof(FolderPickResult)}: {other}");
             }
 
-            ErrorText = null;
-            var result = await installDetection.InspectAsync(path, ct);
+            ShowError(null);
+            var result = await _installDetection.InspectAsync(path, ct);
             if (!result.IsSuccess)
             {
-                ErrorText = ErrorMessages.ToUserText(result.Error);
+                var error = result.Error;
+                ShowError(() => ErrorMessages.ToUserText(error));
                 return;
             }
 
-            if (PzInstallList.ContainsPath(Installs, result.Value.RootPath, platform.PathComparison))
+            if (PzInstallList.ContainsPath(Installs, result.Value.RootPath, _platform.PathComparison))
             {
                 return;
             }
@@ -130,6 +155,21 @@ public partial class InstallsViewModel(
         catch (OperationCanceledException) when (ct.IsCancellationRequested)
         {
             // Cancelled: no change.
+        }
+    }
+
+    private void ShowError(Func<string>? source)
+    {
+        _errorSource = source;
+        ErrorText = source?.Invoke();
+    }
+
+    private void RenderTexts()
+    {
+        ErrorText = _errorSource?.Invoke();
+        for (var i = 0; i < _warningSources.Count; i++)
+        {
+            Warnings[i] = ErrorMessages.ToUserText(_warningSources[i]);
         }
     }
 }

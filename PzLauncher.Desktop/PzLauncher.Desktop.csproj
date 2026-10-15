@@ -7,10 +7,23 @@
         <IsAotCompatible>true</IsAotCompatible>
         <AssemblyName>PzLauncher</AssemblyName>
         <RootNamespace>PzLauncher.Desktop</RootNamespace>
+        <NeutralLanguage>en</NeutralLanguage>
     </PropertyGroup>
 
     <ItemGroup>
         <AvaloniaResource Include="Assets\**" />
+    </ItemGroup>
+
+    <!-- Public so {x:Static} can reach it; generated into obj/ so it stays out of git and works without an IDE. -->
+    <ItemGroup>
+        <EmbeddedResource Update="Lang\UiText.resx">
+            <Generator>MSBuild:Compile</Generator>
+            <StronglyTypedFileName>$(IntermediateOutputPath)UiText.Designer.cs</StronglyTypedFileName>
+            <StronglyTypedLanguage>CSharp</StronglyTypedLanguage>
+            <StronglyTypedNamespace>PzLauncher.Desktop.Lang</StronglyTypedNamespace>
+            <StronglyTypedClassName>UiText</StronglyTypedClassName>
+            <PublicClass>true</PublicClass>
+        </EmbeddedResource>
     </ItemGroup>
 
     <ItemGroup>
@@ -23,6 +36,7 @@
             <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
         </PackageReference>
         <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+        <PackageReference Include="FluentIcons.Avalonia" Version="2.1.344" />
         <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.13" />
         <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.13" />
         <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.13" />

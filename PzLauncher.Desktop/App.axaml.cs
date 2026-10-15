@@ -1,4 +1,6 @@
 using System;
+using System.Globalization;
+using System.IO;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
@@ -9,6 +11,8 @@ using Avalonia.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using PzLauncher.Core;
+using PzLauncher.Desktop.Lang;
+using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Services;
 using PzLauncher.Desktop.ViewModels;
 using PzLauncher.Desktop.ViewModels.Installs;
@@ -29,16 +33,29 @@ public partial class App : Application
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
+            var preferencesPath = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "PzLauncher", "preferences.json");
+
             // Composition root: the only place that builds the container.
             var services = new ServiceCollection();
             services.AddLogging(logging => logging.AddDebug());
             services.AddPzLauncherCore();
             services.AddSingleton<IFolderPicker>(new AvaloniaFolderPicker(() => desktop.MainWindow));
+            services.AddSingleton<ILanguagePreferenceStore>(sp =>
+                new JsonLanguagePreferenceStore(preferencesPath, sp.GetRequiredService<ILogger<JsonLanguagePreferenceStore>>()));
+            services.AddSingleton<ILocalizationService>(sp => new LocalizationService(
+                sp.GetRequiredService<ILanguagePreferenceStore>().Load() ?? AppLanguages.FromCulture(CultureInfo.CurrentUICulture)));
             services.AddTransient<InstallsViewModel>();
             services.AddSingleton<MainViewModel>();
             var provider = services.BuildServiceProvider();
 
             InstallGlobalExceptionHandlers(provider.GetRequiredService<ILogger<App>>());
+
+            // Resolved before the first window exists, so views read UiText in the startup language.
+            var localization = provider.GetRequiredService<ILocalizationService>();
+
+            // Posted: the event fires inside the ComboBox selection change, and rebuilding now would tear that ComboBox down.
+            localization.LanguageChanged += (_, _) => Dispatcher.UIThread.Post(() => RebuildMainView(desktop));
 
             desktop.MainWindow = new MainWindow
             {
@@ -48,6 +65,15 @@ public partial class App : Application
         }
 
         base.OnFrameworkInitializationCompleted();
+    }
+
+    // Views read text once via {x:Static}, so a language switch rebuilds the window's content around the same view models.
+    private static void RebuildMainView(IClassicDesktopStyleApplicationLifetime desktop)
+    {
+        if (desktop.MainWindow is { } window)
+        {
+            window.Content = new MainView();
+        }
     }
 
     // The only place that catches Exception.
@@ -82,10 +108,11 @@ public partial class App : Application
         _showingErrorDialog = true;
         try
         {
-            var ok = new Button { Content = "OK", HorizontalAlignment = HorizontalAlignment.Right };
+            var ok = new Button { Content = UiText.Dialog_Ok, HorizontalAlignment = HorizontalAlignment.Right };
             var dialog = new Window
             {
                 Title = "PzLauncher",
+                FontFamily = Avalonia.Media.FontFamily.Parse(UiText.Main_FontFamily),
                 Width = 420,
                 SizeToContent = SizeToContent.Height,
                 CanResize = false,
@@ -98,7 +125,7 @@ public partial class App : Application
                     {
                         new TextBlock
                         {
-                            Text = "Something went wrong. The launcher may not work as expected; try again or restart it.",
+                            Text = UiText.Dialog_UnexpectedError,
                             TextWrapping = Avalonia.Media.TextWrapping.Wrap,
                         },
                         ok,

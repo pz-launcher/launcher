@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using PzLauncher.Core.Common;
 using PzLauncher.Core.Installs;
 using PzLauncher.Core.Platform;
+using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Services;
 using PzLauncher.Desktop.ViewModels.Installs;
 
@@ -24,16 +25,19 @@ public static class DesignData
         : OperatingSystem.IsMacOS() ? Path.Combine(SampleHome, "Library", "Application Support", "Steam")
         : Path.Combine(SampleHome, ".local", "share", "Steam");
 
+    // Declared first: the properties below are initialized in textual order and need it.
+    private static readonly LocalizationService Localization = new(AppLanguage.English);
+
     public static InstallsViewModel Installs { get; } = CreateInstalls();
 
-    public static MainViewModel Main { get; } = new(CreateInstalls());
+    public static MainViewModel Main { get; } = new(CreateInstalls(), Localization, new NoPreferenceStore());
 
     private static string SampleAppPath(string installDir) =>
         Path.Combine(SampleSteamRoot, "steamapps", "common", installDir);
 
     private static InstallsViewModel CreateInstalls()
     {
-        var vm = new InstallsViewModel(new SampleInstallDetection(), new NoFolderPicker(), new SamplePlatform());
+        var vm = new InstallsViewModel(new SampleInstallDetection(), new NoFolderPicker(), new SamplePlatform(), Localization);
         vm.ScanCommand.Execute(null);
         return vm;
     }
@@ -56,6 +60,13 @@ public static class DesignData
     {
         public Task<FolderPickResult> PickFolderAsync(string title, CancellationToken ct = default) =>
             Task.FromResult<FolderPickResult>(new FolderPickResult.Cancelled());
+    }
+
+    private sealed class NoPreferenceStore : ILanguagePreferenceStore
+    {
+        public AppLanguage? Load() => null;
+
+        public Task SaveAsync(AppLanguage language, CancellationToken ct = default) => Task.CompletedTask;
     }
 
     private sealed class SamplePlatform : IPlatformEnvironment

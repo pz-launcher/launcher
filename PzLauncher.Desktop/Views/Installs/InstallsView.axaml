@@ -5,6 +5,8 @@
              xmlns:vm="using:PzLauncher.Desktop.ViewModels.Installs"
              xmlns:design="using:PzLauncher.Desktop.ViewModels.Design"
              xmlns:installs="using:PzLauncher.Core.Installs"
+             xmlns:loc="using:PzLauncher.Desktop.Localization"
+             xmlns:lang="using:PzLauncher.Desktop.Lang"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="PzLauncher.Desktop.Views.Installs.InstallsView"
              x:DataType="vm:InstallsViewModel">
@@ -15,9 +17,9 @@
 
     <DockPanel Margin="16">
         <Grid DockPanel.Dock="Top" ColumnDefinitions="*,Auto,Auto" Margin="0,0,0,12">
-            <TextBlock Grid.Column="0" Text="Installs" FontSize="22" FontWeight="SemiBold" VerticalAlignment="Center" />
-            <Button Grid.Column="1" Content="Rescan" Command="{Binding ScanCommand}" Margin="0,0,8,0" />
-            <Button Grid.Column="2" Content="Add folder…" Command="{Binding AddFolderCommand}" />
+            <TextBlock Grid.Column="0" Text="{x:Static lang:UiText.Installs_Title}" FontSize="22" FontWeight="SemiBold" VerticalAlignment="Center" />
+            <Button Grid.Column="1" Content="{x:Static lang:UiText.Installs_Rescan}" Command="{Binding ScanCommand}" Margin="0,0,8,0" />
+            <Button Grid.Column="2" Content="{x:Static lang:UiText.Installs_AddFolder}" Command="{Binding AddFolderCommand}" />
         </Grid>
 
         <ProgressBar DockPanel.Dock="Top" IsIndeterminate="True" IsVisible="{Binding IsScanning}" Margin="0,0,0,8" />
@@ -33,7 +35,7 @@
         </ItemsControl>
 
         <Panel>
-            <TextBlock Text="No Project Zomboid installs found. Install the game or the dedicated server through Steam, or use &quot;Add folder…&quot;."
+            <TextBlock Text="{x:Static lang:UiText.Installs_Empty}"
                        IsVisible="{Binding IsEmpty}" TextWrapping="Wrap" Opacity="0.7"
                        HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" />
 
@@ -42,17 +44,17 @@
                     <DataTemplate x:DataType="installs:PzInstall">
                         <StackPanel Spacing="2" Margin="0,4">
                             <StackPanel Orientation="Horizontal" Spacing="8">
-                                <TextBlock Text="{Binding Kind}" FontWeight="SemiBold" />
-                                <TextBlock Text="{Binding Source}" Opacity="0.7" />
+                                <TextBlock Text="{Binding Kind, Converter={x:Static loc:DisplayNames.InstallKind}}" FontWeight="SemiBold" />
+                                <TextBlock Text="{Binding Source, Converter={x:Static loc:DisplayNames.InstallSource}}" Opacity="0.7" />
                                 <!-- Content null (manual install) renders nothing, so the inner bindings never see a null Steam. -->
                                 <ContentControl Content="{Binding Steam}"
                                                 IsVisible="{Binding Steam, Converter={x:Static ObjectConverters.IsNotNull}}">
                                     <ContentControl.ContentTemplate>
                                         <DataTemplate x:DataType="installs:SteamAppInfo">
                                             <StackPanel Orientation="Horizontal" Spacing="8">
-                                                <TextBlock Text="{Binding Branch, StringFormat='branch: {0}'}" Opacity="0.7"
+                                                <TextBlock Text="{Binding Branch, StringFormat={x:Static lang:UiText.Installs_BranchFormat}}" Opacity="0.7"
                                                            IsVisible="{Binding Branch, Converter={x:Static ObjectConverters.IsNotNull}}" />
-                                                <TextBlock Text="{Binding BuildId, StringFormat='build {0}'}" Opacity="0.7" />
+                                                <TextBlock Text="{Binding BuildId, StringFormat={x:Static lang:UiText.Installs_BuildFormat}}" Opacity="0.7" />
                                             </StackPanel>
                                         </DataTemplate>
                                     </ContentControl.ContentTemplate>

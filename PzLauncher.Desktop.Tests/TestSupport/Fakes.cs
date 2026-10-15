@@ -1,6 +1,7 @@
 using PzLauncher.Core.Common;
 using PzLauncher.Core.Installs;
 using PzLauncher.Core.Platform;
+using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Services;
 
 namespace PzLauncher.Desktop.Tests.TestSupport;
@@ -57,6 +58,21 @@ public sealed class FakeFolderPicker : IFolderPicker
     public void PickNext(string path) => Next = new FolderPickResult.Picked(path);
 
     public Task<FolderPickResult> PickFolderAsync(string title, CancellationToken ct = default) => Task.FromResult(Next);
+}
+
+public sealed class FakeLanguagePreferenceStore : ILanguagePreferenceStore
+{
+    public AppLanguage? Stored { get; set; }
+
+    public List<AppLanguage> Saved { get; } = [];
+
+    public AppLanguage? Load() => Stored;
+
+    public Task SaveAsync(AppLanguage language, CancellationToken ct = default)
+    {
+        Saved.Add(language);
+        return Task.CompletedTask;
+    }
 }
 
 public sealed class FakePlatformEnvironment : IPlatformEnvironment

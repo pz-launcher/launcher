@@ -9,7 +9,7 @@
 | Project | Covers |
 |---|---|
 | `PzLauncher.Core.Tests` | Core services, parsers, Result/Error |
-| `PzLauncher.Desktop.Tests` | Desktop ViewModels, `ErrorMessages` |
+| `PzLauncher.Desktop.Tests` | Desktop ViewModels, localization, desktop services |
 
 - Use `xunit.v3.mtp-off`, not `xunit.v3`: the .NET 10 SDK rejects xunit.v3 4.x (Microsoft.Testing.Platform) in VSTest mode.
 - xUnit `Assert` only. No assertion or mocking libraries; hand-written fakes.

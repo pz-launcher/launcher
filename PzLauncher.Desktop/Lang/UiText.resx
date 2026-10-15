@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Main_Language" xml:space="preserve">
+    <value>Language</value>
+  </data>
+  <data name="Main_FontFamily" xml:space="preserve">
+    <value>fonts:Inter#Inter, Microsoft YaHei UI, PingFang SC, Noto Sans CJK SC</value>
+    <comment>Not shown text: font family list. Inter for Latin, then CJK fonts in this language's script (Windows, macOS, Linux), so bold weights and glyph shapes match.</comment>
+  </data>
+  <data name="Installs_Title" xml:space="preserve">
+    <value>Installs</value>
+  </data>
+  <data name="Installs_Rescan" xml:space="preserve">
+    <value>Rescan</value>
+  </data>
+  <data name="Installs_AddFolder" xml:space="preserve">
+    <value>Add folder…</value>
+  </data>
+  <data name="Installs_Empty" xml:space="preserve">
+    <value>No Project Zomboid installs found. Install the game or the dedicated server through Steam, or use "Add folder…".</value>
+  </data>
+  <data name="Installs_BranchFormat" xml:space="preserve">
+    <value>branch: {0}</value>
+  </data>
+  <data name="Installs_BuildFormat" xml:space="preserve">
+    <value>build {0}</value>
+  </data>
+  <data name="Installs_PickFolderTitle" xml:space="preserve">
+    <value>Select a Project Zomboid game or server folder</value>
+  </data>
+  <data name="InstallKind_Game" xml:space="preserve">
+    <value>Game</value>
+  </data>
+  <data name="InstallKind_DedicatedServer" xml:space="preserve">
+    <value>Dedicated server</value>
+  </data>
+  <data name="InstallSource_SteamLibrary" xml:space="preserve">
+    <value>Steam library</value>
+  </data>
+  <data name="InstallSource_Manual" xml:space="preserve">
+    <value>Added manually</value>
+  </data>
+  <data name="Dialog_UnexpectedError" xml:space="preserve">
+    <value>Something went wrong. The launcher may not work as expected; try again or restart it.</value>
+  </data>
+  <data name="Dialog_Ok" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="Error_ResultUninitialized" xml:space="preserve">
+    <value>Something went wrong inside the launcher. Please report this as a bug.</value>
+  </data>
+  <data name="Error_SteamNotInstalled" xml:space="preserve">
+    <value>Steam doesn't seem to be installed, so no installs were found automatically. Use "Add folder…" to add one by hand.</value>
+  </data>
+  <data name="Error_SteamLibraryUnreadable" xml:space="preserve">
+    <value>Couldn't read the Steam library list ({0}). Installs in other Steam libraries may be missing.</value>
+  </data>
+  <data name="Error_SteamManifestUnreadable" xml:space="preserve">
+    <value>Couldn't read a Steam app manifest ({0}). That install is skipped.</value>
+  </data>
+  <data name="Error_SteamVdfMalformed" xml:space="preserve">
+    <value>A Steam file is damaged and couldn't be read.</value>
+  </data>
+  <data name="Error_InstallFilesMissing" xml:space="preserve">
+    <value>Steam lists an install at {0}, but the folder is missing. Try verifying the game files in Steam.</value>
+  </data>
+  <data name="Error_InstallInvalidPath" xml:space="preserve">
+    <value>That isn't a valid folder path.</value>
+  </data>
+  <data name="Error_InstallPathNotFound" xml:space="preserve">
+    <value>The folder {0} doesn't exist.</value>
+  </data>
+  <data name="Error_InstallPathUnreadable" xml:space="preserve">
+    <value>The folder {0} couldn't be read. Check that you have permission to open it.</value>
+  </data>
+  <data name="Error_InstallNotAPzInstall" xml:space="preserve">
+    <value>{0} doesn't look like a Project Zomboid game or dedicated server folder.</value>
+  </data>
+  <data name="Error_FolderNotLocal" xml:space="preserve">
+    <value>{0} isn't a folder on this computer, so the launcher can't open it. Pick a local folder instead.</value>
+  </data>
+</root>

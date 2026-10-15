@@ -7,7 +7,8 @@ using PzLauncher.Desktop.ViewModels.Installs;
 
 namespace PzLauncher.Desktop.Tests.ViewModels.Installs;
 
-public class InstallsViewModelTests
+[Collection(UiTextCultureCollection.Name)]
+public class InstallsViewModelTests : UiTextCultureTest
 {
     private static readonly PzInstall SteamGame =
         new(PzInstallKind.Game, @"E:\SteamLibrary\steamapps\common\ProjectZomboid", new SteamAppInfo("100", null));
@@ -18,7 +19,7 @@ public class InstallsViewModelTests
     private readonly FakeInstallDetectionService _service = new();
     private readonly FakeFolderPicker _picker = new();
 
-    private InstallsViewModel CreateViewModel() => new(_service, _picker, new FakePlatformEnvironment());
+    private InstallsViewModel CreateViewModel() => new(_service, _picker, new FakePlatformEnvironment(), Localization);
 
     private async Task<InstallsViewModel> CreateScannedViewModelAsync(params PzInstall[] found)
     {
@@ -206,5 +207,49 @@ public class InstallsViewModelTests
         await AddFolderAsync(vm, SteamGame.RootPath.ToUpperInvariant());
 
         Assert.Equal([SteamGame], vm.Installs);
+    }
+
+    [Fact]
+    public async Task LanguageChanged_ShownErrorAndWarnings_AreReRenderedWithoutRescanning()
+    {
+        var warning = TestErrors.Create(ErrorCode.SteamLibraryUnreadable, @"C:\Steam\steamapps\libraryfolders.vdf");
+        var error = TestErrors.Create(ErrorCode.InstallNotAPzInstall, @"D:\Random");
+        _service.ScanResults.Enqueue(new InstallScanResult([SteamGame], [warning]));
+        _service.Inspect = _ => error;
+        var vm = CreateViewModel();
+        await vm.ScanCommand.ExecuteAsync(null);
+        await AddFolderAsync(vm, @"D:\Random");
+        var englishError = vm.ErrorText;
+        var englishWarnings = vm.Warnings.ToList();
+
+        Localization.SetLanguage(AppLanguage.SimplifiedChinese);
+
+        Assert.Equal(ErrorMessages.ToUserText(error), vm.ErrorText);
+        Assert.NotEqual(englishError, vm.ErrorText);
+        Assert.Equal([ErrorMessages.ToUserText(warning)], vm.Warnings);
+        Assert.NotEqual(englishWarnings, vm.Warnings);
+        Assert.Equal(1, _service.ScanCalls);
+    }
+
+    [Fact]
+    public async Task LanguageChanged_FolderNotLocalShown_IsReRendered()
+    {
+        var vm = CreateViewModel();
+        _picker.Next = new FolderPickResult.NotLocal("smb://nas/games/pz");
+        await vm.AddFolderCommand.ExecuteAsync(null);
+
+        Localization.SetLanguage(AppLanguage.TraditionalChinese);
+
+        Assert.Equal(ErrorMessages.FolderNotLocal("smb://nas/games/pz"), vm.ErrorText);
+    }
+
+    [Fact]
+    public void LanguageChanged_NoErrorShown_KeepsErrorTextNull()
+    {
+        var vm = CreateViewModel();
+
+        Localization.SetLanguage(AppLanguage.TraditionalChinese);
+
+        Assert.Null(vm.ErrorText);
     }
 }

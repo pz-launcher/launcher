@@ -1,0 +1,4 @@
+{"file": ".trellis/spec/desktop/directory-structure.md", "reason": "Verify MVVM boundaries and x:DataType/Design.DataContext rules"}
+{"file": ".trellis/spec/common/coding-rules.md", "reason": "Verify AOT, nullability, exception catching, comment density"}
+{"file": ".trellis/spec/common/test-strategy.md", "reason": "Verify test coverage rules and naming"}
+{"file": ".trellis/spec/core/error-handling.md", "reason": "Verify ErrorMessages still covers every ErrorCode"}
