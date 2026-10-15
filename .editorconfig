@@ -1,0 +1,30 @@
+root = true
+
+[*.cs]
+# Every project treats warnings as errors, so "warning" below already fails the build.
+
+# Switch exhaustiveness: a missing enum case fails the build; enums cross boundaries by name only, so unnamed values never arrive.
+dotnet_diagnostic.CS8509.severity = error
+dotnet_diagnostic.CS8524.severity = none
+
+# Async
+dotnet_diagnostic.CA2012.severity = warning
+dotnet_diagnostic.CA2016.severity = warning
+
+# API correctness
+dotnet_diagnostic.CA2208.severity = warning
+
+# Logging
+dotnet_diagnostic.CA2254.severity = warning
+
+# Code quality (IDE and dotnet format only: EnforceCodeStyleInBuild is off)
+# Suggestion only: dotnet format can't see the resx-generated UiText and would delete `using PzLauncher.Desktop.Lang`.
+dotnet_diagnostic.IDE0005.severity = suggestion
+dotnet_diagnostic.IDE0051.severity = warning
+dotnet_diagnostic.IDE0052.severity = warning
+dotnet_diagnostic.IDE0059.severity = warning
+dotnet_diagnostic.IDE0079.severity = warning
+
+# Modern C# style
+dotnet_diagnostic.IDE0250.severity = suggestion
+dotnet_diagnostic.IDE0300.severity = suggestion

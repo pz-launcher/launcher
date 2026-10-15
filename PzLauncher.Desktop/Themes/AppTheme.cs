@@ -8,7 +8,6 @@ public enum AppTheme
     Dark,
 }
 
-#pragma warning disable CS8524 // No discard arms on purpose: CS8509 makes a new AppTheme without a mapping a build error.
 public static class AppThemes
 {
     /// <summary>Also the value persisted in the preference file: never change one.</summary>
@@ -31,4 +30,3 @@ public static class AppThemes
         return null;
     }
 }
-#pragma warning restore CS8524

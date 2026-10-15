@@ -18,7 +18,6 @@ public enum AppLanguage
     Russian,
 }
 
-#pragma warning disable CS8524 // No discard arms on purpose: CS8509 makes a new AppLanguage without a mapping a build error.
 public static class AppLanguages
 {
     private static readonly string[] TraditionalChineseCultures = ["zh-Hant", "zh-TW", "zh-HK", "zh-MO"];
@@ -97,4 +96,3 @@ public static class AppLanguages
         };
     }
 }
-#pragma warning restore CS8524

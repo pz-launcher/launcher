@@ -269,9 +269,9 @@ public class InstallsViewModelTests : UiTextCultureTest
 
         PzInstall[] expected = filter switch
         {
+            InstallsFilter.All => [SteamGame, SteamServer],
             InstallsFilter.Game => [SteamGame],
             InstallsFilter.DedicatedServer => [SteamServer],
-            _ => [SteamGame, SteamServer],
         };
         Assert.Equal(expected, vm.VisibleInstalls);
         Assert.Equal([SteamGame, SteamServer], vm.Installs);

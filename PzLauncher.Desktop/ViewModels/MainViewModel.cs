@@ -34,12 +34,10 @@ public partial class MainViewModel : ViewModelBase
     [NotifyPropertyChangedFor(nameof(CurrentPage))]
     public partial ShellPage CurrentPageKind { get; set; }
 
-#pragma warning disable CS8524 // No discard arm on purpose: CS8509 makes a new ShellPage without a view model a build error.
     public ViewModelBase CurrentPage => CurrentPageKind switch
     {
         ShellPage.Home => Home,
         ShellPage.Installs => Installs,
         ShellPage.Settings => Settings,
     };
-#pragma warning restore CS8524
 }

@@ -1,7 +1,7 @@
 # Coding Rules
 
-> Language-level rules for all C# in the solution. The build runs with
-> `-warnaserror`; anything analyzers flag is already an error.
+> Language-level rules for all C# in the solution. Every project sets
+> `TreatWarningsAsErrors`; diagnostic severities live in `.editorconfig`, not here.
 
 ---
 
@@ -66,3 +66,4 @@ Core and the app are `IsAotCompatible`; IL2xxx/IL3xxx warnings fail the build.
 - DI services use primary constructors.
 - `_camelCase` private fields, `PascalCase` static readonly fields.
 - Named constants for domain values (e.g. `PzSteamApps`). No static mutable state.
+- Switches over an enum list every member with no `_ =>` arm: a discard silences CS8509 (an error per `.editorconfig`), so a new member would compile without a case.

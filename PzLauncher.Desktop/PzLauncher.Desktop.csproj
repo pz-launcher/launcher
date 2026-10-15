@@ -5,6 +5,7 @@
         <Nullable>enable</Nullable>
         <ApplicationManifest>app.manifest</ApplicationManifest>
         <IsAotCompatible>true</IsAotCompatible>
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
         <AssemblyName>PzLauncher</AssemblyName>
         <RootNamespace>PzLauncher.Desktop</RootNamespace>
         <NeutralLanguage>en</NeutralLanguage>

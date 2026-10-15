@@ -23,12 +23,10 @@ public sealed class AvaloniaThemeService : IThemeService
         Apply(theme);
     }
 
-#pragma warning disable CS8524 // No discard arm on purpose: CS8509 makes a new AppTheme without a variant a build error.
     private void Apply(AppTheme theme) =>
         _application.RequestedThemeVariant = theme switch
         {
             AppTheme.Light => ThemeVariant.Light,
             AppTheme.Dark => ThemeVariant.Dark,
         };
-#pragma warning restore CS8524
 }

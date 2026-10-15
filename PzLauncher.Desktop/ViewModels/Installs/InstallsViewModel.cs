@@ -199,14 +199,12 @@ public partial class InstallsViewModel : ViewModelBase
 
     private void RefreshVisibleInstalls() => VisibleInstalls = [.. Installs.Where(Matches)];
 
-#pragma warning disable CS8524 // No discard arm on purpose: CS8509 makes a new InstallsFilter without a rule a build error.
     private bool Matches(PzInstall install) => Filter switch
     {
         InstallsFilter.All => true,
         InstallsFilter.Game => install.Kind == PzInstallKind.Game,
         InstallsFilter.DedicatedServer => install.Kind == PzInstallKind.DedicatedServer,
     };
-#pragma warning restore CS8524
 
     private void ShowError(Func<string>? source)
     {
