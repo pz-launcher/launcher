@@ -6,15 +6,17 @@
 PzLauncher.Desktop/
 ├── App.axaml(.cs)       # composition root, VM→View DataTemplates
 ├── Views/<Feature>/     # one UserControl per page
+├── Views/Controls/      # shared controls and converters (NavItem, EnumMatchConverter)
 ├── ViewModels/<Feature>/
 ├── ViewModels/Design/   # previewer-only sample data
 ├── Services/            # UI-only services (interface + Avalonia implementation)
 ├── Lang/                # UiText resx files only (see localization.md)
 ├── Localization/        # language model, LocalizationService, ErrorMessages, DisplayNames
+├── Themes/              # AppTheme, Shell.* color resources, shell control themes (see shell-and-theming.md)
 └── Assets/
 ```
 
-`<Feature>` matches the Core feature folder (`Installs`, ...).
+`<Feature>` matches the Core feature folder (`Installs`, ...), or names a desktop-only page (`Home`, `Settings`).
 
 ## ViewModels
 
