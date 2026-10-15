@@ -1,19 +1,19 @@
 # Localization
 
-> All user-facing desktop text comes from resx. Languages: English (default and
-> fallback), Simplified Chinese, Traditional Chinese (Taiwan wording).
+> All user-facing desktop text comes from resx. Languages: the members of
+> `AppLanguage`; English is the default and the fallback for missing keys.
 
 ---
 
 ## Resources
 
-Reference: `PzLauncher.Desktop/Lang/` → `UiText.resx`, `UiText.zh-Hans.resx`, `UiText.zh-Hant.resx`; generator settings in `PzLauncher.Desktop/PzLauncher.Desktop.csproj`.
+Reference: `PzLauncher.Desktop/Lang/` → `UiText.resx` (English) and one `UiText.<culture>.resx` per other language, named by `AppLanguages.CultureName`; generator settings in `PzLauncher.Desktop/PzLauncher.Desktop.csproj`.
 
 - `Lang/` holds only resx files; localization code lives in `Localization/`. One resource set, `UiText` (namespace `PzLauncher.Desktop.Lang`). The class is generated into `obj/` (public, so `{x:Static}` reaches it); never commit a `UiText.Designer.cs`.
 - Keys are `<Area>_<Name>` (`Installs_Title`, `Error_SteamNotInstalled`, `InstallKind_Game`). Error texts are `Error_<ErrorCode member>`.
-- A new key goes into all three files in the same change. Parameterised texts use `{0}`; every language keeps the same placeholders.
+- A new key goes into every `UiText*.resx` in the same change. Parameterised texts use `{0}`; every language keeps the same placeholders.
 - Product name "PzLauncher" and the language picker's native names (`AppLanguages.NativeName`) are not resources.
-- `Main_FontFamily` is the per-language font list (Inter, then CJK fonts of that script per OS); every root that shows text (`MainView`, standalone windows such as the error dialog in `App.axaml.cs`) sets `FontFamily` from it. Without named CJK fallbacks, bold Chinese renders at regular weight.
+- `Main_FontFamily` is the per-language font list (Inter, then CJK fonts of that script per OS; languages Inter covers fully keep the English value); every root that shows text (`MainView`, standalone windows such as the error dialog in `App.axaml.cs`) sets `FontFamily` from it. Without named CJK fallbacks, bold Chinese renders at regular weight.
 - Format with `CultureInfo.CurrentCulture`; only the UI language changes, never number/date formatting.
 
 ## Using text
@@ -32,6 +32,12 @@ ViewModels, so view state must live in ViewModels. Never recreate the window
 itself for this: the OS window close/open visibly flashes. Localized UI goes in
 `MainView` or below, not on `MainWindow`. Text that changes while a view lives
 is a ViewModel property, never `{x:Static}`.
+
+## Adding a language
+
+- Append an `AppLanguage` member (drop-down order = enum order); the build then requires its `CultureName` and `NativeName`.
+- Use the neutral culture (`es`, not `es-ES`) unless the language needs a script split like `zh-Hans`/`zh-Hant`: .NET fallback then serves every regional variant from one file. Add its mapping to `AppLanguages.FromCulture`.
+- Add `UiText.<culture>.resx` with every key, in the key order of `UiText.resx`.
 
 ## Culture state
 

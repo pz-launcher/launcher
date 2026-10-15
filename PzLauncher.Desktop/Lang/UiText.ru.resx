@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Main_Language" xml:space="preserve">
+    <value>Язык</value>
+  </data>
+  <data name="Main_FontFamily" xml:space="preserve">
+    <value>fonts:Inter#Inter, Microsoft YaHei UI, PingFang SC, Noto Sans CJK SC</value>
+    <comment>Not shown text: font family list. Inter for Latin, then CJK fonts in this language's script (Windows, macOS, Linux), so bold weights and glyph shapes match.</comment>
+  </data>
+  <data name="Installs_Title" xml:space="preserve">
+    <value>Установки</value>
+  </data>
+  <data name="Installs_Rescan" xml:space="preserve">
+    <value>Пересканировать</value>
+  </data>
+  <data name="Installs_AddFolder" xml:space="preserve">
+    <value>Добавить папку…</value>
+  </data>
+  <data name="Installs_Empty" xml:space="preserve">
+    <value>Установки Project Zomboid не найдены. Установите игру или выделенный сервер через Steam либо нажмите «Добавить папку…».</value>
+  </data>
+  <data name="Installs_BranchFormat" xml:space="preserve">
+    <value>ветка: {0}</value>
+  </data>
+  <data name="Installs_BuildFormat" xml:space="preserve">
+    <value>сборка {0}</value>
+  </data>
+  <data name="Installs_PickFolderTitle" xml:space="preserve">
+    <value>Выберите папку игры или сервера Project Zomboid</value>
+  </data>
+  <data name="InstallKind_Game" xml:space="preserve">
+    <value>Игра</value>
+  </data>
+  <data name="InstallKind_DedicatedServer" xml:space="preserve">
+    <value>Выделенный сервер</value>
+  </data>
+  <data name="InstallSource_SteamLibrary" xml:space="preserve">
+    <value>Библиотека Steam</value>
+  </data>
+  <data name="InstallSource_Manual" xml:space="preserve">
+    <value>Добавлена вручную</value>
+  </data>
+  <data name="Dialog_UnexpectedError" xml:space="preserve">
+    <value>Что-то пошло не так. Лаунчер может работать неправильно; повторите попытку или перезапустите его.</value>
+  </data>
+  <data name="Dialog_Ok" xml:space="preserve">
+    <value>ОК</value>
+  </data>
+  <data name="Error_ResultUninitialized" xml:space="preserve">
+    <value>Внутренняя ошибка лаунчера. Пожалуйста, сообщите о ней разработчикам.</value>
+  </data>
+  <data name="Error_SteamNotInstalled" xml:space="preserve">
+    <value>Похоже, Steam не установлен, поэтому установки не удалось найти автоматически. Нажмите «Добавить папку…», чтобы добавить установку вручную.</value>
+  </data>
+  <data name="Error_SteamLibraryUnreadable" xml:space="preserve">
+    <value>Не удалось прочитать список библиотек Steam ({0}). Установки из других библиотек Steam могут не отображаться.</value>
+  </data>
+  <data name="Error_SteamManifestUnreadable" xml:space="preserve">
+    <value>Не удалось прочитать манифест приложения Steam ({0}). Эта установка пропущена.</value>
+  </data>
+  <data name="Error_SteamVdfMalformed" xml:space="preserve">
+    <value>Файл Steam повреждён, его не удалось прочитать.</value>
+  </data>
+  <data name="Error_InstallFilesMissing" xml:space="preserve">
+    <value>По данным Steam, установка находится в {0}, но такой папки нет. Попробуйте проверить целостность файлов игры в Steam.</value>
+  </data>
+  <data name="Error_InstallInvalidPath" xml:space="preserve">
+    <value>Это недопустимый путь к папке.</value>
+  </data>
+  <data name="Error_InstallPathNotFound" xml:space="preserve">
+    <value>Папка {0} не существует.</value>
+  </data>
+  <data name="Error_InstallPathUnreadable" xml:space="preserve">
+    <value>Не удалось прочитать папку {0}. Убедитесь, что у вас есть права на её открытие.</value>
+  </data>
+  <data name="Error_InstallNotAPzInstall" xml:space="preserve">
+    <value>Папка {0} не похожа на папку игры или выделенного сервера Project Zomboid.</value>
+  </data>
+  <data name="Error_FolderNotLocal" xml:space="preserve">
+    <value>{0} — не папка на этом компьютере, поэтому лаунчер не может её открыть. Выберите локальную папку.</value>
+  </data>
+</root>

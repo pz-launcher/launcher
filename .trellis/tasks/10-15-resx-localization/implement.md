@@ -10,6 +10,7 @@
 6. **ViewModels** — `MainViewModel` (options, selection, save); `InstallsViewModel` keeps error/warning sources and re-renders on `LanguageChanged`, picker title from `UiText`. Update `DesignData` and `Fakes.cs` (fake store, use real `LocalizationService`). Tests: AC5, selection calls `SetLanguage` + save.
 7. **Views + App** — `MainView` (top bar + page) hosted by `MainWindow`; `InstallsView` literals → `x:Static`, converters; `App` startup resolution, DI registrations, `RebuildMainView` (swap `MainWindow.Content`), localized error dialog.
 8. **Validate** — commands below, then manual smoke AC8.
+9. **R7 (added)** — `AppLanguage` gets `Spanish`, `Russian`, `Portuguese` (culture name, native name, `FromCulture`); add `Lang/UiText.{es,ru,pt}.resx` with every key (es Latin-American, pt Brazilian; `Main_FontFamily` = English value); extend AC3 tests; rerun build/test and the UIA smoke for all six languages (watch for clipped labels).
 
 ## Validation
 

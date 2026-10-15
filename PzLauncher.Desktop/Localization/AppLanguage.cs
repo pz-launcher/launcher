@@ -9,6 +9,9 @@ public enum AppLanguage
     English,
     SimplifiedChinese,
     TraditionalChinese,
+    Spanish,
+    Russian,
+    Portuguese,
 }
 
 #pragma warning disable CS8524 // No discard arms on purpose: CS8509 makes a new AppLanguage without a mapping a build error.
@@ -22,6 +25,9 @@ public static class AppLanguages
         AppLanguage.English => "en",
         AppLanguage.SimplifiedChinese => "zh-Hans",
         AppLanguage.TraditionalChinese => "zh-Hant",
+        AppLanguage.Spanish => "es",
+        AppLanguage.Russian => "ru",
+        AppLanguage.Portuguese => "pt",
     };
 
     // Not from resx: each option is shown in its own language whatever the current UI language.
@@ -30,6 +36,9 @@ public static class AppLanguages
         AppLanguage.English => "English",
         AppLanguage.SimplifiedChinese => "简体中文",
         AppLanguage.TraditionalChinese => "繁體中文",
+        AppLanguage.Spanish => "Español",
+        AppLanguage.Russian => "Русский",
+        AppLanguage.Portuguese => "Português (Brasil)",
     };
 
     public static AppLanguage? FromCultureName(string? cultureName)
@@ -58,7 +67,14 @@ public static class AppLanguages
             }
         }
 
-        return culture.TwoLetterISOLanguageName == "zh" ? AppLanguage.SimplifiedChinese : AppLanguage.English;
+        return culture.TwoLetterISOLanguageName switch
+        {
+            "zh" => AppLanguage.SimplifiedChinese,
+            "es" => AppLanguage.Spanish,
+            "ru" => AppLanguage.Russian,
+            "pt" => AppLanguage.Portuguese,
+            _ => AppLanguage.English,
+        };
     }
 }
 #pragma warning restore CS8524

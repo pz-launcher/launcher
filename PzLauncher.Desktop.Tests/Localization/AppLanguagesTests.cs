@@ -15,6 +15,12 @@ public class AppLanguagesTests
     [InlineData("zh-HK", AppLanguage.TraditionalChinese)]
     [InlineData("zh-MO", AppLanguage.TraditionalChinese)]
     [InlineData("zh-Hant", AppLanguage.TraditionalChinese)]
+    [InlineData("es-ES", AppLanguage.Spanish)]
+    [InlineData("es-MX", AppLanguage.Spanish)]
+    [InlineData("es-419", AppLanguage.Spanish)]
+    [InlineData("ru-RU", AppLanguage.Russian)]
+    [InlineData("pt-BR", AppLanguage.Portuguese)]
+    [InlineData("pt-PT", AppLanguage.Portuguese)]
     [InlineData("en-US", AppLanguage.English)]
     [InlineData("ja-JP", AppLanguage.English)]
     [InlineData("", AppLanguage.English)]
@@ -31,6 +37,7 @@ public class AppLanguagesTests
     [InlineData("")]
     [InlineData("fr")]
     [InlineData("zh-CN")]
+    [InlineData("pt-BR")]
     [InlineData("SimplifiedChinese")]
     public void FromCultureName_Unknown_ReturnsNull(string? cultureName) =>
         Assert.Null(AppLanguages.FromCultureName(cultureName));
@@ -39,6 +46,9 @@ public class AppLanguagesTests
     [InlineData(AppLanguage.English, "en", "English")]
     [InlineData(AppLanguage.SimplifiedChinese, "zh-Hans", "简体中文")]
     [InlineData(AppLanguage.TraditionalChinese, "zh-Hant", "繁體中文")]
+    [InlineData(AppLanguage.Spanish, "es", "Español")]
+    [InlineData(AppLanguage.Russian, "ru", "Русский")]
+    [InlineData(AppLanguage.Portuguese, "pt", "Português (Brasil)")]
     public void CultureNameAndNativeName_EveryLanguage_AreFixed(AppLanguage language, string cultureName, string nativeName)
     {
         Assert.Equal(cultureName, language.CultureName());

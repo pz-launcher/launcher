@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Main_Language" xml:space="preserve">
+    <value>Idioma</value>
+  </data>
+  <data name="Main_FontFamily" xml:space="preserve">
+    <value>fonts:Inter#Inter, Microsoft YaHei UI, PingFang SC, Noto Sans CJK SC</value>
+    <comment>Not shown text: font family list. Inter for Latin, then CJK fonts in this language's script (Windows, macOS, Linux), so bold weights and glyph shapes match.</comment>
+  </data>
+  <data name="Installs_Title" xml:space="preserve">
+    <value>Instalações</value>
+  </data>
+  <data name="Installs_Rescan" xml:space="preserve">
+    <value>Procurar novamente</value>
+  </data>
+  <data name="Installs_AddFolder" xml:space="preserve">
+    <value>Adicionar pasta…</value>
+  </data>
+  <data name="Installs_Empty" xml:space="preserve">
+    <value>Nenhuma instalação do Project Zomboid foi encontrada. Instale o jogo ou o servidor dedicado pela Steam ou use "Adicionar pasta…".</value>
+  </data>
+  <data name="Installs_BranchFormat" xml:space="preserve">
+    <value>ramo: {0}</value>
+  </data>
+  <data name="Installs_BuildFormat" xml:space="preserve">
+    <value>compilação {0}</value>
+  </data>
+  <data name="Installs_PickFolderTitle" xml:space="preserve">
+    <value>Selecione uma pasta do jogo ou do servidor do Project Zomboid</value>
+  </data>
+  <data name="InstallKind_Game" xml:space="preserve">
+    <value>Jogo</value>
+  </data>
+  <data name="InstallKind_DedicatedServer" xml:space="preserve">
+    <value>Servidor dedicado</value>
+  </data>
+  <data name="InstallSource_SteamLibrary" xml:space="preserve">
+    <value>Biblioteca da Steam</value>
+  </data>
+  <data name="InstallSource_Manual" xml:space="preserve">
+    <value>Adicionada manualmente</value>
+  </data>
+  <data name="Dialog_UnexpectedError" xml:space="preserve">
+    <value>Algo deu errado. O launcher pode não funcionar como esperado; tente novamente ou reinicie-o.</value>
+  </data>
+  <data name="Dialog_Ok" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="Error_ResultUninitialized" xml:space="preserve">
+    <value>Ocorreu um erro interno no launcher. Relate isto como um bug.</value>
+  </data>
+  <data name="Error_SteamNotInstalled" xml:space="preserve">
+    <value>Parece que a Steam não está instalada, então nenhuma instalação foi encontrada automaticamente. Use "Adicionar pasta…" para adicionar uma manualmente.</value>
+  </data>
+  <data name="Error_SteamLibraryUnreadable" xml:space="preserve">
+    <value>Não foi possível ler a lista de bibliotecas da Steam ({0}). Instalações em outras bibliotecas da Steam podem não aparecer.</value>
+  </data>
+  <data name="Error_SteamManifestUnreadable" xml:space="preserve">
+    <value>Não foi possível ler um manifesto de aplicativo da Steam ({0}). Essa instalação foi ignorada.</value>
+  </data>
+  <data name="Error_SteamVdfMalformed" xml:space="preserve">
+    <value>Um arquivo da Steam está danificado e não pôde ser lido.</value>
+  </data>
+  <data name="Error_InstallFilesMissing" xml:space="preserve">
+    <value>A Steam indica uma instalação em {0}, mas a pasta não existe. Tente verificar a integridade dos arquivos do jogo na Steam.</value>
+  </data>
+  <data name="Error_InstallInvalidPath" xml:space="preserve">
+    <value>Esse não é um caminho de pasta válido.</value>
+  </data>
+  <data name="Error_InstallPathNotFound" xml:space="preserve">
+    <value>A pasta {0} não existe.</value>
+  </data>
+  <data name="Error_InstallPathUnreadable" xml:space="preserve">
+    <value>Não foi possível ler a pasta {0}. Verifique se você tem permissão para abri-la.</value>
+  </data>
+  <data name="Error_InstallNotAPzInstall" xml:space="preserve">
+    <value>{0} não parece ser uma pasta do jogo ou do servidor dedicado do Project Zomboid.</value>
+  </data>
+  <data name="Error_FolderNotLocal" xml:space="preserve">
+    <value>{0} não é uma pasta deste computador, então o launcher não pode abri-la. Escolha uma pasta local.</value>
+  </data>
+</root>
