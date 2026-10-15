@@ -85,3 +85,27 @@ PCL-style shell: OS title bar replaced by MainView's own (tabs Home/Installs/Set
 ### Status
 
 [OK] **Completed**
+
+
+## Session 4: UI animations, native window animations and remembered window placement
+<!-- trellis-session: v=2 fp=0bc90c4e9c6ca7e9 -->
+
+**Date**: 2026-10-15
+**Task**: UI animations, native window animations and remembered window placement
+**Branch**: `feat/ui-animation-transitions`
+
+### Summary
+
+Page switches fade and rise in; shell controls blend colors via PremultipliedBrushTransition (BrushTransition flashes light from Transparent in dark theme). On Windows, MainWindow restores WS_CAPTION|WS_SYSMENU for DWM window animations, forwards WM_NCPAINT to keep the frame, and computes WM_GETMINMAXINFO so the 820x520 minimum holds. Main window opens centered, remembers position/size/maximized in preferences.json (awaited close-time save), falls back to centered when off-screen, and Settings > Appearance can reset it to 1000x640. Dropped ThrowIfNull on non-nullable params project-wide; Result<T> now requires T : notnull. PR pz-launcher/launcher#4 open with Auto-fix on.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `18d5c36` | Animate page switches, shell control states and window chrome |
+| `d03bd35` | Remember the main window's placement and add a reset in Settings |
+| `a6c5f55` | Drop ThrowIfNull guards on non-nullable parameters |
+
+### Status
+
+[OK] **Completed**
