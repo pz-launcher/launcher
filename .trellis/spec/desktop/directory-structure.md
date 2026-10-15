@@ -32,7 +32,7 @@ Reference: `PzLauncher.Desktop/ViewModels/Installs/InstallsViewModel.cs`.
 
 Reference: `PzLauncher.Desktop/Views/Installs/`.
 
-- Every `.axaml` sets `x:DataType` (compiled bindings, required for AOT) and a `Design.DataContext`.
+- Every `.axaml` sets a `Design.DataContext`.
 - Code-behind: view concerns only. Page activation calls the ViewModel's `ActivateCommand` from `OnLoaded`; the run-once rule lives in the ViewModel.
 - VM→View mapping: explicit `DataTemplate`s in `PzLauncher.Desktop/App.axaml`, never a reflection `ViewLocator`.
 - Previewer data: `PzLauncher.Desktop/ViewModels/Design/DesignData.cs`. Fictional, portable values only, never data from a real machine.

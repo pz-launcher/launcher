@@ -6,6 +6,8 @@
         <ApplicationManifest>app.manifest</ApplicationManifest>
         <IsAotCompatible>true</IsAotCompatible>
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+        <!-- A binding without x:DataType in scope fails the build. -->
+        <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
         <AssemblyName>PzLauncher</AssemblyName>
         <RootNamespace>PzLauncher.Desktop</RootNamespace>
         <NeutralLanguage>en</NeutralLanguage>

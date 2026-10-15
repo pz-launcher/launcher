@@ -47,8 +47,8 @@ Task<(string? Text, string? Reason)> TryReadAsync(string path, CancellationToken
 
 ## Async
 
-- Async methods that can take time end with `CancellationToken ct = default` and pass it on.
-- Core: `ConfigureAwait(false)` on every `await`. App: never.
+- Async methods that can take time take `CancellationToken ct = default`.
+- App code never calls `ConfigureAwait`.
 - No `async void` except event handlers. Fire-and-forget only on `Task`-returning methods.
 - Use async I/O APIs, not sync calls in `Task.Run`.
 
@@ -61,9 +61,6 @@ Core and the app are `IsAotCompatible`; IL2xxx/IL3xxx warnings fail the build.
 
 ## Types and naming
 
-- File-scoped namespaces matching the folder path.
-- Classes and records `sealed` or `static` unless designed for inheritance; Core types `internal` unless a host needs them.
-- DI services use primary constructors.
-- `_camelCase` private fields, `PascalCase` static readonly fields.
+- Public classes and records `sealed` or `static` unless designed for inheritance; Core types `internal` unless a host needs them.
 - Named constants for domain values (e.g. `PzSteamApps`). No static mutable state.
 - Switches over an enum list every member with no `_ =>` arm: a discard silences CS8509 (an error per `.editorconfig`), so a new member would compile without a case.
