@@ -1,5 +1,5 @@
-using PzLauncher.Desktop.Lang;
 using System.Globalization;
+using PzLauncher.Desktop.Lang;
 using PzLauncher.Desktop.Localization;
 
 namespace PzLauncher.Desktop.Tests.TestSupport;

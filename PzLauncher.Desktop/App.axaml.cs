@@ -1,4 +1,3 @@
-using PzLauncher.Desktop.Lang;
 using System;
 using System.Globalization;
 using System.IO;
@@ -12,6 +11,7 @@ using Avalonia.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using PzLauncher.Core;
+using PzLauncher.Desktop.Lang;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Services;
 using PzLauncher.Desktop.ViewModels;

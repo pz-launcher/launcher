@@ -1,7 +1,7 @@
-using PzLauncher.Desktop.Lang;
 using System.Collections;
 using System.Globalization;
 using System.Text.RegularExpressions;
+using PzLauncher.Desktop.Lang;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Tests.TestSupport;
 

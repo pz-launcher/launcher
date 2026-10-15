@@ -1,5 +1,5 @@
-using PzLauncher.Desktop.Lang;
 using System;
+using PzLauncher.Desktop.Lang;
 
 namespace PzLauncher.Desktop.Localization;
 

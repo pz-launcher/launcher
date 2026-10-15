@@ -15,16 +15,19 @@
 
     <DockPanel>
         <Border DockPanel.Dock="Top" BorderBrush="#30808080" BorderThickness="0,0,0,1" Padding="16,4">
-            <ComboBox HorizontalAlignment="Right" MinWidth="120"
-                      ItemsSource="{Binding Languages}" SelectedItem="{Binding SelectedLanguage}"
-                      ToolTip.Tip="{x:Static lang:UiText.Main_Language}"
-                      AutomationProperties.Name="{x:Static lang:UiText.Main_Language}">
-                <ComboBox.ItemTemplate>
-                    <DataTemplate x:DataType="vm:LanguageOption">
-                        <TextBlock Text="{Binding NativeName}" />
-                    </DataTemplate>
-                </ComboBox.ItemTemplate>
-            </ComboBox>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+                <PathIcon Data="{StaticResource GlobeIcon}" Width="16" Height="16" VerticalAlignment="Center" />
+                <ComboBox MinWidth="120"
+                          ItemsSource="{Binding Languages}" SelectedItem="{Binding SelectedLanguage}"
+                          ToolTip.Tip="{x:Static lang:UiText.Main_Language}"
+                          AutomationProperties.Name="{x:Static lang:UiText.Main_Language}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate x:DataType="vm:LanguageOption">
+                            <TextBlock Text="{Binding NativeName}" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+            </StackPanel>
         </Border>
 
         <!-- The page view is picked by the DataTemplates in App.axaml. -->
