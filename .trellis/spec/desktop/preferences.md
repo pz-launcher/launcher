@@ -1,28 +1,24 @@
 # Preferences
 
-> User choices saved across restarts (language, theme). One file, one store.
+> Choices saved across restarts. Reference: `PzLauncher.Desktop/Services/IPreferenceStore.cs`, `JsonPreferenceStore.cs`.
 
 ---
 
-## Store
+## Rules
 
-Reference: `PzLauncher.Desktop/Services/IPreferenceStore.cs`, `PzLauncher.Desktop/Services/JsonPreferenceStore.cs`; composed in `PzLauncher.Desktop/App.axaml.cs`.
+- `<ApplicationData>/PzLauncher/preferences.json` is read and written only through `IPreferenceStore`.
+- A missing or unknown value loads as `null`; the caller picks the fallback (`App.axaml.cs`).
+- Callers fire and forget saves; a failed save never undoes the applied choice.
 
-- File: `<ApplicationData>/PzLauncher/preferences.json`.
-- `Load()` is synchronous (it runs before the first window exists) and returns `UserPreferences`; each field is `null` when missing, unreadable, or an unknown value (unknown values are logged as warnings). Callers fall back per field: language → `AppLanguages.FromCulture(CurrentUICulture)`, theme → `AppTheme.Light`.
-- One save method per field (`SaveLanguageAsync`, `SaveThemeAsync`). Each rewrites the whole file from one in-memory record, under one save gate, via temp file + rename. So saving one field never drops another, the last choice wins when saves overlap, and a crash never leaves a truncated file.
-- Saves never throw for I/O; failures are logged. Callers fire and forget, and a failed save must not undo the applied choice (references: `LanguageMenuViewModel`, `SettingsViewModel`).
+## File contract (persisted: never change an existing value)
 
-## File contract (persisted: never change existing values)
-
-| Field | Values | Owner of the mapping |
+| Field | Values | Mapping |
 |---|---|---|
-| `language` | culture name, e.g. `zh-Hans` | `AppLanguages.CultureName` / `FromCultureName` |
-| `theme` | `light`, `dark` | `AppThemes.PreferenceName` / `FromPreferenceName` |
+| `language` | culture name, e.g. `zh-Hans` | `AppLanguages.CultureName` |
+| `theme` | `light`, `dark` | `AppThemes.PreferenceName` |
 
-- Field names are camelCase via `DesktopJsonContext` (source-generated, AOT). Unknown JSON properties are ignored on read, so older builds keep reading newer files.
-- Adding a preference: a nullable field in the file record and in `UserPreferences`, a `Save<Field>Async`, a stable string mapping (never enum names), and tests below.
+A new preference gets a nullable field, its own save method and a stable string mapping (never an enum name).
 
 ## Tests
 
-Reference: `PzLauncher.Desktop.Tests/Services/JsonPreferenceStoreTests.cs`. Per field: round-trip; missing file / missing field → `null`; unknown value → `null` without throwing; saving it keeps the other fields (either order, and concurrent saves); unwritable target doesn't throw.
+Reference: `PzLauncher.Desktop.Tests/Services/JsonPreferenceStoreTests.cs`. Each field: round-trip, missing, unknown value, saving it keeps the other fields, unwritable file.

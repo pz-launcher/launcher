@@ -46,7 +46,6 @@ is a ViewModel property, never `{x:Static}`.
 
 - `LocalizationService` is the only production writer. Don't set `CultureInfo.CurrentUICulture`: it flows with `ExecutionContext`, so awaits resume in the old language.
 - Startup language: saved preference (`IPreferenceStore`, see [preferences.md](./preferences.md), which owns the file contract), else `AppLanguages.FromCulture(CurrentUICulture)`. Composition in `PzLauncher.Desktop/App.axaml.cs`.
-- The user switches language from the title-bar globe menu (`LanguageMenuViewModel`).
 
 ## Tests
 
