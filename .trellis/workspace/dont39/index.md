@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 2
+- **Total Sessions**: 3
 - **Last Active**: 2026-10-15
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~60 | Active |
+| `journal-1.md` | ~87 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 3 | 2026-10-15 | Launcher shell: title-bar nav, page sidebars, PZ theme; analyzer rules as config | `a8cc28f`, `542aa65`, `5d99e2a`, `aef6a68`, `e79c9fa`, `1962bf8` | `feat/home-shell` |
 | 2 | 2026-10-15 | resx localization: 10 language options, runtime switch, Fluent icon | `414efe7`, `d6d8b97`, `7377e13`, `542ddd8`, `f1ed444`, `0487771` | `feat/resx-localization` |
 | 1 | 2026-10-14 | Detect PZ installs and restructure Trellis specs | `ae77a83`, `c94072d`, `5dc73e1`, `b8a5d76`, `97482d0` | `feat/detect-pz-installs` |
 <!-- @@@/auto:session-history -->

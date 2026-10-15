@@ -58,3 +58,30 @@ Desktop UI text moved to Lang/UiText*.resx: English, zh-Hans, zh-Hant (Taiwan), 
 ### Status
 
 [OK] **Completed**
+
+
+## Session 3: Launcher shell: title-bar nav, page sidebars, PZ theme; analyzer rules as config
+<!-- trellis-session: v=2 fp=d15eabb643f3ba0e -->
+
+**Date**: 2026-10-15
+**Task**: Launcher shell: title-bar nav, page sidebars, PZ theme; analyzer rules as config
+**Branch**: `feat/home-shell`
+
+### Summary
+
+PCL-style shell: OS title bar replaced by MainView's own (tabs Home/Installs/Settings, globe language menu, caption buttons; BorderOnly on Windows/Linux, native traffic lights on macOS). Content-sized page sidebars: Home (right) shows the selected install and a disabled launch button; Installs filters by kind; Settings > Appearance picks light/dark. PZ-flavoured Shell.* palette, light by default, theme saved next to the language in one IPreferenceStore. Spec rules moved to tooling: .editorconfig (CS8509 error, CS8524 off, CA/IDE rules, naming, namespaces), compiled bindings by default, BannedApiAnalyzers (wall clock everywhere; OS/env/registry in Core outside Platform; Avalonia in ViewModels) with RS0030 off by default in .globalconfig. All CS8524 pragmas and the dead IsDefined guard removed; specs trimmed to rules + references. Build clean, 446 tests; window chrome checked by hand on Windows. Squash-merged as pz-launcher/launcher#3 (29c91bf).
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `a8cc28f` | Add launcher shell with title-bar navigation, page sidebars and PZ theme |
+| `542aa65` | Document shell, theming and preferences specs |
+| `5d99e2a` | Move analyzer severities to .editorconfig and drop CS8524 pragmas |
+| `aef6a68` | Enforce spec rules through .editorconfig and compiled bindings |
+| `e79c9fa` | Ban seam-bypassing APIs with BannedApiAnalyzers |
+| `1962bf8` | Trim shell and preferences specs to rules and references |
+
+### Status
+
+[OK] **Completed**
