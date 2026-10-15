@@ -1,23 +1,24 @@
+using PzLauncher.Desktop.Lang;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Tests.TestSupport;
 
 namespace PzLauncher.Desktop.Tests.Localization;
 
-[Collection(StringsCultureCollection.Name)]
-public class LocalizationServiceTests : StringsCultureTest
+[Collection(UiTextCultureCollection.Name)]
+public class LocalizationServiceTests : UiTextCultureTest
 {
     [Theory]
     [MemberData(nameof(TestLanguages.All), MemberType = typeof(TestLanguages))]
-    public void Constructor_Language_AppliesToStrings(AppLanguage language)
+    public void Constructor_Language_AppliesToUiText(AppLanguage language)
     {
         var service = new LocalizationService(language);
 
         Assert.Equal(language, service.Current);
-        Assert.Equal(language.CultureName(), Strings.Culture?.Name);
+        Assert.Equal(language.CultureName(), UiText.Culture?.Name);
     }
 
     [Fact]
-    public void SetLanguage_Different_SwitchesStringsAndRaisesOnce()
+    public void SetLanguage_Different_SwitchesUiTextAndRaisesOnce()
     {
         var raised = new List<AppLanguage>();
         Localization.LanguageChanged += (_, _) => raised.Add(Localization.Current);
@@ -25,7 +26,7 @@ public class LocalizationServiceTests : StringsCultureTest
         Localization.SetLanguage(AppLanguage.TraditionalChinese);
 
         Assert.Equal([AppLanguage.TraditionalChinese], raised);
-        Assert.Equal("zh-Hant", Strings.Culture?.Name);
+        Assert.Equal("zh-Hant", UiText.Culture?.Name);
     }
 
     [Fact]

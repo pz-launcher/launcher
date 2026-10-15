@@ -32,7 +32,7 @@ Adding a code:
 
 1. Add the member to `ErrorCode` with its wire name.
 2. Add a factory method in `<Feature>Errors`.
-3. Add user text: an `Error_<Member>` key in every `Strings` resx and its arm in `PzLauncher.Desktop/Localization/ErrorMessages.cs` (the build fails until you do; see `.trellis/spec/desktop/localization.md`).
+3. Add user text: an `Error_<Member>` key in every `UiText` resx and its arm in `PzLauncher.Desktop/Localization/ErrorMessages.cs` (the build fails until you do; see `.trellis/spec/desktop/localization.md`).
 4. Pin the wire name and the factory's `Kind` in `PzLauncher.Core.Tests/Common/ErrorCodeTests.cs`.
 
 ## Where exceptions are caught

@@ -7,8 +7,8 @@ using PzLauncher.Desktop.ViewModels.Installs;
 
 namespace PzLauncher.Desktop.Tests.ViewModels.Installs;
 
-[Collection(StringsCultureCollection.Name)]
-public class InstallsViewModelTests : StringsCultureTest
+[Collection(UiTextCultureCollection.Name)]
+public class InstallsViewModelTests : UiTextCultureTest
 {
     private static readonly PzInstall SteamGame =
         new(PzInstallKind.Game, @"E:\SteamLibrary\steamapps\common\ProjectZomboid", new SteamAppInfo("100", null));

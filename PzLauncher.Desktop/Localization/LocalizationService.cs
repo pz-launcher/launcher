@@ -1,9 +1,10 @@
+using PzLauncher.Desktop.Lang;
 using System;
 using System.Globalization;
 
 namespace PzLauncher.Desktop.Localization;
 
-/// <summary>The only writer of <see cref="Strings.Culture"/>.</summary>
+/// <summary>The only writer of <see cref="UiText.Culture"/>.</summary>
 public sealed class LocalizationService : ILocalizationService
 {
     public LocalizationService(AppLanguage language)
@@ -28,8 +29,8 @@ public sealed class LocalizationService : ILocalizationService
         LanguageChanged?.Invoke(this, EventArgs.Empty);
     }
 
-    // Strings.Culture rather than CurrentUICulture: the latter flows with ExecutionContext, so an await
+    // UiText.Culture rather than CurrentUICulture: the latter flows with ExecutionContext, so an await
     // started before a switch would resume rendering in the old language.
     private static void Apply(AppLanguage language) =>
-        Strings.Culture = CultureInfo.GetCultureInfo(language.CultureName());
+        UiText.Culture = CultureInfo.GetCultureInfo(language.CultureName());
 }

@@ -16,12 +16,12 @@
 
     <!-- Public so {x:Static} can reach it; generated into obj/ so it stays out of git and works without an IDE. -->
     <ItemGroup>
-        <EmbeddedResource Update="Localization\Strings.resx">
+        <EmbeddedResource Update="Lang\UiText.resx">
             <Generator>MSBuild:Compile</Generator>
-            <StronglyTypedFileName>$(IntermediateOutputPath)Strings.Designer.cs</StronglyTypedFileName>
+            <StronglyTypedFileName>$(IntermediateOutputPath)UiText.Designer.cs</StronglyTypedFileName>
             <StronglyTypedLanguage>CSharp</StronglyTypedLanguage>
-            <StronglyTypedNamespace>PzLauncher.Desktop.Localization</StronglyTypedNamespace>
-            <StronglyTypedClassName>Strings</StronglyTypedClassName>
+            <StronglyTypedNamespace>PzLauncher.Desktop.Lang</StronglyTypedNamespace>
+            <StronglyTypedClassName>UiText</StronglyTypedClassName>
             <PublicClass>true</PublicClass>
         </EmbeddedResource>
     </ItemGroup>

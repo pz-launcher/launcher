@@ -1,3 +1,4 @@
+using PzLauncher.Desktop.Lang;
 using System;
 using System.Globalization;
 using System.IO;
@@ -50,7 +51,7 @@ public partial class App : Application
 
             InstallGlobalExceptionHandlers(provider.GetRequiredService<ILogger<App>>());
 
-            // Resolved before the first window exists, so views read Strings in the startup language.
+            // Resolved before the first window exists, so views read UiText in the startup language.
             var localization = provider.GetRequiredService<ILocalizationService>();
 
             // Posted: the event fires inside the ComboBox selection change, and rebuilding now would tear that ComboBox down.
@@ -107,11 +108,11 @@ public partial class App : Application
         _showingErrorDialog = true;
         try
         {
-            var ok = new Button { Content = Strings.Dialog_Ok, HorizontalAlignment = HorizontalAlignment.Right };
+            var ok = new Button { Content = UiText.Dialog_Ok, HorizontalAlignment = HorizontalAlignment.Right };
             var dialog = new Window
             {
                 Title = "PzLauncher",
-                FontFamily = Avalonia.Media.FontFamily.Parse(Strings.Main_FontFamily),
+                FontFamily = Avalonia.Media.FontFamily.Parse(UiText.Main_FontFamily),
                 Width = 420,
                 SizeToContent = SizeToContent.Height,
                 CanResize = false,
@@ -124,7 +125,7 @@ public partial class App : Application
                     {
                         new TextBlock
                         {
-                            Text = Strings.Dialog_UnexpectedError,
+                            Text = UiText.Dialog_UnexpectedError,
                             TextWrapping = Avalonia.Media.TextWrapping.Wrap,
                         },
                         ok,

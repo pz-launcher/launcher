@@ -1,5 +1,6 @@
 using Avalonia.Data.Converters;
 using PzLauncher.Core.Installs;
+using PzLauncher.Desktop.Lang;
 
 namespace PzLauncher.Desktop.Localization;
 
@@ -12,14 +13,14 @@ public static class DisplayNames
 
     public static string Of(PzInstallKind kind) => kind switch
     {
-        PzInstallKind.Game => Strings.InstallKind_Game,
-        PzInstallKind.DedicatedServer => Strings.InstallKind_DedicatedServer,
+        PzInstallKind.Game => UiText.InstallKind_Game,
+        PzInstallKind.DedicatedServer => UiText.InstallKind_DedicatedServer,
     };
 
     public static string Of(PzInstallSource source) => source switch
     {
-        PzInstallSource.SteamLibrary => Strings.InstallSource_SteamLibrary,
-        PzInstallSource.Manual => Strings.InstallSource_Manual,
+        PzInstallSource.SteamLibrary => UiText.InstallSource_SteamLibrary,
+        PzInstallSource.Manual => UiText.InstallSource_Manual,
     };
 }
 #pragma warning restore CS8524

@@ -5,8 +5,8 @@ using PzLauncher.Desktop.Tests.TestSupport;
 
 namespace PzLauncher.Desktop.Tests.Localization;
 
-[Collection(StringsCultureCollection.Name)]
-public class DisplayNamesTests : StringsCultureTest
+[Collection(UiTextCultureCollection.Name)]
+public class DisplayNamesTests : UiTextCultureTest
 {
     [Theory]
     [MemberData(nameof(TestLanguages.All), MemberType = typeof(TestLanguages))]

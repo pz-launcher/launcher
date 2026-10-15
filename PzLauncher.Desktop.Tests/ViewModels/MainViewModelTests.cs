@@ -5,8 +5,8 @@ using PzLauncher.Desktop.ViewModels.Installs;
 
 namespace PzLauncher.Desktop.Tests.ViewModels;
 
-[Collection(StringsCultureCollection.Name)]
-public class MainViewModelTests : StringsCultureTest
+[Collection(UiTextCultureCollection.Name)]
+public class MainViewModelTests : UiTextCultureTest
 {
     private readonly FakeLanguagePreferenceStore _store = new();
 

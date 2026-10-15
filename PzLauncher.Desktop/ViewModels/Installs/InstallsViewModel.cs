@@ -1,3 +1,4 @@
+using PzLauncher.Desktop.Lang;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -119,7 +120,7 @@ public partial class InstallsViewModel : ViewModelBase
         try
         {
             string path;
-            switch (await _folderPicker.PickFolderAsync(Strings.Installs_PickFolderTitle, ct))
+            switch (await _folderPicker.PickFolderAsync(UiText.Installs_PickFolderTitle, ct))
             {
                 case FolderPickResult.Picked picked:
                     path = picked.Path;

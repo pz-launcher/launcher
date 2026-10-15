@@ -7,9 +7,9 @@
 
 ## Resources
 
-Reference: `PzLauncher.Desktop/Localization/` → `Strings.resx`, `Strings.zh-Hans.resx`, `Strings.zh-Hant.resx`; generator settings in `PzLauncher.Desktop/PzLauncher.Desktop.csproj`.
+Reference: `PzLauncher.Desktop/Lang/` → `UiText.resx`, `UiText.zh-Hans.resx`, `UiText.zh-Hant.resx`; generator settings in `PzLauncher.Desktop/PzLauncher.Desktop.csproj`.
 
-- One resource set, `Strings`. The class is generated into `obj/` (public, so `{x:Static}` reaches it); never commit a `Strings.Designer.cs`.
+- `Lang/` holds only resx files; localization code lives in `Localization/`. One resource set, `UiText` (namespace `PzLauncher.Desktop.Lang`). The class is generated into `obj/` (public, so `{x:Static}` reaches it); never commit a `UiText.Designer.cs`.
 - Keys are `<Area>_<Name>` (`Installs_Title`, `Error_SteamNotInstalled`, `InstallKind_Game`). Error texts are `Error_<ErrorCode member>`.
 - A new key goes into all three files in the same change. Parameterised texts use `{0}`; every language keeps the same placeholders.
 - Product name "PzLauncher" and the language picker's native names (`AppLanguages.NativeName`) are not resources.
@@ -20,11 +20,11 @@ Reference: `PzLauncher.Desktop/Localization/` → `Strings.resx`, `Strings.zh-Ha
 
 | Where | How | Reference |
 |---|---|---|
-| XAML literal | `{x:Static loc:Strings.Key}` (typos fail the build) | `PzLauncher.Desktop/Views/Installs/InstallsView.axaml` |
-| XAML format | `StringFormat={x:Static loc:Strings.Key}` | same |
+| XAML literal | `{x:Static lang:UiText.Key}` (typos fail the build) | `PzLauncher.Desktop/Views/Installs/InstallsView.axaml` |
+| XAML format | `StringFormat={x:Static lang:UiText.Key}` | same |
 | Enum shown to users | `DisplayNames.Of` / its `FuncValueConverter`, exhaustive switch | `PzLauncher.Desktop/Localization/DisplayNames.cs` |
 | `Error` | `ErrorMessages.ToUserText` | `PzLauncher.Desktop/Localization/ErrorMessages.cs` |
-| ViewModel text | Read `Strings` when needed; keep the source (`Error`, a `Func<string>`) of shown text and re-render on `ILocalizationService.LanguageChanged` | `PzLauncher.Desktop/ViewModels/Installs/InstallsViewModel.cs` |
+| ViewModel text | Read `UiText` when needed; keep the source (`Error`, a `Func<string>`) of shown text and re-render on `ILocalizationService.LanguageChanged` | `PzLauncher.Desktop/ViewModels/Installs/InstallsViewModel.cs` |
 
 `{x:Static}` is read once per view instance: a language switch replaces the
 main window's content (`App.RebuildMainView` → new `MainView`) around the same
@@ -35,7 +35,7 @@ is a ViewModel property, never `{x:Static}`.
 
 ## Culture state
 
-`Strings.Culture` is static: the one deliberate exception to "no static mutable state".
+`UiText.Culture` is static: the one deliberate exception to "no static mutable state".
 
 - `LocalizationService` is the only production writer. Don't set `CultureInfo.CurrentUICulture`: it flows with `ExecutionContext`, so awaits resume in the old language.
 - Startup language: saved preference (`ILanguagePreferenceStore`), else `AppLanguages.FromCulture(CurrentUICulture)`. Composition in `PzLauncher.Desktop/App.axaml.cs`.
@@ -43,5 +43,5 @@ is a ViewModel property, never `{x:Static}`.
 
 ## Tests
 
-- Every test class that constructs a `LocalizationService` or asserts localized text derives from `StringsCultureTest` and is in `[Collection(StringsCultureCollection.Name)]` (non-parallel; restores the culture). Reference: `PzLauncher.Desktop.Tests/TestSupport/StringsCulture.cs`.
-- Resx key and placeholder parity per language: `PzLauncher.Desktop.Tests/Localization/StringsResourcesTests.cs`. Coverage loops enumerate `AppLanguage` and the shown enums, never a hand-kept list.
+- Every test class that constructs a `LocalizationService` or asserts localized text derives from `UiTextCultureTest` and is in `[Collection(UiTextCultureCollection.Name)]` (non-parallel; restores the culture). Reference: `PzLauncher.Desktop.Tests/TestSupport/UiTextCulture.cs`.
+- Resx key and placeholder parity per language: `PzLauncher.Desktop.Tests/Localization/UiTextResourcesTests.cs`. Coverage loops enumerate `AppLanguage` and the shown enums, never a hand-kept list.

@@ -6,12 +6,13 @@ All work is in `PzLauncher.Desktop` (+ its tests). Core is untouched: UI languag
 
 ```
 PzLauncher.Desktop/
+├── Lang/
+│   └── UiText.resx / UiText.zh-Hans.resx / UiText.zh-Hant.resx      # all UI text, nothing else
 ├── Localization/
-│   ├── Strings.resx / Strings.zh-Hans.resx / Strings.zh-Hant.resx   # all UI text
 │   ├── AppLanguage.cs            # enum + culture names, native names, OS-culture resolver
 │   ├── ILocalizationService.cs   # Current, SetLanguage, LanguageChanged
-│   ├── LocalizationService.cs    # the only writer of Strings.Culture
-│   ├── ErrorMessages.cs          # unchanged shape; texts from Strings
+│   ├── LocalizationService.cs    # the only writer of UiText.Culture
+│   ├── ErrorMessages.cs          # unchanged shape; texts from UiText
 │   └── DisplayNames.cs           # PzInstallKind / PzInstallSource → text, plus FuncValueConverters for XAML
 ├── Services/
 │   ├── ILanguagePreferenceStore.cs
@@ -24,10 +25,10 @@ PzLauncher.Desktop/
 
 ## Resources
 
-- Generated class `PzLauncher.Desktop.Localization.Strings`, `public`, via `MSBuild:Compile` (`StronglyTypedFileName` under `$(IntermediateOutputPath)`, `PublicClass=true`), so it works from any IDE/CLI and stays out of git. Only `Strings.resx` gets the generator entry.
+- Generated class `PzLauncher.Desktop.Lang.UiText`, `public`, via `MSBuild:Compile` (`StronglyTypedFileName` under `$(IntermediateOutputPath)`, `PublicClass=true`), so it works from any IDE/CLI and stays out of git. Only `UiText.resx` gets the generator entry. (Not `Resources`: that name collides with the `Resources` property on `Application` and controls.)
 - Culture-specific files are named `zh-Hans` / `zh-Hant` so .NET parent-culture fallback does the right thing if a specific culture is ever passed (`zh-TW` → `zh-Hant`, `zh-CN` → `zh-Hans`).
 - Keys: `<Area>_<Name>` (`Installs_Title`, `Installs_Rescan`, `Error_SteamNotInstalled`, `InstallKind_Game`, `Dialog_UnexpectedError`, …). Parameterised texts use `{0}` and are formatted with `string.Format(CultureInfo.CurrentCulture, …)`.
-- Views keep `{x:Static loc:Strings.Key}`, so a typo is a compile error. `StringFormat` texts (`branch: {0}`, `build {0}`) use `StringFormat={x:Static …}`; if Avalonia's compiler rejects a markup extension there, fall back to a `FuncValueConverter` in `DisplayNames.cs`.
+- Views keep `{x:Static lang:UiText.Key}`, so a typo is a compile error. `StringFormat` texts (`branch: {0}`, `build {0}`) use `StringFormat={x:Static …}`; if Avalonia's compiler rejects a markup extension there, fall back to a `FuncValueConverter` in `DisplayNames.cs`.
 
 ## Language model
 
@@ -36,10 +37,10 @@ PzLauncher.Desktop/
 
 ## Culture state (deliberate exception to "no static mutable state")
 
-The resx-generated `Strings.Culture` is static; `{x:Static}` gives no other hook. Rules that contain it:
+The resx-generated `UiText.Culture` is static; `{x:Static}` gives no other hook. Rules that contain it:
 
 - `LocalizationService` is the only writer. It is constructed with the startup language and applies it in its constructor, before any window exists.
-- We set `Strings.Culture` explicitly instead of relying on `CultureInfo.CurrentUICulture`: the latter flows with `ExecutionContext`, so an `await` that started before a switch would resume with the old culture and render stale text.
+- We set `UiText.Culture` explicitly instead of relying on `CultureInfo.CurrentUICulture`: the latter flows with `ExecutionContext`, so an `await` that started before a switch would resume with the old culture and render stale text.
 - `CurrentCulture` (number/date formatting) is not changed.
 - Tests that set the language run in one xUnit collection with `DisableParallelization = true` and restore the previous culture on dispose.
 
@@ -54,7 +55,7 @@ The resx-generated `Strings.Culture` is static; `{x:Static}` gives no other hook
 
 1. `MainView` ComboBox `SelectedItem` ↔ `MainViewModel.SelectedLanguage` (`LanguageOption(AppLanguage Language, string NativeName)` from `Languages`).
 2. `OnSelectedLanguageChanged` → `localization.SetLanguage(lang)` (no-op when unchanged) → `_ = preferences.SaveAsync(lang)` (never throws for IO, so fire-and-forget on a `Task` is safe).
-3. `SetLanguage` sets `Strings.Culture`, `Current`, raises `LanguageChanged` synchronously.
+3. `SetLanguage` sets `UiText.Culture`, `Current`, raises `LanguageChanged` synchronously.
 4. Subscribers:
    - `InstallsViewModel` re-renders `ErrorText` and `Warnings` from their sources. It keeps the source instead of only the string: `Func<string>? _errorSource` (covers both `Error` and `FolderNotLocal`) and `List<Error> _warningSources`. The VM's lifetime equals the app's (held by the singleton `MainViewModel`), so the subscription is never removed.
    - `App` posts `RebuildMainView` via `Dispatcher.UIThread.Post` — the event fires inside the ComboBox selection change, so rebuilding synchronously would tear down the control raising it.
@@ -62,7 +63,7 @@ The resx-generated `Strings.Culture` is static; `{x:Static}` gives no other hook
 
 ## Startup
 
-`App.OnFrameworkInitializationCompleted`: build store → `Load()` → `language = saved ?? AppLanguages.FromCulture(CultureInfo.CurrentUICulture)` → register `ILocalizationService` singleton `new LocalizationService(language)`, the store, and VMs → create window. Error-dialog texts read `Strings` at show time.
+`App.OnFrameworkInitializationCompleted`: build store → `Load()` → `language = saved ?? AppLanguages.FromCulture(CultureInfo.CurrentUICulture)` → register `ILocalizationService` singleton `new LocalizationService(language)`, the store, and VMs → create window. Error-dialog texts read `UiText` at show time.
 
 ## XAML
 
@@ -73,7 +74,7 @@ The resx-generated `Strings.Culture` is static; `{x:Static}` gives no other hook
 
 ## Risks
 
-- **CJK font fallback (resolved).** `.WithInterFont()` has no CJK glyphs. Avalonia's implicit system fallback rendered SemiBold Chinese at regular weight (seen in smoke). Fix: resx key `Main_FontFamily` holds a per-language family list (Inter, then the script's CJK fonts for Windows/macOS/Linux); `MainView` and the error dialog set `FontFamily.Parse(Strings.Main_FontFamily)`. This also gives zh-Hant Traditional glyph shapes.
+- **CJK font fallback (resolved).** `.WithInterFont()` has no CJK glyphs. Avalonia's implicit system fallback rendered SemiBold Chinese at regular weight (seen in smoke). Fix: resx key `Main_FontFamily` holds a per-language family list (Inter, then the script's CJK fonts for Windows/macOS/Linux); `MainView` and the error dialog set `FontFamily.Parse(UiText.Main_FontFamily)`. This also gives zh-Hant Traditional glyph shapes.
 - **Native AOT satellite resources.** Not published as AOT today (`IsAotCompatible` only); trimming/AOT warnings are covered by AC7. Verifying a real AOT publish is deferred.
 - **Translation quality.** zh-Hans / zh-Hant texts are written by the implementer; the user reviews them in the PR.
 

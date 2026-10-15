@@ -4,8 +4,8 @@ using PzLauncher.Desktop.Tests.TestSupport;
 
 namespace PzLauncher.Desktop.Tests.Localization;
 
-[Collection(StringsCultureCollection.Name)]
-public class ErrorMessagesTests : StringsCultureTest
+[Collection(UiTextCultureCollection.Name)]
+public class ErrorMessagesTests : UiTextCultureTest
 {
     private const string Fallback = "FALLBACK-DEVELOPER-MESSAGE";
 
