@@ -7,7 +7,7 @@ All work is in `PzLauncher.Desktop` (+ its tests). Core is untouched: UI languag
 ```
 PzLauncher.Desktop/
 ├── Lang/
-│   └── UiText.resx + UiText.{zh-Hans,zh-Hant,es,ru,pt}.resx         # all UI text, nothing else
+│   └── UiText.resx + UiText.{zh-Hans,zh-Hant,es-ES,es-MX,es-CL,es-AR,pt-PT,pt-BR,ru}.resx   # all UI text, nothing else
 ├── Localization/
 │   ├── AppLanguage.cs            # enum + culture names, native names, OS-culture resolver
 │   ├── ILocalizationService.cs   # Current, SetLanguage, LanguageChanged
@@ -32,8 +32,8 @@ PzLauncher.Desktop/
 
 ## Language model
 
-- `enum AppLanguage { English, SimplifiedChinese, TraditionalChinese, Spanish, Russian, Portuguese }` (drop-down order = enum order) with exhaustive switches (CS8509 as with `ErrorCode`) for: culture name (`en`, `zh-Hans`, `zh-Hant`, `es`, `ru`, `pt`), native display name (hard-coded, not from resx — R5), and parsing a culture name back (unknown → no value).
-- `AppLanguages.FromCulture(CultureInfo)`: walk the parent chain; `zh-Hant` or a name in {`zh-TW`, `zh-HK`, `zh-MO`} → Traditional; two-letter `zh` → Simplified, `es` → Spanish, `ru` → Russian, `pt` → Portuguese; else English. New languages use neutral cultures so .NET fallback serves every regional variant from one file. Pure function, covered by AC3. The walk avoids depending on ICU vs NLS parent quirks.
+- `enum AppLanguage { English, SimplifiedChinese, TraditionalChinese, SpanishSpain, SpanishMexico, SpanishChile, SpanishArgentina, PortuguesePortugal, PortugueseBrazil, Russian }` (drop-down order = enum order) with exhaustive switches (CS8509 as with `ErrorCode`) for: culture name (`en`, `zh-Hans`, `zh-Hant`, `es-ES`, `es-MX`, `es-CL`, `es-AR`, `pt-PT`, `pt-BR`, `ru`), native display name (hard-coded, not from resx — R5), and parsing a culture name back (unknown → no value).
+- `AppLanguages.FromCulture(CultureInfo)`: walk the parent chain; `zh-Hant` or a name in {`zh-TW`, `zh-HK`, `zh-MO`} → Traditional; an exact supported Spanish/Portuguese region anywhere on the chain wins; then two-letter `zh` → Simplified, `es` → México, `pt` → Brasil for `pt`/`pt-BR` else Portugal, `ru` → Russian; else English. Spanish/Portuguese use regional cultures to mirror PZ's options; there is no neutral `es`/`pt` file, which is safe because `UiText.Culture` is only ever set to a supported culture name and every file is complete (parity test). Pure function, covered by AC3. The walk avoids depending on ICU vs NLS parent quirks.
 
 ## Culture state (deliberate exception to "no static mutable state")
 

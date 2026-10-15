@@ -1,8 +1,8 @@
-# Add resx localization (en / zh-Hans / zh-Hant / es / ru / pt)
+# Add resx localization (en, zh-Hans, zh-Hant, 4× es, 2× pt, ru)
 
 ## Goal
 
-All user-facing text in the desktop app comes from resx resources in six languages: English, Simplified Chinese, Traditional Chinese, Spanish, Russian, Portuguese. The user can switch language from the UI and the switch takes effect immediately; the choice is remembered across restarts. On first launch the language follows the OS UI language. Reference: https://docs.avaloniaui.net/docs/app-development/localizing
+All user-facing text in the desktop app comes from resx resources in ten language options: English, Simplified and Traditional Chinese, Spanish (Spain, Mexico, Chile, Argentina), Portuguese (Portugal, Brazil), Russian. The user can switch language from the UI and the switch takes effect immediately; the choice is remembered across restarts. On first launch the language follows the OS UI language. Reference: https://docs.avaloniaui.net/docs/app-development/localizing
 
 ## Background (repository evidence)
 
@@ -27,13 +27,13 @@ All user-facing text in the desktop app comes from resx resources in six languag
 - **R5 Switcher UI.** A narrow bar at the top of the main window (in `MainView`), outside the page content and visible on every page, with a language drop-down on the right. Options: "English", "简体中文", "繁體中文", each always shown in its own language.
 - **R6 Error-text guarantee.** Every `ErrorCode` still has user text in every supported language, enforced by tests that enumerate `ErrorCode` and the supported languages.
 
-- **R7 Spanish, Russian, Portuguese (added 2026-10-15).** One resx each, neutral culture names `es`, `ru`, `pt` (also the persisted values), so every regional variant of the language gets that one translation. Wording: Spanish is Latin-American/neutral, Portuguese is Brazilian. Drop-down options, each in its own language: "Español", "Русский", "Português (Brasil)". Default mapping: OS UI culture `es*` → Spanish, `ru*` → Russian, `pt*` → Portuguese (checked before the English fallback). Inter covers Latin and Cyrillic, so these resx use the English font list.
+- **R7 Spanish, Portuguese, Russian — aligned with Project Zomboid (revised 2026-10-15).** Spanish and Portuguese options and labels copy PZ's `media/lua/shared/Translate/*/language.json`: "Español (España)", "Español (México)", "Español (Chile)", "Español (Argentina)", "Português (Portugal)", "Português (Brasil)". Russian keeps its native label "Русский" (PZ shows English names for Russian/Chinese, most likely a font limitation; native names stay readable to non-English speakers). One resx per option with that region's wording (Argentine voseo; Spain "ordenador"/"Añadir"; European Portuguese "ficheiro", "o Steam"). Culture names `es-ES`, `es-MX`, `es-CL`, `es-AR`, `pt-PT`, `pt-BR`, `ru` are also the persisted values (the earlier `es` / `pt` were never released and now load as "no preference"). Default mapping from the OS culture: an exact supported region wins; other `es*` (incl. `es`, `es-419`) → Español (México); `pt-BR` and bare `pt` → Português (Brasil), other `pt-*` → Português (Portugal); `ru*` → Russian. Drop-down order: English, 简体中文, 繁體中文, the four Spanish, the two Portuguese, Русский. Inter covers Latin and Cyrillic, so these resx use the English font list.
 
 ## Acceptance Criteria
 
 - [ ] AC1 (R1, R6, R7) Every key in the default resx exists with a non-empty value in every other language resx; a test fails when one is missing.
 - [ ] AC2 (R6) For every `ErrorCode` × every supported language, `ErrorMessages.ToUserText` returns non-empty text that is not the developer fallback; path details are still included.
-- [ ] AC3 (R2) Unit tests map `zh-CN`, `zh-SG`, `zh-Hans`, `zh` → Simplified; `zh-TW`, `zh-HK`, `zh-MO`, `zh-Hant` → Traditional; `es-ES`, `es-MX`, `es-419` → Spanish; `ru-RU` → Russian; `pt-BR`, `pt-PT` → Portuguese; `en-US`, `ja-JP`, invariant → English.
+- [ ] AC3 (R2) Unit tests map `zh-CN`, `zh-SG`, `zh-Hans`, `zh` → Simplified; `zh-TW`, `zh-HK`, `zh-MO`, `zh-Hant` → Traditional; `es-ES` → España; `es-MX`, `es-419`, `es-CO`, `es` → México; `es-CL` → Chile; `es-AR` → Argentina; `pt-BR`, `pt` → Brasil; `pt-PT`, `pt-AO` → Portugal; `ru-RU` → Russian; `en-US`, `ja-JP`, invariant → English.
 - [ ] AC4 (R3) Store tests: save→load round-trips each language; missing file, corrupt JSON, and an unknown value all load as "no preference".
 - [ ] AC5 (R4) ViewModel test: after a language change, an `ErrorText` and `Warnings` produced before the change are re-rendered in the new language.
 - [ ] AC6 (R1) Display names exist for every `PzInstallKind` and `PzInstallSource` value (test enumerates the enums).
@@ -42,7 +42,7 @@ All user-facing text in the desktop app comes from resx resources in six languag
 
 ## Out of Scope
 
-- Languages beyond the six above; regional variants (pt-PT, es-ES) as separate options; RTL.
+- Languages beyond the ten options above; other PZ languages; RTL.
 - Translating Core's developer-facing `Error.Message`.
 - A general settings system or settings page; the preference file holds only the language.
 - Changing number/date formatting culture (`CurrentCulture`).

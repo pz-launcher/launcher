@@ -66,6 +66,8 @@ public sealed class JsonLanguagePreferenceStoreTests : IDisposable
     [InlineData("{}")]
     [InlineData("""{"language":5}""")]
     [InlineData("""{"language":"fr"}""")]
+    [InlineData("""{"language":"es"}""")]
+    [InlineData("""{"language":"pt"}""")]
     [InlineData("""{"language":"SimplifiedChinese"}""")]
     public void Load_CorruptOrUnknownContent_ReturnsNull(string content)
     {

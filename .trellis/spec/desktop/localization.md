@@ -35,8 +35,9 @@ is a ViewModel property, never `{x:Static}`.
 
 ## Adding a language
 
-- Append an `AppLanguage` member (drop-down order = enum order); the build then requires its `CultureName` and `NativeName`.
-- Use the neutral culture (`es`, not `es-ES`) unless the language needs a script split like `zh-Hans`/`zh-Hant`: .NET fallback then serves every regional variant from one file. Add its mapping to `AppLanguages.FromCulture`.
+- Add an `AppLanguage` member at its drop-down position (drop-down order = enum order; files persist culture names, so reordering is safe); the build then requires its `CultureName` and `NativeName`.
+- Options mirror Project Zomboid's languages (`media/lua/shared/Translate/*/language.json`), whose names are the reference for `NativeName`; Chinese and Russian keep native names.
+- Culture: neutral (`ru`) by default; a script split (`zh-Hans`/`zh-Hant`) or a region when PZ offers regional variants (`es-MX`, `pt-BR`). Add its mapping to `AppLanguages.FromCulture`.
 - Add `UiText.<culture>.resx` with every key, in the key order of `UiText.resx`.
 
 ## Culture state

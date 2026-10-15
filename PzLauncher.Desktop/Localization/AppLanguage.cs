@@ -9,9 +9,13 @@ public enum AppLanguage
     English,
     SimplifiedChinese,
     TraditionalChinese,
-    Spanish,
+    SpanishSpain,
+    SpanishMexico,
+    SpanishChile,
+    SpanishArgentina,
+    PortuguesePortugal,
+    PortugueseBrazil,
     Russian,
-    Portuguese,
 }
 
 #pragma warning disable CS8524 // No discard arms on purpose: CS8509 makes a new AppLanguage without a mapping a build error.
@@ -25,9 +29,13 @@ public static class AppLanguages
         AppLanguage.English => "en",
         AppLanguage.SimplifiedChinese => "zh-Hans",
         AppLanguage.TraditionalChinese => "zh-Hant",
-        AppLanguage.Spanish => "es",
+        AppLanguage.SpanishSpain => "es-ES",
+        AppLanguage.SpanishMexico => "es-MX",
+        AppLanguage.SpanishChile => "es-CL",
+        AppLanguage.SpanishArgentina => "es-AR",
+        AppLanguage.PortuguesePortugal => "pt-PT",
+        AppLanguage.PortugueseBrazil => "pt-BR",
         AppLanguage.Russian => "ru",
-        AppLanguage.Portuguese => "pt",
     };
 
     // Not from resx: each option is shown in its own language whatever the current UI language.
@@ -36,9 +44,13 @@ public static class AppLanguages
         AppLanguage.English => "English",
         AppLanguage.SimplifiedChinese => "简体中文",
         AppLanguage.TraditionalChinese => "繁體中文",
-        AppLanguage.Spanish => "Español",
+        AppLanguage.SpanishSpain => "Español (España)",
+        AppLanguage.SpanishMexico => "Español (México)",
+        AppLanguage.SpanishChile => "Español (Chile)",
+        AppLanguage.SpanishArgentina => "Español (Argentina)",
+        AppLanguage.PortuguesePortugal => "Português (Portugal)",
+        AppLanguage.PortugueseBrazil => "Português (Brasil)",
         AppLanguage.Russian => "Русский",
-        AppLanguage.Portuguese => "Português (Brasil)",
     };
 
     public static AppLanguage? FromCultureName(string? cultureName)
@@ -65,14 +77,22 @@ public static class AppLanguages
             {
                 return AppLanguage.TraditionalChinese;
             }
+
+            if (FromCultureName(current.Name) is { } exact)
+            {
+                return exact;
+            }
         }
 
         return culture.TwoLetterISOLanguageName switch
         {
             "zh" => AppLanguage.SimplifiedChinese,
-            "es" => AppLanguage.Spanish,
+            "es" => AppLanguage.SpanishMexico,
+            // Bare "pt" is Brazilian in .NET; the other regions (Africa, Asia) follow European norms.
+            "pt" => culture.Name.Equals("pt", StringComparison.OrdinalIgnoreCase)
+                ? AppLanguage.PortugueseBrazil
+                : AppLanguage.PortuguesePortugal,
             "ru" => AppLanguage.Russian,
-            "pt" => AppLanguage.Portuguese,
             _ => AppLanguage.English,
         };
     }
