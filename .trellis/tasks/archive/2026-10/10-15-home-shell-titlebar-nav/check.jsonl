@@ -1,0 +1,4 @@
+{"file": ".trellis/spec/desktop/directory-structure.md", "reason": "verify VMs have no Avalonia types, x:DataType + Design.DataContext on every view, explicit DataTemplates"}
+{"file": ".trellis/spec/desktop/localization.md", "reason": "verify resx parity, no localized text on MainWindow, state survives MainView rebuild"}
+{"file": ".trellis/spec/common/coding-rules.md", "reason": "comment density, AOT safety, naming"}
+{"file": ".trellis/spec/common/test-strategy.md", "reason": "test coverage for selection, navigation, and moved language tests"}

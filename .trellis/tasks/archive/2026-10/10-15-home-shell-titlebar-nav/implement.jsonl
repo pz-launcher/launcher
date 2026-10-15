@@ -1,0 +1,5 @@
+{"file": ".trellis/spec/desktop/directory-structure.md", "reason": "MVVM, view, DataTemplate, icon, and composition-root conventions for new pages"}
+{"file": ".trellis/spec/desktop/localization.md", "reason": "resx keys in all languages; localized UI must live in MainView, not MainWindow"}
+{"file": ".trellis/spec/common/coding-rules.md", "reason": "comments, nullability, async, AOT rules"}
+{"file": ".trellis/spec/common/test-strategy.md", "reason": "ViewModel test conventions and fakes"}
+{"file": ".trellis/spec/common/formatting.md", "reason": "dotnet format on changed .cs files"}
