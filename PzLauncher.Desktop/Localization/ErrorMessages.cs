@@ -1,4 +1,3 @@
-using System;
 using System.Globalization;
 using PzLauncher.Core.Common;
 using PzLauncher.Desktop.Lang;
@@ -10,13 +9,7 @@ public static class ErrorMessages
 {
     public static string ToUserText(Error error)
     {
-        if (!Enum.IsDefined(error.Code))
-        {
-            return error.Message;
-        }
-
         var path = Detail(error, "path");
-#pragma warning disable CS8524 // Unnamed values are handled above. No discard arm on purpose: CS8509 makes a new ErrorCode without user text a build error.
         return error.Code switch
         {
             ErrorCode.SteamNotInstalled => UiText.Error_SteamNotInstalled,
@@ -30,7 +23,6 @@ public static class ErrorMessages
             ErrorCode.InstallNotAPzInstall => Format(UiText.Error_InstallNotAPzInstall, path),
             ErrorCode.ResultUninitialized => UiText.Error_ResultUninitialized,
         };
-#pragma warning restore CS8524
     }
 
     public static string FolderNotLocal(string location) => Format(UiText.Error_FolderNotLocal, location);

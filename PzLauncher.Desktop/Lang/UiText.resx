@@ -12,12 +12,45 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="Main_Language" xml:space="preserve">
-    <value>Language</value>
-  </data>
   <data name="Main_FontFamily" xml:space="preserve">
     <value>fonts:Inter#Inter, Microsoft YaHei UI, PingFang SC, Noto Sans CJK SC</value>
     <comment>Not shown text: font family list. Inter for Latin, then CJK fonts in this language's script (Windows, macOS, Linux), so bold weights and glyph shapes match.</comment>
+  </data>
+  <data name="Shell_NavHome" xml:space="preserve">
+    <value>Launch</value>
+  </data>
+  <data name="Shell_NavInstalls" xml:space="preserve">
+    <value>Installs</value>
+  </data>
+  <data name="Shell_NavSettings" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="Shell_Language" xml:space="preserve">
+    <value>Language</value>
+  </data>
+  <data name="Shell_Minimize" xml:space="preserve">
+    <value>Minimize</value>
+  </data>
+  <data name="Shell_Maximize" xml:space="preserve">
+    <value>Maximize</value>
+  </data>
+  <data name="Shell_Restore" xml:space="preserve">
+    <value>Restore</value>
+  </data>
+  <data name="Shell_Close" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="Home_CurrentInstall" xml:space="preserve">
+    <value>Selected install</value>
+  </data>
+  <data name="Home_NoInstall" xml:space="preserve">
+    <value>No install detected. Install Project Zomboid through Steam, or add a folder on the Installs page.</value>
+  </data>
+  <data name="Home_Launch" xml:space="preserve">
+    <value>Launch game</value>
+  </data>
+  <data name="Home_SelectVersion" xml:space="preserve">
+    <value>Select version</value>
   </data>
   <data name="Installs_Title" xml:space="preserve">
     <value>Installs</value>
@@ -30,6 +63,15 @@
   </data>
   <data name="Installs_Empty" xml:space="preserve">
     <value>No Project Zomboid installs found. Install the game or the dedicated server through Steam, or use "Add folder…".</value>
+  </data>
+  <data name="Installs_FilterAll" xml:space="preserve">
+    <value>All</value>
+  </data>
+  <data name="Installs_FilterKindGroup" xml:space="preserve">
+    <value>Type</value>
+  </data>
+  <data name="Installs_FilterEmpty" xml:space="preserve">
+    <value>No installs of this type.</value>
   </data>
   <data name="Installs_BranchFormat" xml:space="preserve">
     <value>branch: {0}</value>
@@ -90,5 +132,20 @@
   </data>
   <data name="Error_FolderNotLocal" xml:space="preserve">
     <value>{0} isn't a folder on this computer, so the launcher can't open it. Pick a local folder instead.</value>
+  </data>
+  <data name="Settings_LauncherGroup" xml:space="preserve">
+    <value>Launcher</value>
+  </data>
+  <data name="Settings_Appearance" xml:space="preserve">
+    <value>Appearance</value>
+  </data>
+  <data name="Settings_Theme" xml:space="preserve">
+    <value>Theme</value>
+  </data>
+  <data name="Settings_ThemeLight" xml:space="preserve">
+    <value>Light</value>
+  </data>
+  <data name="Settings_ThemeDark" xml:space="preserve">
+    <value>Dark</value>
   </data>
 </root>

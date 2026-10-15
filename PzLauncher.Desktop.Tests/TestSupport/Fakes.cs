@@ -3,6 +3,7 @@ using PzLauncher.Core.Installs;
 using PzLauncher.Core.Platform;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Services;
+using PzLauncher.Desktop.Themes;
 
 namespace PzLauncher.Desktop.Tests.TestSupport;
 
@@ -41,6 +42,15 @@ public sealed class FakeInstallDetectionService : IInstallDetectionService
     public static InstallScanResult Found(params PzInstall[] installs) => new(installs, []);
 }
 
+public static class TestInstalls
+{
+    public static readonly PzInstall SteamGame =
+        new(PzInstallKind.Game, @"E:\SteamLibrary\steamapps\common\ProjectZomboid", new SteamAppInfo("100", null));
+
+    public static readonly PzInstall SteamServer =
+        new(PzInstallKind.DedicatedServer, @"E:\SteamLibrary\steamapps\common\Project Zomboid Dedicated Server", new SteamAppInfo("200", "unstable"));
+}
+
 public static class TestErrors
 {
     // ViewModels map errors by Code and Details only, so Kind is arbitrary here.
@@ -60,18 +70,37 @@ public sealed class FakeFolderPicker : IFolderPicker
     public Task<FolderPickResult> PickFolderAsync(string title, CancellationToken ct = default) => Task.FromResult(Next);
 }
 
-public sealed class FakeLanguagePreferenceStore : ILanguagePreferenceStore
+public sealed class FakePreferenceStore : IPreferenceStore
 {
-    public AppLanguage? Stored { get; set; }
+    public List<AppLanguage> SavedLanguages { get; } = [];
 
-    public List<AppLanguage> Saved { get; } = [];
+    public List<AppTheme> SavedThemes { get; } = [];
 
-    public AppLanguage? Load() => Stored;
+    public UserPreferences Load() => new(null, null);
 
-    public Task SaveAsync(AppLanguage language, CancellationToken ct = default)
+    public Task SaveLanguageAsync(AppLanguage language, CancellationToken ct = default)
     {
-        Saved.Add(language);
+        SavedLanguages.Add(language);
         return Task.CompletedTask;
+    }
+
+    public Task SaveThemeAsync(AppTheme theme, CancellationToken ct = default)
+    {
+        SavedThemes.Add(theme);
+        return Task.CompletedTask;
+    }
+}
+
+public sealed class FakeThemeService(AppTheme initial) : IThemeService
+{
+    public AppTheme Current { get; private set; } = initial;
+
+    public List<AppTheme> Applied { get; } = [];
+
+    public void SetTheme(AppTheme theme)
+    {
+        Current = theme;
+        Applied.Add(theme);
     }
 }
 

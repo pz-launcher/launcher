@@ -12,12 +12,45 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="Main_Language" xml:space="preserve">
-    <value>Язык</value>
-  </data>
   <data name="Main_FontFamily" xml:space="preserve">
     <value>fonts:Inter#Inter, Microsoft YaHei UI, PingFang SC, Noto Sans CJK SC</value>
     <comment>Not shown text: font family list. Inter for Latin, then CJK fonts in this language's script (Windows, macOS, Linux), so bold weights and glyph shapes match.</comment>
+  </data>
+  <data name="Shell_NavHome" xml:space="preserve">
+    <value>Запуск</value>
+  </data>
+  <data name="Shell_NavInstalls" xml:space="preserve">
+    <value>Установки</value>
+  </data>
+  <data name="Shell_NavSettings" xml:space="preserve">
+    <value>Настройки</value>
+  </data>
+  <data name="Shell_Language" xml:space="preserve">
+    <value>Язык</value>
+  </data>
+  <data name="Shell_Minimize" xml:space="preserve">
+    <value>Свернуть</value>
+  </data>
+  <data name="Shell_Maximize" xml:space="preserve">
+    <value>Развернуть</value>
+  </data>
+  <data name="Shell_Restore" xml:space="preserve">
+    <value>Восстановить</value>
+  </data>
+  <data name="Shell_Close" xml:space="preserve">
+    <value>Закрыть</value>
+  </data>
+  <data name="Home_CurrentInstall" xml:space="preserve">
+    <value>Выбранная установка</value>
+  </data>
+  <data name="Home_NoInstall" xml:space="preserve">
+    <value>Установки не обнаружены. Установите Project Zomboid через Steam или добавьте папку на странице «Установки».</value>
+  </data>
+  <data name="Home_Launch" xml:space="preserve">
+    <value>Запустить игру</value>
+  </data>
+  <data name="Home_SelectVersion" xml:space="preserve">
+    <value>Выбрать версию</value>
   </data>
   <data name="Installs_Title" xml:space="preserve">
     <value>Установки</value>
@@ -30,6 +63,15 @@
   </data>
   <data name="Installs_Empty" xml:space="preserve">
     <value>Установки Project Zomboid не найдены. Установите игру или выделенный сервер через Steam либо нажмите «Добавить папку…».</value>
+  </data>
+  <data name="Installs_FilterAll" xml:space="preserve">
+    <value>Все</value>
+  </data>
+  <data name="Installs_FilterKindGroup" xml:space="preserve">
+    <value>Тип</value>
+  </data>
+  <data name="Installs_FilterEmpty" xml:space="preserve">
+    <value>Нет установок этого типа.</value>
   </data>
   <data name="Installs_BranchFormat" xml:space="preserve">
     <value>ветка: {0}</value>
@@ -90,5 +132,20 @@
   </data>
   <data name="Error_FolderNotLocal" xml:space="preserve">
     <value>{0} — не папка на этом компьютере, поэтому лаунчер не может её открыть. Выберите локальную папку.</value>
+  </data>
+  <data name="Settings_LauncherGroup" xml:space="preserve">
+    <value>Лаунчер</value>
+  </data>
+  <data name="Settings_Appearance" xml:space="preserve">
+    <value>Оформление</value>
+  </data>
+  <data name="Settings_Theme" xml:space="preserve">
+    <value>Тема</value>
+  </data>
+  <data name="Settings_ThemeLight" xml:space="preserve">
+    <value>Светлая</value>
+  </data>
+  <data name="Settings_ThemeDark" xml:space="preserve">
+    <value>Тёмная</value>
   </data>
 </root>

@@ -32,7 +32,7 @@ Reference: `PzLauncher.Core/ServiceCollectionExtensions.cs`.
 
 - Hosts call `AddPzLauncherCore()` **and** `AddLogging(...)` (Core doesn't register logging).
 - Singletons unless a service holds per-operation state.
-- Test seams: `IPlatformEnvironment` (OS, registry, env, home dir) and `TimeProvider`. Never read those directly.
+- Test seams: `IPlatformEnvironment` (OS, registry, env, home dir) and `TimeProvider`.
 - Path comparison uses `IPlatformEnvironment.PathComparison`. Install list logic lives in `PzLauncher.Core/Installs/PzInstallList.cs`, not in hosts.
 - Plain `System.IO`; no file system abstraction library.
 

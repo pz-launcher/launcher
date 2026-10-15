@@ -45,8 +45,7 @@ is a ViewModel property, never `{x:Static}`.
 `UiText.Culture` is static: the one deliberate exception to "no static mutable state".
 
 - `LocalizationService` is the only production writer. Don't set `CultureInfo.CurrentUICulture`: it flows with `ExecutionContext`, so awaits resume in the old language.
-- Startup language: saved preference (`ILanguagePreferenceStore`), else `AppLanguages.FromCulture(CurrentUICulture)`. Composition in `PzLauncher.Desktop/App.axaml.cs`.
-- The preference file stores the culture name (`AppLanguages.CultureName`): a persisted contract, never change one.
+- Startup language: saved preference (`IPreferenceStore`, see [preferences.md](./preferences.md), which owns the file contract), else `AppLanguages.FromCulture(CurrentUICulture)`. Composition in `PzLauncher.Desktop/App.axaml.cs`.
 
 ## Tests
 

@@ -1,18 +1,43 @@
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:homeVm="using:PzLauncher.Desktop.ViewModels.Home"
+             xmlns:homeView="using:PzLauncher.Desktop.Views.Home"
              xmlns:installsVm="using:PzLauncher.Desktop.ViewModels.Installs"
              xmlns:installsView="using:PzLauncher.Desktop.Views.Installs"
+             xmlns:settingsVm="using:PzLauncher.Desktop.ViewModels.Settings"
+             xmlns:settingsView="using:PzLauncher.Desktop.Views.Settings"
              x:Class="PzLauncher.Desktop.App"
-             RequestedThemeVariant="Default">
+             RequestedThemeVariant="Light">
 
     <!-- One DataTemplate per page: the template's reflection-based ViewLocator isn't AOT-safe. -->
     <Application.DataTemplates>
+        <DataTemplate DataType="homeVm:HomeViewModel">
+            <homeView:HomeView />
+        </DataTemplate>
         <DataTemplate DataType="installsVm:InstallsViewModel">
             <installsView:InstallsView />
         </DataTemplate>
+        <DataTemplate DataType="settingsVm:SettingsViewModel">
+            <settingsView:SettingsView />
+        </DataTemplate>
     </Application.DataTemplates>
 
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="/Themes/ShellTheme.axaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Application.Resources>
+
     <Application.Styles>
-        <FluentTheme />
+        <FluentTheme>
+            <!-- Fluent derives its accent shades from this color; keep it equal to Shell.Accent. -->
+            <FluentTheme.Palettes>
+                <ColorPaletteResources x:Key="Light" Accent="#9B2226" />
+                <ColorPaletteResources x:Key="Dark" Accent="#9B2226" />
+            </FluentTheme.Palettes>
+        </FluentTheme>
+        <StyleInclude Source="/Themes/ShellStyles.axaml" />
     </Application.Styles>
 </Application>

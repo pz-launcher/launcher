@@ -7,7 +7,10 @@ using PzLauncher.Core.Installs;
 using PzLauncher.Core.Platform;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Services;
+using PzLauncher.Desktop.Themes;
+using PzLauncher.Desktop.ViewModels.Home;
 using PzLauncher.Desktop.ViewModels.Installs;
+using PzLauncher.Desktop.ViewModels.Settings;
 
 namespace PzLauncher.Desktop.ViewModels.Design;
 
@@ -28,9 +31,15 @@ public static class DesignData
     // Declared first: the properties below are initialized in textual order and need it.
     private static readonly LocalizationService Localization = new(AppLanguage.English);
 
+    private static readonly NoPreferenceStore Preferences = new();
+
     public static InstallsViewModel Installs { get; } = CreateInstalls();
 
-    public static MainViewModel Main { get; } = new(CreateInstalls(), Localization, new NoPreferenceStore());
+    public static HomeViewModel Home { get; } = new(Installs);
+
+    public static SettingsViewModel Settings { get; } = new(new LightThemeService(), Preferences);
+
+    public static MainViewModel Main { get; } = new(Home, Installs, Settings, new LanguageMenuViewModel(Localization, Preferences));
 
     private static string SampleAppPath(string installDir) =>
         Path.Combine(SampleSteamRoot, "steamapps", "common", installDir);
@@ -62,11 +71,22 @@ public static class DesignData
             Task.FromResult<FolderPickResult>(new FolderPickResult.Cancelled());
     }
 
-    private sealed class NoPreferenceStore : ILanguagePreferenceStore
+    private sealed class NoPreferenceStore : IPreferenceStore
     {
-        public AppLanguage? Load() => null;
+        public UserPreferences Load() => new(null, null);
 
-        public Task SaveAsync(AppLanguage language, CancellationToken ct = default) => Task.CompletedTask;
+        public Task SaveLanguageAsync(AppLanguage language, CancellationToken ct = default) => Task.CompletedTask;
+
+        public Task SaveThemeAsync(AppTheme theme, CancellationToken ct = default) => Task.CompletedTask;
+    }
+
+    private sealed class LightThemeService : IThemeService
+    {
+        public AppTheme Current => AppTheme.Light;
+
+        public void SetTheme(AppTheme theme)
+        {
+        }
     }
 
     private sealed class SamplePlatform : IPlatformEnvironment

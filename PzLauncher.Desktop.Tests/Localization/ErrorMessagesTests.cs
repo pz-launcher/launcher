@@ -44,10 +44,6 @@ public class ErrorMessagesTests : UiTextCultureTest
         }
     }
 
-    [Fact]
-    public void ToUserText_UndefinedCode_FallsBackToMessage() =>
-        Assert.Equal(Fallback, ErrorMessages.ToUserText(new Error((ErrorCode)int.MaxValue, Fallback, ErrorKind.Unexpected)));
-
     [Theory]
     [MemberData(nameof(TestLanguages.All), MemberType = typeof(TestLanguages))]
     public void ToUserText_PathDetail_IsIncluded(AppLanguage language)

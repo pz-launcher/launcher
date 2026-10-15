@@ -1,0 +1,4 @@
+is_global = true
+
+# Also covers source-generated files, which .editorconfig sections never match; .editorconfig opts paths back in.
+dotnet_diagnostic.RS0030.severity = none

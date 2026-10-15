@@ -1,0 +1,9 @@
+M:System.Environment.GetEnvironmentVariable(System.String);Use IPlatformEnvironment
+M:System.Environment.GetEnvironmentVariable(System.String,System.EnvironmentVariableTarget);Use IPlatformEnvironment
+M:System.Environment.GetEnvironmentVariables;Use IPlatformEnvironment
+M:System.Environment.GetFolderPath(System.Environment.SpecialFolder);Use IPlatformEnvironment
+M:System.Environment.GetFolderPath(System.Environment.SpecialFolder,System.Environment.SpecialFolderOption);Use IPlatformEnvironment
+T:System.OperatingSystem;Use IPlatformEnvironment.Os
+T:System.Runtime.InteropServices.RuntimeInformation;Use IPlatformEnvironment.Os
+T:Microsoft.Win32.Registry;Use IPlatformEnvironment
+T:System.Activator;Not AOT-safe: construct explicitly or via DI

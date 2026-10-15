@@ -2,9 +2,9 @@ using System.Text.Json.Serialization;
 
 namespace PzLauncher.Desktop.Services;
 
-[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
-[JsonSerializable(typeof(LanguagePreference))]
+[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
+[JsonSerializable(typeof(PreferencesFile))]
 internal sealed partial class DesktopJsonContext : JsonSerializerContext;
 
-/// <summary><see cref="Language"/> is a culture name, not the enum name, so renaming the enum keeps saved files valid.</summary>
-internal sealed record LanguagePreference(string? Language);
+/// <summary>Stable strings, not enum names (<see cref="Localization.AppLanguages.CultureName"/>, <see cref="Themes.AppThemes.PreferenceName"/>), so renaming an enum keeps saved files valid.</summary>
+internal sealed record PreferencesFile(string? Language, string? Theme);

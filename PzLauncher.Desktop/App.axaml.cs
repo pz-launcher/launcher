@@ -14,8 +14,11 @@ using PzLauncher.Core;
 using PzLauncher.Desktop.Lang;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Services;
+using PzLauncher.Desktop.Themes;
 using PzLauncher.Desktop.ViewModels;
+using PzLauncher.Desktop.ViewModels.Home;
 using PzLauncher.Desktop.ViewModels.Installs;
+using PzLauncher.Desktop.ViewModels.Settings;
 using PzLauncher.Desktop.Views;
 
 namespace PzLauncher.Desktop;
@@ -41,20 +44,28 @@ public partial class App : Application
             services.AddLogging(logging => logging.AddDebug());
             services.AddPzLauncherCore();
             services.AddSingleton<IFolderPicker>(new AvaloniaFolderPicker(() => desktop.MainWindow));
-            services.AddSingleton<ILanguagePreferenceStore>(sp =>
-                new JsonLanguagePreferenceStore(preferencesPath, sp.GetRequiredService<ILogger<JsonLanguagePreferenceStore>>()));
+            services.AddSingleton<IPreferenceStore>(sp =>
+                new JsonPreferenceStore(preferencesPath, sp.GetRequiredService<ILogger<JsonPreferenceStore>>()));
+            services.AddSingleton(sp => sp.GetRequiredService<IPreferenceStore>().Load());
             services.AddSingleton<ILocalizationService>(sp => new LocalizationService(
-                sp.GetRequiredService<ILanguagePreferenceStore>().Load() ?? AppLanguages.FromCulture(CultureInfo.CurrentUICulture)));
-            services.AddTransient<InstallsViewModel>();
+                sp.GetRequiredService<UserPreferences>().Language ?? AppLanguages.FromCulture(CultureInfo.CurrentUICulture)));
+            services.AddSingleton<IThemeService>(sp =>
+                new AvaloniaThemeService(this, sp.GetRequiredService<UserPreferences>().Theme ?? AppTheme.Light));
+            // Singletons: Home and Installs share one InstallsViewModel, and page state must outlive a MainView rebuild.
+            services.AddSingleton<InstallsViewModel>();
+            services.AddSingleton<HomeViewModel>();
+            services.AddSingleton<SettingsViewModel>();
+            services.AddSingleton<LanguageMenuViewModel>();
             services.AddSingleton<MainViewModel>();
             var provider = services.BuildServiceProvider();
 
             InstallGlobalExceptionHandlers(provider.GetRequiredService<ILogger<App>>());
 
-            // Resolved before the first window exists, so views read UiText in the startup language.
+            // Resolved before the first window exists, so views read UiText in the startup language and theme.
             var localization = provider.GetRequiredService<ILocalizationService>();
+            provider.GetRequiredService<IThemeService>();
 
-            // Posted: the event fires inside the ComboBox selection change, and rebuilding now would tear that ComboBox down.
+            // Posted: the event fires inside the language menu item's click, and rebuilding now would tear that menu down mid-click.
             localization.LanguageChanged += (_, _) => Dispatcher.UIThread.Post(() => RebuildMainView(desktop));
 
             desktop.MainWindow = new MainWindow

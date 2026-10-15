@@ -43,8 +43,6 @@ Adding a code:
 | I/O, access, parse errors from external data (incl. a parser library's documented exception type) | Catch at the Core service boundary, nearest the source, convert to a specific `Error`, log once at Warning. |
 | `ArgumentException`, `InvalidOperationException`, `NullReferenceException` from our code | Bugs. Don't catch. |
 
-No blanket `catch (Exception)` anywhere except the desktop global handlers (`PzLauncher.Desktop/App.axaml.cs`).
-
 ## External data is untrusted
 
 Files we don't own (Steam `.vdf`/`.acf`, later server `.ini`, mod metadata) can
