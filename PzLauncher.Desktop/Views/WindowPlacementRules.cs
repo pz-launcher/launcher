@@ -23,9 +23,6 @@ public static class WindowPlacementRules
 
     public static WindowStartup Resolve(WindowPlacement saved, IReadOnlyList<ScreenArea> screens, Size minSize)
     {
-        ArgumentNullException.ThrowIfNull(saved);
-        ArgumentNullException.ThrowIfNull(screens);
-
         var size = new Size(saved.Width, saved.Height);
         if (ScreenShowingTitleBar(saved, screens, minSize) is { } screen)
         {
@@ -45,8 +42,6 @@ public static class WindowPlacementRules
     /// <summary>The clamped size, positioned so the client area (<paramref name="clientOffset"/> from the window position) is in the middle of the working area.</summary>
     public static WindowBounds Center(Size size, ScreenArea screen, Size minSize, PixelVector clientOffset)
     {
-        ArgumentNullException.ThrowIfNull(screen);
-
         size = Clamp(size, minSize, screen);
         var area = screen.WorkingArea;
         var width = (int)Math.Round(size.Width * screen.Scaling);

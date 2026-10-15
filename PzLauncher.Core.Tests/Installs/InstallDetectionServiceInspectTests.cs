@@ -36,10 +36,6 @@ public sealed class InstallDetectionServiceInspectTests : IDisposable
         return dir;
     }
 
-    [Fact]
-    public Task InspectAsync_NullPath_ThrowsArgumentNull() =>
-        Assert.ThrowsAsync<ArgumentNullException>(() => _service.InspectAsync(null!, Ct));
-
     [Theory]
     [InlineData("")]
     [InlineData("   ")]

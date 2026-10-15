@@ -29,9 +29,6 @@ public class ResultTests
     }
 
     [Fact]
-    public void Ok_NullValue_Throws() => Assert.Throws<ArgumentNullException>(() => Result<string>.Ok(null!));
-
-    [Fact]
     public void NonGeneric_OkAndImplicitFromError_SetSuccessAndError()
     {
         Result failed = SampleError;

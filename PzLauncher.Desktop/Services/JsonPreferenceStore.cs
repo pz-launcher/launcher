@@ -53,7 +53,6 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger)
 
     public Task SaveWindowPlacementAsync(WindowPlacement placement, CancellationToken ct = default)
     {
-        ArgumentNullException.ThrowIfNull(placement);
         var window = new WindowFile(placement.X, placement.Y, placement.Width, placement.Height, placement.IsMaximized);
         return SaveAsync(file => file with { Window = window }, ct);
     }

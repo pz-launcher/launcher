@@ -48,10 +48,6 @@ public sealed partial class WindowPlacementPersistence
     /// <summary>Call before the window is shown.</summary>
     public static WindowPlacementPersistence Attach(Window window, IPreferenceStore store, WindowPlacement? saved, ILogger logger)
     {
-        ArgumentNullException.ThrowIfNull(window);
-        ArgumentNullException.ThrowIfNull(store);
-        ArgumentNullException.ThrowIfNull(logger);
-
         return new WindowPlacementPersistence(window, store, saved, logger);
     }
 
