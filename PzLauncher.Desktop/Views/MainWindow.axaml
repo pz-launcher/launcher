@@ -10,12 +10,14 @@
         x:DataType="vm:MainViewModel"
         Icon="/Assets/avalonia-logo.ico"
         Width="1000" Height="640" MinWidth="820" MinHeight="520"
+        WindowStartupLocation="CenterScreen"
         ExtendClientAreaToDecorationsHint="True"
         WindowDecorations="{OnPlatform Default=BorderOnly, macOS=Full}"
         Title="PzLauncher">
 
     <!-- BorderOnly keeps the native resize frame and snap on Windows (and drawn resize borders on Linux) without an
-         OS or drawn title bar; MainView draws its own. macOS needs Full to keep the native traffic lights. -->
+         OS or drawn title bar; MainView draws its own. On Windows the code-behind adds the caption style back for the
+         native window animations. macOS needs Full to keep the native traffic lights. -->
 
     <Design.DataContext>
         <!-- Previewer only; at runtime the DataContext comes from DI. -->

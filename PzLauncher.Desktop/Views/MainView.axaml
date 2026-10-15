@@ -83,8 +83,14 @@
             </Grid>
         </Border>
 
-        <!-- The page view is picked by the DataTemplates in App.axaml. -->
-        <ContentControl Grid.Row="1" Content="{Binding CurrentPage}" Foreground="{DynamicResource Shell.TextPrimary}" />
+        <!-- The page view is picked by the DataTemplates in App.axaml.
+             The content present when this view first loads (launch, language rebuild) shows without the transition. -->
+        <TransitioningContentControl Grid.Row="1" Content="{Binding CurrentPage}" Foreground="{DynamicResource Shell.TextPrimary}">
+            <TransitioningContentControl.PageTransition>
+                <controls:FadeRiseTransition Duration="{StaticResource Shell.PageTransitionDuration}"
+                                             Easing="{StaticResource Shell.MotionEasing}" Offset="8" />
+            </TransitioningContentControl.PageTransition>
+        </TransitioningContentControl>
     </Grid>
 
 </UserControl>

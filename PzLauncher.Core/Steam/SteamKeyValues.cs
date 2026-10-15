@@ -13,8 +13,6 @@ internal static class SteamKeyValues
     // No file loader is set, so #include/#base fail instead of touching the file system.
     public static Result<KVObject> Parse(string text)
     {
-        ArgumentNullException.ThrowIfNull(text);
-
         KVDocument document;
         try
         {

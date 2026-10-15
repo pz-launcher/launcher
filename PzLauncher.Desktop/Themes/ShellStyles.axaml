@@ -2,9 +2,15 @@
 <Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:controls="using:PzLauncher.Desktop.Views.Controls"
-        xmlns:ic="using:FluentIcons.Avalonia">
+        xmlns:ic="using:FluentIcons.Avalonia"
+        xmlns:sys="using:System">
 
     <Styles.Resources>
+        <!-- Motion timing for the shell control themes and the page transition in MainView. -->
+        <sys:TimeSpan x:Key="Shell.StateTransitionDuration">0:0:0.15</sys:TimeSpan>
+        <sys:TimeSpan x:Key="Shell.PageTransitionDuration">0:0:0.2</sys:TimeSpan>
+        <CubicEaseOut x:Key="Shell.MotionEasing" />
+
         <!-- Default NavItem look: a sidebar entry. -->
         <ControlTheme x:Key="{x:Type controls:NavItem}" TargetType="controls:NavItem">
             <Setter Property="Background" Value="Transparent" />
@@ -13,13 +19,25 @@
             <Setter Property="CornerRadius" Value="4" />
             <Setter Property="HorizontalAlignment" Value="Stretch" />
             <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Transitions">
+                <Transitions>
+                    <controls:PremultipliedBrushTransition Property="Background" Duration="{StaticResource Shell.StateTransitionDuration}" Easing="{StaticResource Shell.MotionEasing}" />
+                    <controls:PremultipliedBrushTransition Property="Foreground" Duration="{StaticResource Shell.StateTransitionDuration}" Easing="{StaticResource Shell.MotionEasing}" />
+                </Transitions>
+            </Setter>
             <Setter Property="Template">
                 <ControlTemplate>
                     <Border Background="{TemplateBinding Background}" CornerRadius="{TemplateBinding CornerRadius}"
                             Padding="{TemplateBinding Padding}">
                         <Grid ColumnDefinitions="Auto,Auto,*">
                             <Border Name="PART_Indicator" Width="3" Height="16" CornerRadius="2" Margin="0,0,11,0"
-                                    Background="{DynamicResource Shell.SidebarItemSelectedForeground}" Opacity="0" />
+                                    Background="{DynamicResource Shell.SidebarItemSelectedForeground}" Opacity="0">
+                                <Border.Transitions>
+                                    <Transitions>
+                                        <DoubleTransition Property="Opacity" Duration="{StaticResource Shell.StateTransitionDuration}" Easing="{StaticResource Shell.MotionEasing}" />
+                                    </Transitions>
+                                </Border.Transitions>
+                            </Border>
                             <ic:FluentIcon Grid.Column="1" Icon="{TemplateBinding Icon}" IconVariant="Regular" FontSize="16"
                                            VerticalAlignment="Center" Margin="0,0,10,0" />
                             <ContentPresenter Grid.Column="2" Name="PART_ContentPresenter" Content="{TemplateBinding Content}"
@@ -47,6 +65,12 @@
             <Setter Property="CornerRadius" Value="15" />
             <Setter Property="VerticalAlignment" Value="Center" />
             <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Transitions">
+                <Transitions>
+                    <controls:PremultipliedBrushTransition Property="Background" Duration="{StaticResource Shell.StateTransitionDuration}" Easing="{StaticResource Shell.MotionEasing}" />
+                    <controls:PremultipliedBrushTransition Property="Foreground" Duration="{StaticResource Shell.StateTransitionDuration}" Easing="{StaticResource Shell.MotionEasing}" />
+                </Transitions>
+            </Setter>
             <Setter Property="Template">
                 <ControlTemplate>
                     <Border Background="{TemplateBinding Background}" CornerRadius="{TemplateBinding CornerRadius}"
@@ -73,6 +97,12 @@
             <Setter Property="Foreground" Value="{DynamicResource Shell.TitleBarForeground}" />
             <Setter Property="Width" Value="46" />
             <Setter Property="VerticalAlignment" Value="Stretch" />
+            <Setter Property="Transitions">
+                <Transitions>
+                    <controls:PremultipliedBrushTransition Property="Background" Duration="{StaticResource Shell.StateTransitionDuration}" Easing="{StaticResource Shell.MotionEasing}" />
+                    <controls:PremultipliedBrushTransition Property="Foreground" Duration="{StaticResource Shell.StateTransitionDuration}" Easing="{StaticResource Shell.MotionEasing}" />
+                </Transitions>
+            </Setter>
             <Setter Property="Template">
                 <ControlTemplate>
                     <Border Background="{TemplateBinding Background}">

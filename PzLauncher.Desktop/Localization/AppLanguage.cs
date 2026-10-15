@@ -67,8 +67,6 @@ public static class AppLanguages
 
     public static AppLanguage FromCulture(CultureInfo culture)
     {
-        ArgumentNullException.ThrowIfNull(culture);
-
         // Matches names along the parent chain: ICU and NLS disagree on some parents (zh-TW → zh-Hant vs zh-CHT).
         for (var current = culture; current.Name.Length > 0; current = current.Parent)
         {

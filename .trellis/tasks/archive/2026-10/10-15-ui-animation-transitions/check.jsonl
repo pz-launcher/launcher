@@ -1,0 +1,4 @@
+{"file": ".trellis/spec/desktop/shell-and-theming.md", "reason": "Verify shell themes and navigation follow the spec after adding transitions"}
+{"file": ".trellis/spec/desktop/directory-structure.md", "reason": "Verify file placement and AOT-clean view conventions"}
+{"file": ".trellis/spec/common/coding-rules.md", "reason": "Verify C# coding rules"}
+{"file": ".trellis/spec/common/test-strategy.md", "reason": "Confirm which checks apply to UI-only changes"}

@@ -11,8 +11,6 @@ public static class ServiceCollectionExtensions
     /// <summary>The host must also call <c>services.AddLogging()</c>; a fake <see cref="IPlatformEnvironment"/> registered first wins.</summary>
     public static IServiceCollection AddPzLauncherCore(this IServiceCollection services)
     {
-        ArgumentNullException.ThrowIfNull(services);
-
         services.TryAddSingleton<IPlatformEnvironment, PlatformEnvironment>();
 
         services.TryAddSingleton<SteamLocator>();

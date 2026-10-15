@@ -1,10 +1,11 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using PzLauncher.Desktop.Services;
 using PzLauncher.Desktop.Themes;
 
 namespace PzLauncher.Desktop.ViewModels.Settings;
 
-public partial class SettingsViewModel(IThemeService themeService, IPreferenceStore preferences) : ViewModelBase
+public partial class SettingsViewModel(IThemeService themeService, IPreferenceStore preferences, IWindowPlacementService windowPlacement) : ViewModelBase
 {
     [ObservableProperty] public partial SettingsSection Section { get; set; }
 
@@ -22,4 +23,7 @@ public partial class SettingsViewModel(IThemeService themeService, IPreferenceSt
         // SaveThemeAsync never throws for I/O, and a failed save must not undo the switch.
         _ = preferences.SaveThemeAsync(value);
     }
+
+    [RelayCommand]
+    private void ResetWindowSize() => windowPlacement.ResetToDefault();
 }

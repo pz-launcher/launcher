@@ -148,4 +148,10 @@
   <data name="Settings_ThemeDark" xml:space="preserve">
     <value>深色</value>
   </data>
+  <data name="Settings_Window" xml:space="preserve">
+    <value>窗口</value>
+  </data>
+  <data name="Settings_ResetWindowSize" xml:space="preserve">
+    <value>重置窗口大小</value>
+  </data>
 </root>

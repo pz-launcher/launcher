@@ -11,7 +11,7 @@ namespace PzLauncher.Desktop.Services;
 
 public sealed partial class JsonPreferenceStore(string filePath, ILogger logger) : IPreferenceStore
 {
-    private static readonly PreferencesFile Empty = new(null, null);
+    private static readonly PreferencesFile Empty = new(null, null, null);
 
     // Saves are fire-and-forget; one at a time so the last choice is the one left on disk.
     private readonly SemaphoreSlim _saveGate = new(1, 1);
@@ -36,7 +36,13 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger)
             LogUnknownTheme(logger, filePath, file.Theme);
         }
 
-        return new UserPreferences(language, theme);
+        var window = ToPlacement(file.Window);
+        if (window is null && file.Window is not null)
+        {
+            LogInvalidWindowPlacement(logger, filePath);
+        }
+
+        return new UserPreferences(language, theme, window);
     }
 
     public Task SaveLanguageAsync(AppLanguage language, CancellationToken ct = default) =>
@@ -44,6 +50,18 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger)
 
     public Task SaveThemeAsync(AppTheme theme, CancellationToken ct = default) =>
         SaveAsync(file => file with { Theme = theme.PreferenceName() }, ct);
+
+    public Task SaveWindowPlacementAsync(WindowPlacement placement, CancellationToken ct = default)
+    {
+        var window = new WindowFile(placement.X, placement.Y, placement.Width, placement.Height, placement.IsMaximized);
+        return SaveAsync(file => file with { Window = window }, ct);
+    }
+
+    private static WindowPlacement? ToPlacement(WindowFile? window) =>
+        window is { X: { } x, Y: { } y, Width: { } width, Height: { } height, Maximized: { } maximized }
+        && double.IsFinite(width) && width > 0 && double.IsFinite(height) && height > 0
+            ? new WindowPlacement(x, y, width, height, maximized)
+            : null;
 
     private async Task SaveAsync(Func<PreferencesFile, PreferencesFile> update, CancellationToken ct)
     {
@@ -116,7 +134,7 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger)
         return Empty;
     }
 
-    [LoggerMessage(Level = LogLevel.Warning, Message = "Preferences {Path} could not be read; using the OS language and the light theme")]
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Preferences {Path} could not be read; using the OS language, the light theme and the default window placement")]
     private static partial void LogLoadFailed(ILogger logger, string path, Exception exception);
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Language preference {Path} holds an unsupported value '{Value}'; using the OS language")]
@@ -124,6 +142,9 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger)
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Theme preference {Path} holds an unsupported value '{Value}'; using the light theme")]
     private static partial void LogUnknownTheme(ILogger logger, string path, string value);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Window placement preference {Path} is incomplete or out of range; using the default size and position")]
+    private static partial void LogInvalidWindowPlacement(ILogger logger, string path);
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Preferences {Path} could not be saved")]
     private static partial void LogSaveFailed(ILogger logger, string path, Exception exception);

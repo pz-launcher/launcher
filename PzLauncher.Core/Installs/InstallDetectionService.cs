@@ -75,7 +75,6 @@ internal sealed partial class InstallDetectionService(
 
     public Task<Result<PzInstall>> InspectAsync(string path, CancellationToken ct = default)
     {
-        ArgumentNullException.ThrowIfNull(path);
         ct.ThrowIfCancellationRequested();
         return Task.FromResult(Inspect(path));
     }

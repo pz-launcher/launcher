@@ -21,17 +21,14 @@ public readonly record struct Result
 
     public static Result Ok() => new(true, null);
 
-    public static Result Fail(Error error)
-    {
-        ArgumentNullException.ThrowIfNull(error);
-        return new Result(false, error);
-    }
+    public static Result Fail(Error error) => new(false, error);
 
     public static implicit operator Result(Error error) => Fail(error);
 }
 
 /// <summary><c>default(Result&lt;T&gt;)</c> is a failure (<see cref="ResultErrors.Uninitialized"/>), never a success with a null value.</summary>
 public readonly record struct Result<T>
+    where T : notnull
 {
     private readonly bool _isSuccess;
     private readonly Error? _error;
@@ -51,17 +48,9 @@ public readonly record struct Result<T>
 
     public Error? Error => _isSuccess ? null : _error ?? ResultErrors.Uninitialized;
 
-    public static Result<T> Ok(T value)
-    {
-        ArgumentNullException.ThrowIfNull(value);
-        return new Result<T>(true, value, null);
-    }
+    public static Result<T> Ok(T value) => new(true, value, null);
 
-    public static Result<T> Fail(Error error)
-    {
-        ArgumentNullException.ThrowIfNull(error);
-        return new Result<T>(false, default, error);
-    }
+    public static Result<T> Fail(Error error) => new(false, default, error);
 
     public static implicit operator Result<T>(T value) => Ok(value);
 

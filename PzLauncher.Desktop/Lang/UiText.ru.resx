@@ -148,4 +148,10 @@
   <data name="Settings_ThemeDark" xml:space="preserve">
     <value>Тёмная</value>
   </data>
+  <data name="Settings_Window" xml:space="preserve">
+    <value>Окно</value>
+  </data>
+  <data name="Settings_ResetWindowSize" xml:space="preserve">
+    <value>Сбросить размер окна</value>
+  </data>
 </root>

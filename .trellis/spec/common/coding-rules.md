@@ -31,7 +31,8 @@ validated yet" or "error".
 
 | Situation | Rule | Reference |
 |---|---|---|
-| Public method, non-null param | `ThrowIfNull` at entry; helpers below take non-null types | `InstallDetectionService.InspectAsync` |
+| Non-null param | Trust the annotation: no `ThrowIfNull`. Every caller is in this solution, compiled with nullable warnings as errors and no `!` | `InstallDetectionService.InspectAsync` |
+| Generic value that must not be null | `where T : notnull`, not a runtime check | `Result<T>` |
 | OS / registry / env / file value | Nullable only until the first validation | `SteamLocator.GetCandidateRoots` |
 | Value or failure reason | `Result<T>`, not a tuple of nullables | `SteamLibraryReader.ReadAsync` |
 | Fields that are null together | One nullable sub-record; derive flags from it | `PzInstall` |
@@ -39,7 +40,7 @@ validated yet" or "error".
 | Value set at startup and used right away | Local or constructor parameter, not a nullable field | `PzLauncher.Desktop/App.axaml.cs` |
 | Service with several outcomes | Explicit result type; `null` at most means "cancelled" | `PzLauncher.Desktop/Services/FolderPickResult.cs` |
 
-- No `!` in production code. Tests use it only on genuinely nullable APIs or to feed a null guard.
+- No `!` in production code. Tests use it only on genuinely nullable APIs.
 
 ```csharp
 // Wrong — two nullables encode one either; callers need `!`

@@ -148,4 +148,10 @@
   <data name="Settings_ThemeDark" xml:space="preserve">
     <value>Dark</value>
   </data>
+  <data name="Settings_Window" xml:space="preserve">
+    <value>Window</value>
+  </data>
+  <data name="Settings_ResetWindowSize" xml:space="preserve">
+    <value>Reset window size</value>
+  </data>
 </root>

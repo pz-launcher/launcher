@@ -44,6 +44,8 @@ public partial class App : Application
             services.AddLogging(logging => logging.AddDebug());
             services.AddPzLauncherCore();
             services.AddSingleton<IFolderPicker>(new AvaloniaFolderPicker(() => desktop.MainWindow));
+            WindowPlacementPersistence? windowPlacement = null;
+            services.AddSingleton<IWindowPlacementService>(new WindowPlacementService(() => windowPlacement));
             services.AddSingleton<IPreferenceStore>(sp =>
                 new JsonPreferenceStore(preferencesPath, sp.GetRequiredService<ILogger<JsonPreferenceStore>>()));
             services.AddSingleton(sp => sp.GetRequiredService<IPreferenceStore>().Load());
@@ -68,10 +70,16 @@ public partial class App : Application
             // Posted: the event fires inside the language menu item's click, and rebuilding now would tear that menu down mid-click.
             localization.LanguageChanged += (_, _) => Dispatcher.UIThread.Post(() => RebuildMainView(desktop));
 
-            desktop.MainWindow = new MainWindow
+            var mainWindow = new MainWindow
             {
                 DataContext = provider.GetRequiredService<MainViewModel>(),
             };
+            windowPlacement = WindowPlacementPersistence.Attach(
+                mainWindow,
+                provider.GetRequiredService<IPreferenceStore>(),
+                provider.GetRequiredService<UserPreferences>().Window,
+                provider.GetRequiredService<ILogger<WindowPlacementPersistence>>());
+            desktop.MainWindow = mainWindow;
             desktop.Exit += (_, _) => provider.Dispose();
         }
 

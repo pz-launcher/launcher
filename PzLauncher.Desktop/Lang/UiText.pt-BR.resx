@@ -148,4 +148,10 @@
   <data name="Settings_ThemeDark" xml:space="preserve">
     <value>Escuro</value>
   </data>
+  <data name="Settings_Window" xml:space="preserve">
+    <value>Janela</value>
+  </data>
+  <data name="Settings_ResetWindowSize" xml:space="preserve">
+    <value>Redefinir tamanho da janela</value>
+  </data>
 </root>

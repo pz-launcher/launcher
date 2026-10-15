@@ -6,7 +6,7 @@ using PzLauncher.Desktop.Themes;
 namespace PzLauncher.Desktop.Services;
 
 /// <summary>A <c>null</c> field means no usable saved choice.</summary>
-public sealed record UserPreferences(AppLanguage? Language, AppTheme? Theme);
+public sealed record UserPreferences(AppLanguage? Language, AppTheme? Theme, WindowPlacement? Window);
 
 public interface IPreferenceStore
 {
@@ -18,4 +18,7 @@ public interface IPreferenceStore
 
     /// <inheritdoc cref="SaveLanguageAsync"/>
     Task SaveThemeAsync(AppTheme theme, CancellationToken ct = default);
+
+    /// <inheritdoc cref="SaveLanguageAsync"/>
+    Task SaveWindowPlacementAsync(WindowPlacement placement, CancellationToken ct = default);
 }
