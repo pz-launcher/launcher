@@ -2,6 +2,7 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using PzLauncher.Core.Common;
 using PzLauncher.Core.Installs;
+using PzLauncher.Core.Java;
 using PzLauncher.Core.Serialization;
 using PzLauncher.Core.Steam;
 
@@ -23,9 +24,15 @@ public partial class ErrorCodeTests
         [ErrorCode.InstallPathNotFound] = (InstallErrors.PathNotFound("p"), ErrorKind.NotFound),
         [ErrorCode.InstallPathUnreadable] = (InstallErrors.PathUnreadable("p", "r"), ErrorKind.External),
         [ErrorCode.InstallNotAPzInstall] = (InstallErrors.NotAPzInstall("p"), ErrorKind.Validation),
+        [ErrorCode.JavaInvalidPath] = (JavaErrors.InvalidPath("p"), ErrorKind.Validation),
+        [ErrorCode.JavaPathNotFound] = (JavaErrors.PathNotFound("p"), ErrorKind.NotFound),
+        [ErrorCode.JavaNotAJavaHome] = (JavaErrors.NotAJavaHome("p"), ErrorKind.Validation),
+        [ErrorCode.JavaNot64Bit] = (JavaErrors.Not64Bit("p"), ErrorKind.Validation),
+        [ErrorCode.JavaSourceUnreadable] = (JavaErrors.SourceUnreadable("p", "r"), ErrorKind.External),
+        [ErrorCode.JavaReleaseUnreadable] = (JavaErrors.ReleaseUnreadable("p", "r"), ErrorKind.External),
     };
 
-    [GeneratedRegex(@"^[a-z]+\.[a-z]+(_[a-z]+)*$")]
+    [GeneratedRegex(@"^[a-z]+\.[a-z0-9]+(_[a-z0-9]+)*$")]
     private static partial Regex WireNameFormat();
 
     [Theory]
@@ -63,6 +70,12 @@ public partial class ErrorCodeTests
     [InlineData(ErrorCode.InstallPathNotFound, "install.path_not_found")]
     [InlineData(ErrorCode.InstallPathUnreadable, "install.path_unreadable")]
     [InlineData(ErrorCode.InstallNotAPzInstall, "install.not_a_pz_install")]
+    [InlineData(ErrorCode.JavaInvalidPath, "java.invalid_path")]
+    [InlineData(ErrorCode.JavaPathNotFound, "java.path_not_found")]
+    [InlineData(ErrorCode.JavaNotAJavaHome, "java.not_a_java_home")]
+    [InlineData(ErrorCode.JavaNot64Bit, "java.not_64_bit")]
+    [InlineData(ErrorCode.JavaSourceUnreadable, "java.source_unreadable")]
+    [InlineData(ErrorCode.JavaReleaseUnreadable, "java.release_unreadable")]
     public void ToWireName_ExistingCodes_AreStable(ErrorCode code, string wireName) =>
         Assert.Equal(wireName, code.ToWireName());
 

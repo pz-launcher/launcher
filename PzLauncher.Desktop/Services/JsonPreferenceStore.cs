@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -11,7 +13,7 @@ namespace PzLauncher.Desktop.Services;
 
 public sealed partial class JsonPreferenceStore(string filePath, ILogger logger) : IPreferenceStore
 {
-    private static readonly PreferencesFile Empty = new(null, null, null);
+    private static readonly PreferencesFile Empty = new(null, null, null, null);
 
     // Saves are fire-and-forget; one at a time so the last choice is the one left on disk.
     private readonly SemaphoreSlim _saveGate = new(1, 1);
@@ -42,7 +44,13 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger)
             LogInvalidWindowPlacement(logger, filePath);
         }
 
-        return new UserPreferences(language, theme, window);
+        var javaHomes = ToManualJavaHomes(file.JavaRuntimes);
+        if (javaHomes.Count != (file.JavaRuntimes?.Count ?? 0))
+        {
+            LogInvalidJavaRuntimes(logger, filePath);
+        }
+
+        return new UserPreferences(language, theme, window) { ManualJavaHomes = javaHomes };
     }
 
     public Task SaveLanguageAsync(AppLanguage language, CancellationToken ct = default) =>
@@ -56,6 +64,20 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger)
         var window = new WindowFile(placement.X, placement.Y, placement.Width, placement.Height, placement.IsMaximized);
         return SaveAsync(file => file with { Window = window }, ct);
     }
+
+    public Task SaveManualJavaHomesAsync(IReadOnlyList<string> homes, CancellationToken ct = default)
+    {
+        JsonElement[] entries = [.. homes.Select(home => JsonSerializer.SerializeToElement(home, DesktopJsonContext.Default.String))];
+        return SaveAsync(file => file with { JavaRuntimes = entries }, ct);
+    }
+
+    private static List<string> ToManualJavaHomes(IReadOnlyList<JsonElement>? entries) =>
+    [
+        .. (entries ?? [])
+            .Where(entry => entry.ValueKind == JsonValueKind.String)
+            .Select(entry => entry.GetString() ?? "")
+            .Where(path => path.AsSpan().IndexOfAny(Path.GetInvalidPathChars()) < 0 && Path.IsPathFullyQualified(path)),
+    ];
 
     private static WindowPlacement? ToPlacement(WindowFile? window) =>
         window is { X: { } x, Y: { } y, Width: { } width, Height: { } height, Maximized: { } maximized }
@@ -145,6 +167,9 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger)
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Window placement preference {Path} is incomplete or out of range; using the default size and position")]
     private static partial void LogInvalidWindowPlacement(ILogger logger, string path);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Java runtime preference {Path} holds entries that aren't absolute paths; ignoring them")]
+    private static partial void LogInvalidJavaRuntimes(ILogger logger, string path);
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Preferences {Path} could not be saved")]
     private static partial void LogSaveFailed(ILogger logger, string path, Exception exception);

@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 4
+- **Total Sessions**: 5
 - **Last Active**: 2026-10-15
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~111 | Active |
+| `journal-1.md` | ~134 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 5 | 2026-10-15 | Plan launch feature; implement Java runtime discovery | `cdf04c5`, `a17328c` | `feat/java-discovery` |
 | 4 | 2026-10-15 | UI animations, native window animations and remembered window placement | `18d5c36`, `d03bd35`, `a6c5f55` | `feat/ui-animation-transitions` |
 | 3 | 2026-10-15 | Launcher shell: title-bar nav, page sidebars, PZ theme; analyzer rules as config | `a8cc28f`, `542aa65`, `5d99e2a`, `aef6a68`, `e79c9fa`, `1962bf8` | `feat/home-shell` |
 | 2 | 2026-10-15 | resx localization: 10 language options, runtime switch, Fluent icon | `414efe7`, `d6d8b97`, `7377e13`, `542ddd8`, `f1ed444`, `0487771` | `feat/resx-localization` |

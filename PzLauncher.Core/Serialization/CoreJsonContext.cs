@@ -1,6 +1,7 @@
 using System.Text.Json.Serialization;
 using PzLauncher.Core.Common;
 using PzLauncher.Core.Installs;
+using PzLauncher.Core.Java;
 
 namespace PzLauncher.Core.Serialization;
 
@@ -16,4 +17,7 @@ namespace PzLauncher.Core.Serialization;
 [JsonSerializable(typeof(PzInstall))]
 [JsonSerializable(typeof(SteamAppInfo))]
 [JsonSerializable(typeof(InstallScanResult))]
+[JsonSerializable(typeof(JavaRuntime))]
+[JsonSerializable(typeof(JavaVersion))]
+[JsonSerializable(typeof(JavaScanResult))]
 public sealed partial class CoreJsonContext : JsonSerializerContext;

@@ -1,0 +1,78 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:PzLauncher.Desktop.ViewModels.Java"
+             xmlns:design="using:PzLauncher.Desktop.ViewModels.Design"
+             xmlns:loc="using:PzLauncher.Desktop.Localization"
+             xmlns:lang="using:PzLauncher.Desktop.Lang"
+             mc:Ignorable="d" d:DesignWidth="700" d:DesignHeight="560"
+             x:Class="PzLauncher.Desktop.Views.Settings.JavaSettingsView"
+             x:DataType="vm:JavaRuntimesViewModel">
+
+    <Design.DataContext>
+        <x:Static Member="design:DesignData.Java" />
+    </Design.DataContext>
+
+    <DockPanel Margin="24,16">
+        <Grid DockPanel.Dock="Top" ColumnDefinitions="*,Auto,Auto" Margin="0,0,0,12">
+            <TextBlock Grid.Column="0" Text="{x:Static lang:UiText.Java_Title}" FontSize="22" FontWeight="SemiBold" VerticalAlignment="Center" />
+            <Button Grid.Column="1" Content="{x:Static lang:UiText.Java_Rescan}" Command="{Binding ScanCommand}" Margin="0,0,8,0" />
+            <Button Grid.Column="2" Content="{x:Static lang:UiText.Java_Add}" Command="{Binding AddCommand}" />
+        </Grid>
+
+        <ProgressBar DockPanel.Dock="Top" IsIndeterminate="True" IsVisible="{Binding IsScanning}" Margin="0,0,0,8" />
+
+        <TextBlock DockPanel.Dock="Top" Text="{Binding ErrorText}" Foreground="{DynamicResource Shell.ErrorForeground}" TextWrapping="Wrap"
+                   IsVisible="{Binding ErrorText, Converter={x:Static ObjectConverters.IsNotNull}}" Margin="0,0,0,8" />
+        <ItemsControl DockPanel.Dock="Top" ItemsSource="{Binding Warnings}" Margin="0,0,0,8">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="x:String">
+                    <TextBlock Text="{Binding}" Foreground="{DynamicResource Shell.WarningForeground}" TextWrapping="Wrap" />
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <Panel>
+            <TextBlock Text="{x:Static lang:UiText.Java_Empty}"
+                       IsVisible="{Binding IsEmpty}" TextWrapping="Wrap" Foreground="{DynamicResource Shell.TextMuted}"
+                       HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" />
+
+            <ScrollViewer IsVisible="{Binding !IsEmpty}">
+                <ItemsControl ItemsSource="{Binding Runtimes}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:JavaRuntimeRow">
+                            <Border Padding="12,8" Margin="0,0,0,6" CornerRadius="4" BorderThickness="1"
+                                    BorderBrush="{DynamicResource Shell.Border}">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <StackPanel Grid.Column="0" Spacing="2">
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <TextBlock Text="{Binding Version, StringFormat={x:Static lang:UiText.Java_VersionFormat}}" FontWeight="SemiBold"
+                                                       IsVisible="{Binding Version, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                                            <TextBlock Text="{x:Static lang:UiText.Java_VersionUnknown}" FontWeight="SemiBold"
+                                                       IsVisible="{Binding IsVersionUnknown}" />
+                                            <TextBlock Text="{Binding Vendor}"
+                                                       IsVisible="{Binding Vendor, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                                            <TextBlock Text="{x:Static lang:UiText.Java_VendorUnknown}" Foreground="{DynamicResource Shell.TextMuted}"
+                                                       IsVisible="{Binding IsVendorUnknown}" />
+                                            <TextBlock Text="{x:Static lang:UiText.Java_Missing}" Foreground="{DynamicResource Shell.ErrorForeground}" FontWeight="SemiBold"
+                                                       IsVisible="{Binding !IsAvailable}" />
+                                            <Border BorderThickness="1" BorderBrush="{DynamicResource Shell.Border}" CornerRadius="3" Padding="6,0"
+                                                    VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Source, Converter={x:Static loc:DisplayNames.JavaSource}}" FontSize="12"
+                                                           Foreground="{DynamicResource Shell.TextMuted}" />
+                                            </Border>
+                                        </StackPanel>
+                                        <TextBlock Text="{Binding HomePath}" Foreground="{DynamicResource Shell.TextMuted}" TextWrapping="Wrap" />
+                                    </StackPanel>
+                                    <Button Grid.Column="1" Content="{x:Static lang:UiText.Java_Remove}" Command="{Binding RemoveCommand}"
+                                            IsVisible="{Binding IsManual}" VerticalAlignment="Center" Margin="12,0,0,0" />
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </Panel>
+    </DockPanel>
+</UserControl>

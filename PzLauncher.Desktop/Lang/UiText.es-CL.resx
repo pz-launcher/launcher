@@ -130,6 +130,24 @@
   <data name="Error_InstallNotAPzInstall" xml:space="preserve">
     <value>{0} no parece ser una carpeta del juego ni del servidor dedicado de Project Zomboid.</value>
   </data>
+  <data name="Error_JavaInvalidPath" xml:space="preserve">
+    <value>Esa no es una ruta de carpeta válida.</value>
+  </data>
+  <data name="Error_JavaPathNotFound" xml:space="preserve">
+    <value>La carpeta {0} no existe.</value>
+  </data>
+  <data name="Error_JavaNotAJavaHome" xml:space="preserve">
+    <value>{0} no es una carpeta de Java. Elige la carpeta de Java que contiene la carpeta bin, o la carpeta bin misma.</value>
+  </data>
+  <data name="Error_JavaNot64Bit" xml:space="preserve">
+    <value>El Java de {0} es de 32 bits. Project Zomboid necesita un Java de 64 bits.</value>
+  </data>
+  <data name="Error_JavaSourceUnreadable" xml:space="preserve">
+    <value>No se pudo buscar Java en {0}. Puede que falte en la lista algún Java instalado ahí.</value>
+  </data>
+  <data name="Error_JavaReleaseUnreadable" xml:space="preserve">
+    <value>No se pudo leer el archivo de versión {0}. Ese Java aparece con una versión desconocida.</value>
+  </data>
   <data name="Error_FolderNotLocal" xml:space="preserve">
     <value>{0} no es una carpeta de este computador, así que el launcher no puede abrirla. Elige una carpeta local.</value>
   </data>
@@ -153,5 +171,47 @@
   </data>
   <data name="Settings_ResetWindowSize" xml:space="preserve">
     <value>Restablecer tamaño de la ventana</value>
+  </data>
+  <data name="Settings_GameGroup" xml:space="preserve">
+    <value>Juego</value>
+  </data>
+  <data name="Settings_Java" xml:space="preserve">
+    <value>Java</value>
+  </data>
+  <data name="Java_Title" xml:space="preserve">
+    <value>Entornos de ejecución de Java</value>
+  </data>
+  <data name="Java_Rescan" xml:space="preserve">
+    <value>Volver a escanear</value>
+  </data>
+  <data name="Java_Add" xml:space="preserve">
+    <value>Agregar…</value>
+  </data>
+  <data name="Java_PickFolderTitle" xml:space="preserve">
+    <value>Selecciona una carpeta de Java (o su carpeta bin)</value>
+  </data>
+  <data name="Java_Remove" xml:space="preserve">
+    <value>Quitar</value>
+  </data>
+  <data name="Java_Empty" xml:space="preserve">
+    <value>No se encontró ningún Java de 64 bits. Instala Java o usa "Agregar…" para elegir su carpeta.</value>
+  </data>
+  <data name="Java_VersionFormat" xml:space="preserve">
+    <value>Java {0}</value>
+  </data>
+  <data name="Java_VersionUnknown" xml:space="preserve">
+    <value>Versión desconocida</value>
+  </data>
+  <data name="Java_VendorUnknown" xml:space="preserve">
+    <value>Proveedor desconocido</value>
+  </data>
+  <data name="Java_Missing" xml:space="preserve">
+    <value>No encontrado</value>
+  </data>
+  <data name="JavaSource_Auto" xml:space="preserve">
+    <value>Automático</value>
+  </data>
+  <data name="JavaSource_Manual" xml:space="preserve">
+    <value>Agregado manualmente</value>
   </data>
 </root>

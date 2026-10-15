@@ -1,5 +1,6 @@
 using PzLauncher.Core.Common;
 using PzLauncher.Core.Installs;
+using PzLauncher.Core.Java;
 
 namespace PzLauncher.Core.Tests.TestSupport;
 
@@ -20,9 +21,13 @@ public static class ResultAssert
         return result.Error;
     }
 
-    public static Error SingleWarning(InstallScanResult scan, ErrorCode code)
+    public static Error SingleWarning(InstallScanResult scan, ErrorCode code) => SingleWarning(scan.Warnings, code);
+
+    public static Error SingleWarning(JavaScanResult scan, ErrorCode code) => SingleWarning(scan.Warnings, code);
+
+    private static Error SingleWarning(IReadOnlyList<Error> warnings, ErrorCode code)
     {
-        var warning = Assert.Single(scan.Warnings);
+        var warning = Assert.Single(warnings);
         Assert.Equal(code, warning.Code);
         return warning;
     }

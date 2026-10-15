@@ -32,7 +32,8 @@ Reference: `PzLauncher.Core/ServiceCollectionExtensions.cs`.
 
 - Hosts call `AddPzLauncherCore()` **and** `AddLogging(...)` (Core doesn't register logging).
 - Singletons unless a service holds per-operation state.
-- Test seams: `IPlatformEnvironment` (OS, registry, env, home dir) and `TimeProvider`.
+- Test seams: `IPlatformEnvironment` (OS, registry, env, home dir) and `TimeProvider`. A fixed system location a test must redirect (e.g. `/usr/lib/jvm`) is an `internal init` property on the service, defaulting to the real list; every test sets it. Reference: `JavaDiscoveryService.LinuxSystemFolders`.
+- Registry reads are generic (`IPlatformEnvironment.GetRegistrySubKeyNames` / `ReadRegistryString`, 64-bit view): empty/`null` off Windows or for a missing key, but they **throw** `IOException` / `UnauthorizedAccessException` for an existing key that can't be read, so the service can report it as a warning at its boundary. Fakes must model all three cases.
 - Path comparison uses `IPlatformEnvironment.PathComparison`. Install list logic lives in `PzLauncher.Core/Installs/PzInstallList.cs`, not in hosts.
 - Plain `System.IO`; no file system abstraction library.
 

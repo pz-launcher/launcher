@@ -130,6 +130,24 @@
   <data name="Error_InstallNotAPzInstall" xml:space="preserve">
     <value>{0} não parece ser uma pasta do jogo nem do servidor dedicado do Project Zomboid.</value>
   </data>
+  <data name="Error_JavaInvalidPath" xml:space="preserve">
+    <value>Esse não é um caminho de pasta válido.</value>
+  </data>
+  <data name="Error_JavaPathNotFound" xml:space="preserve">
+    <value>A pasta {0} não existe.</value>
+  </data>
+  <data name="Error_JavaNotAJavaHome" xml:space="preserve">
+    <value>{0} não é uma pasta do Java. Escolha a pasta do Java que contém a pasta bin, ou a própria pasta bin.</value>
+  </data>
+  <data name="Error_JavaNot64Bit" xml:space="preserve">
+    <value>O Java em {0} é de 32 bits. O Project Zomboid precisa de um Java de 64 bits.</value>
+  </data>
+  <data name="Error_JavaSourceUnreadable" xml:space="preserve">
+    <value>Não foi possível procurar o Java em {0}. Algum Java aí instalado pode não aparecer na lista.</value>
+  </data>
+  <data name="Error_JavaReleaseUnreadable" xml:space="preserve">
+    <value>Não foi possível ler o ficheiro de versão {0}. Esse Java é apresentado com versão desconhecida.</value>
+  </data>
   <data name="Error_FolderNotLocal" xml:space="preserve">
     <value>{0} não é uma pasta deste computador, pelo que o launcher não a consegue abrir. Escolha uma pasta local.</value>
   </data>
@@ -153,5 +171,47 @@
   </data>
   <data name="Settings_ResetWindowSize" xml:space="preserve">
     <value>Repor tamanho da janela</value>
+  </data>
+  <data name="Settings_GameGroup" xml:space="preserve">
+    <value>Jogo</value>
+  </data>
+  <data name="Settings_Java" xml:space="preserve">
+    <value>Java</value>
+  </data>
+  <data name="Java_Title" xml:space="preserve">
+    <value>Ambientes de execução Java</value>
+  </data>
+  <data name="Java_Rescan" xml:space="preserve">
+    <value>Voltar a procurar</value>
+  </data>
+  <data name="Java_Add" xml:space="preserve">
+    <value>Adicionar…</value>
+  </data>
+  <data name="Java_PickFolderTitle" xml:space="preserve">
+    <value>Selecione uma pasta do Java (ou a respetiva pasta bin)</value>
+  </data>
+  <data name="Java_Remove" xml:space="preserve">
+    <value>Remover</value>
+  </data>
+  <data name="Java_Empty" xml:space="preserve">
+    <value>Não foi encontrado nenhum Java de 64 bits. Instale o Java ou utilize "Adicionar…" para escolher a pasta.</value>
+  </data>
+  <data name="Java_VersionFormat" xml:space="preserve">
+    <value>Java {0}</value>
+  </data>
+  <data name="Java_VersionUnknown" xml:space="preserve">
+    <value>Versão desconhecida</value>
+  </data>
+  <data name="Java_VendorUnknown" xml:space="preserve">
+    <value>Fornecedor desconhecido</value>
+  </data>
+  <data name="Java_Missing" xml:space="preserve">
+    <value>Não encontrado</value>
+  </data>
+  <data name="JavaSource_Auto" xml:space="preserve">
+    <value>Automático</value>
+  </data>
+  <data name="JavaSource_Manual" xml:space="preserve">
+    <value>Adicionado manualmente</value>
   </data>
 </root>

@@ -26,6 +26,14 @@ public enum ErrorCode
     [JsonStringEnumMemberName("install.path_not_found")] InstallPathNotFound,
     [JsonStringEnumMemberName("install.path_unreadable")] InstallPathUnreadable,
     [JsonStringEnumMemberName("install.not_a_pz_install")] InstallNotAPzInstall,
+
+    // ── java ──────────────────────────────────────────────────
+    [JsonStringEnumMemberName("java.invalid_path")] JavaInvalidPath,
+    [JsonStringEnumMemberName("java.path_not_found")] JavaPathNotFound,
+    [JsonStringEnumMemberName("java.not_a_java_home")] JavaNotAJavaHome,
+    [JsonStringEnumMemberName("java.not_64_bit")] JavaNot64Bit,
+    [JsonStringEnumMemberName("java.source_unreadable")] JavaSourceUnreadable,
+    [JsonStringEnumMemberName("java.release_unreadable")] JavaReleaseUnreadable,
 }
 
 public static class ErrorCodeExtensions

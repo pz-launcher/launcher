@@ -109,3 +109,26 @@ Page switches fade and rise in; shell controls blend colors via PremultipliedBru
 ### Status
 
 [OK] **Completed**
+
+
+## Session 5: Plan launch feature; implement Java runtime discovery
+<!-- trellis-session: v=2 fp=61d5cdf0b12dc73a -->
+
+**Date**: 2026-10-15
+**Task**: Plan launch feature; implement Java runtime discovery
+**Branch**: `feat/java-discovery`
+
+### Summary
+
+Planned launching as parent 10-15-launch-installs with children: Java discovery, game client (java command built from ProjectZomboid64.json + per-install overrides: Java, min/max memory, extra args; version settings page; Windows + Linux), hosted dedicated server. Implemented and archived Java discovery: Core IJavaDiscoveryService (JAVA_HOME, PATH, Windows registry, Program Files, Linux /usr/lib/jvm etc., SDKMAN, ~/.jdks; release file + PE/ELF bitness; link-resolved de-dup), generic registry reads on IPlatformEnvironment, Settings > Game > Java list with rescan/add/remove and persisted manual homes. PR #5 open. Open: manual smoke AC7 (Windows) / AC8 (Linux); game-client plan must fold in research/linux-launch.md (deeper Linux root, extra preload, libjsig in jre64/lib) and be re-reviewed before start.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `cdf04c5` | chore(task): plan game launch and dedicated server hosting |
+| `a17328c` | Discover installed Java runtimes and list them in Settings |
+
+### Status
+
+[OK] **Completed**

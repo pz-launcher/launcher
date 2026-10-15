@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using PzLauncher.Core.Installs;
+using PzLauncher.Core.Java;
 using PzLauncher.Core.Platform;
 using PzLauncher.Core.Steam;
 
@@ -16,6 +17,7 @@ public static class ServiceCollectionExtensions
         services.TryAddSingleton<SteamLocator>();
         services.TryAddSingleton<SteamLibraryReader>();
         services.TryAddSingleton<IInstallDetectionService, InstallDetectionService>();
+        services.TryAddSingleton<IJavaDiscoveryService, JavaDiscoveryService>();
 
         return services;
     }

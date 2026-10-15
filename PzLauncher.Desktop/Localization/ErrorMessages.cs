@@ -21,6 +21,12 @@ public static class ErrorMessages
             ErrorCode.InstallPathNotFound => Format(UiText.Error_InstallPathNotFound, path),
             ErrorCode.InstallPathUnreadable => Format(UiText.Error_InstallPathUnreadable, path),
             ErrorCode.InstallNotAPzInstall => Format(UiText.Error_InstallNotAPzInstall, path),
+            ErrorCode.JavaInvalidPath => UiText.Error_JavaInvalidPath,
+            ErrorCode.JavaPathNotFound => Format(UiText.Error_JavaPathNotFound, path),
+            ErrorCode.JavaNotAJavaHome => Format(UiText.Error_JavaNotAJavaHome, path),
+            ErrorCode.JavaNot64Bit => Format(UiText.Error_JavaNot64Bit, path),
+            ErrorCode.JavaSourceUnreadable => Format(UiText.Error_JavaSourceUnreadable, path),
+            ErrorCode.JavaReleaseUnreadable => Format(UiText.Error_JavaReleaseUnreadable, path),
             ErrorCode.ResultUninitialized => UiText.Error_ResultUninitialized,
         };
     }

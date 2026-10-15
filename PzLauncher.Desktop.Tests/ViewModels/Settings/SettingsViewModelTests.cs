@@ -4,10 +4,15 @@ using PzLauncher.Desktop.ViewModels.Settings;
 
 namespace PzLauncher.Desktop.Tests.ViewModels.Settings;
 
-public class SettingsViewModelTests
+[Collection(UiTextCultureCollection.Name)]
+public class SettingsViewModelTests : UiTextCultureTest
 {
     private readonly FakePreferenceStore _store = new();
     private readonly FakeWindowPlacementService _windowPlacement = new();
+    private readonly FakeJavaDiscoveryService _java = new();
+
+    private SettingsViewModel CreateViewModel(FakeThemeService theme) =>
+        new(theme, _store, _windowPlacement, TestJava.ViewModel(Localization, _java, _store));
 
     [Theory]
     [InlineData(AppTheme.Light)]
@@ -16,12 +21,13 @@ public class SettingsViewModelTests
     {
         var theme = new FakeThemeService(current);
 
-        var vm = new SettingsViewModel(theme, _store, _windowPlacement);
+        var vm = CreateViewModel(theme);
 
         Assert.Equal(current, vm.Theme);
         Assert.Equal(SettingsSection.Appearance, vm.Section);
         Assert.Empty(theme.Applied);
         Assert.Empty(_store.SavedThemes);
+        Assert.Equal(0, _java.ScanCalls);
     }
 
     [Theory]
@@ -32,7 +38,7 @@ public class SettingsViewModelTests
     public void Theme_Chosen_AppliesAndSavesOnlyAChange(AppTheme current, AppTheme chosen)
     {
         var theme = new FakeThemeService(current);
-        var vm = new SettingsViewModel(theme, _store, _windowPlacement);
+        var vm = CreateViewModel(theme);
 
         vm.Theme = chosen;
 
@@ -46,10 +52,23 @@ public class SettingsViewModelTests
     [Fact]
     public void ResetWindowSize_Executed_ResetsThroughTheServiceOnce()
     {
-        var vm = new SettingsViewModel(new FakeThemeService(AppTheme.Light), _store, _windowPlacement);
+        var vm = CreateViewModel(new FakeThemeService(AppTheme.Light));
 
         vm.ResetWindowSizeCommand.Execute(null);
 
         Assert.Equal(1, _windowPlacement.ResetCalls);
+    }
+
+    [Fact]
+    public void Section_JavaSelectedRepeatedly_ScansOnce()
+    {
+        var vm = CreateViewModel(new FakeThemeService(AppTheme.Light));
+
+        vm.Section = SettingsSection.Java;
+        vm.Section = SettingsSection.Appearance;
+        vm.Section = SettingsSection.Java;
+
+        Assert.Equal(1, _java.ScanCalls);
+        Assert.True(vm.Java.HasScanned);
     }
 }

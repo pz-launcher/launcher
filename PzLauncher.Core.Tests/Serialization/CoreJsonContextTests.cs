@@ -1,6 +1,7 @@
 using System.Text.Json;
 using PzLauncher.Core.Common;
 using PzLauncher.Core.Installs;
+using PzLauncher.Core.Java;
 using PzLauncher.Core.Serialization;
 
 namespace PzLauncher.Core.Tests.Serialization;
@@ -80,4 +81,31 @@ public class CoreJsonContextTests
     [InlineData("""{"kind":"Game","rootPath":"/games/pz","steam":{"buildId":null,"branch":null}}""")]
     public void PzInstall_NonNullMemberNullOrMissingInJson_Throws(string json) =>
         Assert.Throws<JsonException>(() => JsonSerializer.Deserialize(json, CoreJsonContext.Default.PzInstall));
+
+    [Fact]
+    public void JavaScanResult_RoundTrips_WithCamelCaseAndStringEnums()
+    {
+        var original = new JavaScanResult(
+            [
+                new JavaRuntime(@"C:\Java\jdk-21", @"C:\Java\jdk-21\bin\javaw.exe", new JavaVersion(21, "21.0.9"), "Eclipse Adoptium", JavaRuntimeSource.Registry),
+                new JavaRuntime("/opt/jdk", "/opt/jdk/bin/java", Version: null, Vendor: null, JavaRuntimeSource.Manual),
+            ],
+            [new Error(ErrorCode.JavaReleaseUnreadable, "msg", ErrorKind.External) { Details = new Dictionary<string, string> { ["path"] = "p" } }]);
+
+        var json = JsonSerializer.Serialize(original, CoreJsonContext.Default.JavaScanResult);
+        var copy = JsonSerializer.Deserialize(json, CoreJsonContext.Default.JavaScanResult);
+
+        Assert.Contains("\"code\":\"java.release_unreadable\"", json, StringComparison.Ordinal);
+        Assert.Contains("\"source\":\"Registry\"", json, StringComparison.Ordinal);
+        Assert.NotNull(copy);
+        Assert.Equal(original.Runtimes, copy.Runtimes);
+        Assert.Equal(ErrorCode.JavaReleaseUnreadable, Assert.Single(copy.Warnings).Code);
+    }
+
+    [Theory]
+    [InlineData("""{"homePath":null,"executablePath":"/x/bin/java","version":null,"vendor":null,"source":"Manual"}""")]
+    [InlineData("""{"executablePath":"/x/bin/java","version":null,"vendor":null,"source":"Manual"}""")]
+    [InlineData("""{"homePath":"/x","executablePath":"/x/bin/java","version":{"major":21,"full":null},"vendor":null,"source":"Manual"}""")]
+    public void JavaRuntime_NonNullMemberNullOrMissingInJson_Throws(string json) =>
+        Assert.Throws<JsonException>(() => JsonSerializer.Deserialize(json, CoreJsonContext.Default.JavaRuntime));
 }

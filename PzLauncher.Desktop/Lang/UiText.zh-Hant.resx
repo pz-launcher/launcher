@@ -130,6 +130,24 @@
   <data name="Error_InstallNotAPzInstall" xml:space="preserve">
     <value>{0} 看起來不是 Project Zomboid 遊戲或專用伺服器資料夾。</value>
   </data>
+  <data name="Error_JavaInvalidPath" xml:space="preserve">
+    <value>這不是有效的資料夾路徑。</value>
+  </data>
+  <data name="Error_JavaPathNotFound" xml:space="preserve">
+    <value>資料夾 {0} 不存在。</value>
+  </data>
+  <data name="Error_JavaNotAJavaHome" xml:space="preserve">
+    <value>{0} 不是 Java 資料夾。請選擇包含 bin 資料夾的 Java 資料夾，或直接選擇該 bin 資料夾。</value>
+  </data>
+  <data name="Error_JavaNot64Bit" xml:space="preserve">
+    <value>{0} 中的 Java 是 32 位元版本。Project Zomboid 需要 64 位元 Java。</value>
+  </data>
+  <data name="Error_JavaSourceUnreadable" xml:space="preserve">
+    <value>無法在 {0} 中搜尋 Java。安裝在該處的 Java 可能不會列出。</value>
+  </data>
+  <data name="Error_JavaReleaseUnreadable" xml:space="preserve">
+    <value>無法讀取版本檔案 {0}。該 Java 將以未知版本列出。</value>
+  </data>
   <data name="Error_FolderNotLocal" xml:space="preserve">
     <value>{0} 不是這台電腦上的資料夾，啟動器無法開啟它。請選擇本機資料夾。</value>
   </data>
@@ -153,5 +171,47 @@
   </data>
   <data name="Settings_ResetWindowSize" xml:space="preserve">
     <value>重設視窗大小</value>
+  </data>
+  <data name="Settings_GameGroup" xml:space="preserve">
+    <value>遊戲</value>
+  </data>
+  <data name="Settings_Java" xml:space="preserve">
+    <value>Java</value>
+  </data>
+  <data name="Java_Title" xml:space="preserve">
+    <value>Java 執行環境</value>
+  </data>
+  <data name="Java_Rescan" xml:space="preserve">
+    <value>重新掃描</value>
+  </data>
+  <data name="Java_Add" xml:space="preserve">
+    <value>新增…</value>
+  </data>
+  <data name="Java_PickFolderTitle" xml:space="preserve">
+    <value>選擇 Java 資料夾（或其 bin 資料夾）</value>
+  </data>
+  <data name="Java_Remove" xml:space="preserve">
+    <value>移除</value>
+  </data>
+  <data name="Java_Empty" xml:space="preserve">
+    <value>找不到 64 位元 Java。請安裝 Java，或使用「新增…」選擇其資料夾。</value>
+  </data>
+  <data name="Java_VersionFormat" xml:space="preserve">
+    <value>Java {0}</value>
+  </data>
+  <data name="Java_VersionUnknown" xml:space="preserve">
+    <value>未知版本</value>
+  </data>
+  <data name="Java_VendorUnknown" xml:space="preserve">
+    <value>未知供應商</value>
+  </data>
+  <data name="Java_Missing" xml:space="preserve">
+    <value>找不到</value>
+  </data>
+  <data name="JavaSource_Auto" xml:space="preserve">
+    <value>自動</value>
+  </data>
+  <data name="JavaSource_Manual" xml:space="preserve">
+    <value>手動</value>
   </data>
 </root>

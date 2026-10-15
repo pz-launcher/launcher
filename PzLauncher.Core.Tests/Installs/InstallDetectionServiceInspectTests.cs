@@ -1,6 +1,3 @@
-using System.Runtime.Versioning;
-using System.Security.AccessControl;
-using System.Security.Principal;
 using PzLauncher.Core.Common;
 using PzLauncher.Core.Installs;
 using PzLauncher.Core.Tests.TestSupport;
@@ -59,9 +56,7 @@ public sealed class InstallDetectionServiceInspectTests : IDisposable
     {
         var dir = CreateFolder("StartServer64.bat");
 
-        var result = OperatingSystem.IsWindows()
-            ? await WithDeniedListingAsync(dir, () => _service.InspectAsync(dir, Ct))
-            : await WithNoUnixPermissionsAsync(dir, () => _service.InspectAsync(dir, Ct));
+        var result = await DeniedListing.RunAsync(dir, () => _service.InspectAsync(dir, Ct));
 
         ResultAssert.Failed(result, ErrorCode.InstallPathUnreadable);
     }
@@ -103,54 +98,5 @@ public sealed class InstallDetectionServiceInspectTests : IDisposable
         await cts.CancelAsync();
 
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => _service.InspectAsync(_temp.Path, cts.Token));
-    }
-
-    [SupportedOSPlatform("windows")]
-    private static async Task<T> WithDeniedListingAsync<T>(string dir, Func<Task<T>> action)
-    {
-        var info = new DirectoryInfo(dir);
-        var user = WindowsIdentity.GetCurrent().User!;
-        var rule = new FileSystemAccessRule(user, FileSystemRights.ListDirectory, AccessControlType.Deny);
-        var acl = info.GetAccessControl();
-        acl.AddAccessRule(rule);
-        info.SetAccessControl(acl);
-        try
-        {
-            return await action();
-        }
-        finally
-        {
-            acl = info.GetAccessControl();
-            acl.RemoveAccessRule(rule);
-            info.SetAccessControl(acl);
-        }
-    }
-
-    [UnsupportedOSPlatform("windows")]
-    private static async Task<T> WithNoUnixPermissionsAsync<T>(string dir, Func<Task<T>> action)
-    {
-        File.SetUnixFileMode(dir, UnixFileMode.None);
-        try
-        {
-            Assert.SkipWhen(CanList(dir), "Running as a user that ignores permissions (root).");
-            return await action();
-        }
-        finally
-        {
-            File.SetUnixFileMode(dir, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
-        }
-    }
-
-    private static bool CanList(string dir)
-    {
-        try
-        {
-            _ = Directory.EnumerateFileSystemEntries(dir).Any();
-            return true;
-        }
-        catch (UnauthorizedAccessException)
-        {
-            return false;
-        }
     }
 }
