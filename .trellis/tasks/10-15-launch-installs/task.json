@@ -1,0 +1,30 @@
+{
+  "id": "launch-installs",
+  "name": "launch-installs",
+  "title": "Launch game and dedicated server installs",
+  "description": "Home's launch button starts the selected game install or hosts the selected dedicated server",
+  "status": "planning",
+  "dev_type": null,
+  "scope": null,
+  "package": null,
+  "priority": "P2",
+  "creator": "dont39",
+  "assignee": "dont39",
+  "createdAt": "2026-10-15",
+  "completedAt": null,
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [
+    "10-15-launch-game-client",
+    "10-15-host-dedicated-server",
+    "10-15-discover-java-runtimes"
+  ],
+  "parent": null,
+  "relatedFiles": [],
+  "notes": "",
+  "meta": {}
+}

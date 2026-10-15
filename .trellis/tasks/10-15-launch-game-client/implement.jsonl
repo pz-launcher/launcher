@@ -1,0 +1,11 @@
+{"file": ".trellis/spec/common/architecture.md", "reason": "Core vs Desktop boundary: launch logic in Core, UI-only in Desktop"}
+{"file": ".trellis/spec/common/coding-rules.md", "reason": "comments, nullability, async, AOT, exhaustive enum switches"}
+{"file": ".trellis/spec/common/test-strategy.md", "reason": "fakes, fixture files, error-code assertions, test naming"}
+{"file": ".trellis/spec/common/formatting.md", "reason": "dotnet format on changed .cs files"}
+{"file": ".trellis/spec/core/directory-structure.md", "reason": "new Launch/ feature folder, domain constants in one place"}
+{"file": ".trellis/spec/core/service-api.md", "reason": "IGameLaunchService shape, DTOs in CoreJsonContext, DI and test seams"}
+{"file": ".trellis/spec/core/error-handling.md", "reason": "launch.* error codes, untrusted ProjectZomboid64.json, exception boundaries"}
+{"file": ".trellis/spec/desktop/directory-structure.md", "reason": "MVVM, new VersionSettings page, DataTemplates, dialog service placement"}
+{"file": ".trellis/spec/desktop/localization.md", "reason": "new resx keys in all 10 languages, error texts, text that changes while a view lives"}
+{"file": ".trellis/spec/desktop/shell-and-theming.md", "reason": "navigation via events, EnumMatchConverter radios, Shell.* colors"}
+{"file": ".trellis/spec/desktop/preferences.md", "reason": "new installs field in preferences.json and its store tests"}
