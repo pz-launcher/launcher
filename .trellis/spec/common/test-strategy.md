@@ -34,5 +34,5 @@ Never touch the developer's real Steam install, home directory, or registry.
 - Keep tests concise: shared arrange/assert helpers live in `TestSupport/` (`PzLauncher.Core.Tests/TestSupport/ResultAssert.cs`, `SteamLayoutBuilder.cs`; `PzLauncher.Desktop.Tests/TestSupport/Fakes.cs`); near-duplicate Facts become one Theory; each behaviour has one owner, the lowest layer that implements it, and higher layers don't re-pin it.
 - Every partial-failure path asserts its warnings; long-running services have a cancellation test.
 - Names: `Method_Scenario_Expected`. Test folders mirror source folders.
-- Deterministic and offline: no network, no real Steam, no wall clock (`FakeTimeProvider`).
+- Deterministic and offline: no network, no real Steam.
 - OS-specific tests skip on other OSes; portable logic runs everywhere.

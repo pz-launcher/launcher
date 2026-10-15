@@ -1,0 +1,8 @@
+<Project>
+  <!-- RS0030 reports uses of the APIs listed in BannedSymbols.txt; scopes and exemptions are in .editorconfig. -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" Version="5.6.0" PrivateAssets="all" />
+    <AdditionalFiles Include="$(MSBuildThisFileDirectory)BannedSymbols.txt" />
+    <AdditionalFiles Include="BannedSymbols.txt" Condition="Exists('BannedSymbols.txt')" />
+  </ItemGroup>
+</Project>

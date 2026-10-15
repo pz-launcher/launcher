@@ -1,7 +1,8 @@
 # Coding Rules
 
 > Language-level rules for all C# in the solution. Every project sets
-> `TreatWarningsAsErrors`; diagnostic severities live in `.editorconfig`, not here.
+> `TreatWarningsAsErrors`; diagnostic severities live in `.editorconfig` and banned
+> APIs in `BannedSymbols.txt` (repo root and per project), not here.
 
 ---
 
@@ -56,7 +57,7 @@ Task<(string? Text, string? Reason)> TryReadAsync(string path, CancellationToken
 
 Core and the app are `IsAotCompatible`; IL2xxx/IL3xxx warnings fail the build.
 
-- No reflection: JSON via source generation (`CoreJsonContext`), no `Activator`, no assembly scanning.
+- No reflection: JSON via source generation (`CoreJsonContext`), no assembly scanning.
 - New packages: check for trim/AOT warnings and use only their reflection-free APIs.
 
 ## Types and naming

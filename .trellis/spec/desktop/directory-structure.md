@@ -23,8 +23,6 @@ PzLauncher.Desktop/
 Reference: `PzLauncher.Desktop/ViewModels/Installs/InstallsViewModel.cs`.
 
 - CommunityToolkit source generators; dependencies via constructor (DI).
-- **No `Avalonia.*` types.** Windows, dialogs, storage go behind `Services/` interfaces (e.g. `IFolderPicker`), so ViewModels are testable without Avalonia.
-- No `Dispatcher` use.
 - Page state is explicit (busy, loaded, empty, error). Don't infer it from item counts.
 - Bind to Core DTOs directly unless a row needs its own commands or state.
 

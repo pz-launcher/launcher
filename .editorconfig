@@ -71,3 +71,19 @@ dotnet_diagnostic.IDE0300.severity = suggestion
 
 [PzLauncher.Core/**.cs]
 dotnet_diagnostic.CA2007.severity = warning
+
+# Banned APIs (BannedSymbols.txt): off by default (.globalconfig), opted in per path; the OS seam stays exempt
+[PzLauncher.Core/**.cs]
+dotnet_diagnostic.RS0030.severity = warning
+
+[PzLauncher.Core/Platform/**.cs]
+dotnet_diagnostic.RS0030.severity = none
+
+[PzLauncher.Desktop/ViewModels/**.cs]
+dotnet_diagnostic.RS0030.severity = warning
+
+[PzLauncher.Desktop/ViewModels/Design/**.cs]
+dotnet_diagnostic.RS0030.severity = none
+
+[{PzLauncher.Core.Tests,PzLauncher.Desktop.Tests}/**.cs]
+dotnet_diagnostic.RS0030.severity = warning

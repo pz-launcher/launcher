@@ -1,0 +1,5 @@
+P:System.DateTime.Now;Use TimeProvider (tests: FakeTimeProvider)
+P:System.DateTime.UtcNow;Use TimeProvider (tests: FakeTimeProvider)
+P:System.DateTime.Today;Use TimeProvider (tests: FakeTimeProvider)
+P:System.DateTimeOffset.Now;Use TimeProvider (tests: FakeTimeProvider)
+P:System.DateTimeOffset.UtcNow;Use TimeProvider (tests: FakeTimeProvider)

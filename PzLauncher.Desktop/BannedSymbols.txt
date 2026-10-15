@@ -1,0 +1,1 @@
+N:Avalonia;ViewModels stay Avalonia-free: put windows, dialogs, storage and dispatching behind a Services/ interface
