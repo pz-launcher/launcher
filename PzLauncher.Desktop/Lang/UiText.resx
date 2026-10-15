@@ -130,6 +130,24 @@
   <data name="Error_InstallNotAPzInstall" xml:space="preserve">
     <value>{0} doesn't look like a Project Zomboid game or dedicated server folder.</value>
   </data>
+  <data name="Error_JavaInvalidPath" xml:space="preserve">
+    <value>That isn't a valid folder path.</value>
+  </data>
+  <data name="Error_JavaPathNotFound" xml:space="preserve">
+    <value>The folder {0} doesn't exist.</value>
+  </data>
+  <data name="Error_JavaNotAJavaHome" xml:space="preserve">
+    <value>{0} isn't a Java folder. Pick the Java folder that contains the bin folder, or the bin folder itself.</value>
+  </data>
+  <data name="Error_JavaNot64Bit" xml:space="preserve">
+    <value>The Java in {0} is 32-bit. Project Zomboid needs a 64-bit Java.</value>
+  </data>
+  <data name="Error_JavaSourceUnreadable" xml:space="preserve">
+    <value>Couldn't search {0} for Java. Java installed there may be missing from the list.</value>
+  </data>
+  <data name="Error_JavaReleaseUnreadable" xml:space="preserve">
+    <value>Couldn't read the version file {0}. That Java is listed with an unknown version.</value>
+  </data>
   <data name="Error_FolderNotLocal" xml:space="preserve">
     <value>{0} isn't a folder on this computer, so the launcher can't open it. Pick a local folder instead.</value>
   </data>
@@ -153,5 +171,47 @@
   </data>
   <data name="Settings_ResetWindowSize" xml:space="preserve">
     <value>Reset window size</value>
+  </data>
+  <data name="Settings_GameGroup" xml:space="preserve">
+    <value>Game</value>
+  </data>
+  <data name="Settings_Java" xml:space="preserve">
+    <value>Java</value>
+  </data>
+  <data name="Java_Title" xml:space="preserve">
+    <value>Java runtimes</value>
+  </data>
+  <data name="Java_Rescan" xml:space="preserve">
+    <value>Rescan</value>
+  </data>
+  <data name="Java_Add" xml:space="preserve">
+    <value>Add…</value>
+  </data>
+  <data name="Java_PickFolderTitle" xml:space="preserve">
+    <value>Select a Java folder (or its bin folder)</value>
+  </data>
+  <data name="Java_Remove" xml:space="preserve">
+    <value>Remove</value>
+  </data>
+  <data name="Java_Empty" xml:space="preserve">
+    <value>No 64-bit Java found. Install Java, or use "Add…" to pick its folder.</value>
+  </data>
+  <data name="Java_VersionFormat" xml:space="preserve">
+    <value>Java {0}</value>
+  </data>
+  <data name="Java_VersionUnknown" xml:space="preserve">
+    <value>Unknown version</value>
+  </data>
+  <data name="Java_VendorUnknown" xml:space="preserve">
+    <value>Unknown vendor</value>
+  </data>
+  <data name="Java_Missing" xml:space="preserve">
+    <value>Not found</value>
+  </data>
+  <data name="JavaSource_Auto" xml:space="preserve">
+    <value>Detected</value>
+  </data>
+  <data name="JavaSource_Manual" xml:space="preserve">
+    <value>Added manually</value>
   </data>
 </root>

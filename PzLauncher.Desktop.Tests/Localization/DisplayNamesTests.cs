@@ -1,5 +1,6 @@
 using System.Globalization;
 using PzLauncher.Core.Installs;
+using PzLauncher.Core.Java;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Tests.TestSupport;
 
@@ -18,6 +19,19 @@ public class DisplayNamesTests : UiTextCultureTest
         AssertDistinctNonEmpty([.. Enum.GetValues<PzInstallSource>().Select(DisplayNames.Of)]);
     }
 
+    [Theory]
+    [MemberData(nameof(TestLanguages.All), MemberType = typeof(TestLanguages))]
+    public void Of_JavaRuntimeSource_DiscoveredSourcesShareOneNameDistinctFromManual(AppLanguage language)
+    {
+        Localization.SetLanguage(language);
+
+        var discovered = Enum.GetValues<JavaRuntimeSource>().Where(source => source != JavaRuntimeSource.Manual).Select(DisplayNames.Of).Distinct().ToList();
+
+        Assert.False(string.IsNullOrWhiteSpace(Assert.Single(discovered)));
+        Assert.NotEqual(discovered[0], DisplayNames.Of(JavaRuntimeSource.Manual));
+        Assert.False(string.IsNullOrWhiteSpace(DisplayNames.Of(JavaRuntimeSource.Manual)));
+    }
+
     [Fact]
     public void Converters_EnumValue_ReturnDisplayName()
     {
@@ -27,6 +41,9 @@ public class DisplayNamesTests : UiTextCultureTest
         Assert.Equal(
             DisplayNames.Of(PzInstallSource.Manual),
             DisplayNames.InstallSource.Convert(PzInstallSource.Manual, typeof(string), null, CultureInfo.InvariantCulture));
+        Assert.Equal(
+            DisplayNames.Of(JavaRuntimeSource.Manual),
+            DisplayNames.JavaSource.Convert(JavaRuntimeSource.Manual, typeof(string), null, CultureInfo.InvariantCulture));
     }
 
     private static void AssertDistinctNonEmpty(string[] names)

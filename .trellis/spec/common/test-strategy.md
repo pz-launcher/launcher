@@ -36,3 +36,4 @@ Never touch the developer's real Steam install, home directory, or registry.
 - Names: `Method_Scenario_Expected`. Test folders mirror source folders.
 - Deterministic and offline: no network, no real Steam.
 - OS-specific tests skip on other OSes; portable logic runs everywhere.
+- Tests needing symbolic links create them through `PzLauncher.Core.Tests/TestSupport/Links.cs`, which skips the test where links can't be made (Windows without Developer Mode). Such logic still needs a link-free test where possible.

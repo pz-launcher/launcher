@@ -1,0 +1,12 @@
+{"file": ".trellis/spec/common/architecture.md", "reason": "Core vs Desktop boundary: discovery in Core, list UI in Desktop"}
+{"file": ".trellis/spec/common/coding-rules.md", "reason": "comments, nullability, async, AOT, exhaustive enum switches"}
+{"file": ".trellis/spec/common/test-strategy.md", "reason": "fake platform + temp-dir worlds, never the real registry/Program Files"}
+{"file": ".trellis/spec/common/formatting.md", "reason": "dotnet format on changed .cs files"}
+{"file": ".trellis/spec/core/directory-structure.md", "reason": "new Java/ feature folder, OS-specific code behind Platform"}
+{"file": ".trellis/spec/core/service-api.md", "reason": "IJavaDiscoveryService shape, scan result with warnings, DTOs in CoreJsonContext, IPlatformEnvironment seam"}
+{"file": ".trellis/spec/core/error-handling.md", "reason": "java.* codes, partial failure as warnings, untrusted env/registry/release data"}
+{"file": ".trellis/spec/desktop/directory-structure.md", "reason": "MVVM page state, run-once activation rule, DesignData"}
+{"file": ".trellis/spec/desktop/localization.md", "reason": "resx keys in all 10 languages, DisplayNames for the source enum, warnings re-rendered on language change"}
+{"file": ".trellis/spec/desktop/shell-and-theming.md", "reason": "settings nav sidebar groups/items, Shell.* colors"}
+{"file": ".trellis/spec/desktop/preferences.md", "reason": "new javaRuntimes field and its store tests"}
+{"file": ".trellis/tasks/10-15-discover-java-runtimes/research/registry-layouts.md", "reason": "vendor registry table, release file format, Linux locations and link de-dup"}

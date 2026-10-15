@@ -17,7 +17,7 @@ public class MainViewModelTests : UiTextCultureTest
         return new(
             new HomeViewModel(installs),
             installs,
-            new SettingsViewModel(new FakeThemeService(AppTheme.Light), store, new FakeWindowPlacementService()),
+            new SettingsViewModel(new FakeThemeService(AppTheme.Light), store, new FakeWindowPlacementService(), TestJava.ViewModel(Localization, new FakeJavaDiscoveryService(), store)),
             new LanguageMenuViewModel(Localization, store));
     }
 

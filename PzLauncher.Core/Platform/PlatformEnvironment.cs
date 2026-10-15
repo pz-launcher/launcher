@@ -1,4 +1,5 @@
 using System.Runtime.Versioning;
+using System.Security;
 using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
 
@@ -22,6 +23,61 @@ internal sealed partial class PlatformEnvironment(ILogger<PlatformEnvironment> l
     public string? ReadSteamPathFromRegistry() =>
         OperatingSystem.IsWindows() ? ReadSteamPathWindows() : null;
 
+    public IReadOnlyList<string> GetRegistrySubKeyNames(RegistryHiveKind hive, string path)
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return [];
+        }
+
+        using var key = OpenKeyWindows(hive, path);
+        return key is null ? [] : WithAccessDenied(key.GetSubKeyNames);
+    }
+
+    public string? ReadRegistryString(RegistryHiveKind hive, string path, string name)
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return null;
+        }
+
+        using var key = OpenKeyWindows(hive, path);
+        try
+        {
+            return key?.GetValue(name) as string;
+        }
+        catch (SecurityException ex)
+        {
+            throw new UnauthorizedAccessException(ex.Message, ex);
+        }
+    }
+
+    [SupportedOSPlatform("windows")]
+    private static RegistryKey? OpenKeyWindows(RegistryHiveKind hive, string path)
+    {
+        var registryHive = hive switch
+        {
+            RegistryHiveKind.LocalMachine => RegistryHive.LocalMachine,
+            RegistryHiveKind.CurrentUser => RegistryHive.CurrentUser,
+        };
+
+        using var baseKey = RegistryKey.OpenBaseKey(registryHive, RegistryView.Registry64);
+        return WithAccessDenied(() => baseKey.OpenSubKey(path));
+    }
+
+    // The registry API reports access denied as SecurityException; the interface promises UnauthorizedAccessException.
+    private static T WithAccessDenied<T>(Func<T> read)
+    {
+        try
+        {
+            return read();
+        }
+        catch (SecurityException ex)
+        {
+            throw new UnauthorizedAccessException(ex.Message, ex);
+        }
+    }
+
     [SupportedOSPlatform("windows")]
     private string? ReadSteamPathWindows()
     {
@@ -30,7 +86,7 @@ internal sealed partial class PlatformEnvironment(ILogger<PlatformEnvironment> l
             using var key = Registry.CurrentUser.OpenSubKey(@"Software\Valve\Steam");
             return key?.GetValue("SteamPath") as string;
         }
-        catch (Exception ex) when (ex is System.Security.SecurityException or UnauthorizedAccessException or IOException)
+        catch (Exception ex) when (ex is SecurityException or UnauthorizedAccessException or IOException)
         {
             // Treat an unreadable key like a missing one; the locator falls back to default paths.
             LogRegistryUnreadable(logger, ex.Message);

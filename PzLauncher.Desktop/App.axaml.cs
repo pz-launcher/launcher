@@ -18,6 +18,7 @@ using PzLauncher.Desktop.Themes;
 using PzLauncher.Desktop.ViewModels;
 using PzLauncher.Desktop.ViewModels.Home;
 using PzLauncher.Desktop.ViewModels.Installs;
+using PzLauncher.Desktop.ViewModels.Java;
 using PzLauncher.Desktop.ViewModels.Settings;
 using PzLauncher.Desktop.Views;
 
@@ -53,8 +54,9 @@ public partial class App : Application
                 sp.GetRequiredService<UserPreferences>().Language ?? AppLanguages.FromCulture(CultureInfo.CurrentUICulture)));
             services.AddSingleton<IThemeService>(sp =>
                 new AvaloniaThemeService(this, sp.GetRequiredService<UserPreferences>().Theme ?? AppTheme.Light));
-            // Singletons: Home and Installs share one InstallsViewModel, and page state must outlive a MainView rebuild.
+            // Singletons: Home and Installs share one InstallsViewModel, the Java list is shared app-wide, and page state must outlive a MainView rebuild.
             services.AddSingleton<InstallsViewModel>();
+            services.AddSingleton<JavaRuntimesViewModel>();
             services.AddSingleton<HomeViewModel>();
             services.AddSingleton<SettingsViewModel>();
             services.AddSingleton<LanguageMenuViewModel>();

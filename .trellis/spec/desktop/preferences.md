@@ -18,6 +18,7 @@
 |---|---|---|
 | `language` | culture name, e.g. `zh-Hans` | `AppLanguages.CultureName` |
 | `theme` | `light`, `dark` | `AppThemes.PreferenceName` |
+| `javaRuntimes` | array of absolute Java home paths (manually added); a non-string or non-absolute entry is dropped, the rest kept | `UserPreferences.ManualJavaHomes` |
 | `window` | `{x, y, width, height, maximized}`: normal-state position (int, physical px), client size (number > 0, DIPs), maximized (bool); invalid if any member is missing | `WindowPlacement` |
 
 A new preference gets a nullable field, its own save method and a stable string mapping (never an enum name).

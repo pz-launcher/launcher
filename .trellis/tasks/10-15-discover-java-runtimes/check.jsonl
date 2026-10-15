@@ -1,0 +1,7 @@
+{"file": ".trellis/spec/common/coding-rules.md", "reason": "review comments, nullability, async, AOT rules"}
+{"file": ".trellis/spec/common/test-strategy.md", "reason": "every new error code tested by Code; warnings asserted; Kind pinned in ErrorCodeTests"}
+{"file": ".trellis/spec/core/service-api.md", "reason": "Core API shape and JSON contract for new DTOs"}
+{"file": ".trellis/spec/core/error-handling.md", "reason": "error code checklist and untrusted-input hazards"}
+{"file": ".trellis/spec/desktop/localization.md", "reason": "resx parity and no hard-coded user text"}
+{"file": ".trellis/spec/desktop/preferences.md", "reason": "preference file contract and per-field tests"}
+{"file": ".trellis/tasks/10-15-discover-java-runtimes/research/registry-layouts.md", "reason": "verify registry table and release parsing against research"}

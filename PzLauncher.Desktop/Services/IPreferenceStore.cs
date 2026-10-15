@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using PzLauncher.Desktop.Localization;
@@ -6,7 +9,21 @@ using PzLauncher.Desktop.Themes;
 namespace PzLauncher.Desktop.Services;
 
 /// <summary>A <c>null</c> field means no usable saved choice.</summary>
-public sealed record UserPreferences(AppLanguage? Language, AppTheme? Theme, WindowPlacement? Window);
+public sealed record UserPreferences(AppLanguage? Language, AppTheme? Theme, WindowPlacement? Window)
+{
+    /// <summary>Absolute paths; empty when none are saved.</summary>
+    public IReadOnlyList<string> ManualJavaHomes { get; init; } = [];
+
+    // Compares the list by content; the generated equality would compare references.
+    public bool Equals(UserPreferences? other) =>
+        other is not null
+        && Language == other.Language
+        && Theme == other.Theme
+        && Window == other.Window
+        && ManualJavaHomes.SequenceEqual(other.ManualJavaHomes, StringComparer.Ordinal);
+
+    public override int GetHashCode() => HashCode.Combine(Language, Theme, Window, ManualJavaHomes.Count);
+}
 
 public interface IPreferenceStore
 {
@@ -21,4 +38,7 @@ public interface IPreferenceStore
 
     /// <inheritdoc cref="SaveLanguageAsync"/>
     Task SaveWindowPlacementAsync(WindowPlacement placement, CancellationToken ct = default);
+
+    /// <inheritdoc cref="SaveLanguageAsync"/>
+    Task SaveManualJavaHomesAsync(IReadOnlyList<string> homes, CancellationToken ct = default);
 }

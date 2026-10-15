@@ -12,6 +12,12 @@ public sealed class JsonPreferenceStoreTests : IDisposable
 
     private static readonly WindowPlacement Placement = new(-1910, 30, 1000.5, 640, IsMaximized: true);
 
+    private static readonly string JavaA = OperatingSystem.IsWindows() ? @"C:\Java\jdk-21" : "/opt/java/jdk-21";
+
+    private static readonly string JavaB = OperatingSystem.IsWindows() ? @"D:\Tools\jre 17" : "/home/player/jre 17";
+
+    private static UserPreferences WithJava(params string[] homes) => new(null, null, null) { ManualJavaHomes = homes };
+
     public static TheoryData<AppTheme> Themes => [.. Enum.GetValues<AppTheme>()];
 
     public static TheoryData<WindowPlacement> Placements =>
@@ -61,6 +67,26 @@ public sealed class JsonPreferenceStoreTests : IDisposable
     }
 
     [Fact]
+    public async Task SaveManualJavaHomesAsync_ThenLoad_RoundTripsInOrder()
+    {
+        await CreateStore().SaveManualJavaHomesAsync([JavaB, JavaA], TestContext.Current.CancellationToken);
+
+        Assert.Equal(WithJava(JavaB, JavaA), CreateStore().Load());
+    }
+
+    [Fact]
+    public async Task SaveManualJavaHomesAsync_Empty_WritesEmptyArrayAndLoadsNone()
+    {
+        var store = CreateStore();
+        await store.SaveManualJavaHomesAsync([JavaA], TestContext.Current.CancellationToken);
+
+        await store.SaveManualJavaHomesAsync([], TestContext.Current.CancellationToken);
+
+        Assert.Equal("""{"javaRuntimes":[]}""", await File.ReadAllTextAsync(FilePath, TestContext.Current.CancellationToken));
+        Assert.Equal(WithJava(), CreateStore().Load());
+    }
+
+    [Fact]
     public async Task SaveLanguageAsync_WritesCultureName()
     {
         await CreateStore().SaveLanguageAsync(AppLanguage.SimplifiedChinese, TestContext.Current.CancellationToken);
@@ -103,6 +129,7 @@ public sealed class JsonPreferenceStoreTests : IDisposable
     [InlineData(0)]
     [InlineData(1)]
     [InlineData(2)]
+    [InlineData(3)]
     public async Task SaveOneField_FileHoldsTheOthers_KeepsAll(int savedLast)
     {
         var ct = TestContext.Current.CancellationToken;
@@ -111,6 +138,7 @@ public sealed class JsonPreferenceStoreTests : IDisposable
             () => CreateStore().SaveLanguageAsync(AppLanguage.Russian, ct),
             () => CreateStore().SaveThemeAsync(AppTheme.Dark, ct),
             () => CreateStore().SaveWindowPlacementAsync(Placement, ct),
+            () => CreateStore().SaveManualJavaHomesAsync([JavaA], ct),
         ];
 
         // Separate stores, as across app runs.
@@ -119,7 +147,7 @@ public sealed class JsonPreferenceStoreTests : IDisposable
             await save();
         }
 
-        Assert.Equal(new UserPreferences(AppLanguage.Russian, AppTheme.Dark, Placement), CreateStore().Load());
+        Assert.Equal(new UserPreferences(AppLanguage.Russian, AppTheme.Dark, Placement) { ManualJavaHomes = [JavaA] }, CreateStore().Load());
     }
 
     [Fact]
@@ -131,9 +159,12 @@ public sealed class JsonPreferenceStoreTests : IDisposable
         await Task.WhenAll(
             store.SaveThemeAsync(AppTheme.Dark, TestContext.Current.CancellationToken),
             store.SaveLanguageAsync(AppLanguage.PortugueseBrazil, TestContext.Current.CancellationToken),
-            store.SaveWindowPlacementAsync(Placement, TestContext.Current.CancellationToken));
+            store.SaveWindowPlacementAsync(Placement, TestContext.Current.CancellationToken),
+            store.SaveManualJavaHomesAsync([JavaA, JavaB], TestContext.Current.CancellationToken));
 
-        Assert.Equal(new UserPreferences(AppLanguage.PortugueseBrazil, AppTheme.Dark, Placement), CreateStore().Load());
+        Assert.Equal(
+            new UserPreferences(AppLanguage.PortugueseBrazil, AppTheme.Dark, Placement) { ManualJavaHomes = [JavaA, JavaB] },
+            CreateStore().Load());
     }
 
     [Fact]
@@ -144,6 +175,7 @@ public sealed class JsonPreferenceStoreTests : IDisposable
         await CreateStore().SaveLanguageAsync(AppLanguage.English, TestContext.Current.CancellationToken);
         await CreateStore().SaveThemeAsync(AppTheme.Dark, TestContext.Current.CancellationToken);
         await CreateStore().SaveWindowPlacementAsync(Placement, TestContext.Current.CancellationToken);
+        await CreateStore().SaveManualJavaHomesAsync([JavaA], TestContext.Current.CancellationToken);
 
         Assert.Equal(new UserPreferences(null, null, null), CreateStore().Load());
     }
@@ -198,10 +230,21 @@ public sealed class JsonPreferenceStoreTests : IDisposable
     [InlineData("""{"window":5}""")]
     [InlineData("""{"window":{"x":"left"}}""")]
     [InlineData("""{"window":{"x":10,"y":30,"width":NaN,"height":640,"maximized":false}}""")]
+    [InlineData("""{"javaRuntimes":5}""")]
+    [InlineData("""{"javaRuntimes":"/opt/jdk"}""")]
     public void Load_CorruptOrUnknownContent_ReturnsNoChoices(string content)
     {
         WriteFile(content);
 
         Assert.Equal(new UserPreferences(null, null, null), CreateStore().Load());
+    }
+
+    [Fact]
+    public void Load_JavaRuntimesWithInvalidEntries_KeepsTheValidOnesAndOtherFields()
+    {
+        var valid = System.Text.Json.JsonSerializer.Serialize(JavaA);
+        WriteFile($$"""{"theme":"dark","javaRuntimes":[{{valid}},5,null,"relative/jdk","",{"path":"x"},{{valid}}]}""");
+
+        Assert.Equal(new UserPreferences(null, AppTheme.Dark, null) { ManualJavaHomes = [JavaA, JavaA] }, CreateStore().Load());
     }
 }

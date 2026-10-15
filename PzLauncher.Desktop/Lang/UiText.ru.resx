@@ -130,6 +130,24 @@
   <data name="Error_InstallNotAPzInstall" xml:space="preserve">
     <value>Папка {0} не похожа на папку игры или выделенного сервера Project Zomboid.</value>
   </data>
+  <data name="Error_JavaInvalidPath" xml:space="preserve">
+    <value>Это недопустимый путь к папке.</value>
+  </data>
+  <data name="Error_JavaPathNotFound" xml:space="preserve">
+    <value>Папка {0} не существует.</value>
+  </data>
+  <data name="Error_JavaNotAJavaHome" xml:space="preserve">
+    <value>{0} — не папка Java. Выберите папку Java, в которой есть папка bin, или саму папку bin.</value>
+  </data>
+  <data name="Error_JavaNot64Bit" xml:space="preserve">
+    <value>Java в папке {0} — 32-битная. Для Project Zomboid нужна 64-битная Java.</value>
+  </data>
+  <data name="Error_JavaSourceUnreadable" xml:space="preserve">
+    <value>Не удалось выполнить поиск Java в {0}. Установленная там Java может отсутствовать в списке.</value>
+  </data>
+  <data name="Error_JavaReleaseUnreadable" xml:space="preserve">
+    <value>Не удалось прочитать файл версии {0}. Эта Java показана с неизвестной версией.</value>
+  </data>
   <data name="Error_FolderNotLocal" xml:space="preserve">
     <value>{0} — не папка на этом компьютере, поэтому лаунчер не может её открыть. Выберите локальную папку.</value>
   </data>
@@ -153,5 +171,47 @@
   </data>
   <data name="Settings_ResetWindowSize" xml:space="preserve">
     <value>Сбросить размер окна</value>
+  </data>
+  <data name="Settings_GameGroup" xml:space="preserve">
+    <value>Игра</value>
+  </data>
+  <data name="Settings_Java" xml:space="preserve">
+    <value>Java</value>
+  </data>
+  <data name="Java_Title" xml:space="preserve">
+    <value>Среды выполнения Java</value>
+  </data>
+  <data name="Java_Rescan" xml:space="preserve">
+    <value>Пересканировать</value>
+  </data>
+  <data name="Java_Add" xml:space="preserve">
+    <value>Добавить…</value>
+  </data>
+  <data name="Java_PickFolderTitle" xml:space="preserve">
+    <value>Выберите папку Java (или её папку bin)</value>
+  </data>
+  <data name="Java_Remove" xml:space="preserve">
+    <value>Удалить</value>
+  </data>
+  <data name="Java_Empty" xml:space="preserve">
+    <value>64-битная Java не найдена. Установите Java или нажмите «Добавить…», чтобы выбрать её папку.</value>
+  </data>
+  <data name="Java_VersionFormat" xml:space="preserve">
+    <value>Java {0}</value>
+  </data>
+  <data name="Java_VersionUnknown" xml:space="preserve">
+    <value>Версия неизвестна</value>
+  </data>
+  <data name="Java_VendorUnknown" xml:space="preserve">
+    <value>Поставщик неизвестен</value>
+  </data>
+  <data name="Java_Missing" xml:space="preserve">
+    <value>Не найдена</value>
+  </data>
+  <data name="JavaSource_Auto" xml:space="preserve">
+    <value>Автоматически</value>
+  </data>
+  <data name="JavaSource_Manual" xml:space="preserve">
+    <value>Добавлена вручную</value>
   </data>
 </root>

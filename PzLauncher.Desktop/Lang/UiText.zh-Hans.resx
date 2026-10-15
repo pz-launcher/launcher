@@ -130,6 +130,24 @@
   <data name="Error_InstallNotAPzInstall" xml:space="preserve">
     <value>{0} 看起来不是 Project Zomboid 游戏或专用服务器文件夹。</value>
   </data>
+  <data name="Error_JavaInvalidPath" xml:space="preserve">
+    <value>这不是有效的文件夹路径。</value>
+  </data>
+  <data name="Error_JavaPathNotFound" xml:space="preserve">
+    <value>文件夹 {0} 不存在。</value>
+  </data>
+  <data name="Error_JavaNotAJavaHome" xml:space="preserve">
+    <value>{0} 不是 Java 文件夹。请选择包含 bin 文件夹的 Java 文件夹，或直接选择该 bin 文件夹。</value>
+  </data>
+  <data name="Error_JavaNot64Bit" xml:space="preserve">
+    <value>{0} 中的 Java 是 32 位的。Project Zomboid 需要 64 位 Java。</value>
+  </data>
+  <data name="Error_JavaSourceUnreadable" xml:space="preserve">
+    <value>无法在 {0} 中搜索 Java。安装在那里的 Java 可能未列出。</value>
+  </data>
+  <data name="Error_JavaReleaseUnreadable" xml:space="preserve">
+    <value>无法读取版本文件 {0}。该 Java 将以未知版本列出。</value>
+  </data>
   <data name="Error_FolderNotLocal" xml:space="preserve">
     <value>{0} 不是这台电脑上的文件夹，启动器无法打开它。请选择本地文件夹。</value>
   </data>
@@ -153,5 +171,47 @@
   </data>
   <data name="Settings_ResetWindowSize" xml:space="preserve">
     <value>重置窗口大小</value>
+  </data>
+  <data name="Settings_GameGroup" xml:space="preserve">
+    <value>游戏</value>
+  </data>
+  <data name="Settings_Java" xml:space="preserve">
+    <value>Java</value>
+  </data>
+  <data name="Java_Title" xml:space="preserve">
+    <value>Java 运行时</value>
+  </data>
+  <data name="Java_Rescan" xml:space="preserve">
+    <value>重新扫描</value>
+  </data>
+  <data name="Java_Add" xml:space="preserve">
+    <value>添加…</value>
+  </data>
+  <data name="Java_PickFolderTitle" xml:space="preserve">
+    <value>选择 Java 文件夹（或其 bin 文件夹）</value>
+  </data>
+  <data name="Java_Remove" xml:space="preserve">
+    <value>移除</value>
+  </data>
+  <data name="Java_Empty" xml:space="preserve">
+    <value>未找到 64 位 Java。请安装 Java，或使用“添加…”选择其文件夹。</value>
+  </data>
+  <data name="Java_VersionFormat" xml:space="preserve">
+    <value>Java {0}</value>
+  </data>
+  <data name="Java_VersionUnknown" xml:space="preserve">
+    <value>未知版本</value>
+  </data>
+  <data name="Java_VendorUnknown" xml:space="preserve">
+    <value>未知供应商</value>
+  </data>
+  <data name="Java_Missing" xml:space="preserve">
+    <value>找不到</value>
+  </data>
+  <data name="JavaSource_Auto" xml:space="preserve">
+    <value>自动</value>
+  </data>
+  <data name="JavaSource_Manual" xml:space="preserve">
+    <value>手动</value>
   </data>
 </root>
