@@ -182,3 +182,25 @@ Home's 启动游戏 starts the selected game install with a launcher-built java 
 
 - Manual smoke: AC9 (Windows), AC10 (Linux), AC14 (GraalVM + Viewpoint json, forced crash, bad JVM arg, closing the launcher while the game runs), and a visual pass over 启动设置 and 选择安装 in light/dark
 - Merge PR pz-launcher/launcher#6, then plan 10-15-host-dedicated-server on top of the Core launch feature
+
+
+## Session 7: Initialize ZombieBuddy for subscribed installs
+<!-- trellis-session: v=2 fp=f974f609652ca324 -->
+
+**Date**: 2026-10-16
+**Task**: Initialize ZombieBuddy for subscribed installs
+**Branch**: `feat/zombiebuddy-init`
+
+### Summary
+
+Planned and implemented ZombieBuddy setup modelled on its CLI installer: Core IZombieBuddyService (detect stable/beta Workshop item, copy files, add/remove agent arg via atomic vmArgs-only json edit, allow-all policy switch), JavaRuntime.HasInstrumentLibrary; Home launch gate with progress dialog (Launch/Cancel/Retry); Launch settings ZombieBuddy section with channel choice (zombieBuddyChannels pref), Initialize/Remove, instrument-library warning, allow-all switch. Corrected the custom-Java instrument.dll assumption (selected Java's own copy loads first). Build clean; Core 646 passed/3 skipped, Desktop 786 passed. Manual smoke test and real-Linux check not done. PR pz-launcher/launcher#7.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `c60f2ac` | Initialize ZombieBuddy for subscribed installs |
+
+### Status
+
+[OK] **Completed**
