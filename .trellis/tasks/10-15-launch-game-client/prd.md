@@ -22,12 +22,17 @@ twice.
     map of OS version → extra `vmArgs` (`10.0.17134` → Shenandoah GC,
     `6.1` → G1 GC). The server's file has the same shape (`7`, `10` keys).
   - Bundled JRE `jre64\bin\java.exe` / `javaw.exe` (Azul Zulu 25.0.1).
-- Linux (public sources, not verified on a machine): the game folder also has
-  `ProjectZomboid64.json` (`-Djava.library.path=linux64/…`), `jre64/`, and
-  `projectzomboid.sh`, which sets `LD_LIBRARY_PATH` (`linux64`, `natives`,
-  install root, `jre64/lib/amd64`) and `LD_PRELOAD=libjsig.so` before starting
-  the game. macOS reportedly keeps JVM args in the app bundle's `Info.plist`
-  instead of the json (single source), so it needs a real bundle to design.
+- Linux (`projectzomboid.sh` copied from the user's Ubuntu install; json from
+  public sources; `research/linux-launch.md`): the Steam app folder holds
+  `projectzomboid.sh` and a `projectzomboid/` subfolder; the script `cd`s into
+  that subfolder (`ProjectZomboid64.json`, `jre64/`, `natives/`). Install
+  detection reports the app folder as the root (the `.sh` marker). The stock
+  json has no OS-version map. The script sets
+  `LD_LIBRARY_PATH=natives:<game>:jre64/lib:$LD_LIBRARY_PATH`,
+  `LD_PRELOAD=$LD_PRELOAD:libjsig.so:libPZXInitThreads64.so` and an empty
+  `XMODIFIERS`, then runs the native `ProjectZomboid64`. macOS keeps JVM args
+  in the app bundle's `Info.plist` instead of the json, so it needs a real
+  bundle to design.
   - `ProjectZomboid64.exe` (not used) hosts the JVM in-process from that json;
     `ProjectZomboid64.bat` runs `java.exe` and passes `%1 %2` as game args.
   - `steam_appid.txt` = `108600`: the game initialises the Steam API itself
@@ -46,10 +51,14 @@ twice.
 ## Decisions
 
 - D4 Mechanism: start the chosen Java (D14) — `bin\javaw.exe` on Windows (no
-  console window), `bin/java` on Linux — with a launcher-built command,
-  install root as working directory; on Linux also the environment from
-  `projectzomboid.sh` (`LD_LIBRARY_PATH`, `LD_PRELOAD=libjsig.so`).
+  console window), `bin/java` on Linux — with a launcher-built command, the
+  game folder (D18) as working directory; on Linux also the environment from
+  `projectzomboid.sh` (`LD_LIBRARY_PATH`, `LD_PRELOAD` with `libjsig.so` and
+  `libPZXInitThreads64.so`, empty `XMODIFIERS`).
   Not `ProjectZomboid64.exe`, not Steam.
+- D18 Game folder: the folder holding `ProjectZomboid64.json` and `jre64` —
+  the install root, or else its `projectzomboid` subfolder (Linux Steam
+  layout). Overrides stay keyed by the install root (D10).
 - D9 Arguments: from the install's `ProjectZomboid64.json` (`mainClass`,
   `classpath`, `vmArgs`, plus the `windows` entry for the current OS version),
   then launcher overrides: max memory (replaces `-Xmx`), min memory
@@ -126,11 +135,12 @@ twice.
 
 ## Acceptance Criteria
 
-- [ ] AC1 (R1, R6) Core tests (Windows and Linux fake platforms): the built
-      command is `<root>/jre64/bin/javaw.exe` (Linux: `…/bin/java`), or the
-      chosen Java home's, working dir `<root>`; Linux adds the
-      `LD_LIBRARY_PATH` / `LD_PRELOAD` environment and joins the classpath
-      with `:`;
+- [ ] AC1 (R1, R6, D18) Core tests (Windows and Linux fake platforms): the built
+      command is `<game>/jre64/bin/javaw.exe` (Linux: `…/bin/java`), or the
+      chosen Java home's, working dir `<game>` (= root, or `<root>/projectzomboid`
+      for the Linux Steam layout); Linux adds `LD_LIBRARY_PATH`, `LD_PRELOAD`
+      (inherited values kept, as in `projectzomboid.sh`) and empty
+      `XMODIFIERS`, and joins the classpath with `:`;
       args = json `vmArgs` + matching `windows` vmArgs (Windows only) +
       extra JVM args + `-cp .;projectzomboid.jar` + main class + extra game
       args; works for a manual install.

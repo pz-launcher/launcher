@@ -40,11 +40,14 @@ DTOs (records, in `CoreJsonContext`, round-trip tested):
 - `GameLaunchOverrides(string? JavaHome, int? MaxMemoryMb, int? MinMemoryMb, string ExtraJvmArgs, string ExtraGameArgs)`
   — `null` Java = the install's bundled `jre64`; `null` memory = follow json;
   empty strings = none. `Empty` static.
-- `GameLaunchDefaults(int? MaxMemoryMb, int? MinMemoryMb, IReadOnlyList<string> VmArgs, JavaRuntime? BundledJava, int SystemMemoryMb)`
+- `GameLaunchDefaults(int? MaxMemoryMb, int? MinMemoryMb, IReadOnlyList<string> VmArgs, JavaRuntime? BundledJava, int SystemMemoryMb, IReadOnlyList<Error> Warnings)`
   — memory from the json's effective `-Xmx`/`-Xms` (null when absent or
   unparseable); `VmArgs` = json vmArgs + matching `windows` vmArgs;
-  `BundledJava` = `IJavaDiscoveryService.InspectAsync(<root>/jre64)` (null on
-  failure), used for 游戏自带's label and the D17 comparison.
+  `BundledJava` = `IJavaDiscoveryService.InspectAsync(<game>/jre64)` (null on
+  failure), used for 游戏自带's label and the D17 comparison. A json that
+  can't be read is a `Warnings` entry on a successful result (json values
+  null/empty), so the page still gets `SystemMemoryMb` for 自定义 (R4);
+  `install.*` and `launch.not_a_game` still fail the call.
 - `GameSession(string InstallRoot, int ProcessId)`
 
 `LaunchAsync` order (first failure wins):
@@ -54,16 +57,18 @@ DTOs (records, in `CoreJsonContext`, round-trip tested):
 3. A game is tracked → `launch.already_running`.
 4. `InspectAsync(root)` failure → returned unchanged (`install.*`).
 5. Kind is `DedicatedServer` → `launch.not_a_game`.
-6. Read `<root>/ProjectZomboid64.json` → `launch.config_missing` /
-   `launch.config_malformed` (also when `mainClass` or `classpath` is
-   missing/empty).
+6. Resolve `<game>` (D18): `<root>` if `<root>/ProjectZomboid64.json`
+   exists, else `<root>/projectzomboid` if its json exists, else `<root>`
+   (so the error names the expected file). Read `<game>/ProjectZomboid64.json`
+   → `launch.config_missing` / `launch.config_malformed` (also when
+   `mainClass` or `classpath` is missing/empty).
 7. Java: `JavaHome` set → `<JavaHome>/bin/<exe>`, else
-   `<root>/jre64/bin/<exe>` (`<exe>` = `javaw.exe` on Windows, `java` on
+   `<game>/jre64/bin/<exe>` (`<exe>` = `javaw.exe` on Windows, `java` on
    Linux); missing → `launch.java_missing`. No version
    check here (D17 is a UI warning only).
 7a. Effective min > effective max (override, else json value) →
    `launch.invalid_memory`.
-8. Build args and environment (below), `IProcessRunner.Start(java, args, env, workingDirectory: root)`;
+8. Build args and environment (below), `IProcessRunner.Start(java, args, env, workingDirectory: <game>)`;
    `Win32Exception` / `IOException` / `UnauthorizedAccessException` →
    `launch.start_failed` (details `path`, `reason`), logged once at Warning.
 9. Track the process; return `GameSession`.
@@ -108,26 +113,37 @@ process exit, clears the session and disposes the process;
 | `LaunchAlreadyRunning` | `launch.already_running` | Conflict | — |
 | `LaunchNotAGame` | `launch.not_a_game` | Validation | `path` |
 | `LaunchConfigMissing` | `launch.config_missing` | NotFound | `path` |
-| `LaunchConfigMalformed` | `launch.config_malformed` | External | `path` |
+| `LaunchConfigMalformed` | `launch.config_malformed` | External | `path`, `reason` (also unreadable file) |
 | `LaunchJavaMissing` | `launch.java_missing` | NotFound | `path` |
 | `LaunchStartFailed` | `launch.start_failed` | External | `path`, `reason` |
 
-File names (`ProjectZomboid64.json`, `jre64`, per-OS Java executable) are
-domain constants in one place: `Launch/PzLaunchFiles.cs`. The separator comes
+File names (`ProjectZomboid64.json`, `jre64`, the `projectzomboid` subfolder,
+`natives`, per-OS Java executable, the Linux preload libraries) are domain constants in
+one place: `Launch/PzLaunchFiles.cs`. Game-folder resolution (step 6) is one
+internal function shared by `LaunchAsync` and `GetDefaultsAsync`. The separator comes
 from the target OS (`IPlatformEnvironment.Os`), not `Path.PathSeparator`, so
 Linux behaviour is testable on Windows.
 
 ### Linux environment
 
-Mirrors `projectzomboid.sh` (public copies; verify against a real install
-during implementation and record in `research/linux-launch.md`):
+Mirrors the shipped B42 `projectzomboid.sh` (copied from the user's Ubuntu
+install, `research/linux-launch.md`):
 
-- `LD_LIBRARY_PATH` = `<root>/linux64:<root>/natives:<root>:<java home>/lib:<java home>/lib/server:<java home>/lib/amd64`
-  + existing value (from `IPlatformEnvironment.GetEnvironmentVariable`).
-- `LD_PRELOAD` = existing value + `:libjsig.so` (resolved through
-  `LD_LIBRARY_PATH`, so it follows the chosen Java).
-- Only the `windows` OS-version map is applied, and only on Windows; if the
-  Linux json has an equivalent map, research decides whether to apply it.
+- `LD_LIBRARY_PATH` = `<game>/natives:<game>:<java home>/lib` + existing value
+  (from `IPlatformEnvironment.GetEnvironmentVariable`). `<java home>/lib` is
+  the script's `jre64/lib`, following the chosen Java.
+- `LD_PRELOAD` = existing value + `libjsig.so` + `libPZXInitThreads64.so`,
+  `:`-joined, empty parts skipped. Bare names as in the script: the loader
+  finds them through `LD_LIBRARY_PATH`, so `libjsig.so` follows the chosen
+  Java. No existence checks.
+- `XMODIFIERS` = empty (the script clears it so SCIM doesn't break keyboard input).
+- The script's stdout redirect to `~/Zomboid/projectzomboid.sh.log` is not
+  replicated (no output redirection in this task).
+- `PATH` is not changed: the script prepends `jre64/bin` only so the native
+  `ProjectZomboid64` launcher can find `libjvm.so`.
+- The stock Linux json has no OS-version map; the `windows` map is applied
+  only on Windows. `-Djava.library.path` comes from the json, never
+  hard-coded.
 
 ## Core: platform additions
 
@@ -163,9 +179,9 @@ New field `installs`: object keyed by install root path →
 ### Navigation
 
 - `ShellPage` gains `VersionSettings`. `MainViewModel.CurrentPage` maps it to
-  `VersionSettingsViewModel`. The Home tab's `IsChecked` matches `Home` **or**
-  `VersionSettings` (converter parameter set or a derived `NavTab` property;
-  pick whichever `EnumMatchConverter` supports cleanly).
+  `VersionSettingsViewModel`. Title-bar tabs bind to a derived
+  `MainViewModel.CurrentTab` (`VersionSettings` → `Home`); clicking the Home
+  tab while on 版本设置 returns to Home.
 - `HomeViewModel.VersionSettingsRequested` / `VersionSettingsViewModel.BackRequested`
   events, handled by `MainViewModel` (spec: navigation via events).
 
@@ -183,9 +199,11 @@ New field `installs`: object keyed by install root path →
 
 ### `VersionSettingsViewModel` (`ViewModels/VersionSettings/`, singleton)
 
-- Activated on navigation for the current `SelectedInstall`: loads stored
-  overrides and `GetDefaultsAsync` (error kept as an `Error`, re-rendered on
-  `LanguageChanged`).
+- Reloads on every view load for the current `SelectedInstall` (a newer load
+  replaces one still running; loading never saves): stored overrides and
+  `GetDefaultsAsync` (errors/warnings kept as `Error`, re-rendered on
+  `LanguageChanged`). `JavaOption.Label` reads `UiText` at bind time; a
+  language switch rebuilds `MainView`.
 - Java dropdown: `JavaOption` rows = 游戏自带 (label from `BundledJava`,
   `JavaHome = null`) + `JavaRuntimesViewModel`'s available runtimes (calls
   its `EnsureScannedAsync`). A saved `JavaHome` not in the list is added as a
@@ -198,11 +216,14 @@ New field `installs`: object keyed by install root path →
   Switching to Custom starts from the json value clamped, else 8192 (max) /
   the clamped json min or 512 (min). When effective max drops below a custom
   min, min is set to max (D15).
-- `ExtraJvmArgs` / `ExtraGameArgs` text boxes bound with
-  `UpdateSourceTrigger=LostFocus`.
-- Saving: each change calls `IInstallOverridesService.Save` (fire-and-forget
-  file write); slider changes are coalesced with a 300 ms debounce
-  (`TimeProvider`, so tests can drive it) to avoid a write per drag step.
+- `ExtraJvmArgs` / `ExtraGameArgs` text boxes update on every keystroke (the
+  service's write debounce coalesces them), so closing the window while
+  typing keeps the text.
+- Saving: each change calls `IInstallOverridesService.Save`, which updates the
+  in-memory map at once (Home always launches with current values) and
+  debounces the file write per install by 300 ms (`TimeProvider`, so tests
+  can drive it) to avoid a write per slider step; pending writes are flushed
+  on shutdown.
 - View: page with back button + title + install path, then a 启动参数 card.
   No sidebar.
 
@@ -217,7 +238,7 @@ New field `installs`: object keyed by install root path →
 `Home_GameRunning`, `Home_VersionSettings`, `VersionSettings_Title`,
 `VersionSettings_Back`, `VersionSettings_LaunchSection`,
 `VersionSettings_Java`, `VersionSettings_JavaBundled` (`{0}` = vendor/version),
-`VersionSettings_JavaMissing`, `VersionSettings_JavaVersionWarning` (`{0}` = bundled major),
+`VersionSettings_JavaVersionWarning` (`{0}` = bundled major),
 `VersionSettings_Memory`, `VersionSettings_MinMemory`,
 `VersionSettings_MemoryFollowJson` (`{0}` MB),
 `VersionSettings_MemoryNotSet`, `VersionSettings_MemoryCustom`,

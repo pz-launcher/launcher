@@ -5,10 +5,8 @@ Start only after `10-15-discover-java-runtimes` is done (uses
 
 ## Checklist
 
-0. Research (persist to `research/linux-launch.md`): `projectzomboid.sh` and
-   the Linux `ProjectZomboid64.json` from a real Linux install (ask the user
-   for copies) or reliable public copies; confirm `LD_LIBRARY_PATH` /
-   `LD_PRELOAD` entries and whether the Linux json has an OS-version map.
+0. ~~Research~~ done: `research/linux-launch.md`, folded into prd (D4, D18,
+   AC1) and design (step 6, Linux environment).
 1. Core errors: `ErrorCode` `launch` section (8 members), `Launch/LaunchErrors.cs`,
    rows in `PzLauncher.Core.Tests/Common/ErrorCodeTests.cs`.
 2. Core platform: `IPlatformEnvironment.OsVersion` / `TotalMemoryBytes`
@@ -21,7 +19,9 @@ Start only after `10-15-discover-java-runtimes` is done (uses
    (`PzLauncher.Core.Tests/Fixtures/Launch/`, values anonymised where needed).
 4. Core service: `IGameLaunchService`, `GameLaunchService`, DTOs; register in
    `AddPzLauncherCore` and `CoreJsonContext`; service tests with a fake
-   `IProcessRunner` (`TestSupport/`), temp-dir install layout; JSON round-trips.
+   `IProcessRunner` (`TestSupport/`), temp-dir install layouts (flat Windows,
+   nested Linux `projectzomboid/`);
+   JSON round-trips.
 5. Desktop preferences: `installs` field, `UserPreferences.InstallOverrides`,
    `SaveInstallOverridesAsync`, store tests; `IInstallOverridesService`.
 6. Desktop dialog: `IDialogService` + `AvaloniaDialogService`; move the dialog
@@ -59,12 +59,6 @@ Then `dotnet format` on this task's `.cs` files and the manual smoke (`prd.md` A
 - Exit continuation runs off the UI thread; ViewModels set state after `await`
   on the UI context.
 - Preferences: an invalid `installs` entry must not drop language/theme/window.
-
-## Before `task.py start`: re-review needed
-
-`research/linux-launch.md` (written during the Java child) changes Linux
-details in this plan: the Linux install root is one level deeper
-(`<library>/ProjectZomboid/projectzomboid/`), the B42 client script also
-preloads `libPZXInitThreads64.so` and clears `XMODIFIERS`, `libjsig.so` is in
-`jre64/lib` (not `lib/amd64`), the stock Linux json has no OS-version map.
-Fold these into prd/design and show the user the delta before starting.
+- Linux environment mirrors the user's copy of the B42 script; the user's AC10
+  smoke confirms it works without the native launcher. Keep it in one
+  function so a correction is a one-place change.
