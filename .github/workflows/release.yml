@@ -1,0 +1,105 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  # Manual runs build and upload the packages as workflow artifacts but create no release.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+jobs:
+  publish:
+    name: Publish ${{ matrix.rid }}
+    strategy:
+      matrix:
+        include:
+          - rid: win-x64
+            os: windows-latest
+          - rid: linux-x64
+            os: ubuntu-latest
+    # Native AOT cannot cross-compile between operating systems, so each RID builds on its own OS.
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Resolve version
+        id: version
+        shell: bash
+        run: |
+          if [[ "$GITHUB_REF_TYPE" == tag ]]; then
+            version="${GITHUB_REF_NAME#v}"
+          else
+            version="0.0.0-ci.$GITHUB_RUN_NUMBER"
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "package=PzLauncher-$version-${{ matrix.rid }}" >> "$GITHUB_OUTPUT"
+
+      - name: Install AOT toolchain
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y clang zlib1g-dev
+
+      - name: Test
+        run: dotnet test PzLauncher.slnx -c Release
+
+      - name: Publish
+        run: >-
+          dotnet publish PzLauncher.Desktop/PzLauncher.Desktop.csproj
+          -c Release
+          -r ${{ matrix.rid }}
+          -p:PublishAot=true
+          -p:Version=${{ steps.version.outputs.version }}
+          -o publish
+
+      - name: Package
+        shell: bash
+        run: |
+          rm -f publish/*.pdb publish/*.dbg
+          mkdir dist
+          if [[ "$RUNNER_OS" == Windows ]]; then
+            7z a "dist/${{ steps.version.outputs.package }}.zip" ./publish/*
+          else
+            tar -czf "dist/${{ steps.version.outputs.package }}.tar.gz" -C publish .
+          fi
+
+      - uses: actions/upload-artifact@v5
+        with:
+          name: ${{ steps.version.outputs.package }}
+          path: dist/*
+          if-no-files-found: error
+
+  release:
+    name: GitHub Release
+    needs: publish
+    if: github.ref_type == 'tag'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v5
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          flags=()
+          # A SemVer suffix such as v1.2.0-beta.1 marks a prerelease.
+          [[ "$GITHUB_REF_NAME" == *-* ]] && flags+=(--prerelease)
+          gh release create "$GITHUB_REF_NAME" dist/* \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "$GITHUB_REF_NAME" \
+            --generate-notes \
+            --verify-tag \
+            "${flags[@]}"
