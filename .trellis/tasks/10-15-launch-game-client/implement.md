@@ -48,6 +48,8 @@ Start only after `10-15-discover-java-runtimes` is done (uses
 14. Naming (prd D30): rename `VersionSettings` → `LaunchSettings` across
     code, XAML, resx keys and tests; new texts 选择安装 / 启动设置 / 使用此安装
     in all 10 languages; error texts naming the page follow.
+15. Row click applies the install (prd D26 revised): row → in use + Home;
+    per-row 启动设置 button → 启动设置; tests per AC16.
 11. Spec update (phase 3): `core/directory-structure.md` (`Launch/`),
     `core/service-api.md` test seams (`IProcessRunner`), `desktop/preferences.md`
     (`installs` row), `desktop/shell-and-theming.md` (sub-page navigation),

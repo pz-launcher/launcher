@@ -129,8 +129,10 @@ twice.
   on 启动设置.
 - D25 选择安装 (Installs page) drops the 全部 filter; the sidebar keeps 游戏 and
   专用服务器, 游戏 by default.
-- D26 Clicking an install in 选择安装 opens 启动设置 for that install. It does
-  not change the install in use; the list marks which install is in use.
+- D26 (revised) Clicking an install in 选择安装 makes it the install in use
+  and goes to Home. Each row (Game and DedicatedServer alike) has its own
+  启动设置 button that opens 启动设置 for that install without changing the
+  install in use. The list marks which install is in use.
 - D27 启动设置 has a prominent 使用此安装 button (accent, top of the page).
   It makes the viewed install the one in use and goes to Home. When the
   viewed install is already in use it is disabled and reads 正在使用.
@@ -251,8 +253,9 @@ twice.
       different GCs in extra args → `launch.gc_conflict`; the same GC in both
       → launches with one flag.
 - [ ] AC16 (D25, D26) ViewModel tests: filters are Game and DedicatedServer,
-      Game first; clicking a row requests 启动设置 for that install and leaves
-      the install in use unchanged.
+      Game first; clicking a row makes that install the one in use and
+      requests Home; a row's 启动设置 button requests 启动设置 for that
+      install and leaves the install in use unchanged.
 - [ ] AC17 (D27, D29) ViewModel tests: 使用此安装 sets the install in use and
       requests Home; disabled for the install already in use; a server shows
       no launch settings and never calls `GetDefaultsAsync`/`ValidateAsync`.

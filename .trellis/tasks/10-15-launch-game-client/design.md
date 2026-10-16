@@ -305,10 +305,12 @@ well when the output is empty).
 
 - `InstallsFilter` loses `All`; default `Game`; `Installs_FilterAll` resx key
   removed from all 10 files.
-- 选择安装 list: a row click (pointer or keyboard) raises an
-  `InstallsViewModel` event with that install; it never sets
-  `SelectedInstall`. The in-use install is marked in the row (one shared
-  "正在使用" text key with D27).
+- 选择安装 list: a row click (pointer or keyboard) makes that install the one
+  in use and raises an `InstallsViewModel` event the shell answers with
+  Home. A separate 启动设置 button on every row raises the open-settings
+  event with that install and never sets `SelectedInstall`. The row and its
+  button are sibling controls, not a button inside a button. The in-use
+  install is marked in the row (one shared "正在使用" text key with D27).
 - `InstallsViewModel` gains a public way to make an install the one in use
   (by root path, platform path comparison); nothing else sets
   `SelectedInstall` from outside.
