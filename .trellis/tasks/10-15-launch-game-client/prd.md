@@ -89,14 +89,44 @@ twice.
 - D5 After launch: the launcher tracks the game process; the window is not
   minimised or closed. A configurable "after launch" behaviour is a later
   settings task.
-- D6 Errors: a failed launch shows a modal error dialog with localized text
-  from the error code. Game exit codes are not interpreted.
+- D6 Errors (revised by D22): a failed launch shows a modal error dialog with
+  localized text from the error code. Exit codes alone are not interpreted.
 - D7 Running scope: only the game started in this launcher session counts.
   Closing the launcher leaves the game running; after a launcher restart it
   is not detected.
 - D8 Platforms (revised): Windows and Linux. On macOS, launch fails with a
   "not supported on this platform yet" error (dialog); macOS is a later task
   once a real app bundle can be inspected. The user smoke-tests on Linux.
+- D19 GC is a per-install override: 版本设置 has a GC dropdown — 跟随 json
+  （当前 X）(default; X = the json's effective GC, or 未设置) then G1, ZGC,
+  Shenandoah. Choosing one removes every `-XX:+Use…GC` flag from the json
+  part (incl. the OS-version entry) and adds the chosen one.
+- D20 GraalVM + Shenandoah crashes the JVM at start (`research/gc-graal-viewpoint.md`).
+  When the chosen Java has the Graal JIT (and the args don't disable it with
+  `-XX:-UseJVMCICompiler`) and the effective GC is Shenandoah, launch is
+  blocked with a dialog, and 版本设置 shows the same text under GC. The
+  launcher never changes the user's settings itself.
+- D21 Viewpoint: the Viewpoint mod offers to switch the json's ZGC to
+  Shenandoah to save memory and leaves `ProjectZomboid64.json.viewpoint-backup`.
+  When D20 applies, the GC comes from the json and that backup exists, the
+  dialog and page text name Viewpoint: it set Shenandoah; pick G1 or ZGC in
+  版本设置 (Viewpoint keeps working, memory use is higher) or use the
+  bundled Java. 跟随 json's label notes "由 Viewpoint 设置" in that case.
+- D22 Crash notice: when the launched game exits and that process's
+  `hs_err_pid<pid>.log` exists (in the game folder, or where
+  `-XX:ErrorFile` points) and was written after this launch, the launcher
+  shows a dialog saying the game's Java crashed, with the exit code and the
+  log path.
+- D23 Failed JVM start: the game's stderr is captured (last lines only). When
+  the game exits with a non-zero code within 30 s of the launch and D22 found
+  no crash log, the launcher shows a dialog with the exit code and the JVM's
+  own error lines (bad VM option, two GCs selected, a GC this Java doesn't
+  have, ...).
+- D24 GC in extra JVM args: a `-XX:+Use...GC` typed in 额外 JVM 参数 counts as
+  the user's GC choice: it removes the json's GC flags like D19 does, and the
+  D20 check uses it. Two different GCs between the dropdown and the extra
+  args, or within the extra args, block launch (`launch.gc_conflict`) and show
+  on 版本设置.
 
 ## Requirements
 
@@ -132,6 +162,17 @@ twice.
   show results. Per-install overrides are stored by the desktop app and passed
   to Core on launch.
 - R7 All new texts exist in all 10 `UiText*.resx` files.
+- R8 版本设置 GC dropdown per D19; changes save immediately like the other
+  overrides.
+- R9 D20/D21: `launch.gc_incompatible` (generic) or
+  `launch.gc_incompatible_viewpoint`; the page shows the same text while the
+  combination is selected. Validation is a Core operation the page and the
+  launch share (one owner of the rule).
+- R10 D22/D23: `launch.game_crashed` (details `path` = log, `exitCode`) or
+  `launch.game_exited_early` (details `exitCode`, `output`) from waiting for
+  exit; Home shows it in the error dialog. Any other exit shows nothing.
+- R11 D24: `launch.gc_conflict` (details `value` = the conflicting flags) from
+  validation and launch.
 
 ## Acceptance Criteria
 
@@ -168,6 +209,27 @@ twice.
       round-trip, missing, invalid, keeps other fields.
 - [ ] AC7 (R7) Resx parity passes; new codes pinned in `ErrorCodeTests`; new
       DTOs round-trip through `CoreJsonContext`.
+- [ ] AC11 (D19) Core tests: a GC override removes all `-XX:+Use…GC` flags
+      (json + OS-version entry) and adds exactly one; no override keeps the
+      json's; defaults report the json's effective GC.
+- [ ] AC12 (D20, D21) Core tests: Graal Java + Shenandoah (from json or
+      override) → `launch.gc_incompatible`; from json with the Viewpoint
+      backup → `launch.gc_incompatible_viewpoint`; `-XX:-UseJVMCICompiler`,
+      a non-Graal Java, or another GC → launches. Java tests: Graal detected
+      from the release file (`GRAALVM_VERSION`, or `jvmci` in
+      `JAVA_RUNTIME_VERSION`). ViewModel tests: page shows the text and clears
+      it when GC or Java changes.
+- [ ] AC13 (D22, D23) Core tests: exit with the process's hs_err log written
+      after the launch → `launch.game_crashed` with path and exit code; an
+      older log with the same pid is ignored; `-XX:ErrorFile` (with `%p`) is
+      honoured; non-zero exit within 30 s without a log →
+      `launch.game_exited_early` with the stderr tail; non-zero exit after
+      30 s, or exit code 0 → success. ViewModel test: crash → dialog, button
+      back to 启动游戏.
+- [ ] AC15 (D24) Core tests: a GC flag in extra JVM args removes the json's
+      GC flags and feeds the D20 check; dropdown ≠ extra-args GC, or two
+      different GCs in extra args → `launch.gc_conflict`; the same GC in both
+      → launches with one flag.
 - [ ] AC8 `dotnet build PzLauncher.slnx -warnaserror` and `dotnet test
       PzLauncher.slnx` pass.
 - [ ] AC9 Manual smoke (Windows, PZ via Steam): 启动游戏 starts the game with
@@ -180,6 +242,12 @@ twice.
 - [ ] AC10 Manual smoke (Linux, PZ via Steam, done by the user): the game
       starts from 启动游戏 with the json settings; a chosen system Java and
       custom memory apply; 游戏运行中 until quit.
+- [ ] AC14 Manual smoke (Windows): with the Viewpoint-edited json and
+      GraalVM 25 chosen → launch blocked with the Viewpoint text; GC → ZGC →
+      game starts on GraalVM; a forced JVM crash shows the crash dialog;
+      a bad extra JVM arg (e.g. `-XX:+Bogus`) shows the failed-start dialog
+      with the JVM's text; closing the launcher while the game runs leaves
+      the game running (stderr is piped to the launcher; Windows and Linux).
 
 ## Out of Scope
 
@@ -191,4 +259,6 @@ twice.
   presets such as `-nosteam` / debug toggles beyond free-text game args.
 - Detecting a game started outside this session; stopping the game from the
   launcher; "after launch" minimise/close settings.
-- Interpreting game exit codes or crash logs; showing the final command line.
+- Interpreting the crash log's contents or exit codes after the first 30 s;
+  showing the final command line; detecting Viewpoint other than by its backup
+  file; a stdout/stderr log viewer.

@@ -35,6 +35,13 @@ Start only after `10-15-discover-java-runtimes` is done (uses
    `App.axaml` DataTemplate, `DesignData`.
 10. Desktop tests: fakes in `TestSupport/Fakes.cs`; `HomeViewModelTests`,
     `VersionSettingsViewModelTests`, `MainViewModelTests` navigation.
+12. GC / Graal / Viewpoint / crash (prd D19–D22, design step 7b, GC flags,
+    `ValidateAsync`, `WaitForExitAsync` result): Core `GarbageCollector` +
+    `GarbageCollectors`, `JavaRuntime.HasGraalCompiler` (release file),
+    `IRunningProcess.ExitCode`, 3 error codes; Desktop `gc` preference field,
+    GC dropdown, page validation text, Home crash dialog; D23 stderr tail +
+    early-exit result, D24 extra-args GC + `launch.gc_conflict`, D22 log time
+    and `-XX:ErrorFile`; tests per AC11–AC13, AC15.
 11. Spec update (phase 3): `core/directory-structure.md` (`Launch/`),
     `core/service-api.md` test seams (`IProcessRunner`), `desktop/preferences.md`
     (`installs` row), `desktop/shell-and-theming.md` (sub-page navigation),

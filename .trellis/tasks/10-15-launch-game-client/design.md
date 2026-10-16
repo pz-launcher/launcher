@@ -32,15 +32,20 @@ VersionSettingsView ─> VersionSettingsViewModel ─┤
 |---|---|---|
 | `Task<Result<GameLaunchDefaults>> GetDefaultsAsync(string installRoot, CancellationToken ct = default)` | json values for the settings page + machine memory | `GET /api/v1/game/defaults` |
 | `Task<Result<GameSession>> LaunchAsync(LaunchGameRequest request, CancellationToken ct = default)` | Validates, builds, starts; `launch.already_running` while a tracked game runs | `POST /api/v1/game/launch` |
-| `Task WaitForExitAsync(CancellationToken ct = default)` | Completes when the tracked game exits, immediately when none; cancellation throws | long-poll / SSE |
+| `Task<Result> ValidateAsync(LaunchGameRequest request, CancellationToken ct = default)` | `LaunchAsync`'s checks without starting (all but `launch.already_running`); the page shows the failure (D20/D21) | `POST /api/v1/game/launch/validate` |
+| `Task<Result> WaitForExitAsync(CancellationToken ct = default)` | Completes when the tracked game exits (`launch.game_crashed` per D22, else success), immediately with success when none ran; cancellation throws | long-poll / SSE |
 
 DTOs (records, in `CoreJsonContext`, round-trip tested):
 
 - `LaunchGameRequest(string InstallRoot, GameLaunchOverrides Overrides)`
-- `GameLaunchOverrides(string? JavaHome, int? MaxMemoryMb, int? MinMemoryMb, string ExtraJvmArgs, string ExtraGameArgs)`
-  — `null` Java = the install's bundled `jre64`; `null` memory = follow json;
-  empty strings = none. `Empty` static.
-- `GameLaunchDefaults(int? MaxMemoryMb, int? MinMemoryMb, IReadOnlyList<string> VmArgs, JavaRuntime? BundledJava, int SystemMemoryMb, IReadOnlyList<Error> Warnings)`
+- `GameLaunchOverrides(string? JavaHome, int? MaxMemoryMb, int? MinMemoryMb, string ExtraJvmArgs, string ExtraGameArgs, GarbageCollector? GarbageCollector)`
+  — `null` Java = the install's bundled `jre64`; `null` memory / GC = follow
+  json; empty strings = none. `Empty` static.
+- `enum GarbageCollector { G1, Z, Shenandoah, Parallel, Serial }` — the
+  dropdown offers the first three; the others only describe a json.
+- `GameLaunchDefaults(int? MaxMemoryMb, int? MinMemoryMb, IReadOnlyList<string> VmArgs, JavaRuntime? BundledJava, int SystemMemoryMb, IReadOnlyList<Error> Warnings, GarbageCollector? GarbageCollector, bool GarbageCollectorSetByViewpoint)`
+  — GC = the json's effective `-XX:+Use…GC` (last one wins, null when none);
+  set-by-Viewpoint = it is Shenandoah and `<game>/ProjectZomboid64.json.viewpoint-backup` exists (D21).
   — memory from the json's effective `-Xmx`/`-Xms` (null when absent or
   unparseable); `VmArgs` = json vmArgs + matching `windows` vmArgs;
   `BundledJava` = `IJavaDiscoveryService.InspectAsync(<game>/jre64)` (null on
@@ -68,14 +73,43 @@ DTOs (records, in `CoreJsonContext`, round-trip tested):
    check here (D17 is a UI warning only).
 7a. Effective min > effective max (override, else json value) →
    `launch.invalid_memory`.
+7b. GC (D20/D21): effective GC (override, else json) is Shenandoah, the
+   chosen Java has the Graal JIT (`IJavaDiscoveryService.InspectAsync(javaHome)`;
+   a failed inspect counts as no Graal) and no `-XX:-UseJVMCICompiler` in the
+   json part or extra JVM args → `launch.gc_incompatible_viewpoint` when the
+   GC comes from the json and the Viewpoint backup exists, else
+   `launch.gc_incompatible` (details `path` = Java home).
+   Before that, D24: GC flags in the extra JVM args; two different GCs among
+   them, or one differing from the dropdown → `launch.gc_conflict`
+   (details `value`). Effective GC = dropdown ?? extra-args GC ?? json GC; the
+   json's GC flags are removed when either of the first two is set.
 8. Build args and environment (below), `IProcessRunner.Start(java, args, env, workingDirectory: <game>)`;
    `Win32Exception` / `IOException` / `UnauthorizedAccessException` →
    `launch.start_failed` (details `path`, `reason`), logged once at Warning.
 9. Track the process; return `GameSession`.
 
-Steps 3–9 run under a `SemaphoreSlim(1)`. A background continuation awaits
-process exit, clears the session and disposes the process;
-`WaitForExitAsync` awaits that task with `WaitAsync(ct)`.
+Steps 3–9 run under a `SemaphoreSlim(1)`. `ValidateAsync` runs 1, 2, 4–7b
+through the same code. A background continuation awaits process exit, reads
+`IRunningProcess.ExitCode`, then decides the result (D22, D23):
+the crash log is `-XX:ErrorFile=<p>` from the effective JVM args (`%p` →
+pid, relative to `<game>`) or `<game>/hs_err_pid<ProcessId>.log`; it counts
+only if its last write time is at or after the launch time
+(`TimeProvider`) → `launch.game_crashed` (details `path`, `exitCode`). Else a
+non-zero exit within 30 s of the launch → `launch.game_exited_early`
+(details `exitCode`, `output` = the captured stderr tail). Then it clears
+the session and disposes the process; `WaitForExitAsync` awaits that task with
+`WaitAsync(ct)`.
+
+GC flags (`Launch/GarbageCollectors.cs`, one owner): enum ↔ `-XX:+Use<Name>GC`.
+A GC override removes every collector-selecting flag from the json part (a
+listed set: the enum's flags plus ParallelOld, ConcMarkSweep, ParNew,
+Epsilon; not any `-XX:+Use<word>GC`, which would also take options such as
+`-XX:+UseMaximumCompactionOnSystemGC`) (two selected GCs make the JVM refuse to start) and adds the chosen flag
+after it, before the extra JVM args.
+
+Java discovery: `JavaRuntime` gains `bool HasGraalCompiler` — the release
+file has `GRAALVM_VERSION`, or `JAVA_RUNTIME_VERSION` contains `jvmci`
+(`research/gc-graal-viewpoint.md`).
 
 ### Launch config (`PzLaunchConfig`, internal, reusable by the server child)
 
@@ -116,6 +150,11 @@ process exit, clears the session and disposes the process;
 | `LaunchConfigMalformed` | `launch.config_malformed` | External | `path`, `reason` (also unreadable file) |
 | `LaunchJavaMissing` | `launch.java_missing` | NotFound | `path` |
 | `LaunchStartFailed` | `launch.start_failed` | External | `path`, `reason` |
+| `LaunchGcIncompatible` | `launch.gc_incompatible` | Validation | `path` |
+| `LaunchGcIncompatibleViewpoint` | `launch.gc_incompatible_viewpoint` | Validation | `path` |
+| `LaunchGameCrashed` | `launch.game_crashed` | External | `path`, `exitCode` |
+| `LaunchGameExitedEarly` | `launch.game_exited_early` | External | `exitCode`, `output` |
+| `LaunchGcConflict` | `launch.gc_conflict` | Validation | `value` |
 
 File names (`ProjectZomboid64.json`, `jre64`, the `projectzomboid` subfolder,
 `natives`, per-OS Java executable, the Linux preload libraries) are domain constants in
@@ -153,7 +192,10 @@ install, `research/linux-launch.md`):
 - `internal interface IProcessRunner { IRunningProcess Start(ProcessStartRequest request); }`
   with `ProcessStartRequest(string FileName, IReadOnlyList<string> Arguments, string WorkingDirectory, IReadOnlyDictionary<string, string> Environment)`
   (environment entries are added/overridden on top of the launcher's own).
-- `internal interface IRunningProcess : IDisposable { int Id { get; } Task WaitForExitAsync(CancellationToken ct); }`
+- `internal interface IRunningProcess : IDisposable { int Id { get; } int ExitCode { get; } IReadOnlyList<string> ErrorOutputTail { get; } Task WaitForExitAsync(CancellationToken ct); }` (`ExitCode` and the full tail valid after exit)
+- `ProcessRunner` redirects stderr only and drains it asynchronously into a
+  bounded buffer (last 50 lines), so a chatty game never blocks on a full pipe;
+  stdout is not redirected.
 - `ProcessRunner`: `Process` with `UseShellExecute = false`, no redirection.
   Throws OS exceptions; the service converts them. `TryAddSingleton` so tests
   register a fake first. The server child extends this seam with stdio.
@@ -163,7 +205,8 @@ install, `research/linux-launch.md`):
 ### Preferences (`preferences.json`)
 
 New field `installs`: object keyed by install root path →
-`{ "javaHome": string|null, "maxMemoryMb": int|null, "minMemoryMb": int|null, "jvmArgs": string, "gameArgs": string }`.
+`{ "javaHome": string|null, "maxMemoryMb": int|null, "minMemoryMb": int|null, "jvmArgs": string, "gameArgs": string, "gc": "g1"|"zgc"|"shenandoah"|null }`
+(an unknown `gc` loads as null = follow json).
 
 - `UserPreferences` gains `IReadOnlyDictionary<string, GameLaunchOverrides> InstallOverrides`
   (empty when missing; entries with invalid values dropped, others kept,
@@ -192,7 +235,8 @@ New field `installs`: object keyed by install root path →
   !running; `VersionSettingsCommand` with `CanExecute` = Game selected; both
   re-evaluated in `OnInstallsPropertyChanged` and on `IsGameRunning` change.
 - Launch: request with the selected install's stored overrides; success →
-  running, await `WaitForExitAsync`, not running; failure →
+  running, await `WaitForExitAsync` (a `launch.game_crashed` failure → error
+  dialog), not running; failure →
   `IDialogService.ShowErrorAsync(ErrorMessages.ToUserText(error))`.
 - Button label: two `{x:Static}` TextBlocks (`Home_Launch`,
   `Home_GameRunning`) toggled by `IsGameRunning`.
@@ -219,6 +263,13 @@ New field `installs`: object keyed by install root path →
 - `ExtraJvmArgs` / `ExtraGameArgs` text boxes update on every keystroke (the
   service's write debounce coalesces them), so closing the window while
   typing keeps the text.
+- GC: dropdown (`GcOption` rows) = 跟随 json（当前 <name> / 未设置; plus
+  "由 Viewpoint 设置" when `GarbageCollectorSetByViewpoint`）, G1, ZGC,
+  Shenandoah. GC display names live with the other display names
+  (`Localization/DisplayNames.cs`).
+- Launch problem: after load and after each change (latest wins) the page
+  calls `ValidateAsync` and shows a failure's user text (not repeating the
+  json warning already shown); a `launch.gc_*` text sits under GC.
 - Saving: each change calls `IInstallOverridesService.Save`, which updates the
   in-memory map at once (Home always launches with current values) and
   debounces the file write per install by 300 ms (`TimeProvider`, so tests
@@ -244,7 +295,21 @@ New field `installs`: object keyed by install root path →
 `VersionSettings_MemoryNotSet`, `VersionSettings_MemoryCustom`,
 `VersionSettings_MemoryValue` (`{0}`), `VersionSettings_SystemMemory` (`{0}`),
 `VersionSettings_JvmArgs`, `VersionSettings_JsonVmArgs`, `VersionSettings_GameArgs`,
-`VersionSettings_ArgsHint`, and one `Error_<Member>` per new code.
+`VersionSettings_ArgsHint`, `VersionSettings_Gc`, `VersionSettings_GcFollowJson` (`{0}` = GC name),
+`VersionSettings_GcNotSet`, `VersionSettings_GcSetByViewpoint` (`{0}` = GC name), and one
+`Error_<Member>` per new code (`Error_LaunchGameCrashed`: `{0}` log path, `{1}` exit code;
+`Error_LaunchGameExitedEarly`: `{0}` exit code, `{1}` JVM output; worded so it still reads
+well when the output is empty).
+
+## Notes for later (no work in this task)
+
+- Viewpoint after a launcher GC override: the game then runs a GC that isn't
+  the json's, so Viewpoint's collector check doesn't offer a switch again; its
+  own switch ends with the game saving and quitting (exit 0, no notice).
+  (`research/gc-graal-viewpoint.md`)
+- The dedicated server's json has the same shape; the GC override, D20/D24
+  checks and exit handling sit in Core so `10-15-host-dedicated-server` reuses
+  them.
 
 ## Trade-offs
 
