@@ -26,7 +26,7 @@ public partial class VersionSettingsViewModel : ViewModelBase
     private const int MinMemoryFloorMb = 512;
     private const int DefaultCustomMaxMemoryMb = 8192;
 
-    private static readonly GarbageCollector[] OfferedCollectors = [GarbageCollector.G1, GarbageCollector.Z, GarbageCollector.Shenandoah];
+    private static readonly GarbageCollector[] OfferedCollectors = [GarbageCollector.Z, GarbageCollector.G1, GarbageCollector.Shenandoah];
 
     private readonly InstallsViewModel _installs;
     private readonly IGameLaunchService _launcher;

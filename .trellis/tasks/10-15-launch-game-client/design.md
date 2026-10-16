@@ -264,7 +264,7 @@ New field `installs`: object keyed by install root path →
   service's write debounce coalesces them), so closing the window while
   typing keeps the text.
 - GC: dropdown (`GcOption` rows) = 跟随 json（当前 <name> / 未设置; plus
-  "由 Viewpoint 设置" when `GarbageCollectorSetByViewpoint`）, G1, ZGC,
+  "由 Viewpoint 设置" when `GarbageCollectorSetByViewpoint`）, ZGC, G1,
   Shenandoah. GC display names live with the other display names
   (`Localization/DisplayNames.cs`).
 - Launch problem: after load and after each change (latest wins) the page

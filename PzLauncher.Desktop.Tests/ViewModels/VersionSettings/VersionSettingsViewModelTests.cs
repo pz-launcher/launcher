@@ -357,10 +357,10 @@ public class VersionSettingsViewModelTests : UiTextCultureTest
     {
         await ActivateAsync();
 
-        Assert.Equal([null, GarbageCollector.G1, GarbageCollector.Z, GarbageCollector.Shenandoah], _vm.GcOptions.Select(option => option.Collector));
+        Assert.Equal([null, GarbageCollector.Z, GarbageCollector.G1, GarbageCollector.Shenandoah], _vm.GcOptions.Select(option => option.Collector));
         Assert.Same(_vm.GcOptions[0], _vm.SelectedGc);
         Assert.Equal("Follow json (currently ZGC)", _vm.GcOptions[0].Label);
-        Assert.Equal(["G1", "ZGC", "Shenandoah"], _vm.GcOptions.Skip(1).Select(option => option.Label));
+        Assert.Equal(["ZGC", "G1", "Shenandoah"], _vm.GcOptions.Skip(1).Select(option => option.Label));
     }
 
     [Theory]

@@ -98,7 +98,7 @@ twice.
   "not supported on this platform yet" error (dialog); macOS is a later task
   once a real app bundle can be inspected. The user smoke-tests on Linux.
 - D19 GC is a per-install override: 版本设置 has a GC dropdown — 跟随 json
-  （当前 X）(default; X = the json's effective GC, or 未设置) then G1, ZGC,
+  （当前 X）(default; X = the json's effective GC, or 未设置) then ZGC, G1,
   Shenandoah. Choosing one removes every `-XX:+Use…GC` flag from the json
   part (incl. the OS-version entry) and adds the chosen one.
 - D20 GraalVM + Shenandoah crashes the JVM at start (`research/gc-graal-viewpoint.md`).
