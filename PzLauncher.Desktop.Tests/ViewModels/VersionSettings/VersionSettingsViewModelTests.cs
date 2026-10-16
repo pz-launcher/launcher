@@ -32,14 +32,10 @@ public class VersionSettingsViewModelTests : UiTextCultureTest
         _vm = new(_installs, _launcher, _overrides, java, new FakePlatformEnvironment(), Localization);
     }
 
-    private async Task ActivateAsync(PzInstall? select = null)
+    private async Task ActivateAsync(PzInstall? open = null)
     {
         await _installs.ActivateCommand.ExecuteAsync(null);
-        if (select is not null)
-        {
-            _installs.ListSelection = select;
-        }
-
+        _vm.Open(open ?? SteamGame);
         await _vm.ActivateCommand.ExecuteAsync(null);
     }
 
@@ -234,19 +230,40 @@ public class VersionSettingsViewModelTests : UiTextCultureTest
         _vm.MaxMemoryMode = MemoryMode.Custom;
         _vm.ExtraGameArgs = "-manual";
 
-        _installs.ListSelection = SteamGame;
+        _vm.Open(SteamGame);
         await _vm.ActivateCommand.ExecuteAsync(null);
 
         Assert.Equal(SteamGame, _vm.Install);
         Assert.Equal(MemoryMode.FollowJson, _vm.MaxMemoryMode);
         Assert.Equal("", _vm.ExtraGameArgs);
 
-        _installs.ListSelection = ManualGame;
+        _vm.Open(ManualGame);
         await _vm.ActivateCommand.ExecuteAsync(null);
 
         Assert.Equal(MemoryMode.Custom, _vm.MaxMemoryMode);
         Assert.Equal("-manual", _vm.ExtraGameArgs);
         Assert.Equal([ManualGame.RootPath], _overrides.Saved.Select(save => save.Root).Distinct());
+    }
+
+    [Fact]
+    public async Task Open_WhileThePreviousInstallStillLoads_ItsValuesAreNeitherShownNorSavedForTheNewOne()
+    {
+        _overrides.Set(ManualGame.RootPath, GameLaunchOverrides.Empty with { ExtraGameArgs = "-manual" });
+        _javaDiscovery.ScanGate = new TaskCompletionSource();
+        await _installs.ActivateCommand.ExecuteAsync(null);
+        _vm.Open(ManualGame);
+        var load = _vm.ActivateCommand.ExecuteAsync(null);
+
+        _vm.Open(SteamGame);
+        _javaDiscovery.ScanGate.SetResult();
+        await load;
+        _vm.ExtraGameArgs = "-typed";
+
+        Assert.Equal(SteamGame, _vm.Install);
+        Assert.False(_vm.HasSettings);
+        Assert.False(_vm.IsLoading);
+        Assert.Empty(_overrides.Saved);
+        Assert.Empty(_launcher.Validations);
     }
 
     [Fact]
@@ -332,13 +349,81 @@ public class VersionSettingsViewModelTests : UiTextCultureTest
     }
 
     [Fact]
-    public async Task Activate_ServerSelected_ShowsNothing()
+    public async Task Activate_Server_ShowsItWithoutLaunchSettingsOrLaunchCalls()
     {
         await ActivateAsync(SteamServer);
 
-        Assert.Null(_vm.Install);
+        Assert.Equal(SteamServer, _vm.Install);
         Assert.False(_vm.HasSettings);
+        Assert.False(_vm.IsLoading);
         Assert.Null(_vm.ErrorText);
+        Assert.Empty(_launcher.DefaultsRequests);
+        Assert.Empty(_launcher.Validations);
+        Assert.True(_vm.UseCommand.CanExecute(null));
+    }
+
+    [Fact]
+    public async Task Activate_LoadsTheOpenedInstallNotTheOneInUse()
+    {
+        await ActivateAsync(ManualGame);
+
+        Assert.Equal(ManualGame, _vm.Install);
+        Assert.Equal([ManualGame.RootPath], _launcher.DefaultsRequests);
+        Assert.Equal(SteamGame, _installs.SelectedInstall);
+        Assert.False(_vm.IsInUse);
+    }
+
+    [Fact]
+    public async Task Use_MakesTheInstallTheOneInUseAndRequestsHome()
+    {
+        await ActivateAsync(ManualGame);
+        var homeRequests = 0;
+        _vm.HomeRequested += (_, _) => homeRequests++;
+        Assert.True(_vm.UseCommand.CanExecute(null));
+
+        _vm.UseCommand.Execute(null);
+
+        Assert.Equal(ManualGame, _installs.SelectedInstall);
+        Assert.True(_vm.IsInUse);
+        Assert.False(_vm.UseCommand.CanExecute(null));
+        Assert.Equal(1, homeRequests);
+    }
+
+    [Fact]
+    public async Task Use_InstallAlreadyInUse_Disabled()
+    {
+        await ActivateAsync(SteamGame);
+
+        Assert.True(_vm.IsInUse);
+        Assert.False(_vm.UseCommand.CanExecute(null));
+    }
+
+    [Fact]
+    public async Task Use_InstallNoLongerListed_Disabled()
+    {
+        await ActivateAsync(ManualGame);
+        _installDetection.ScanResults.Enqueue(FakeInstallDetectionService.Found(SteamGame));
+        var raised = 0;
+        _vm.UseCommand.CanExecuteChanged += (_, _) => raised++;
+
+        await _installs.ScanCommand.ExecuteAsync(null);
+
+        Assert.False(_vm.UseCommand.CanExecute(null));
+        Assert.True(raised > 0);
+    }
+
+    [Fact]
+    public async Task Use_AnotherInstallPutInUse_ReEvaluated()
+    {
+        await ActivateAsync(SteamGame);
+        var changed = new List<string?>();
+        _vm.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
+
+        _installs.Use(ManualGame.RootPath);
+
+        Assert.False(_vm.IsInUse);
+        Assert.True(_vm.UseCommand.CanExecute(null));
+        Assert.Contains(nameof(VersionSettingsViewModel.IsInUse), changed);
     }
 
     [Fact]

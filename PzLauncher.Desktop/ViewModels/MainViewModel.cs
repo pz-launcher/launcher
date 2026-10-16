@@ -1,4 +1,5 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using PzLauncher.Core.Installs;
 using PzLauncher.Desktop.ViewModels.Home;
 using PzLauncher.Desktop.ViewModels.Installs;
 using PzLauncher.Desktop.ViewModels.Settings;
@@ -8,6 +9,9 @@ namespace PzLauncher.Desktop.ViewModels;
 
 public partial class MainViewModel : ViewModelBase
 {
+    // The page that opened VersionSettings: its tab stays highlighted and back returns there.
+    private ShellPage _versionSettingsOrigin = ShellPage.Home;
+
     public MainViewModel(
         HomeViewModel home,
         InstallsViewModel installs,
@@ -23,8 +27,10 @@ public partial class MainViewModel : ViewModelBase
 
         // Never unsubscribed: these view models are app-lifetime singletons.
         home.SelectVersionRequested += (_, _) => CurrentPageKind = ShellPage.Installs;
-        home.VersionSettingsRequested += (_, _) => CurrentPageKind = ShellPage.VersionSettings;
-        versionSettings.BackRequested += (_, _) => CurrentPageKind = ShellPage.Home;
+        home.VersionSettingsRequested += (_, install) => OpenVersionSettings(install, ShellPage.Home);
+        installs.VersionSettingsRequested += (_, install) => OpenVersionSettings(install, ShellPage.Installs);
+        versionSettings.BackRequested += (_, _) => CurrentPageKind = _versionSettingsOrigin;
+        versionSettings.HomeRequested += (_, _) => CurrentPageKind = ShellPage.Home;
     }
 
     public HomeViewModel Home { get; }
@@ -46,9 +52,10 @@ public partial class MainViewModel : ViewModelBase
     {
         get => CurrentPageKind switch
         {
-            ShellPage.Home or ShellPage.VersionSettings => ShellPage.Home,
+            ShellPage.Home => ShellPage.Home,
             ShellPage.Installs => ShellPage.Installs,
             ShellPage.Settings => ShellPage.Settings,
+            ShellPage.VersionSettings => _versionSettingsOrigin,
         };
         set => CurrentPageKind = value;
     }
@@ -63,4 +70,11 @@ public partial class MainViewModel : ViewModelBase
         ShellPage.Settings => Settings,
         ShellPage.VersionSettings => VersionSettings,
     };
+
+    private void OpenVersionSettings(PzInstall install, ShellPage origin)
+    {
+        _versionSettingsOrigin = origin;
+        VersionSettings.Open(install);
+        CurrentPageKind = ShellPage.VersionSettings;
+    }
 }

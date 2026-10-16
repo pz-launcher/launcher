@@ -17,6 +17,7 @@
             <SolidColorBrush x:Key="Shell.SidebarItemSelectedForeground" Color="#9B2226" />
             <SolidColorBrush x:Key="Shell.SidebarGroupHeaderForeground" Color="#8C8378" />
             <SolidColorBrush x:Key="Shell.ContentBackground" Color="#EDE6DB" />
+            <SolidColorBrush x:Key="Shell.ListRowHoverBackground" Color="#F5F0E9" />
             <SolidColorBrush x:Key="Shell.Accent" Color="#9B2226" />
             <SolidColorBrush x:Key="Shell.TextPrimary" Color="#2B2622" />
             <SolidColorBrush x:Key="Shell.TextMuted" Color="#7D746A" />
@@ -39,6 +40,7 @@
             <SolidColorBrush x:Key="Shell.SidebarItemSelectedForeground" Color="#E3817A" />
             <SolidColorBrush x:Key="Shell.SidebarGroupHeaderForeground" Color="#857D72" />
             <SolidColorBrush x:Key="Shell.ContentBackground" Color="#2F2B27" />
+            <SolidColorBrush x:Key="Shell.ListRowHoverBackground" Color="#3A3530" />
             <SolidColorBrush x:Key="Shell.Accent" Color="#9B2226" />
             <SolidColorBrush x:Key="Shell.TextPrimary" Color="#E8E2D6" />
             <SolidColorBrush x:Key="Shell.TextMuted" Color="#9C9488" />

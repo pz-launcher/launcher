@@ -8,6 +8,7 @@
              xmlns:controls="using:PzLauncher.Desktop.Views.Controls"
              xmlns:loc="using:PzLauncher.Desktop.Localization"
              xmlns:lang="using:PzLauncher.Desktop.Lang"
+             xmlns:ic="using:FluentIcons.Avalonia"
              mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="560"
              x:Class="PzLauncher.Desktop.Views.Installs.InstallsView"
              x:DataType="vm:InstallsViewModel">
@@ -19,8 +20,6 @@
     <Grid ColumnDefinitions="Auto,*">
         <Border Grid.Column="0" Classes="sidebar left" MinWidth="180">
             <StackPanel Margin="8" Spacing="2">
-                <controls:NavItem Icon="Apps" Content="{x:Static lang:UiText.Installs_FilterAll}"
-                                  IsChecked="{Binding Filter, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:InstallsFilter.All}}" />
                 <TextBlock Classes="sidebarHeader" Text="{x:Static lang:UiText.Installs_FilterKindGroup}" />
                 <controls:NavItem Icon="Games" Content="{x:Static lang:UiText.InstallKind_Game}"
                                   IsChecked="{Binding Filter, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:InstallsFilter.Game}}" />
@@ -57,33 +56,51 @@
                                IsVisible="{Binding IsFilterEmpty}" TextWrapping="Wrap" Opacity="0.7"
                                HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" />
 
-                    <ListBox ItemsSource="{Binding VisibleInstalls}" SelectedItem="{Binding ListSelection}"
-                             Background="Transparent" IsVisible="{Binding !IsEmpty}">
-                        <ListBox.ItemTemplate>
-                            <DataTemplate x:DataType="installs:PzInstall">
-                                <StackPanel Spacing="2" Margin="0,4">
-                                    <StackPanel Orientation="Horizontal" Spacing="8">
-                                        <TextBlock Text="{Binding Kind, Converter={x:Static loc:DisplayNames.InstallKind}}" FontWeight="SemiBold" />
-                                        <TextBlock Text="{Binding Source, Converter={x:Static loc:DisplayNames.InstallSource}}" Opacity="0.7" />
-                                        <!-- Content null (manual install) renders nothing, so the inner bindings never see a null Steam. -->
-                                        <ContentControl Content="{Binding Steam}"
-                                                        IsVisible="{Binding Steam, Converter={x:Static ObjectConverters.IsNotNull}}">
-                                            <ContentControl.ContentTemplate>
-                                                <DataTemplate x:DataType="installs:SteamAppInfo">
-                                                    <StackPanel Orientation="Horizontal" Spacing="8">
-                                                        <TextBlock Text="{Binding Branch, StringFormat={x:Static lang:UiText.Installs_BranchFormat}}" Opacity="0.7"
-                                                                   IsVisible="{Binding Branch, Converter={x:Static ObjectConverters.IsNotNull}}" />
-                                                        <TextBlock Text="{Binding BuildId, StringFormat={x:Static lang:UiText.Installs_BuildFormat}}" Opacity="0.7" />
-                                                    </StackPanel>
-                                                </DataTemplate>
-                                            </ContentControl.ContentTemplate>
-                                        </ContentControl>
-                                    </StackPanel>
-                                    <TextBlock Text="{Binding RootPath}" TextWrapping="Wrap" />
-                                </StackPanel>
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
-                    </ListBox>
+                    <!-- Rows are buttons, not ListBox items: a click opens the install's settings and must not select it. -->
+                    <ScrollViewer IsVisible="{Binding !IsEmpty}">
+                        <ItemsControl ItemsSource="{Binding VisibleInstalls}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Spacing="4" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:InstallRow">
+                                    <Button Theme="{StaticResource Shell.ListRow}" Classes.inUse="{Binding IsInUse}"
+                                            Command="{Binding $parent[ItemsControl].((vm:InstallsViewModel)DataContext).OpenSettingsCommand}"
+                                            CommandParameter="{Binding Install}">
+                                        <Grid ColumnDefinitions="*,Auto,Auto">
+                                            <StackPanel Grid.Column="0" Spacing="2">
+                                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                                    <TextBlock Text="{Binding Install.Kind, Converter={x:Static loc:DisplayNames.InstallKind}}" FontWeight="SemiBold" />
+                                                    <TextBlock Text="{Binding Install.Source, Converter={x:Static loc:DisplayNames.InstallSource}}" Opacity="0.7" />
+                                                    <!-- Content null (manual install) renders nothing, so the inner bindings never see a null Steam. -->
+                                                    <ContentControl Content="{Binding Install.Steam}"
+                                                                    IsVisible="{Binding Install.Steam, Converter={x:Static ObjectConverters.IsNotNull}}">
+                                                        <ContentControl.ContentTemplate>
+                                                            <DataTemplate x:DataType="installs:SteamAppInfo">
+                                                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                                                    <TextBlock Text="{Binding Branch, StringFormat={x:Static lang:UiText.Installs_BranchFormat}}" Opacity="0.7"
+                                                                               IsVisible="{Binding Branch, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                                                                    <TextBlock Text="{Binding BuildId, StringFormat={x:Static lang:UiText.Installs_BuildFormat}}" Opacity="0.7" />
+                                                                </StackPanel>
+                                                            </DataTemplate>
+                                                        </ContentControl.ContentTemplate>
+                                                    </ContentControl>
+                                                </StackPanel>
+                                                <TextBlock Text="{Binding Install.RootPath}" TextWrapping="Wrap" />
+                                            </StackPanel>
+                                            <TextBlock Grid.Column="1" Text="{x:Static lang:UiText.Installs_InUse}" FontWeight="SemiBold"
+                                                       Foreground="{DynamicResource Shell.SidebarItemSelectedForeground}"
+                                                       VerticalAlignment="Center" Margin="12,0,0,0" IsVisible="{Binding IsInUse}" />
+                                            <ic:FluentIcon Grid.Column="2" Icon="ChevronRight" IconVariant="Regular" FontSize="16"
+                                                           VerticalAlignment="Center" Margin="12,0,0,0" Foreground="{DynamicResource Shell.TextMuted}" />
+                                        </Grid>
+                                    </Button>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
                 </Panel>
             </DockPanel>
         </DockPanel>

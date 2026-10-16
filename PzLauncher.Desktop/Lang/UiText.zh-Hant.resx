@@ -70,9 +70,6 @@
   <data name="Installs_Empty" xml:space="preserve">
     <value>找不到 Project Zomboid 的安裝。請透過 Steam 安裝遊戲或專用伺服器，或使用「新增資料夾…」。</value>
   </data>
-  <data name="Installs_FilterAll" xml:space="preserve">
-    <value>全部</value>
-  </data>
   <data name="Installs_FilterKindGroup" xml:space="preserve">
     <value>類型</value>
   </data>
@@ -87,6 +84,9 @@
   </data>
   <data name="Installs_PickFolderTitle" xml:space="preserve">
     <value>選擇 Project Zomboid 遊戲或伺服器資料夾</value>
+  </data>
+  <data name="Installs_InUse" xml:space="preserve">
+    <value>正在使用</value>
   </data>
   <data name="InstallKind_Game" xml:space="preserve">
     <value>遊戲</value>
@@ -265,6 +265,9 @@
   </data>
   <data name="VersionSettings_Back" xml:space="preserve">
     <value>返回</value>
+  </data>
+  <data name="VersionSettings_Use" xml:space="preserve">
+    <value>使用此版本</value>
   </data>
   <data name="VersionSettings_LaunchSection" xml:space="preserve">
     <value>啟動參數</value>

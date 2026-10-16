@@ -70,9 +70,6 @@
   <data name="Installs_Empty" xml:space="preserve">
     <value>No se encontraron instalaciones de Project Zomboid. Instalá el juego o el servidor dedicado con Steam, o usá "Agregar carpeta…".</value>
   </data>
-  <data name="Installs_FilterAll" xml:space="preserve">
-    <value>Todas</value>
-  </data>
   <data name="Installs_FilterKindGroup" xml:space="preserve">
     <value>Tipo</value>
   </data>
@@ -87,6 +84,9 @@
   </data>
   <data name="Installs_PickFolderTitle" xml:space="preserve">
     <value>Seleccioná una carpeta del juego o del servidor de Project Zomboid</value>
+  </data>
+  <data name="Installs_InUse" xml:space="preserve">
+    <value>En uso</value>
   </data>
   <data name="InstallKind_Game" xml:space="preserve">
     <value>Juego</value>
@@ -265,6 +265,9 @@
   </data>
   <data name="VersionSettings_Back" xml:space="preserve">
     <value>Volver</value>
+  </data>
+  <data name="VersionSettings_Use" xml:space="preserve">
+    <value>Usar esta versión</value>
   </data>
   <data name="VersionSettings_LaunchSection" xml:space="preserve">
     <value>Opciones de inicio</value>

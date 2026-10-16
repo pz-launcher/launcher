@@ -70,9 +70,6 @@
   <data name="Installs_Empty" xml:space="preserve">
     <value>Установки Project Zomboid не найдены. Установите игру или выделенный сервер через Steam либо нажмите «Добавить папку…».</value>
   </data>
-  <data name="Installs_FilterAll" xml:space="preserve">
-    <value>Все</value>
-  </data>
   <data name="Installs_FilterKindGroup" xml:space="preserve">
     <value>Тип</value>
   </data>
@@ -87,6 +84,9 @@
   </data>
   <data name="Installs_PickFolderTitle" xml:space="preserve">
     <value>Выберите папку игры или сервера Project Zomboid</value>
+  </data>
+  <data name="Installs_InUse" xml:space="preserve">
+    <value>Используется</value>
   </data>
   <data name="InstallKind_Game" xml:space="preserve">
     <value>Игра</value>
@@ -265,6 +265,9 @@
   </data>
   <data name="VersionSettings_Back" xml:space="preserve">
     <value>Назад</value>
+  </data>
+  <data name="VersionSettings_Use" xml:space="preserve">
+    <value>Использовать эту версию</value>
   </data>
   <data name="VersionSettings_LaunchSection" xml:space="preserve">
     <value>Параметры запуска</value>

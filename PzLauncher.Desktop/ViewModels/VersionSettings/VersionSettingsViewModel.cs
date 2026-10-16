@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.ComponentModel;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -18,7 +20,7 @@ using PzLauncher.Desktop.ViewModels.Java;
 
 namespace PzLauncher.Desktop.ViewModels.VersionSettings;
 
-/// <summary>Launch settings of the install selected on Home; every change is saved at once.</summary>
+/// <summary>Settings of the install it was opened for, which need not be the one in use; every change is saved at once.</summary>
 public partial class VersionSettingsViewModel : ViewModelBase
 {
     private const int MemoryStepMb = 512;
@@ -63,16 +65,26 @@ public partial class VersionSettingsViewModel : ViewModelBase
         _java = java;
         _pathComparer = StringComparer.FromComparison(platform.PathComparison);
 
-        // Never unsubscribed: this view model is an app-lifetime singleton.
+        // Never unsubscribed: these view models are app-lifetime singletons.
         localization.LanguageChanged += (_, _) => RenderTexts();
+        installs.PropertyChanged += OnInstallsPropertyChanged;
+        installs.Installs.CollectionChanged += OnInstallsListChanged;
     }
 
     public event EventHandler? BackRequested;
 
+    /// <summary>The viewed install was made the one in use.</summary>
+    public event EventHandler? HomeRequested;
+
     // Slider step for the view, typed like RangeBase's properties.
     public static double MemoryStep => MemoryStepMb;
 
-    [ObservableProperty] public partial PzInstall? Install { get; private set; }
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsInUse))]
+    [NotifyCanExecuteChangedFor(nameof(UseCommand))]
+    public partial PzInstall? Install { get; private set; }
+
+    public bool IsInUse => Install is { } install && _installs.IsInUse(install.RootPath);
 
     [ObservableProperty] public partial bool IsLoading { get; private set; }
 
@@ -181,13 +193,23 @@ public partial class VersionSettingsViewModel : ViewModelBase
 
     private bool IsEditing => !_applying && HasSettings && Install is not null;
 
-    // The view calls this on every load: the selected install may have changed since.
+    /// <summary>Picks the install the page shows; the view's load then reads its settings.</summary>
+    public void Open(PzInstall install)
+    {
+        // Drops a load or check still running for the previous install; until the next load nothing saves under this one.
+        _loadVersion++;
+        _validationVersion++;
+        IsLoading = false;
+        HasSettings = false;
+        Install = install;
+    }
+
+    // The view calls this on every load. Only a game has launch settings; a server shows its path and the use button.
     [RelayCommand(AllowConcurrentExecutions = true)]
     private async Task ActivateAsync(CancellationToken ct)
     {
         var load = ++_loadVersion;
-        var install = _installs.SelectedInstall is { Kind: PzInstallKind.Game } game ? game : null;
-        Install = install;
+        var install = Install is { Kind: PzInstallKind.Game } game ? game : null;
         HasSettings = false;
         ShowError(null);
         _validationVersion++;
@@ -196,6 +218,7 @@ public partial class VersionSettingsViewModel : ViewModelBase
         Warnings.Clear();
         if (install is null)
         {
+            IsLoading = false;
             return;
         }
 
@@ -235,6 +258,31 @@ public partial class VersionSettingsViewModel : ViewModelBase
 
     [RelayCommand]
     private void Back() => BackRequested?.Invoke(this, EventArgs.Empty);
+
+    private bool CanUse() => Install is { } install && !IsInUse && _installs.IsListed(install.RootPath);
+
+    [RelayCommand(CanExecute = nameof(CanUse))]
+    private void Use()
+    {
+        if (Install is not { } install)
+        {
+            return;
+        }
+
+        _installs.Use(install.RootPath);
+        HomeRequested?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void OnInstallsPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName is nameof(InstallsViewModel.SelectedInstall))
+        {
+            OnPropertyChanged(nameof(IsInUse));
+            UseCommand.NotifyCanExecuteChanged();
+        }
+    }
+
+    private void OnInstallsListChanged(object? sender, NotifyCollectionChangedEventArgs e) => UseCommand.NotifyCanExecuteChanged();
 
     private void Apply(GameLaunchDefaults defaults, GameLaunchOverrides saved)
     {

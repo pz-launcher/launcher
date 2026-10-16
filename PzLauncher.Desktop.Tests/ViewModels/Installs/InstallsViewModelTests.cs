@@ -135,16 +135,16 @@ public class InstallsViewModelTests : UiTextCultureTest
     public async Task AddFolderAsync_ValidFolder_AddsManualInstall()
     {
         var vm = await CreateScannedViewModelAsync(SteamGame);
-        var manual = new PzInstall(PzInstallKind.DedicatedServer, @"D:\Servers\PZ", Steam: null);
+        var manual = new PzInstall(PzInstallKind.Game, @"D:\Games\PZ", Steam: null);
         _service.Inspect = _ => manual;
 
-        await AddFolderAsync(vm, @"D:\Servers\PZ");
+        await AddFolderAsync(vm, @"D:\Games\PZ");
 
         Assert.Equal([SteamGame, manual], vm.Installs);
-        Assert.Equal([SteamGame, manual], vm.VisibleInstalls);
+        Assert.Equal([new InstallRow(SteamGame, true), new InstallRow(manual, false)], vm.VisibleInstalls);
         Assert.Equal(SteamGame, vm.SelectedInstall);
         Assert.Null(vm.ErrorText);
-        Assert.Equal([@"D:\Servers\PZ"], _service.InspectedPaths);
+        Assert.Equal([@"D:\Games\PZ"], _service.InspectedPaths);
     }
 
     [Fact]
@@ -214,21 +214,19 @@ public class InstallsViewModelTests : UiTextCultureTest
         var vm = found ? await CreateScannedViewModelAsync(SteamGame, SteamServer) : await CreateScannedViewModelAsync();
 
         Assert.Equal(found ? SteamGame : null, vm.SelectedInstall);
-        Assert.Equal(vm.SelectedInstall, vm.ListSelection);
     }
 
     [Fact]
     public async Task ScanAsync_SelectedStillPresent_KeepsItByPathWithFreshData()
     {
         var vm = await CreateScannedViewModelAsync(SteamGame, SteamServer);
-        vm.ListSelection = SteamServer;
+        vm.Use(SteamServer.RootPath);
         var updated = SteamServer with { RootPath = SteamServer.RootPath.ToUpperInvariant(), Steam = new SteamAppInfo("201", "unstable") };
         _service.ScanResults.Enqueue(FakeInstallDetectionService.Found(SteamGame, updated));
 
         await vm.ScanCommand.ExecuteAsync(null);
 
         Assert.Equal(updated, vm.SelectedInstall);
-        Assert.Equal(updated, vm.ListSelection);
     }
 
     [Theory]
@@ -237,7 +235,7 @@ public class InstallsViewModelTests : UiTextCultureTest
     public async Task ScanAsync_SelectedGone_FallsBackToFirstOrNone(bool othersLeft)
     {
         var vm = await CreateScannedViewModelAsync(SteamGame, SteamServer);
-        vm.ListSelection = SteamServer;
+        vm.Use(SteamServer.RootPath);
         _service.ScanResults.Enqueue(othersLeft ? FakeInstallDetectionService.Found(SteamGame) : FakeInstallDetectionService.Found());
 
         await vm.ScanCommand.ExecuteAsync(null);
@@ -249,7 +247,7 @@ public class InstallsViewModelTests : UiTextCultureTest
     public async Task ScanAsync_Fails_KeepsSelection()
     {
         var vm = await CreateScannedViewModelAsync(SteamGame, SteamServer);
-        vm.ListSelection = SteamServer;
+        vm.Use(SteamServer.RootPath);
         _service.ScanResults.Enqueue(Result<InstallScanResult>.Fail(TestErrors.Create(ErrorCode.SteamNotInstalled)));
 
         await vm.ScanCommand.ExecuteAsync(null);
@@ -257,8 +255,16 @@ public class InstallsViewModelTests : UiTextCultureTest
         Assert.Equal(SteamServer, vm.SelectedInstall);
     }
 
+    [Fact]
+    public void Filter_GameAndServerOnly_GameByDefault()
+    {
+        var vm = CreateViewModel();
+
+        Assert.Equal([InstallsFilter.Game, InstallsFilter.DedicatedServer], Enum.GetValues<InstallsFilter>());
+        Assert.Equal(InstallsFilter.Game, vm.Filter);
+    }
+
     [Theory]
-    [InlineData(InstallsFilter.All)]
     [InlineData(InstallsFilter.Game)]
     [InlineData(InstallsFilter.DedicatedServer)]
     public async Task Filter_Set_ShowsOnlyThatKind(InstallsFilter filter)
@@ -269,44 +275,51 @@ public class InstallsViewModelTests : UiTextCultureTest
 
         PzInstall[] expected = filter switch
         {
-            InstallsFilter.All => [SteamGame, SteamServer],
             InstallsFilter.Game => [SteamGame],
             InstallsFilter.DedicatedServer => [SteamServer],
         };
-        Assert.Equal(expected, vm.VisibleInstalls);
+        Assert.Equal(expected, vm.VisibleInstalls.Select(row => row.Install));
         Assert.Equal([SteamGame, SteamServer], vm.Installs);
         Assert.False(vm.IsFilterEmpty);
     }
 
     [Fact]
-    public async Task Filter_HidesSelectedInstall_SelectionIsKeptAndShownAgainWhenVisible()
+    public async Task VisibleInstalls_MarkTheInstallInUse()
     {
-        var vm = await CreateScannedViewModelAsync(SteamGame, SteamServer);
-        vm.ListSelection = SteamServer;
+        var vm = await CreateScannedViewModelAsync(SteamGame, ManualGame);
 
-        vm.Filter = InstallsFilter.Game;
-        // What the ListBox pushes when its selected row disappears.
-        vm.ListSelection = null;
+        Assert.Equal([new InstallRow(SteamGame, true), new InstallRow(ManualGame, false)], vm.VisibleInstalls);
 
-        Assert.Equal(SteamServer, vm.SelectedInstall);
+        vm.Use(ManualGame.RootPath);
 
-        vm.Filter = InstallsFilter.All;
-
-        Assert.Equal(SteamServer, vm.SelectedInstall);
-        Assert.Equal(SteamServer, vm.ListSelection);
+        Assert.Equal([new InstallRow(SteamGame, false), new InstallRow(ManualGame, true)], vm.VisibleInstalls);
     }
 
     [Fact]
-    public async Task ListSelection_NullForVisibleRow_KeepsSelectionAndKeepsReportingIt()
+    public async Task OpenSettings_RequestsVersionSettingsForTheRowAndKeepsTheInstallInUse()
     {
-        var vm = await CreateScannedViewModelAsync(SteamGame, SteamServer);
-        vm.ListSelection = SteamServer;
+        var vm = await CreateScannedViewModelAsync(SteamGame, ManualGame);
+        var requested = new List<PzInstall>();
+        vm.VersionSettingsRequested += (_, install) => requested.Add(install);
 
-        // What a ListBox pushes while a MainView rebuild tears it down.
-        vm.ListSelection = null;
+        vm.OpenSettingsCommand.Execute(ManualGame);
 
-        Assert.Equal(SteamServer, vm.SelectedInstall);
-        Assert.Equal(SteamServer, vm.ListSelection);
+        Assert.Equal([ManualGame], requested);
+        Assert.Equal(SteamGame, vm.SelectedInstall);
+    }
+
+    [Theory]
+    [InlineData(@"D:\GAMES\PROJECTZOMBOID", true)]
+    [InlineData(@"D:\Games\Gone", false)]
+    public async Task Use_MatchesTheRootByPlatformComparisonAndIgnoresUnlistedRoots(string root, bool listed)
+    {
+        var vm = await CreateScannedViewModelAsync(SteamGame, ManualGame);
+
+        vm.Use(root);
+
+        Assert.Equal(listed ? ManualGame : SteamGame, vm.SelectedInstall);
+        Assert.Equal(listed, vm.IsListed(root));
+        Assert.Equal(listed, vm.IsInUse(root));
     }
 
     [Fact]

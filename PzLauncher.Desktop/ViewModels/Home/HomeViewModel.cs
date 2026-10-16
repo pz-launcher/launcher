@@ -36,7 +36,7 @@ public partial class HomeViewModel : ViewModelBase
 
     public event EventHandler? SelectVersionRequested;
 
-    public event EventHandler? VersionSettingsRequested;
+    public event EventHandler<PzInstall>? VersionSettingsRequested;
 
     public PzInstall? SelectedInstall => _installs.SelectedInstall;
 
@@ -59,7 +59,13 @@ public partial class HomeViewModel : ViewModelBase
     private void SelectVersion() => SelectVersionRequested?.Invoke(this, EventArgs.Empty);
 
     [RelayCommand(CanExecute = nameof(IsGameSelected))]
-    private void VersionSettings() => VersionSettingsRequested?.Invoke(this, EventArgs.Empty);
+    private void VersionSettings()
+    {
+        if (SelectedInstall is { Kind: PzInstallKind.Game } install)
+        {
+            VersionSettingsRequested?.Invoke(this, install);
+        }
+    }
 
     private bool CanLaunch() => IsGameSelected && !IsGameRunning;
 

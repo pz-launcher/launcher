@@ -48,7 +48,7 @@ public class HomeViewModelTests : UiTextCultureTest
         Assert.False(vm.IsEmpty);
 
         changed.Clear();
-        Installs.ListSelection = SteamServer;
+        Installs.Use(SteamServer.RootPath);
 
         Assert.Equal(SteamServer, vm.SelectedInstall);
         Assert.Contains(nameof(HomeViewModel.SelectedInstall), changed);
@@ -101,7 +101,7 @@ public class HomeViewModelTests : UiTextCultureTest
         Assert.False(vm.LaunchCommand.CanExecute(null));
         Assert.False(vm.VersionSettingsCommand.CanExecute(null));
 
-        Installs.ListSelection = SteamGame;
+        Installs.Use(SteamGame.RootPath);
 
         Assert.True(vm.LaunchCommand.CanExecute(null));
         Assert.True(vm.VersionSettingsCommand.CanExecute(null));
@@ -117,7 +117,7 @@ public class HomeViewModelTests : UiTextCultureTest
 
         Assert.True(vm.IsGameRunning);
         Assert.False(vm.LaunchCommand.CanExecute(null));
-        Installs.ListSelection = ManualGame;
+        Installs.Use(ManualGame.RootPath);
         Assert.False(vm.LaunchCommand.CanExecute(null));
         Assert.True(vm.VersionSettingsCommand.CanExecute(null));
 
@@ -136,7 +136,7 @@ public class HomeViewModelTests : UiTextCultureTest
         _overrides.Set(ManualGame.RootPath, stored);
         _overrides.Set(SteamGame.RootPath, GameLaunchOverrides.Empty with { ExtraGameArgs = "-other" });
         var vm = await CreateActivatedViewModelAsync(SteamGame, ManualGame);
-        Installs.ListSelection = ManualGame;
+        Installs.Use(ManualGame.RootPath);
 
         var launch = vm.LaunchCommand.ExecuteAsync(null);
         _launcher.Exit.SetResult(Result.Ok());
@@ -191,14 +191,15 @@ public class HomeViewModelTests : UiTextCultureTest
     }
 
     [Fact]
-    public async Task VersionSettings_RaisesRequest()
+    public async Task VersionSettings_RequestsTheInstallInUse()
     {
-        var vm = await CreateActivatedViewModelAsync(SteamGame);
-        var raised = 0;
-        vm.VersionSettingsRequested += (_, _) => raised++;
+        var vm = await CreateActivatedViewModelAsync(SteamGame, ManualGame);
+        Installs.Use(ManualGame.RootPath);
+        var requested = new List<PzInstall>();
+        vm.VersionSettingsRequested += (_, install) => requested.Add(install);
 
         vm.VersionSettingsCommand.Execute(null);
 
-        Assert.Equal(1, raised);
+        Assert.Equal([ManualGame], requested);
     }
 }

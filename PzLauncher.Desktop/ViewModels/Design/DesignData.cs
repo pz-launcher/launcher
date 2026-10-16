@@ -79,6 +79,11 @@ public static class DesignData
     private static VersionSettingsViewModel CreateVersionSettings()
     {
         var vm = new VersionSettingsViewModel(Installs, GameLaunch, InstallOverrides, Java, new SamplePlatform(), Localization);
+        if (Installs.SelectedInstall is { } install)
+        {
+            vm.Open(install);
+        }
+
         vm.ActivateCommand.Execute(null);
         return vm;
     }

@@ -181,10 +181,15 @@ public sealed class FakeGameLaunchService : IGameLaunchService
 
     public List<LaunchGameRequest> Validations { get; } = [];
 
+    public List<string> DefaultsRequests { get; } = [];
+
     public TaskCompletionSource<Result> Exit { get; private set; } = Exited();
 
-    public Task<Result<GameLaunchDefaults>> GetDefaultsAsync(string installRoot, CancellationToken ct = default) =>
-        Task.FromResult(Defaults(installRoot));
+    public Task<Result<GameLaunchDefaults>> GetDefaultsAsync(string installRoot, CancellationToken ct = default)
+    {
+        DefaultsRequests.Add(installRoot);
+        return Task.FromResult(Defaults(installRoot));
+    }
 
     public Task<Result<GameSession>> LaunchAsync(LaunchGameRequest request, CancellationToken ct = default)
     {

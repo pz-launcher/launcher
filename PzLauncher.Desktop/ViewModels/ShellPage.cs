@@ -6,6 +6,6 @@ public enum ShellPage
     Installs,
     Settings,
 
-    /// <summary>A Home sub-page: no tab of its own.</summary>
+    /// <summary>A sub-page of Home or Installs, whichever opened it: no tab of its own.</summary>
     VersionSettings,
 }
