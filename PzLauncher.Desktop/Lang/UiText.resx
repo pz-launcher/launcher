@@ -49,14 +49,14 @@
   <data name="Home_Launch" xml:space="preserve">
     <value>Launch game</value>
   </data>
-  <data name="Home_SelectVersion" xml:space="preserve">
-    <value>Select version</value>
+  <data name="Home_ChooseInstall" xml:space="preserve">
+    <value>Choose install</value>
   </data>
   <data name="Home_GameRunning" xml:space="preserve">
     <value>Game running</value>
   </data>
-  <data name="Home_VersionSettings" xml:space="preserve">
-    <value>Version settings</value>
+  <data name="Home_LaunchSettings" xml:space="preserve">
+    <value>Launch settings</value>
   </data>
   <data name="Installs_Title" xml:space="preserve">
     <value>Installs</value>
@@ -173,22 +173,22 @@
     <value>Couldn't read the launch configuration {0}. Try verifying the game files in Steam.</value>
   </data>
   <data name="Error_LaunchJavaMissing" xml:space="preserve">
-    <value>The Java program {0} doesn't exist. Choose another Java for this install in Version settings.</value>
+    <value>The Java program {0} doesn't exist. Choose another Java for this install in Launch settings.</value>
   </data>
   <data name="Error_LaunchStartFailed" xml:space="preserve">
     <value>Couldn't start the game with {0}.</value>
   </data>
   <data name="Error_LaunchGcIncompatible" xml:space="preserve">
-    <value>{0} has the Graal compiler, which doesn't support the Shenandoah GC. In Version settings, change the GC to G1 or ZGC, or choose another Java.</value>
+    <value>{0} has the Graal compiler, which doesn't support the Shenandoah GC. In Launch settings, change the GC to G1 or ZGC, or choose another Java.</value>
   </data>
   <data name="Error_LaunchGcIncompatibleViewpoint" xml:space="preserve">
-    <value>The Viewpoint mod switched the game's GC to Shenandoah to save memory, but the GraalVM you chose doesn't support it, so the game would crash at start. In Version settings, change the GC to G1 or ZGC (Viewpoint keeps working, it just uses more memory), or switch back to the game's bundled Java.</value>
+    <value>The Viewpoint mod switched the game's GC to Shenandoah to save memory, but the GraalVM you chose doesn't support it, so the game would crash at start. In Launch settings, change the GC to G1 or ZGC (Viewpoint keeps working, it just uses more memory), or switch back to the game's bundled Java.</value>
   </data>
   <data name="Error_LaunchGameCrashed" xml:space="preserve">
     <value>The game's Java crashed (exit code {1}). Crash log: {0}</value>
   </data>
   <data name="Error_LaunchGameExitedEarly" xml:space="preserve">
-    <value>The game closed right after starting (exit code {0}). Check the extra JVM arguments, the Java and the GC in Version settings.
+    <value>The game closed right after starting (exit code {0}). Check the extra JVM arguments, the Java and the GC in Launch settings.
 {1}</value>
   </data>
   <data name="Error_LaunchGcConflict" xml:space="preserve">
@@ -260,70 +260,70 @@
   <data name="JavaSource_Manual" xml:space="preserve">
     <value>Added manually</value>
   </data>
-  <data name="VersionSettings_Title" xml:space="preserve">
-    <value>Version settings</value>
+  <data name="LaunchSettings_Title" xml:space="preserve">
+    <value>Launch settings</value>
   </data>
-  <data name="VersionSettings_Back" xml:space="preserve">
+  <data name="LaunchSettings_Back" xml:space="preserve">
     <value>Back</value>
   </data>
-  <data name="VersionSettings_Use" xml:space="preserve">
-    <value>Use this version</value>
+  <data name="LaunchSettings_Use" xml:space="preserve">
+    <value>Use this install</value>
   </data>
-  <data name="VersionSettings_LaunchSection" xml:space="preserve">
+  <data name="LaunchSettings_LaunchSection" xml:space="preserve">
     <value>Launch options</value>
   </data>
-  <data name="VersionSettings_Java" xml:space="preserve">
+  <data name="LaunchSettings_Java" xml:space="preserve">
     <value>Java</value>
   </data>
-  <data name="VersionSettings_JavaBundled" xml:space="preserve">
+  <data name="LaunchSettings_JavaBundled" xml:space="preserve">
     <value>Bundled with the game ({0})</value>
   </data>
-  <data name="VersionSettings_JavaVersionWarning" xml:space="preserve">
+  <data name="LaunchSettings_JavaVersionWarning" xml:space="preserve">
     <value>This Java is older than the game's bundled Java {0}. The game may not start.</value>
   </data>
-  <data name="VersionSettings_Memory" xml:space="preserve">
+  <data name="LaunchSettings_Memory" xml:space="preserve">
     <value>Maximum memory</value>
   </data>
-  <data name="VersionSettings_MinMemory" xml:space="preserve">
+  <data name="LaunchSettings_MinMemory" xml:space="preserve">
     <value>Minimum memory</value>
   </data>
-  <data name="VersionSettings_MemoryFollowJson" xml:space="preserve">
+  <data name="LaunchSettings_MemoryFollowJson" xml:space="preserve">
     <value>Follow json (currently {0} MB)</value>
   </data>
-  <data name="VersionSettings_MemoryNotSet" xml:space="preserve">
+  <data name="LaunchSettings_MemoryNotSet" xml:space="preserve">
     <value>Follow json (not set)</value>
   </data>
-  <data name="VersionSettings_MemoryCustom" xml:space="preserve">
+  <data name="LaunchSettings_MemoryCustom" xml:space="preserve">
     <value>Custom</value>
   </data>
-  <data name="VersionSettings_MemoryValue" xml:space="preserve">
+  <data name="LaunchSettings_MemoryValue" xml:space="preserve">
     <value>{0} GB</value>
   </data>
-  <data name="VersionSettings_SystemMemory" xml:space="preserve">
+  <data name="LaunchSettings_SystemMemory" xml:space="preserve">
     <value>This computer has {0} GB of memory.</value>
   </data>
-  <data name="VersionSettings_JvmArgs" xml:space="preserve">
+  <data name="LaunchSettings_JvmArgs" xml:space="preserve">
     <value>Extra JVM arguments</value>
   </data>
-  <data name="VersionSettings_JsonVmArgs" xml:space="preserve">
+  <data name="LaunchSettings_JsonVmArgs" xml:space="preserve">
     <value>JVM arguments from ProjectZomboid64.json:</value>
   </data>
-  <data name="VersionSettings_GameArgs" xml:space="preserve">
+  <data name="LaunchSettings_GameArgs" xml:space="preserve">
     <value>Extra game arguments</value>
   </data>
-  <data name="VersionSettings_ArgsHint" xml:space="preserve">
+  <data name="LaunchSettings_ArgsHint" xml:space="preserve">
     <value>Separate arguments with spaces; put a value that contains spaces in double quotes.</value>
   </data>
-  <data name="VersionSettings_Gc" xml:space="preserve">
+  <data name="LaunchSettings_Gc" xml:space="preserve">
     <value>Garbage collector (GC)</value>
   </data>
-  <data name="VersionSettings_GcFollowJson" xml:space="preserve">
+  <data name="LaunchSettings_GcFollowJson" xml:space="preserve">
     <value>Follow json (currently {0})</value>
   </data>
-  <data name="VersionSettings_GcNotSet" xml:space="preserve">
+  <data name="LaunchSettings_GcNotSet" xml:space="preserve">
     <value>Follow json (not set)</value>
   </data>
-  <data name="VersionSettings_GcSetByViewpoint" xml:space="preserve">
+  <data name="LaunchSettings_GcSetByViewpoint" xml:space="preserve">
     <value>Follow json (currently {0}, set by Viewpoint)</value>
   </data>
   <data name="GarbageCollector_G1" xml:space="preserve">

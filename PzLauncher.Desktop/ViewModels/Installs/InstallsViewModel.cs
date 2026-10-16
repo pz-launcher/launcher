@@ -47,7 +47,7 @@ public partial class InstallsViewModel : ViewModelBase
 
     public ObservableCollection<PzInstall> Installs { get; } = [];
 
-    public event EventHandler<PzInstall>? VersionSettingsRequested;
+    public event EventHandler<PzInstall>? LaunchSettingsRequested;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsFilterEmpty))]
@@ -193,7 +193,7 @@ public partial class InstallsViewModel : ViewModelBase
         SelectedInstall is { } selected && string.Equals(selected.RootPath, rootPath, _platform.PathComparison);
 
     [RelayCommand]
-    private void OpenSettings(PzInstall install) => VersionSettingsRequested?.Invoke(this, install);
+    private void OpenSettings(PzInstall install) => LaunchSettingsRequested?.Invoke(this, install);
 
     partial void OnFilterChanged(InstallsFilter value) => RefreshVisibleInstalls();
 

@@ -296,11 +296,11 @@ public class InstallsViewModelTests : UiTextCultureTest
     }
 
     [Fact]
-    public async Task OpenSettings_RequestsVersionSettingsForTheRowAndKeepsTheInstallInUse()
+    public async Task OpenSettings_RequestsLaunchSettingsForTheRowAndKeepsTheInstallInUse()
     {
         var vm = await CreateScannedViewModelAsync(SteamGame, ManualGame);
         var requested = new List<PzInstall>();
-        vm.VersionSettingsRequested += (_, install) => requested.Add(install);
+        vm.LaunchSettingsRequested += (_, install) => requested.Add(install);
 
         vm.OpenSettingsCommand.Execute(ManualGame);
 

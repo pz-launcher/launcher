@@ -49,14 +49,14 @@
   <data name="Home_Launch" xml:space="preserve">
     <value>啟動遊戲</value>
   </data>
-  <data name="Home_SelectVersion" xml:space="preserve">
-    <value>版本選擇</value>
+  <data name="Home_ChooseInstall" xml:space="preserve">
+    <value>選擇安裝</value>
   </data>
   <data name="Home_GameRunning" xml:space="preserve">
     <value>遊戲執行中</value>
   </data>
-  <data name="Home_VersionSettings" xml:space="preserve">
-    <value>版本設定</value>
+  <data name="Home_LaunchSettings" xml:space="preserve">
+    <value>啟動設定</value>
   </data>
   <data name="Installs_Title" xml:space="preserve">
     <value>已安裝</value>
@@ -167,28 +167,28 @@
     <value>{0} 不是 Project Zomboid 遊戲資料夾。</value>
   </data>
   <data name="Error_LaunchConfigMissing" xml:space="preserve">
-    <value>啟動設定 {0} 不存在。請嘗試在 Steam 中驗證遊戲檔案的完整性。</value>
+    <value>啟動設定檔 {0} 不存在。請嘗試在 Steam 中驗證遊戲檔案的完整性。</value>
   </data>
   <data name="Error_LaunchConfigMalformed" xml:space="preserve">
-    <value>無法讀取啟動設定 {0}。請嘗試在 Steam 中驗證遊戲檔案的完整性。</value>
+    <value>無法讀取啟動設定檔 {0}。請嘗試在 Steam 中驗證遊戲檔案的完整性。</value>
   </data>
   <data name="Error_LaunchJavaMissing" xml:space="preserve">
-    <value>Java 程式 {0} 不存在。請在「版本設定」中為此版本選擇其他 Java。</value>
+    <value>Java 程式 {0} 不存在。請在「啟動設定」中為此安裝選擇其他 Java。</value>
   </data>
   <data name="Error_LaunchStartFailed" xml:space="preserve">
     <value>無法使用 {0} 啟動遊戲。</value>
   </data>
   <data name="Error_LaunchGcIncompatible" xml:space="preserve">
-    <value>{0} 內含 Graal 編譯器，不支援 Shenandoah GC。請在「版本設定」中將 GC 改為 G1 或 ZGC，或改用其他 Java。</value>
+    <value>{0} 內含 Graal 編譯器，不支援 Shenandoah GC。請在「啟動設定」中將 GC 改為 G1 或 ZGC，或改用其他 Java。</value>
   </data>
   <data name="Error_LaunchGcIncompatibleViewpoint" xml:space="preserve">
-    <value>Viewpoint 模組為了節省記憶體，把遊戲的 GC 改成了 Shenandoah，但目前選擇的 GraalVM 不支援它，遊戲會直接當掉。請在「版本設定」中將 GC 改為 G1 或 ZGC（Viewpoint 仍可正常使用，只是記憶體用量較高），或改回遊戲內建的 Java。</value>
+    <value>Viewpoint 模組為了節省記憶體，把遊戲的 GC 改成了 Shenandoah，但目前選擇的 GraalVM 不支援它，遊戲會直接當掉。請在「啟動設定」中將 GC 改為 G1 或 ZGC（Viewpoint 仍可正常使用，只是記憶體用量較高），或改回遊戲內建的 Java。</value>
   </data>
   <data name="Error_LaunchGameCrashed" xml:space="preserve">
     <value>遊戲的 Java 當掉了（結束代碼 {1}）。當機記錄：{0}</value>
   </data>
   <data name="Error_LaunchGameExitedEarly" xml:space="preserve">
-    <value>遊戲剛啟動就結束了（結束代碼 {0}）。請檢查「版本設定」中的額外 JVM 參數、Java 和 GC。
+    <value>遊戲剛啟動就結束了（結束代碼 {0}）。請檢查「啟動設定」中的額外 JVM 參數、Java 和 GC。
 {1}</value>
   </data>
   <data name="Error_LaunchGcConflict" xml:space="preserve">
@@ -260,70 +260,70 @@
   <data name="JavaSource_Manual" xml:space="preserve">
     <value>手動</value>
   </data>
-  <data name="VersionSettings_Title" xml:space="preserve">
-    <value>版本設定</value>
+  <data name="LaunchSettings_Title" xml:space="preserve">
+    <value>啟動設定</value>
   </data>
-  <data name="VersionSettings_Back" xml:space="preserve">
+  <data name="LaunchSettings_Back" xml:space="preserve">
     <value>返回</value>
   </data>
-  <data name="VersionSettings_Use" xml:space="preserve">
-    <value>使用此版本</value>
+  <data name="LaunchSettings_Use" xml:space="preserve">
+    <value>使用此安裝</value>
   </data>
-  <data name="VersionSettings_LaunchSection" xml:space="preserve">
+  <data name="LaunchSettings_LaunchSection" xml:space="preserve">
     <value>啟動參數</value>
   </data>
-  <data name="VersionSettings_Java" xml:space="preserve">
+  <data name="LaunchSettings_Java" xml:space="preserve">
     <value>Java</value>
   </data>
-  <data name="VersionSettings_JavaBundled" xml:space="preserve">
+  <data name="LaunchSettings_JavaBundled" xml:space="preserve">
     <value>遊戲內建（{0}）</value>
   </data>
-  <data name="VersionSettings_JavaVersionWarning" xml:space="preserve">
+  <data name="LaunchSettings_JavaVersionWarning" xml:space="preserve">
     <value>此 Java 比遊戲內建的 Java {0} 舊，遊戲可能無法啟動。</value>
   </data>
-  <data name="VersionSettings_Memory" xml:space="preserve">
+  <data name="LaunchSettings_Memory" xml:space="preserve">
     <value>最大記憶體</value>
   </data>
-  <data name="VersionSettings_MinMemory" xml:space="preserve">
+  <data name="LaunchSettings_MinMemory" xml:space="preserve">
     <value>最小記憶體</value>
   </data>
-  <data name="VersionSettings_MemoryFollowJson" xml:space="preserve">
+  <data name="LaunchSettings_MemoryFollowJson" xml:space="preserve">
     <value>跟隨 json（目前 {0} MB）</value>
   </data>
-  <data name="VersionSettings_MemoryNotSet" xml:space="preserve">
+  <data name="LaunchSettings_MemoryNotSet" xml:space="preserve">
     <value>跟隨 json（未設定）</value>
   </data>
-  <data name="VersionSettings_MemoryCustom" xml:space="preserve">
+  <data name="LaunchSettings_MemoryCustom" xml:space="preserve">
     <value>自訂</value>
   </data>
-  <data name="VersionSettings_MemoryValue" xml:space="preserve">
+  <data name="LaunchSettings_MemoryValue" xml:space="preserve">
     <value>{0} GB</value>
   </data>
-  <data name="VersionSettings_SystemMemory" xml:space="preserve">
+  <data name="LaunchSettings_SystemMemory" xml:space="preserve">
     <value>本機記憶體：{0} GB</value>
   </data>
-  <data name="VersionSettings_JvmArgs" xml:space="preserve">
+  <data name="LaunchSettings_JvmArgs" xml:space="preserve">
     <value>額外 JVM 參數</value>
   </data>
-  <data name="VersionSettings_JsonVmArgs" xml:space="preserve">
+  <data name="LaunchSettings_JsonVmArgs" xml:space="preserve">
     <value>ProjectZomboid64.json 中的 JVM 參數：</value>
   </data>
-  <data name="VersionSettings_GameArgs" xml:space="preserve">
+  <data name="LaunchSettings_GameArgs" xml:space="preserve">
     <value>額外遊戲參數</value>
   </data>
-  <data name="VersionSettings_ArgsHint" xml:space="preserve">
+  <data name="LaunchSettings_ArgsHint" xml:space="preserve">
     <value>參數之間以空格分隔；包含空格的值請用英文雙引號括起來。</value>
   </data>
-  <data name="VersionSettings_Gc" xml:space="preserve">
+  <data name="LaunchSettings_Gc" xml:space="preserve">
     <value>垃圾回收器（GC）</value>
   </data>
-  <data name="VersionSettings_GcFollowJson" xml:space="preserve">
+  <data name="LaunchSettings_GcFollowJson" xml:space="preserve">
     <value>跟隨 json（目前 {0}）</value>
   </data>
-  <data name="VersionSettings_GcNotSet" xml:space="preserve">
+  <data name="LaunchSettings_GcNotSet" xml:space="preserve">
     <value>跟隨 json（未設定）</value>
   </data>
-  <data name="VersionSettings_GcSetByViewpoint" xml:space="preserve">
+  <data name="LaunchSettings_GcSetByViewpoint" xml:space="preserve">
     <value>跟隨 json（目前 {0}，由 Viewpoint 設定）</value>
   </data>
   <data name="GarbageCollector_G1" xml:space="preserve">

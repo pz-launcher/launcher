@@ -18,10 +18,10 @@ using PzLauncher.Desktop.Services;
 using PzLauncher.Desktop.ViewModels.Installs;
 using PzLauncher.Desktop.ViewModels.Java;
 
-namespace PzLauncher.Desktop.ViewModels.VersionSettings;
+namespace PzLauncher.Desktop.ViewModels.LaunchSettings;
 
 /// <summary>Settings of the install it was opened for, which need not be the one in use; every change is saved at once.</summary>
-public partial class VersionSettingsViewModel : ViewModelBase
+public partial class LaunchSettingsViewModel : ViewModelBase
 {
     private const int MemoryStepMb = 512;
     private const int MaxMemoryFloorMb = 2048;
@@ -51,7 +51,7 @@ public partial class VersionSettingsViewModel : ViewModelBase
     // A saved min above the effective max stays in the min slider's range until a max change pulls it down.
     private int _loadedMinMemoryMb;
 
-    public VersionSettingsViewModel(
+    public LaunchSettingsViewModel(
         InstallsViewModel installs,
         IGameLaunchService launcher,
         IInstallOverridesService overrides,

@@ -4,7 +4,7 @@ using PzLauncher.Desktop.ViewModels;
 using PzLauncher.Desktop.ViewModels.Home;
 using PzLauncher.Desktop.ViewModels.Installs;
 using PzLauncher.Desktop.ViewModels.Settings;
-using PzLauncher.Desktop.ViewModels.VersionSettings;
+using PzLauncher.Desktop.ViewModels.LaunchSettings;
 using static PzLauncher.Desktop.Tests.TestSupport.TestInstalls;
 
 namespace PzLauncher.Desktop.Tests.ViewModels;
@@ -25,7 +25,7 @@ public class MainViewModelTests : UiTextCultureTest
             new HomeViewModel(installs, launcher, overrides, new FakeDialogService()),
             installs,
             new SettingsViewModel(new FakeThemeService(AppTheme.Light), store, new FakeWindowPlacementService(), java),
-            new VersionSettingsViewModel(installs, launcher, overrides, java, new FakePlatformEnvironment(), Localization),
+            new LaunchSettingsViewModel(installs, launcher, overrides, java, new FakePlatformEnvironment(), Localization),
             new LanguageMenuViewModel(Localization, store));
     }
 
@@ -65,7 +65,7 @@ public class MainViewModelTests : UiTextCultureTest
     [InlineData(ShellPage.Home, ShellPage.Home)]
     [InlineData(ShellPage.Installs, ShellPage.Installs)]
     [InlineData(ShellPage.Settings, ShellPage.Settings)]
-    [InlineData(ShellPage.VersionSettings, ShellPage.Home)]
+    [InlineData(ShellPage.LaunchSettings, ShellPage.Home)]
     public void CurrentTab_SubPageHighlightsItsTab(ShellPage page, ShellPage tab)
     {
         var vm = CreateViewModel();
@@ -79,7 +79,7 @@ public class MainViewModelTests : UiTextCultureTest
     public void CurrentTab_SetFromSubPage_NavigatesThere()
     {
         var vm = CreateViewModel();
-        vm.CurrentPageKind = ShellPage.VersionSettings;
+        vm.CurrentPageKind = ShellPage.LaunchSettings;
         var changed = new List<string?>();
         vm.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
 
@@ -90,7 +90,7 @@ public class MainViewModelTests : UiTextCultureTest
     }
 
     [Theory]
-    [InlineData(ShellPage.VersionSettings, ShellPage.Home)]
+    [InlineData(ShellPage.LaunchSettings, ShellPage.Home)]
     [InlineData(ShellPage.Home, ShellPage.Home)]
     [InlineData(ShellPage.Installs, ShellPage.Installs)]
     [InlineData(ShellPage.Settings, ShellPage.Settings)]
@@ -105,17 +105,17 @@ public class MainViewModelTests : UiTextCultureTest
     }
 
     [Fact]
-    public async Task HomeVersionSettings_OpensTheInstallInUse_HomeTabStaysAndBackReturnsHome()
+    public async Task HomeLaunchSettings_OpensTheInstallInUse_HomeTabStaysAndBackReturnsHome()
     {
         var vm = await CreateScannedViewModelAsync();
 
-        vm.Home.VersionSettingsCommand.Execute(null);
+        vm.Home.LaunchSettingsCommand.Execute(null);
 
-        Assert.Same(vm.VersionSettings, vm.CurrentPage);
-        Assert.Equal(SteamGame, vm.VersionSettings.Install);
+        Assert.Same(vm.LaunchSettings, vm.CurrentPage);
+        Assert.Equal(SteamGame, vm.LaunchSettings.Install);
         Assert.Equal(ShellPage.Home, vm.CurrentTab);
 
-        vm.VersionSettings.BackCommand.Execute(null);
+        vm.LaunchSettings.BackCommand.Execute(null);
 
         Assert.Same(vm.Home, vm.CurrentPage);
     }
@@ -128,11 +128,11 @@ public class MainViewModelTests : UiTextCultureTest
 
         vm.Installs.OpenSettingsCommand.Execute(SteamServer);
 
-        Assert.Same(vm.VersionSettings, vm.CurrentPage);
-        Assert.Equal(SteamServer, vm.VersionSettings.Install);
+        Assert.Same(vm.LaunchSettings, vm.CurrentPage);
+        Assert.Equal(SteamServer, vm.LaunchSettings.Install);
         Assert.Equal(ShellPage.Installs, vm.CurrentTab);
 
-        vm.VersionSettings.BackCommand.Execute(null);
+        vm.LaunchSettings.BackCommand.Execute(null);
 
         Assert.Same(vm.Installs, vm.CurrentPage);
     }
@@ -140,13 +140,13 @@ public class MainViewModelTests : UiTextCultureTest
     [Theory]
     [InlineData(ShellPage.Home)]
     [InlineData(ShellPage.Installs)]
-    public async Task ShowTabPage_OnVersionSettings_ReturnsToWhereItWasOpenedFrom(ShellPage origin)
+    public async Task ShowTabPage_OnLaunchSettings_ReturnsToWhereItWasOpenedFrom(ShellPage origin)
     {
         var vm = await CreateScannedViewModelAsync();
         vm.CurrentPageKind = origin;
         if (origin == ShellPage.Home)
         {
-            vm.Home.VersionSettingsCommand.Execute(null);
+            vm.Home.LaunchSettingsCommand.Execute(null);
         }
         else
         {
@@ -159,7 +159,7 @@ public class MainViewModelTests : UiTextCultureTest
     }
 
     [Fact]
-    public async Task VersionSettings_ReopenedFromHomeAfterInstalls_FollowsTheNewOrigin()
+    public async Task LaunchSettings_ReopenedFromHomeAfterInstalls_FollowsTheNewOrigin()
     {
         var vm = await CreateScannedViewModelAsync();
         vm.CurrentPageKind = ShellPage.Installs;
@@ -167,32 +167,32 @@ public class MainViewModelTests : UiTextCultureTest
         vm.CurrentTab = ShellPage.Settings;
         vm.CurrentTab = ShellPage.Home;
 
-        vm.Home.VersionSettingsCommand.Execute(null);
+        vm.Home.LaunchSettingsCommand.Execute(null);
 
         Assert.Equal(ShellPage.Home, vm.CurrentTab);
-        vm.VersionSettings.BackCommand.Execute(null);
+        vm.LaunchSettings.BackCommand.Execute(null);
         Assert.Same(vm.Home, vm.CurrentPage);
     }
 
     [Fact]
-    public async Task VersionSettingsUse_ShowsHomeWithThatInstallInUse()
+    public async Task LaunchSettingsUse_ShowsHomeWithThatInstallInUse()
     {
         var vm = await CreateScannedViewModelAsync();
         vm.CurrentPageKind = ShellPage.Installs;
         vm.Installs.OpenSettingsCommand.Execute(ManualGame);
 
-        vm.VersionSettings.UseCommand.Execute(null);
+        vm.LaunchSettings.UseCommand.Execute(null);
 
         Assert.Same(vm.Home, vm.CurrentPage);
         Assert.Equal(ManualGame, vm.Installs.SelectedInstall);
     }
 
     [Fact]
-    public void HomeSelectVersion_NavigatesToInstalls()
+    public void HomeChooseInstall_NavigatesToInstalls()
     {
         var vm = CreateViewModel();
 
-        vm.Home.SelectVersionCommand.Execute(null);
+        vm.Home.ChooseInstallCommand.Execute(null);
 
         Assert.Same(vm.Installs, vm.CurrentPage);
     }

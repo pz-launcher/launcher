@@ -6,8 +6,8 @@
              xmlns:installsView="using:PzLauncher.Desktop.Views.Installs"
              xmlns:settingsVm="using:PzLauncher.Desktop.ViewModels.Settings"
              xmlns:settingsView="using:PzLauncher.Desktop.Views.Settings"
-             xmlns:versionSettingsVm="using:PzLauncher.Desktop.ViewModels.VersionSettings"
-             xmlns:versionSettingsView="using:PzLauncher.Desktop.Views.VersionSettings"
+             xmlns:launchSettingsVm="using:PzLauncher.Desktop.ViewModels.LaunchSettings"
+             xmlns:launchSettingsView="using:PzLauncher.Desktop.Views.LaunchSettings"
              x:Class="PzLauncher.Desktop.App"
              RequestedThemeVariant="Light">
 
@@ -22,8 +22,8 @@
         <DataTemplate DataType="settingsVm:SettingsViewModel">
             <settingsView:SettingsView />
         </DataTemplate>
-        <DataTemplate DataType="versionSettingsVm:VersionSettingsViewModel">
-            <versionSettingsView:VersionSettingsView />
+        <DataTemplate DataType="launchSettingsVm:LaunchSettingsViewModel">
+            <launchSettingsView:LaunchSettingsView />
         </DataTemplate>
     </Application.DataTemplates>
 

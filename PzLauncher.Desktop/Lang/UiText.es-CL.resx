@@ -49,14 +49,14 @@
   <data name="Home_Launch" xml:space="preserve">
     <value>Iniciar juego</value>
   </data>
-  <data name="Home_SelectVersion" xml:space="preserve">
-    <value>Elegir versión</value>
+  <data name="Home_ChooseInstall" xml:space="preserve">
+    <value>Elegir instalación</value>
   </data>
   <data name="Home_GameRunning" xml:space="preserve">
     <value>Juego en ejecución</value>
   </data>
-  <data name="Home_VersionSettings" xml:space="preserve">
-    <value>Configuración de la versión</value>
+  <data name="Home_LaunchSettings" xml:space="preserve">
+    <value>Configuración de inicio</value>
   </data>
   <data name="Installs_Title" xml:space="preserve">
     <value>Instalaciones</value>
@@ -167,28 +167,28 @@
     <value>{0} no es una carpeta del juego Project Zomboid.</value>
   </data>
   <data name="Error_LaunchConfigMissing" xml:space="preserve">
-    <value>La configuración de inicio {0} no existe. Intenta verificar la integridad de los archivos del juego en Steam.</value>
+    <value>El archivo de configuración de inicio {0} no existe. Intenta verificar la integridad de los archivos del juego en Steam.</value>
   </data>
   <data name="Error_LaunchConfigMalformed" xml:space="preserve">
-    <value>No se pudo leer la configuración de inicio {0}. Intenta verificar la integridad de los archivos del juego en Steam.</value>
+    <value>No se pudo leer el archivo de configuración de inicio {0}. Intenta verificar la integridad de los archivos del juego en Steam.</value>
   </data>
   <data name="Error_LaunchJavaMissing" xml:space="preserve">
-    <value>El programa de Java {0} no existe. Elige otro Java para esta instalación en Configuración de la versión.</value>
+    <value>El programa de Java {0} no existe. Elige otro Java para esta instalación en Configuración de inicio.</value>
   </data>
   <data name="Error_LaunchStartFailed" xml:space="preserve">
     <value>No se pudo iniciar el juego con {0}.</value>
   </data>
   <data name="Error_LaunchGcIncompatible" xml:space="preserve">
-    <value>{0} incluye el compilador Graal, que no es compatible con el GC Shenandoah. En Configuración de la versión, cambia el GC a G1 o ZGC, o elige otro Java.</value>
+    <value>{0} incluye el compilador Graal, que no es compatible con el GC Shenandoah. En Configuración de inicio, cambia el GC a G1 o ZGC, o elige otro Java.</value>
   </data>
   <data name="Error_LaunchGcIncompatibleViewpoint" xml:space="preserve">
-    <value>El mod Viewpoint cambió el GC del juego a Shenandoah para ahorrar memoria, pero el GraalVM que elegiste no es compatible con él y el juego se cerraría de inmediato. En Configuración de la versión, cambia el GC a G1 o ZGC (Viewpoint sigue funcionando, solo usa más memoria) o vuelve al Java incluido con el juego.</value>
+    <value>El mod Viewpoint cambió el GC del juego a Shenandoah para ahorrar memoria, pero el GraalVM que elegiste no es compatible con él y el juego se cerraría de inmediato. En Configuración de inicio, cambia el GC a G1 o ZGC (Viewpoint sigue funcionando, solo usa más memoria) o vuelve al Java incluido con el juego.</value>
   </data>
   <data name="Error_LaunchGameCrashed" xml:space="preserve">
     <value>El Java del juego falló (código de salida {1}). Registro del fallo: {0}</value>
   </data>
   <data name="Error_LaunchGameExitedEarly" xml:space="preserve">
-    <value>El juego se cerró justo después de iniciar (código de salida {0}). Revisa los argumentos adicionales de JVM, el Java y el GC en Configuración de la versión.
+    <value>El juego se cerró justo después de iniciar (código de salida {0}). Revisa los argumentos adicionales de JVM, el Java y el GC en Configuración de inicio.
 {1}</value>
   </data>
   <data name="Error_LaunchGcConflict" xml:space="preserve">
@@ -260,70 +260,70 @@
   <data name="JavaSource_Manual" xml:space="preserve">
     <value>Agregado manualmente</value>
   </data>
-  <data name="VersionSettings_Title" xml:space="preserve">
-    <value>Configuración de la versión</value>
+  <data name="LaunchSettings_Title" xml:space="preserve">
+    <value>Configuración de inicio</value>
   </data>
-  <data name="VersionSettings_Back" xml:space="preserve">
+  <data name="LaunchSettings_Back" xml:space="preserve">
     <value>Volver</value>
   </data>
-  <data name="VersionSettings_Use" xml:space="preserve">
-    <value>Usar esta versión</value>
+  <data name="LaunchSettings_Use" xml:space="preserve">
+    <value>Usar esta instalación</value>
   </data>
-  <data name="VersionSettings_LaunchSection" xml:space="preserve">
+  <data name="LaunchSettings_LaunchSection" xml:space="preserve">
     <value>Opciones de inicio</value>
   </data>
-  <data name="VersionSettings_Java" xml:space="preserve">
+  <data name="LaunchSettings_Java" xml:space="preserve">
     <value>Java</value>
   </data>
-  <data name="VersionSettings_JavaBundled" xml:space="preserve">
+  <data name="LaunchSettings_JavaBundled" xml:space="preserve">
     <value>Incluido con el juego ({0})</value>
   </data>
-  <data name="VersionSettings_JavaVersionWarning" xml:space="preserve">
+  <data name="LaunchSettings_JavaVersionWarning" xml:space="preserve">
     <value>Este Java es más antiguo que el Java {0} incluido con el juego. Es posible que el juego no inicie.</value>
   </data>
-  <data name="VersionSettings_Memory" xml:space="preserve">
+  <data name="LaunchSettings_Memory" xml:space="preserve">
     <value>Memoria máxima</value>
   </data>
-  <data name="VersionSettings_MinMemory" xml:space="preserve">
+  <data name="LaunchSettings_MinMemory" xml:space="preserve">
     <value>Memoria mínima</value>
   </data>
-  <data name="VersionSettings_MemoryFollowJson" xml:space="preserve">
+  <data name="LaunchSettings_MemoryFollowJson" xml:space="preserve">
     <value>Según el json (actual: {0} MB)</value>
   </data>
-  <data name="VersionSettings_MemoryNotSet" xml:space="preserve">
+  <data name="LaunchSettings_MemoryNotSet" xml:space="preserve">
     <value>Según el json (sin definir)</value>
   </data>
-  <data name="VersionSettings_MemoryCustom" xml:space="preserve">
+  <data name="LaunchSettings_MemoryCustom" xml:space="preserve">
     <value>Personalizado</value>
   </data>
-  <data name="VersionSettings_MemoryValue" xml:space="preserve">
+  <data name="LaunchSettings_MemoryValue" xml:space="preserve">
     <value>{0} GB</value>
   </data>
-  <data name="VersionSettings_SystemMemory" xml:space="preserve">
+  <data name="LaunchSettings_SystemMemory" xml:space="preserve">
     <value>Este computador tiene {0} GB de memoria.</value>
   </data>
-  <data name="VersionSettings_JvmArgs" xml:space="preserve">
+  <data name="LaunchSettings_JvmArgs" xml:space="preserve">
     <value>Argumentos adicionales de JVM</value>
   </data>
-  <data name="VersionSettings_JsonVmArgs" xml:space="preserve">
+  <data name="LaunchSettings_JsonVmArgs" xml:space="preserve">
     <value>Argumentos de JVM de ProjectZomboid64.json:</value>
   </data>
-  <data name="VersionSettings_GameArgs" xml:space="preserve">
+  <data name="LaunchSettings_GameArgs" xml:space="preserve">
     <value>Argumentos adicionales del juego</value>
   </data>
-  <data name="VersionSettings_ArgsHint" xml:space="preserve">
+  <data name="LaunchSettings_ArgsHint" xml:space="preserve">
     <value>Separa los argumentos con espacios; encierra entre comillas dobles un valor que contenga espacios.</value>
   </data>
-  <data name="VersionSettings_Gc" xml:space="preserve">
+  <data name="LaunchSettings_Gc" xml:space="preserve">
     <value>Recolector de basura (GC)</value>
   </data>
-  <data name="VersionSettings_GcFollowJson" xml:space="preserve">
+  <data name="LaunchSettings_GcFollowJson" xml:space="preserve">
     <value>Según el json (actual: {0})</value>
   </data>
-  <data name="VersionSettings_GcNotSet" xml:space="preserve">
+  <data name="LaunchSettings_GcNotSet" xml:space="preserve">
     <value>Según el json (sin definir)</value>
   </data>
-  <data name="VersionSettings_GcSetByViewpoint" xml:space="preserve">
+  <data name="LaunchSettings_GcSetByViewpoint" xml:space="preserve">
     <value>Según el json (actual: {0}, definido por Viewpoint)</value>
   </data>
   <data name="GarbageCollector_G1" xml:space="preserve">

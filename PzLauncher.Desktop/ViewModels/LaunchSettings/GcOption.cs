@@ -3,7 +3,7 @@ using PzLauncher.Core.Launch;
 using PzLauncher.Desktop.Lang;
 using PzLauncher.Desktop.Localization;
 
-namespace PzLauncher.Desktop.ViewModels.VersionSettings;
+namespace PzLauncher.Desktop.ViewModels.LaunchSettings;
 
 public sealed class GcOption
 {
@@ -24,10 +24,10 @@ public sealed class GcOption
     public string Label => (Collector, _jsonCollector) switch
     {
         ({ } chosen, _) => DisplayNames.Of(chosen),
-        (null, null) => UiText.VersionSettings_GcNotSet,
+        (null, null) => UiText.LaunchSettings_GcNotSet,
         (null, { } json) => string.Format(
             CultureInfo.CurrentCulture,
-            _setByViewpoint ? UiText.VersionSettings_GcSetByViewpoint : UiText.VersionSettings_GcFollowJson,
+            _setByViewpoint ? UiText.LaunchSettings_GcSetByViewpoint : UiText.LaunchSettings_GcFollowJson,
             DisplayNames.Of(json)),
     };
 

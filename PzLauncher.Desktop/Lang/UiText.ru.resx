@@ -49,14 +49,14 @@
   <data name="Home_Launch" xml:space="preserve">
     <value>Запустить игру</value>
   </data>
-  <data name="Home_SelectVersion" xml:space="preserve">
-    <value>Выбрать версию</value>
+  <data name="Home_ChooseInstall" xml:space="preserve">
+    <value>Выбрать установку</value>
   </data>
   <data name="Home_GameRunning" xml:space="preserve">
     <value>Игра запущена</value>
   </data>
-  <data name="Home_VersionSettings" xml:space="preserve">
-    <value>Настройки версии</value>
+  <data name="Home_LaunchSettings" xml:space="preserve">
+    <value>Настройки запуска</value>
   </data>
   <data name="Installs_Title" xml:space="preserve">
     <value>Установки</value>
@@ -173,22 +173,22 @@
     <value>Не удалось прочитать файл настроек запуска {0}. Попробуйте проверить целостность файлов игры в Steam.</value>
   </data>
   <data name="Error_LaunchJavaMissing" xml:space="preserve">
-    <value>Программа Java {0} не существует. Выберите для этой установки другую Java в «Настройках версии».</value>
+    <value>Программа Java {0} не существует. Выберите для этой установки другую Java в «Настройках запуска».</value>
   </data>
   <data name="Error_LaunchStartFailed" xml:space="preserve">
     <value>Не удалось запустить игру с помощью {0}.</value>
   </data>
   <data name="Error_LaunchGcIncompatible" xml:space="preserve">
-    <value>В {0} используется компилятор Graal, который не поддерживает Shenandoah GC. Выберите в «Настройках версии» GC G1 или ZGC либо другую Java.</value>
+    <value>В {0} используется компилятор Graal, который не поддерживает Shenandoah GC. Выберите в «Настройках запуска» GC G1 или ZGC либо другую Java.</value>
   </data>
   <data name="Error_LaunchGcIncompatibleViewpoint" xml:space="preserve">
-    <value>Мод Viewpoint переключил GC игры на Shenandoah, чтобы сэкономить память, но выбранная GraalVM его не поддерживает, и игра сразу аварийно завершится. Выберите в «Настройках версии» GC G1 или ZGC (Viewpoint продолжит работать, просто памяти уйдёт больше) или вернитесь к встроенной в игру Java.</value>
+    <value>Мод Viewpoint переключил GC игры на Shenandoah, чтобы сэкономить память, но выбранная GraalVM его не поддерживает, и игра сразу аварийно завершится. Выберите в «Настройках запуска» GC G1 или ZGC (Viewpoint продолжит работать, просто памяти уйдёт больше) или вернитесь к встроенной в игру Java.</value>
   </data>
   <data name="Error_LaunchGameCrashed" xml:space="preserve">
     <value>Java игры аварийно завершилась (код выхода {1}). Журнал сбоя: {0}</value>
   </data>
   <data name="Error_LaunchGameExitedEarly" xml:space="preserve">
-    <value>Игра закрылась сразу после запуска (код выхода {0}). Проверьте дополнительные аргументы JVM, Java и GC в «Настройках версии».
+    <value>Игра закрылась сразу после запуска (код выхода {0}). Проверьте дополнительные аргументы JVM, Java и GC в «Настройках запуска».
 {1}</value>
   </data>
   <data name="Error_LaunchGcConflict" xml:space="preserve">
@@ -260,70 +260,70 @@
   <data name="JavaSource_Manual" xml:space="preserve">
     <value>Добавлена вручную</value>
   </data>
-  <data name="VersionSettings_Title" xml:space="preserve">
-    <value>Настройки версии</value>
+  <data name="LaunchSettings_Title" xml:space="preserve">
+    <value>Настройки запуска</value>
   </data>
-  <data name="VersionSettings_Back" xml:space="preserve">
+  <data name="LaunchSettings_Back" xml:space="preserve">
     <value>Назад</value>
   </data>
-  <data name="VersionSettings_Use" xml:space="preserve">
-    <value>Использовать эту версию</value>
+  <data name="LaunchSettings_Use" xml:space="preserve">
+    <value>Использовать эту установку</value>
   </data>
-  <data name="VersionSettings_LaunchSection" xml:space="preserve">
+  <data name="LaunchSettings_LaunchSection" xml:space="preserve">
     <value>Параметры запуска</value>
   </data>
-  <data name="VersionSettings_Java" xml:space="preserve">
+  <data name="LaunchSettings_Java" xml:space="preserve">
     <value>Java</value>
   </data>
-  <data name="VersionSettings_JavaBundled" xml:space="preserve">
+  <data name="LaunchSettings_JavaBundled" xml:space="preserve">
     <value>Встроенная в игру ({0})</value>
   </data>
-  <data name="VersionSettings_JavaVersionWarning" xml:space="preserve">
+  <data name="LaunchSettings_JavaVersionWarning" xml:space="preserve">
     <value>Эта Java старее встроенной в игру Java {0}. Игра может не запуститься.</value>
   </data>
-  <data name="VersionSettings_Memory" xml:space="preserve">
+  <data name="LaunchSettings_Memory" xml:space="preserve">
     <value>Максимальная память</value>
   </data>
-  <data name="VersionSettings_MinMemory" xml:space="preserve">
+  <data name="LaunchSettings_MinMemory" xml:space="preserve">
     <value>Минимальная память</value>
   </data>
-  <data name="VersionSettings_MemoryFollowJson" xml:space="preserve">
+  <data name="LaunchSettings_MemoryFollowJson" xml:space="preserve">
     <value>Как в json (сейчас {0} МБ)</value>
   </data>
-  <data name="VersionSettings_MemoryNotSet" xml:space="preserve">
+  <data name="LaunchSettings_MemoryNotSet" xml:space="preserve">
     <value>Как в json (не задано)</value>
   </data>
-  <data name="VersionSettings_MemoryCustom" xml:space="preserve">
+  <data name="LaunchSettings_MemoryCustom" xml:space="preserve">
     <value>Своё значение</value>
   </data>
-  <data name="VersionSettings_MemoryValue" xml:space="preserve">
+  <data name="LaunchSettings_MemoryValue" xml:space="preserve">
     <value>{0} ГБ</value>
   </data>
-  <data name="VersionSettings_SystemMemory" xml:space="preserve">
+  <data name="LaunchSettings_SystemMemory" xml:space="preserve">
     <value>Память этого компьютера: {0} ГБ.</value>
   </data>
-  <data name="VersionSettings_JvmArgs" xml:space="preserve">
+  <data name="LaunchSettings_JvmArgs" xml:space="preserve">
     <value>Дополнительные аргументы JVM</value>
   </data>
-  <data name="VersionSettings_JsonVmArgs" xml:space="preserve">
+  <data name="LaunchSettings_JsonVmArgs" xml:space="preserve">
     <value>Аргументы JVM из ProjectZomboid64.json:</value>
   </data>
-  <data name="VersionSettings_GameArgs" xml:space="preserve">
+  <data name="LaunchSettings_GameArgs" xml:space="preserve">
     <value>Дополнительные аргументы игры</value>
   </data>
-  <data name="VersionSettings_ArgsHint" xml:space="preserve">
+  <data name="LaunchSettings_ArgsHint" xml:space="preserve">
     <value>Разделяйте аргументы пробелами; значение с пробелами заключите в двойные кавычки.</value>
   </data>
-  <data name="VersionSettings_Gc" xml:space="preserve">
+  <data name="LaunchSettings_Gc" xml:space="preserve">
     <value>Сборщик мусора (GC)</value>
   </data>
-  <data name="VersionSettings_GcFollowJson" xml:space="preserve">
+  <data name="LaunchSettings_GcFollowJson" xml:space="preserve">
     <value>Как в json (сейчас {0})</value>
   </data>
-  <data name="VersionSettings_GcNotSet" xml:space="preserve">
+  <data name="LaunchSettings_GcNotSet" xml:space="preserve">
     <value>Как в json (не задано)</value>
   </data>
-  <data name="VersionSettings_GcSetByViewpoint" xml:space="preserve">
+  <data name="LaunchSettings_GcSetByViewpoint" xml:space="preserve">
     <value>Как в json (сейчас {0}, задано Viewpoint)</value>
   </data>
   <data name="GarbageCollector_G1" xml:space="preserve">

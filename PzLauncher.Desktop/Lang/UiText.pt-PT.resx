@@ -49,14 +49,14 @@
   <data name="Home_Launch" xml:space="preserve">
     <value>Iniciar jogo</value>
   </data>
-  <data name="Home_SelectVersion" xml:space="preserve">
-    <value>Selecionar versão</value>
+  <data name="Home_ChooseInstall" xml:space="preserve">
+    <value>Selecionar instalação</value>
   </data>
   <data name="Home_GameRunning" xml:space="preserve">
     <value>Jogo em execução</value>
   </data>
-  <data name="Home_VersionSettings" xml:space="preserve">
-    <value>Definições da versão</value>
+  <data name="Home_LaunchSettings" xml:space="preserve">
+    <value>Definições de arranque</value>
   </data>
   <data name="Installs_Title" xml:space="preserve">
     <value>Instalações</value>
@@ -173,22 +173,22 @@
     <value>Não foi possível ler a configuração de arranque {0}. Experimente verificar a integridade dos ficheiros do jogo no Steam.</value>
   </data>
   <data name="Error_LaunchJavaMissing" xml:space="preserve">
-    <value>O programa Java {0} não existe. Escolha outro Java para esta instalação nas Definições da versão.</value>
+    <value>O programa Java {0} não existe. Escolha outro Java para esta instalação nas Definições de arranque.</value>
   </data>
   <data name="Error_LaunchStartFailed" xml:space="preserve">
     <value>Não foi possível iniciar o jogo com {0}.</value>
   </data>
   <data name="Error_LaunchGcIncompatible" xml:space="preserve">
-    <value>{0} tem o compilador Graal, que não é compatível com o GC Shenandoah. Nas Definições da versão, altere o GC para G1 ou ZGC, ou escolha outro Java.</value>
+    <value>{0} tem o compilador Graal, que não é compatível com o GC Shenandoah. Nas Definições de arranque, altere o GC para G1 ou ZGC, ou escolha outro Java.</value>
   </data>
   <data name="Error_LaunchGcIncompatibleViewpoint" xml:space="preserve">
-    <value>O mod Viewpoint mudou o GC do jogo para Shenandoah para poupar memória, mas o GraalVM escolhido não é compatível com ele e o jogo iria falhar de imediato. Nas Definições da versão, altere o GC para G1 ou ZGC (o Viewpoint continua a funcionar, apenas usa mais memória) ou volte ao Java incluído no jogo.</value>
+    <value>O mod Viewpoint mudou o GC do jogo para Shenandoah para poupar memória, mas o GraalVM escolhido não é compatível com ele e o jogo iria falhar de imediato. Nas Definições de arranque, altere o GC para G1 ou ZGC (o Viewpoint continua a funcionar, apenas usa mais memória) ou volte ao Java incluído no jogo.</value>
   </data>
   <data name="Error_LaunchGameCrashed" xml:space="preserve">
     <value>O Java do jogo falhou (código de saída {1}). Registo da falha: {0}</value>
   </data>
   <data name="Error_LaunchGameExitedEarly" xml:space="preserve">
-    <value>O jogo fechou logo após arrancar (código de saída {0}). Verifique os argumentos adicionais da JVM, o Java e o GC nas Definições da versão.
+    <value>O jogo fechou logo após arrancar (código de saída {0}). Verifique os argumentos adicionais da JVM, o Java e o GC nas Definições de arranque.
 {1}</value>
   </data>
   <data name="Error_LaunchGcConflict" xml:space="preserve">
@@ -260,70 +260,70 @@
   <data name="JavaSource_Manual" xml:space="preserve">
     <value>Adicionado manualmente</value>
   </data>
-  <data name="VersionSettings_Title" xml:space="preserve">
-    <value>Definições da versão</value>
+  <data name="LaunchSettings_Title" xml:space="preserve">
+    <value>Definições de arranque</value>
   </data>
-  <data name="VersionSettings_Back" xml:space="preserve">
+  <data name="LaunchSettings_Back" xml:space="preserve">
     <value>Voltar</value>
   </data>
-  <data name="VersionSettings_Use" xml:space="preserve">
-    <value>Utilizar esta versão</value>
+  <data name="LaunchSettings_Use" xml:space="preserve">
+    <value>Utilizar esta instalação</value>
   </data>
-  <data name="VersionSettings_LaunchSection" xml:space="preserve">
+  <data name="LaunchSettings_LaunchSection" xml:space="preserve">
     <value>Opções de arranque</value>
   </data>
-  <data name="VersionSettings_Java" xml:space="preserve">
+  <data name="LaunchSettings_Java" xml:space="preserve">
     <value>Java</value>
   </data>
-  <data name="VersionSettings_JavaBundled" xml:space="preserve">
+  <data name="LaunchSettings_JavaBundled" xml:space="preserve">
     <value>Incluído no jogo ({0})</value>
   </data>
-  <data name="VersionSettings_JavaVersionWarning" xml:space="preserve">
+  <data name="LaunchSettings_JavaVersionWarning" xml:space="preserve">
     <value>Este Java é mais antigo do que o Java {0} incluído no jogo. O jogo pode não arrancar.</value>
   </data>
-  <data name="VersionSettings_Memory" xml:space="preserve">
+  <data name="LaunchSettings_Memory" xml:space="preserve">
     <value>Memória máxima</value>
   </data>
-  <data name="VersionSettings_MinMemory" xml:space="preserve">
+  <data name="LaunchSettings_MinMemory" xml:space="preserve">
     <value>Memória mínima</value>
   </data>
-  <data name="VersionSettings_MemoryFollowJson" xml:space="preserve">
+  <data name="LaunchSettings_MemoryFollowJson" xml:space="preserve">
     <value>Seguir o json (atual: {0} MB)</value>
   </data>
-  <data name="VersionSettings_MemoryNotSet" xml:space="preserve">
+  <data name="LaunchSettings_MemoryNotSet" xml:space="preserve">
     <value>Seguir o json (não definido)</value>
   </data>
-  <data name="VersionSettings_MemoryCustom" xml:space="preserve">
+  <data name="LaunchSettings_MemoryCustom" xml:space="preserve">
     <value>Personalizado</value>
   </data>
-  <data name="VersionSettings_MemoryValue" xml:space="preserve">
+  <data name="LaunchSettings_MemoryValue" xml:space="preserve">
     <value>{0} GB</value>
   </data>
-  <data name="VersionSettings_SystemMemory" xml:space="preserve">
+  <data name="LaunchSettings_SystemMemory" xml:space="preserve">
     <value>Este computador tem {0} GB de memória.</value>
   </data>
-  <data name="VersionSettings_JvmArgs" xml:space="preserve">
+  <data name="LaunchSettings_JvmArgs" xml:space="preserve">
     <value>Argumentos adicionais da JVM</value>
   </data>
-  <data name="VersionSettings_JsonVmArgs" xml:space="preserve">
+  <data name="LaunchSettings_JsonVmArgs" xml:space="preserve">
     <value>Argumentos da JVM do ProjectZomboid64.json:</value>
   </data>
-  <data name="VersionSettings_GameArgs" xml:space="preserve">
+  <data name="LaunchSettings_GameArgs" xml:space="preserve">
     <value>Argumentos adicionais do jogo</value>
   </data>
-  <data name="VersionSettings_ArgsHint" xml:space="preserve">
+  <data name="LaunchSettings_ArgsHint" xml:space="preserve">
     <value>Separe os argumentos com espaços; coloque entre aspas duplas um valor que contenha espaços.</value>
   </data>
-  <data name="VersionSettings_Gc" xml:space="preserve">
+  <data name="LaunchSettings_Gc" xml:space="preserve">
     <value>Recoletor de lixo (GC)</value>
   </data>
-  <data name="VersionSettings_GcFollowJson" xml:space="preserve">
+  <data name="LaunchSettings_GcFollowJson" xml:space="preserve">
     <value>Seguir o json (atual: {0})</value>
   </data>
-  <data name="VersionSettings_GcNotSet" xml:space="preserve">
+  <data name="LaunchSettings_GcNotSet" xml:space="preserve">
     <value>Seguir o json (não definido)</value>
   </data>
-  <data name="VersionSettings_GcSetByViewpoint" xml:space="preserve">
+  <data name="LaunchSettings_GcSetByViewpoint" xml:space="preserve">
     <value>Seguir o json (atual: {0}, definido pelo Viewpoint)</value>
   </data>
   <data name="GarbageCollector_G1" xml:space="preserve">

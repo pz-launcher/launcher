@@ -5,14 +5,14 @@ using PzLauncher.Core.Launch;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Tests.TestSupport;
 using PzLauncher.Desktop.ViewModels.Installs;
-using PzLauncher.Desktop.ViewModels.VersionSettings;
+using PzLauncher.Desktop.ViewModels.LaunchSettings;
 using static PzLauncher.Desktop.Tests.TestSupport.TestInstalls;
 using static PzLauncher.Desktop.Tests.TestSupport.TestJava;
 
-namespace PzLauncher.Desktop.Tests.ViewModels.VersionSettings;
+namespace PzLauncher.Desktop.Tests.ViewModels.LaunchSettings;
 
 [Collection(UiTextCultureCollection.Name)]
-public class VersionSettingsViewModelTests : UiTextCultureTest
+public class LaunchSettingsViewModelTests : UiTextCultureTest
 {
     private static readonly JavaRuntime UnknownVersionJava = Manual(@"D:\Tools\custom-jre");
 
@@ -21,9 +21,9 @@ public class VersionSettingsViewModelTests : UiTextCultureTest
     private readonly FakeGameLaunchService _launcher = new();
     private readonly FakeInstallOverridesService _overrides = new();
     private readonly InstallsViewModel _installs;
-    private readonly VersionSettingsViewModel _vm;
+    private readonly LaunchSettingsViewModel _vm;
 
-    public VersionSettingsViewModelTests()
+    public LaunchSettingsViewModelTests()
     {
         _installs = new(_installDetection, new FakeFolderPicker(), new FakePlatformEnvironment(), Localization);
         _installDetection.ScanResults.Enqueue(FakeInstallDetectionService.Found(SteamGame, ManualGame, SteamServer));
@@ -423,7 +423,7 @@ public class VersionSettingsViewModelTests : UiTextCultureTest
 
         Assert.False(_vm.IsInUse);
         Assert.True(_vm.UseCommand.CanExecute(null));
-        Assert.Contains(nameof(VersionSettingsViewModel.IsInUse), changed);
+        Assert.Contains(nameof(LaunchSettingsViewModel.IsInUse), changed);
     }
 
     [Fact]

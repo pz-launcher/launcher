@@ -3,34 +3,34 @@ using PzLauncher.Core.Installs;
 using PzLauncher.Desktop.ViewModels.Home;
 using PzLauncher.Desktop.ViewModels.Installs;
 using PzLauncher.Desktop.ViewModels.Settings;
-using PzLauncher.Desktop.ViewModels.VersionSettings;
+using PzLauncher.Desktop.ViewModels.LaunchSettings;
 
 namespace PzLauncher.Desktop.ViewModels;
 
 public partial class MainViewModel : ViewModelBase
 {
-    // The page that opened VersionSettings: its tab stays highlighted and back returns there.
-    private ShellPage _versionSettingsOrigin = ShellPage.Home;
+    // The page that opened LaunchSettings: its tab stays highlighted and back returns there.
+    private ShellPage _launchSettingsOrigin = ShellPage.Home;
 
     public MainViewModel(
         HomeViewModel home,
         InstallsViewModel installs,
         SettingsViewModel settings,
-        VersionSettingsViewModel versionSettings,
+        LaunchSettingsViewModel launchSettings,
         LanguageMenuViewModel languageMenu)
     {
         Home = home;
         Installs = installs;
         Settings = settings;
-        VersionSettings = versionSettings;
+        LaunchSettings = launchSettings;
         LanguageMenu = languageMenu;
 
         // Never unsubscribed: these view models are app-lifetime singletons.
-        home.SelectVersionRequested += (_, _) => CurrentPageKind = ShellPage.Installs;
-        home.VersionSettingsRequested += (_, install) => OpenVersionSettings(install, ShellPage.Home);
-        installs.VersionSettingsRequested += (_, install) => OpenVersionSettings(install, ShellPage.Installs);
-        versionSettings.BackRequested += (_, _) => CurrentPageKind = _versionSettingsOrigin;
-        versionSettings.HomeRequested += (_, _) => CurrentPageKind = ShellPage.Home;
+        home.ChooseInstallRequested += (_, _) => CurrentPageKind = ShellPage.Installs;
+        home.LaunchSettingsRequested += (_, install) => OpenLaunchSettings(install, ShellPage.Home);
+        installs.LaunchSettingsRequested += (_, install) => OpenLaunchSettings(install, ShellPage.Installs);
+        launchSettings.BackRequested += (_, _) => CurrentPageKind = _launchSettingsOrigin;
+        launchSettings.HomeRequested += (_, _) => CurrentPageKind = ShellPage.Home;
     }
 
     public HomeViewModel Home { get; }
@@ -39,7 +39,7 @@ public partial class MainViewModel : ViewModelBase
 
     public SettingsViewModel Settings { get; }
 
-    public VersionSettingsViewModel VersionSettings { get; }
+    public LaunchSettingsViewModel LaunchSettings { get; }
 
     public LanguageMenuViewModel LanguageMenu { get; }
 
@@ -55,7 +55,7 @@ public partial class MainViewModel : ViewModelBase
             ShellPage.Home => ShellPage.Home,
             ShellPage.Installs => ShellPage.Installs,
             ShellPage.Settings => ShellPage.Settings,
-            ShellPage.VersionSettings => _versionSettingsOrigin,
+            ShellPage.LaunchSettings => _launchSettingsOrigin,
         };
         set => CurrentPageKind = value;
     }
@@ -68,13 +68,13 @@ public partial class MainViewModel : ViewModelBase
         ShellPage.Home => Home,
         ShellPage.Installs => Installs,
         ShellPage.Settings => Settings,
-        ShellPage.VersionSettings => VersionSettings,
+        ShellPage.LaunchSettings => LaunchSettings,
     };
 
-    private void OpenVersionSettings(PzInstall install, ShellPage origin)
+    private void OpenLaunchSettings(PzInstall install, ShellPage origin)
     {
-        _versionSettingsOrigin = origin;
-        VersionSettings.Open(install);
-        CurrentPageKind = ShellPage.VersionSettings;
+        _launchSettingsOrigin = origin;
+        LaunchSettings.Open(install);
+        CurrentPageKind = ShellPage.LaunchSettings;
     }
 }

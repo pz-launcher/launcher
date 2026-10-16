@@ -18,7 +18,7 @@ using PzLauncher.Desktop.ViewModels.Home;
 using PzLauncher.Desktop.ViewModels.Installs;
 using PzLauncher.Desktop.ViewModels.Java;
 using PzLauncher.Desktop.ViewModels.Settings;
-using PzLauncher.Desktop.ViewModels.VersionSettings;
+using PzLauncher.Desktop.ViewModels.LaunchSettings;
 using PzLauncher.Desktop.Views;
 
 namespace PzLauncher.Desktop;
@@ -59,7 +59,7 @@ public partial class App : Application
             services.AddSingleton<InstallsViewModel>();
             services.AddSingleton<JavaRuntimesViewModel>();
             services.AddSingleton<HomeViewModel>();
-            services.AddSingleton<VersionSettingsViewModel>();
+            services.AddSingleton<LaunchSettingsViewModel>();
             services.AddSingleton<SettingsViewModel>();
             services.AddSingleton<LanguageMenuViewModel>();
             services.AddSingleton<MainViewModel>();

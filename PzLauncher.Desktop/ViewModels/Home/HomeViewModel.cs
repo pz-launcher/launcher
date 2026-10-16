@@ -34,9 +34,9 @@ public partial class HomeViewModel : ViewModelBase
         installs.PropertyChanged += OnInstallsPropertyChanged;
     }
 
-    public event EventHandler? SelectVersionRequested;
+    public event EventHandler? ChooseInstallRequested;
 
-    public event EventHandler<PzInstall>? VersionSettingsRequested;
+    public event EventHandler<PzInstall>? LaunchSettingsRequested;
 
     public PzInstall? SelectedInstall => _installs.SelectedInstall;
 
@@ -56,14 +56,14 @@ public partial class HomeViewModel : ViewModelBase
     private Task ActivateAsync() => _installs.ActivateCommand.ExecuteAsync(null);
 
     [RelayCommand]
-    private void SelectVersion() => SelectVersionRequested?.Invoke(this, EventArgs.Empty);
+    private void ChooseInstall() => ChooseInstallRequested?.Invoke(this, EventArgs.Empty);
 
     [RelayCommand(CanExecute = nameof(IsGameSelected))]
-    private void VersionSettings()
+    private void LaunchSettings()
     {
         if (SelectedInstall is { Kind: PzInstallKind.Game } install)
         {
-            VersionSettingsRequested?.Invoke(this, install);
+            LaunchSettingsRequested?.Invoke(this, install);
         }
     }
 
@@ -110,7 +110,7 @@ public partial class HomeViewModel : ViewModelBase
             OnPropertyChanged(nameof(IsScanning));
             OnPropertyChanged(nameof(IsEmpty));
             LaunchCommand.NotifyCanExecuteChanged();
-            VersionSettingsCommand.NotifyCanExecuteChanged();
+            LaunchSettingsCommand.NotifyCanExecuteChanged();
         }
     }
 }

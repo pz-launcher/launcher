@@ -15,7 +15,7 @@ using PzLauncher.Desktop.ViewModels.Home;
 using PzLauncher.Desktop.ViewModels.Installs;
 using PzLauncher.Desktop.ViewModels.Java;
 using PzLauncher.Desktop.ViewModels.Settings;
-using PzLauncher.Desktop.ViewModels.VersionSettings;
+using PzLauncher.Desktop.ViewModels.LaunchSettings;
 
 namespace PzLauncher.Desktop.ViewModels.Design;
 
@@ -52,9 +52,9 @@ public static class DesignData
 
     public static SettingsViewModel Settings { get; } = new(new LightThemeService(), Preferences, new NoWindowPlacement(), Java);
 
-    public static VersionSettingsViewModel VersionSettings { get; } = CreateVersionSettings();
+    public static LaunchSettingsViewModel LaunchSettings { get; } = CreateLaunchSettings();
 
-    public static MainViewModel Main { get; } = new(Home, Installs, Settings, VersionSettings, new LanguageMenuViewModel(Localization, Preferences));
+    public static MainViewModel Main { get; } = new(Home, Installs, Settings, LaunchSettings, new LanguageMenuViewModel(Localization, Preferences));
 
     private static string SampleAppPath(string installDir) =>
         Path.Combine(SampleSteamRoot, "steamapps", "common", installDir);
@@ -76,9 +76,9 @@ public static class DesignData
         return vm;
     }
 
-    private static VersionSettingsViewModel CreateVersionSettings()
+    private static LaunchSettingsViewModel CreateLaunchSettings()
     {
-        var vm = new VersionSettingsViewModel(Installs, GameLaunch, InstallOverrides, Java, new SamplePlatform(), Localization);
+        var vm = new LaunchSettingsViewModel(Installs, GameLaunch, InstallOverrides, Java, new SamplePlatform(), Localization);
         if (Installs.SelectedInstall is { } install)
         {
             vm.Open(install);

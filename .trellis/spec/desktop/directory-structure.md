@@ -34,7 +34,7 @@ Reference: `PzLauncher.Desktop/Views/Installs/`.
 - Code-behind: view concerns only. Page activation calls the ViewModel's `ActivateCommand` from `OnLoaded`; the run-once rule lives in the ViewModel.
 - VM→View mapping: explicit `DataTemplate`s in `PzLauncher.Desktop/App.axaml`, never a reflection `ViewLocator`.
 - Previewer data: `PzLauncher.Desktop/ViewModels/Design/DesignData.cs`. Fictional, portable values only, never data from a real machine.
-- Range controls (`Slider`, ...) bind `Minimum`/`Maximum` before `Value`, with a range that includes the loaded value, or the control rewrites the saved value. Reference: `PzLauncher.Desktop/Views/VersionSettings/VersionSettingsView.axaml`.
+- Range controls (`Slider`, ...) bind `Minimum`/`Maximum` before `Value`, with a range that includes the loaded value, or the control rewrites the saved value. Reference: `PzLauncher.Desktop/Views/LaunchSettings/LaunchSettingsView.axaml`.
 - Dialogs go through `IDialogService` (`PzLauncher.Desktop/Services/IDialogService.cs`).
 - Icons: `FluentIcons.Avalonia` (`<ic:FluentIcon Icon="…" IconVariant="Regular" />`, reference `PzLauncher.Desktop/Views/MainView.axaml`), matching the Fluent theme. Never paste SVG path data into XAML. Verified AOT-clean with a Native AOT publish (0 IL warnings).
 

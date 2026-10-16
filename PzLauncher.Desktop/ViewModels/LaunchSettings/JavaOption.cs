@@ -3,7 +3,7 @@ using System.Linq;
 using PzLauncher.Core.Java;
 using PzLauncher.Desktop.Lang;
 
-namespace PzLauncher.Desktop.ViewModels.VersionSettings;
+namespace PzLauncher.Desktop.ViewModels.LaunchSettings;
 
 public enum JavaOptionKind
 {
@@ -39,7 +39,7 @@ public sealed class JavaOption
     // Read when bound: a language switch rebuilds the view, which binds it again.
     public string Label => Kind switch
     {
-        JavaOptionKind.Bundled => string.Format(CultureInfo.CurrentCulture, UiText.VersionSettings_JavaBundled, Detail),
+        JavaOptionKind.Bundled => string.Format(CultureInfo.CurrentCulture, UiText.LaunchSettings_JavaBundled, Detail),
         JavaOptionKind.Runtime => Detail,
         JavaOptionKind.Missing => UiText.Java_Missing,
     };
