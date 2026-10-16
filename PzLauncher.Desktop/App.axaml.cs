@@ -51,6 +51,8 @@ public partial class App : Application
                 new JsonPreferenceStore(preferencesPath, sp.GetRequiredService<ILogger<JsonPreferenceStore>>()));
             services.AddSingleton(sp => sp.GetRequiredService<IPreferenceStore>().Load());
             services.AddSingleton<IInstallOverridesService, InstallOverridesService>();
+            services.AddSingleton<IZombieBuddyChannelService, ZombieBuddyChannelService>();
+            services.AddSingleton<GameRunState>();
             services.AddSingleton<ILocalizationService>(sp => new LocalizationService(
                 sp.GetRequiredService<UserPreferences>().Language ?? AppLanguages.FromCulture(CultureInfo.CurrentUICulture)));
             services.AddSingleton<IThemeService>(sp =>

@@ -1,3 +1,4 @@
+using PzLauncher.Desktop.Services;
 using PzLauncher.Desktop.Tests.TestSupport;
 using PzLauncher.Desktop.Themes;
 using PzLauncher.Desktop.ViewModels;
@@ -21,11 +22,16 @@ public class MainViewModelTests : UiTextCultureTest
         var java = TestJava.ViewModel(Localization, new FakeJavaDiscoveryService(), store);
         var launcher = new FakeGameLaunchService();
         var overrides = new FakeInstallOverridesService();
+        var zombieBuddy = new FakeZombieBuddyService();
+        var channels = new FakeZombieBuddyChannelService();
+        var runState = new GameRunState();
+        var dialogs = new FakeDialogService();
         return new(
-            new HomeViewModel(installs, launcher, overrides, new FakeDialogService()),
+            new HomeViewModel(installs, launcher, overrides, dialogs, zombieBuddy, channels, runState),
             installs,
             new SettingsViewModel(new FakeThemeService(AppTheme.Light), store, new FakeWindowPlacementService(), java),
-            new LaunchSettingsViewModel(installs, launcher, overrides, java, new FakePlatformEnvironment(), Localization),
+            new LaunchSettingsViewModel(
+                installs, launcher, overrides, java, zombieBuddy, channels, runState, dialogs, new FakePlatformEnvironment(), Localization),
             new LanguageMenuViewModel(Localization, store));
     }
 

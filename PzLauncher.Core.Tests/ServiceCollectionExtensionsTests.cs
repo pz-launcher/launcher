@@ -6,6 +6,7 @@ using PzLauncher.Core.Java;
 using PzLauncher.Core.Launch;
 using PzLauncher.Core.Platform;
 using PzLauncher.Core.Tests.TestSupport;
+using PzLauncher.Core.ZombieBuddy;
 
 namespace PzLauncher.Core.Tests;
 
@@ -22,6 +23,7 @@ public class ServiceCollectionExtensionsTests
         Assert.Same(provider.GetRequiredService<IInstallDetectionService>(), provider.GetRequiredService<IInstallDetectionService>());
         Assert.Same(provider.GetRequiredService<IJavaDiscoveryService>(), provider.GetRequiredService<IJavaDiscoveryService>());
         Assert.Same(provider.GetRequiredService<IGameLaunchService>(), provider.GetRequiredService<IGameLaunchService>());
+        Assert.Same(provider.GetRequiredService<IZombieBuddyService>(), provider.GetRequiredService<IZombieBuddyService>());
     }
 
     [Fact]

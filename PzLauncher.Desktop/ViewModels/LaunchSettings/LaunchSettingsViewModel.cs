@@ -13,10 +13,12 @@ using PzLauncher.Core.Installs;
 using PzLauncher.Core.Java;
 using PzLauncher.Core.Launch;
 using PzLauncher.Core.Platform;
+using PzLauncher.Core.ZombieBuddy;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Services;
 using PzLauncher.Desktop.ViewModels.Installs;
 using PzLauncher.Desktop.ViewModels.Java;
+using PzLauncher.Desktop.ViewModels.ZombieBuddy;
 
 namespace PzLauncher.Desktop.ViewModels.LaunchSettings;
 
@@ -34,19 +36,29 @@ public partial class LaunchSettingsViewModel : ViewModelBase
     private readonly IGameLaunchService _launcher;
     private readonly IInstallOverridesService _overrides;
     private readonly JavaRuntimesViewModel _java;
+    private readonly IZombieBuddyService _zombieBuddy;
+    private readonly IZombieBuddyChannelService _channels;
+    private readonly GameRunState _runState;
+    private readonly IDialogService _dialogs;
     private readonly StringComparer _pathComparer;
 
     // Sources of the shown texts, kept so a language switch can re-render them.
     private readonly List<Error> _warningSources = [];
     private Error? _errorSource;
     private Error? _launchProblemSource;
+    private Error? _zombieBuddyErrorSource;
 
     // Set while fields are filled from saved values, so filling them doesn't save or pull values around.
     private bool _applying;
+    private bool _applyingZombieBuddy;
+
+    // Null while the section is hidden.
+    private ZombieBuddyStatus? _zombieBuddyStatus;
 
     // A newer activation supersedes a load still in flight; a newer check supersedes one still running.
     private int _loadVersion;
     private int _validationVersion;
+    private int _zombieBuddyVersion;
 
     // A saved min above the effective max stays in the min slider's range until a max change pulls it down.
     private int _loadedMinMemoryMb;
@@ -56,6 +68,10 @@ public partial class LaunchSettingsViewModel : ViewModelBase
         IGameLaunchService launcher,
         IInstallOverridesService overrides,
         JavaRuntimesViewModel java,
+        IZombieBuddyService zombieBuddy,
+        IZombieBuddyChannelService channels,
+        GameRunState runState,
+        IDialogService dialogs,
         IPlatformEnvironment platform,
         ILocalizationService localization)
     {
@@ -63,12 +79,17 @@ public partial class LaunchSettingsViewModel : ViewModelBase
         _launcher = launcher;
         _overrides = overrides;
         _java = java;
+        _zombieBuddy = zombieBuddy;
+        _channels = channels;
+        _runState = runState;
+        _dialogs = dialogs;
         _pathComparer = StringComparer.FromComparison(platform.PathComparison);
 
-        // Never unsubscribed: these view models are app-lifetime singletons.
+        // Never unsubscribed: these are app-lifetime singletons.
         localization.LanguageChanged += (_, _) => RenderTexts();
         installs.PropertyChanged += OnInstallsPropertyChanged;
         installs.Installs.CollectionChanged += OnInstallsListChanged;
+        runState.PropertyChanged += OnRunStatePropertyChanged;
     }
 
     public event EventHandler? BackRequested;
@@ -104,7 +125,7 @@ public partial class LaunchSettingsViewModel : ViewModelBase
     public ObservableCollection<JavaOption> JavaOptions { get; } = [];
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(JavaSelection), nameof(ShowJavaVersionWarning))]
+    [NotifyPropertyChangedFor(nameof(JavaSelection), nameof(ShowJavaVersionWarning), nameof(ShowZombieBuddyInstrumentWarning))]
     public partial JavaOption? SelectedJava { get; private set; }
 
     // The combo box pushes null while its items are replaced; that must not clear the choice.
@@ -191,6 +212,51 @@ public partial class LaunchSettingsViewModel : ViewModelBase
         }
     }
 
+    /// <summary>The ZombieBuddy card is shown: a supported install that is subscribed or has leftovers.</summary>
+    public bool ShowZombieBuddy => _zombieBuddyStatus is not null;
+
+    public bool IsZombieBuddySubscribed => _zombieBuddyStatus is { Subscribed.Count: > 0 };
+
+    public bool IsZombieBuddyInitialized => _zombieBuddyStatus is { IsInitialized: true };
+
+    public ZombieBuddyState ZombieBuddyState =>
+        !IsZombieBuddySubscribed ? ZombieBuddyState.Leftovers
+        : IsZombieBuddyInitialized ? ZombieBuddyState.Initialized
+        : ZombieBuddyState.NotInitialized;
+
+    /// <summary>Only an unsubscribed install with leftovers offers removing them.</summary>
+    public bool CanOfferZombieBuddyRemove => _zombieBuddyStatus is { Subscribed.Count: 0, HasLeftovers: true };
+
+    /// <summary>Both channels are subscribed, so the user picks one.</summary>
+    public bool HasZombieBuddyChannelChoice => _zombieBuddyStatus is { Subscribed.Count: > 1 };
+
+    /// <summary>The item initialize copies from.</summary>
+    public ZombieBuddyItem? ZombieBuddySource =>
+        _zombieBuddyStatus?.Subscribed.FirstOrDefault(item => item.Channel == SelectedZombieBuddyChannel)
+        ?? _zombieBuddyStatus?.Subscribed.FirstOrDefault();
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ZombieBuddySource))]
+    public partial ZombieBuddyChannel SelectedZombieBuddyChannel { get; set; }
+
+    /// <summary>Applies to the json at once; the switch is shown only when initialized.</summary>
+    [ObservableProperty] public partial bool IsZombieBuddyAllowAll { get; set; }
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanEditZombieBuddy))]
+    [NotifyCanExecuteChangedFor(nameof(InitializeZombieBuddyCommand), nameof(RemoveZombieBuddyCommand))]
+    public partial bool IsApplyingZombieBuddyAllowAll { get; private set; }
+
+    /// <summary>The game holds the files open and reads the policy only at start, so nothing changes while it runs.</summary>
+    public bool CanEditZombieBuddy => !_runState.IsGameRunning && !IsApplyingZombieBuddyAllowAll;
+
+    public bool IsGameRunning => _runState.IsGameRunning;
+
+    /// <summary>The Java the next launch uses lacks <c>java.instrument</c>, which ZombieBuddy's agent needs; an unknown Java doesn't warn.</summary>
+    public bool ShowZombieBuddyInstrumentWarning => IsZombieBuddyInitialized && SelectedJava?.Runtime is { HasInstrumentLibrary: false };
+
+    [ObservableProperty] public partial string? ZombieBuddyErrorText { get; private set; }
+
     private bool IsEditing => !_applying && HasSettings && Install is not null;
 
     /// <summary>Picks the install the page shows; the view's load then reads its settings.</summary>
@@ -199,6 +265,9 @@ public partial class LaunchSettingsViewModel : ViewModelBase
         // Drops a load or check still running for the previous install; until the next load nothing saves under this one.
         _loadVersion++;
         _validationVersion++;
+        _zombieBuddyVersion++;
+        ApplyZombieBuddy(null);
+        ShowZombieBuddyError(null);
         IsLoading = false;
         HasSettings = false;
         Install = install;
@@ -214,6 +283,9 @@ public partial class LaunchSettingsViewModel : ViewModelBase
         ShowError(null);
         _validationVersion++;
         ShowLaunchProblem(null);
+        _zombieBuddyVersion++;
+        ApplyZombieBuddy(null);
+        ShowZombieBuddyError(null);
         _warningSources.Clear();
         Warnings.Clear();
         if (install is null)
@@ -242,6 +314,7 @@ public partial class LaunchSettingsViewModel : ViewModelBase
             Apply(result.Value, _overrides.Get(install.RootPath));
             HasSettings = true;
             await ValidateAsync(ct);
+            await LoadZombieBuddyAsync(install.RootPath, ct);
         }
         catch (OperationCanceledException) when (ct.IsCancellationRequested)
         {
@@ -279,6 +352,112 @@ public partial class LaunchSettingsViewModel : ViewModelBase
         {
             OnPropertyChanged(nameof(IsInUse));
             UseCommand.NotifyCanExecuteChanged();
+        }
+    }
+
+    [RelayCommand(CanExecute = nameof(CanEditZombieBuddy))]
+    private Task InitializeZombieBuddyAsync() => RunZombieBuddySetupAsync(ZombieBuddySetupMode.Initialize);
+
+    [RelayCommand(CanExecute = nameof(CanEditZombieBuddy))]
+    private Task RemoveZombieBuddyAsync() => RunZombieBuddySetupAsync(ZombieBuddySetupMode.Remove);
+
+    private async Task RunZombieBuddySetupAsync(ZombieBuddySetupMode mode)
+    {
+        if (Install is not { } install || _zombieBuddyStatus is null)
+        {
+            return;
+        }
+
+        ShowZombieBuddyError(null);
+        var channel = ZombieBuddySource?.Channel ?? ZombieBuddyChannel.Stable;
+        await _dialogs.ShowZombieBuddySetupAsync(new ZombieBuddySetupViewModel(_zombieBuddy, mode, install.RootPath, channel, offersLaunch: false));
+        if (Install == install)
+        {
+            await LoadZombieBuddyAsync(install.RootPath, CancellationToken.None);
+        }
+    }
+
+    private async Task LoadZombieBuddyAsync(string installRoot, CancellationToken ct)
+    {
+        var version = ++_zombieBuddyVersion;
+        var status = await _zombieBuddy.GetStatusAsync(installRoot, ct);
+        if (version == _zombieBuddyVersion)
+        {
+            // An unreadable json is already shown by the page, and the section can't work without it.
+            ApplyZombieBuddy(status.IsSuccess ? status.Value : null);
+        }
+    }
+
+    private void ApplyZombieBuddy(ZombieBuddyStatus? status)
+    {
+        _zombieBuddyStatus = status is { IsSupported: true } shown && (shown.Subscribed.Count > 0 || shown.HasLeftovers) ? shown : null;
+        _applyingZombieBuddy = true;
+        try
+        {
+            SelectedZombieBuddyChannel = Install is { } install && _zombieBuddyStatus is { } current
+                ? _channels.EffectiveItem(install.RootPath, current.Subscribed)?.Channel ?? ZombieBuddyChannel.Stable
+                : ZombieBuddyChannel.Stable;
+            IsZombieBuddyAllowAll = _zombieBuddyStatus?.IsAllowAll ?? false;
+        }
+        finally
+        {
+            _applyingZombieBuddy = false;
+        }
+
+        OnPropertyChanged(nameof(ShowZombieBuddy));
+        OnPropertyChanged(nameof(IsZombieBuddySubscribed));
+        OnPropertyChanged(nameof(IsZombieBuddyInitialized));
+        OnPropertyChanged(nameof(ZombieBuddyState));
+        OnPropertyChanged(nameof(CanOfferZombieBuddyRemove));
+        OnPropertyChanged(nameof(HasZombieBuddyChannelChoice));
+        OnPropertyChanged(nameof(ZombieBuddySource));
+        OnPropertyChanged(nameof(ShowZombieBuddyInstrumentWarning));
+    }
+
+    partial void OnSelectedZombieBuddyChannelChanged(ZombieBuddyChannel value)
+    {
+        if (!_applyingZombieBuddy && Install is { } install && _zombieBuddyStatus is not null)
+        {
+            _channels.Save(install.RootPath, value);
+        }
+    }
+
+    partial void OnIsZombieBuddyAllowAllChanged(bool value)
+    {
+        if (!_applyingZombieBuddy && Install is { } install && _zombieBuddyStatus is not null)
+        {
+            _ = SetZombieBuddyAllowAllAsync(install, value);
+        }
+    }
+
+    private async Task SetZombieBuddyAllowAllAsync(PzInstall install, bool allowAll)
+    {
+        IsApplyingZombieBuddyAllowAll = true;
+        ShowZombieBuddyError(null);
+        try
+        {
+            var result = await _zombieBuddy.SetAllowAllAsync(install.RootPath, allowAll);
+            if (!result.IsSuccess && Install == install)
+            {
+                // The switch goes back to what the json holds now.
+                await LoadZombieBuddyAsync(install.RootPath, CancellationToken.None);
+                ShowZombieBuddyError(result.Error);
+            }
+        }
+        finally
+        {
+            IsApplyingZombieBuddyAllowAll = false;
+        }
+    }
+
+    private void OnRunStatePropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName is nameof(GameRunState.IsGameRunning))
+        {
+            OnPropertyChanged(nameof(IsGameRunning));
+            OnPropertyChanged(nameof(CanEditZombieBuddy));
+            InitializeZombieBuddyCommand.NotifyCanExecuteChanged();
+            RemoveZombieBuddyCommand.NotifyCanExecuteChanged();
         }
     }
 
@@ -487,9 +666,16 @@ public partial class LaunchSettingsViewModel : ViewModelBase
         LaunchProblemText = isGc ? null : text;
     }
 
+    private void ShowZombieBuddyError(Error? error)
+    {
+        _zombieBuddyErrorSource = error;
+        ZombieBuddyErrorText = error is null ? null : ErrorMessages.ToUserText(error);
+    }
+
     private void RenderTexts()
     {
         ErrorText = _errorSource is null ? null : ErrorMessages.ToUserText(_errorSource);
+        ZombieBuddyErrorText = _zombieBuddyErrorSource is null ? null : ErrorMessages.ToUserText(_zombieBuddyErrorSource);
         ShowLaunchProblem(_launchProblemSource);
         for (var i = 0; i < _warningSources.Count; i++)
         {

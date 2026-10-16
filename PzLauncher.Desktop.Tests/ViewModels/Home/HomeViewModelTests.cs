@@ -1,11 +1,15 @@
 using PzLauncher.Core.Common;
 using PzLauncher.Core.Installs;
 using PzLauncher.Core.Launch;
+using PzLauncher.Core.ZombieBuddy;
 using PzLauncher.Desktop.Localization;
+using PzLauncher.Desktop.Services;
 using PzLauncher.Desktop.Tests.TestSupport;
 using PzLauncher.Desktop.ViewModels.Home;
 using PzLauncher.Desktop.ViewModels.Installs;
+using PzLauncher.Desktop.ViewModels.ZombieBuddy;
 using static PzLauncher.Desktop.Tests.TestSupport.TestInstalls;
+using static PzLauncher.Desktop.Tests.TestSupport.TestZombieBuddy;
 
 namespace PzLauncher.Desktop.Tests.ViewModels.Home;
 
@@ -16,6 +20,9 @@ public class HomeViewModelTests : UiTextCultureTest
     private readonly FakeGameLaunchService _launcher = new();
     private readonly FakeInstallOverridesService _overrides = new();
     private readonly FakeDialogService _dialogs = new();
+    private readonly FakeZombieBuddyService _zombieBuddy = new();
+    private readonly FakeZombieBuddyChannelService _channels = new();
+    private readonly GameRunState _runState = new();
 
     public HomeViewModelTests()
     {
@@ -24,7 +31,7 @@ public class HomeViewModelTests : UiTextCultureTest
 
     private InstallsViewModel Installs { get; }
 
-    private HomeViewModel CreateViewModel() => new(Installs, _launcher, _overrides, _dialogs);
+    private HomeViewModel CreateViewModel() => new(Installs, _launcher, _overrides, _dialogs, _zombieBuddy, _channels, _runState);
 
     private async Task<HomeViewModel> CreateActivatedViewModelAsync(params PzInstall[] installs)
     {
@@ -116,6 +123,7 @@ public class HomeViewModelTests : UiTextCultureTest
         var launch = vm.LaunchCommand.ExecuteAsync(null);
 
         Assert.True(vm.IsGameRunning);
+        Assert.True(_runState.IsGameRunning);
         Assert.False(vm.LaunchCommand.CanExecute(null));
         Installs.Use(ManualGame.RootPath);
         Assert.False(vm.LaunchCommand.CanExecute(null));
@@ -125,8 +133,106 @@ public class HomeViewModelTests : UiTextCultureTest
         await launch;
 
         Assert.False(vm.IsGameRunning);
+        Assert.False(_runState.IsGameRunning);
         Assert.True(vm.LaunchCommand.CanExecute(null));
         Assert.Empty(_dialogs.Errors);
+    }
+
+    [Fact]
+    public async Task IsGameRunning_FollowsTheSharedRunState()
+    {
+        var vm = await CreateActivatedViewModelAsync(SteamGame);
+        var changed = new List<string?>();
+        vm.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
+
+        _runState.IsGameRunning = true;
+
+        Assert.True(vm.IsGameRunning);
+        Assert.False(vm.LaunchCommand.CanExecute(null));
+        Assert.Contains(nameof(HomeViewModel.IsGameRunning), changed);
+    }
+
+    public static TheoryData<ZombieBuddyStatus> NothingToSetUp => [ZombieBuddyStatus.Unsupported, NotSubscribed, Initialized()];
+
+    [Theory]
+    [MemberData(nameof(NothingToSetUp))]
+    public async Task Launch_ZombieBuddyNeedsNothing_LaunchesWithoutTheSetupDialog(ZombieBuddyStatus status)
+    {
+        _zombieBuddy.Status = _ => status;
+        var vm = await CreateActivatedViewModelAsync(SteamGame);
+
+        await LaunchAndExitAsync(vm);
+
+        Assert.Equal([SteamGame.RootPath], _zombieBuddy.StatusRequests);
+        Assert.Empty(_dialogs.Setups);
+        Assert.Single(_launcher.Launches);
+    }
+
+    [Fact]
+    public async Task Launch_ZombieBuddyStatusFails_LaunchesAndTheLaunchReportsTheProblem()
+    {
+        _zombieBuddy.Status = _ => TestErrors.Create(ErrorCode.LaunchConfigMalformed, "ProjectZomboid64.json");
+        var vm = await CreateActivatedViewModelAsync(SteamGame);
+
+        await LaunchAndExitAsync(vm);
+
+        Assert.Empty(_dialogs.Setups);
+        Assert.Single(_launcher.Launches);
+    }
+
+    [Theory]
+    [InlineData(ZombieBuddyAction.Initialize, ZombieBuddySetupMode.Initialize)]
+    [InlineData(ZombieBuddyAction.Remove, ZombieBuddySetupMode.Remove)]
+    public async Task Launch_ZombieBuddyNeedsSetup_ShowsTheDialogOfferingLaunchThenLaunches(ZombieBuddyAction action, ZombieBuddySetupMode mode)
+    {
+        _zombieBuddy.Status = _ => action == ZombieBuddyAction.Initialize ? NotInitialized() : Leftovers;
+        var launchedWhenShown = new List<int>();
+        _dialogs.SetupResult = _ =>
+        {
+            launchedWhenShown.Add(_launcher.Launches.Count);
+            return Task.FromResult(true);
+        };
+        var vm = await CreateActivatedViewModelAsync(SteamGame);
+
+        await LaunchAndExitAsync(vm);
+
+        var setup = Assert.Single(_dialogs.Setups);
+        Assert.Equal((mode, true), (setup.Mode, setup.OffersLaunch));
+        Assert.Equal([0], launchedWhenShown);
+        Assert.Single(_launcher.Launches);
+    }
+
+    [Fact]
+    public async Task Launch_SetupDialogCancelled_DoesNotLaunch()
+    {
+        _zombieBuddy.Status = _ => NotInitialized();
+        _dialogs.SetupResult = _ => Task.FromResult(false);
+        var vm = await CreateActivatedViewModelAsync(SteamGame);
+
+        await vm.LaunchCommand.ExecuteAsync(null);
+
+        Assert.Single(_dialogs.Setups);
+        Assert.Empty(_launcher.Launches);
+        Assert.True(vm.LaunchCommand.CanExecute(null));
+    }
+
+    [Theory]
+    [InlineData(ZombieBuddyChannel.Beta, ZombieBuddyChannel.Beta, true)]
+    [InlineData(ZombieBuddyChannel.Stable, ZombieBuddyChannel.Stable, true)]
+    [InlineData(ZombieBuddyChannel.Beta, ZombieBuddyChannel.Stable, false)]
+    [InlineData(ZombieBuddyChannel.Stable, ZombieBuddyChannel.Beta, false)]
+    public async Task Launch_Initialize_UsesTheSavedChannelWhenSubscribedElseTheSubscribedOne(
+        ZombieBuddyChannel saved, ZombieBuddyChannel expected, bool bothSubscribed)
+    {
+        _channels.Set(SteamGame.RootPath, saved);
+        ZombieBuddyItem[] subscribed = bothSubscribed ? [StableItem, BetaItem] : [expected == ZombieBuddyChannel.Beta ? BetaItem : StableItem];
+        _zombieBuddy.Status = _ => NotInitialized(subscribed);
+        _dialogs.SetupResult = FakeDialogService.RunsSetup();
+        var vm = await CreateActivatedViewModelAsync(SteamGame);
+
+        await LaunchAndExitAsync(vm);
+
+        Assert.Equal([(SteamGame.RootPath, expected)], _zombieBuddy.Initializations);
     }
 
     [Fact]
@@ -176,6 +282,13 @@ public class HomeViewModelTests : UiTextCultureTest
         Assert.Equal([ErrorMessages.ToUserText(crash)], _dialogs.Errors);
         Assert.Equal([false], runningWhenShown);
         Assert.True(vm.LaunchCommand.CanExecute(null));
+    }
+
+    private async Task LaunchAndExitAsync(HomeViewModel vm)
+    {
+        var launch = vm.LaunchCommand.ExecuteAsync(null);
+        _launcher.Exit.TrySetResult(Result.Ok());
+        await launch;
     }
 
     [Fact]

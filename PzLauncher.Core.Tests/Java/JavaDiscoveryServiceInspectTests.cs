@@ -90,7 +90,7 @@ public sealed class JavaDiscoveryServiceInspectTests : IDisposable
         var runtime = ResultAssert.Ok(await _service.InspectAsync(trailingSeparator ? picked + Path.DirectorySeparatorChar : picked, Ct));
 
         Assert.Equal(
-            new JavaRuntime(home, _java.ExecutableOf(home), new JavaVersion(21, "21.0.9"), "Eclipse Adoptium", JavaRuntimeSource.Manual, HasGraalCompiler: false),
+            new JavaRuntime(home, _java.ExecutableOf(home), new JavaVersion(21, "21.0.9"), "Eclipse Adoptium", JavaRuntimeSource.Manual, HasGraalCompiler: false, HasInstrumentLibrary: true),
             runtime);
     }
 
@@ -102,6 +102,21 @@ public sealed class JavaDiscoveryServiceInspectTests : IDisposable
         Assert.True(ResultAssert.Ok(await _service.InspectAsync(home, Ct)).HasGraalCompiler);
     }
 
+    [Theory]
+    [InlineData(PlatformKind.Windows, true)]
+    [InlineData(PlatformKind.Windows, false)]
+    [InlineData(PlatformKind.Linux, true)]
+    [InlineData(PlatformKind.Linux, false)]
+    [InlineData(PlatformKind.MacOS, true)]
+    [InlineData(PlatformKind.MacOS, false)]
+    public async Task InspectAsync_InstrumentLibraryPresentOrMissing_ReportsIt(PlatformKind os, bool withInstrument)
+    {
+        var home = new JavaHomeBuilder(_root, os).Create("jdk", withInstrument: withInstrument);
+        var service = JavaDiscoveryServiceScanTests.CreateService(new FakePlatformEnvironment { Os = os, PathComparison = StringComparison.Ordinal });
+
+        Assert.Equal(withInstrument, ResultAssert.Ok(await service.InspectAsync(home, Ct)).HasInstrumentLibrary);
+    }
+
     [Fact]
     public async Task InspectAsync_LinuxHomeWithoutRelease_UsesElfHeaderAndUnknownVersion()
     {
@@ -111,7 +126,7 @@ public sealed class JavaDiscoveryServiceInspectTests : IDisposable
 
         var runtime = ResultAssert.Ok(await service.InspectAsync(home, Ct));
 
-        Assert.Equal(new JavaRuntime(home, linux.ExecutableOf(home), null, null, JavaRuntimeSource.Manual, HasGraalCompiler: false), runtime);
+        Assert.Equal(new JavaRuntime(home, linux.ExecutableOf(home), null, null, JavaRuntimeSource.Manual, HasGraalCompiler: false, HasInstrumentLibrary: true), runtime);
     }
 
     [Fact]

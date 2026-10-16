@@ -13,12 +13,14 @@ internal sealed partial class DesktopJsonContext : JsonSerializerContext;
 /// <summary>Stable strings, not enum names (<see cref="Localization.AppLanguages.CultureName"/>, <see cref="Themes.AppThemes.PreferenceName"/>), so renaming an enum keeps saved files valid.</summary>
 /// <param name="JavaRuntimes">Elements, not strings, so one non-string entry doesn't make the whole file unreadable.</param>
 /// <param name="Installs">Keyed by install root; elements for the same reason as <paramref name="JavaRuntimes"/>.</param>
+/// <param name="ZombieBuddyChannels">Keyed by install root; <see cref="ZombieBuddyChannelPreferences.PreferenceName"/> values, elements for the same reason as <paramref name="JavaRuntimes"/>.</param>
 internal sealed record PreferencesFile(
     string? Language,
     string? Theme,
     WindowFile? Window,
     IReadOnlyList<JsonElement>? JavaRuntimes,
-    IReadOnlyDictionary<string, JsonElement>? Installs);
+    IReadOnlyDictionary<string, JsonElement>? Installs,
+    IReadOnlyDictionary<string, JsonElement>? ZombieBuddyChannels);
 
 /// <summary>Nullable members, so a missing one is told apart from a zero.</summary>
 internal sealed record WindowFile(int? X, int? Y, double? Width, double? Height, bool? Maximized);

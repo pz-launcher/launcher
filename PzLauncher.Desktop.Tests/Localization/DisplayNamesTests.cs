@@ -2,6 +2,7 @@ using System.Globalization;
 using PzLauncher.Core.Installs;
 using PzLauncher.Core.Java;
 using PzLauncher.Core.Launch;
+using PzLauncher.Core.ZombieBuddy;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Tests.TestSupport;
 
@@ -12,13 +13,15 @@ public class DisplayNamesTests : UiTextCultureTest
 {
     [Theory]
     [MemberData(nameof(TestLanguages.All), MemberType = typeof(TestLanguages))]
-    public void Of_EveryInstallKindSourceAndGc_HasDistinctNonEmptyName(AppLanguage language)
+    public void Of_EveryShownEnum_HasDistinctNonEmptyName(AppLanguage language)
     {
         Localization.SetLanguage(language);
 
         AssertDistinctNonEmpty([.. Enum.GetValues<PzInstallKind>().Select(DisplayNames.Of)]);
         AssertDistinctNonEmpty([.. Enum.GetValues<PzInstallSource>().Select(DisplayNames.Of)]);
         AssertDistinctNonEmpty([.. Enum.GetValues<GarbageCollector>().Select(DisplayNames.Of)]);
+        AssertDistinctNonEmpty([.. Enum.GetValues<ZombieBuddyChannel>().Select(DisplayNames.Of)]);
+        AssertDistinctNonEmpty([.. Enum.GetValues<ZombieBuddyStep>().Select(DisplayNames.Of)]);
     }
 
     [Theory]
@@ -46,6 +49,12 @@ public class DisplayNamesTests : UiTextCultureTest
         Assert.Equal(
             DisplayNames.Of(JavaRuntimeSource.Manual),
             DisplayNames.JavaSource.Convert(JavaRuntimeSource.Manual, typeof(string), null, CultureInfo.InvariantCulture));
+        Assert.Equal(
+            DisplayNames.Of(ZombieBuddyChannel.Beta),
+            DisplayNames.ZombieBuddyChannelName.Convert(ZombieBuddyChannel.Beta, typeof(string), null, CultureInfo.InvariantCulture));
+        Assert.Equal(
+            DisplayNames.Of(ZombieBuddyStep.CopyAgentJar),
+            DisplayNames.ZombieBuddyStepName.Convert(ZombieBuddyStep.CopyAgentJar, typeof(string), null, CultureInfo.InvariantCulture));
     }
 
     private static void AssertDistinctNonEmpty(string[] names)

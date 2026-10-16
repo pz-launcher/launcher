@@ -30,4 +30,16 @@ internal static class PzLaunchFiles
 
     public static string JavaExecutable(string javaHome, PlatformKind os) =>
         Path.Combine(javaHome, JavaLocations.BinFolder, JavaLocations.ExecutableName(os));
+
+    // The Linux Steam depot nests the game one level down; when neither has the json, the root is named in the error.
+    public static string ResolveGameFolder(string root)
+    {
+        if (File.Exists(Path.Combine(root, ConfigFile)))
+        {
+            return root;
+        }
+
+        var nested = Path.Combine(root, NestedGameFolder);
+        return File.Exists(Path.Combine(nested, ConfigFile)) ? nested : root;
+    }
 }

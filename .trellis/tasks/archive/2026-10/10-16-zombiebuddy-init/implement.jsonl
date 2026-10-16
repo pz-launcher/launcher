@@ -1,0 +1,11 @@
+{"file": ".trellis/spec/common/architecture.md", "reason": "Core vs Desktop boundary: ZombieBuddy file/json logic in Core, dialog and settings UI in Desktop"}
+{"file": ".trellis/spec/common/coding-rules.md", "reason": "comments, nullability, async, AOT (JsonNode edit), exhaustive enum switches"}
+{"file": ".trellis/spec/common/test-strategy.md", "reason": "fakes, temp-dir fixtures, error-code assertions, test naming"}
+{"file": ".trellis/spec/common/formatting.md", "reason": "dotnet format on changed .cs files"}
+{"file": ".trellis/spec/core/directory-structure.md", "reason": "new ZombieBuddy/ feature folder, domain constants in one place"}
+{"file": ".trellis/spec/core/service-api.md", "reason": "IZombieBuddyService shape, IProgress payload, DTOs in CoreJsonContext, DI and test seams"}
+{"file": ".trellis/spec/core/error-handling.md", "reason": "zombiebuddy.* error codes, untrusted ProjectZomboid64.json, IO exception boundaries"}
+{"file": ".trellis/spec/desktop/directory-structure.md", "reason": "MVVM, setup dialog view/viewmodel placement, dialog service, DesignData"}
+{"file": ".trellis/spec/desktop/localization.md", "reason": "new resx keys in all 10 languages, error texts, texts re-rendered on language switch"}
+{"file": ".trellis/spec/desktop/shell-and-theming.md", "reason": "Shell.* colors, no literal durations, dialog and section styling"}
+{"file": ".trellis/spec/desktop/preferences.md", "reason": "new zombieBuddyChannels field, own save method, stable mapping, store tests"}

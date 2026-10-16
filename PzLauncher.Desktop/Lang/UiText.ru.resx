@@ -194,6 +194,24 @@
   <data name="Error_LaunchGcConflict" xml:space="preserve">
     <value>Выбрано несколько разных сборщиков мусора ({0}). Оставьте один: в списке GC или в дополнительных аргументах JVM.</value>
   </data>
+  <data name="Error_ZombieBuddyNotSubscribed" xml:space="preserve">
+    <value>Предмет Мастерской ZombieBuddy {0} не найден ни в одной библиотеке Steam. Проверьте, что вы подписаны на него в Steam и загрузка завершена, затем повторите попытку.</value>
+  </data>
+  <data name="Error_ZombieBuddySourceFileMissing" xml:space="preserve">
+    <value>Файлы ZombieBuddy из Мастерской неполные: отсутствует {0}. Отпишитесь и снова подпишитесь на мод в Steam, затем повторите попытку.</value>
+  </data>
+  <data name="Error_ZombieBuddyCopyFailed" xml:space="preserve">
+    <value>Не удалось скопировать файл ZombieBuddy в {0}. Если игра запущена, закройте её и повторите попытку.</value>
+  </data>
+  <data name="Error_ZombieBuddyDeleteFailed" xml:space="preserve">
+    <value>Не удалось удалить {0}. Если игра запущена, закройте её и повторите попытку.</value>
+  </data>
+  <data name="Error_ZombieBuddyConfigWriteFailed" xml:space="preserve">
+    <value>Не удалось сохранить файл настроек запуска {0}. Убедитесь, что файл не доступен только для чтения и не открыт в другой программе, затем повторите попытку.</value>
+  </data>
+  <data name="Error_ZombieBuddyNotInitialized" xml:space="preserve">
+    <value>ZombieBuddy не инициализирован для этой установки. Сначала выполните «Инициализировать» в «Настройках запуска».</value>
+  </data>
   <data name="Error_FolderNotLocal" xml:space="preserve">
     <value>{0} — не папка на этом компьютере, поэтому лаунчер не может её открыть. Выберите локальную папку.</value>
   </data>
@@ -340,5 +358,98 @@
   </data>
   <data name="GarbageCollector_Serial" xml:space="preserve">
     <value>Serial</value>
+  </data>
+  <data name="ZombieBuddy_Section" xml:space="preserve">
+    <value>ZombieBuddy</value>
+  </data>
+  <data name="ZombieBuddy_Status" xml:space="preserve">
+    <value>Состояние</value>
+  </data>
+  <data name="ZombieBuddy_StatusNotInitialized" xml:space="preserve">
+    <value>Не инициализирован</value>
+  </data>
+  <data name="ZombieBuddy_StatusInitialized" xml:space="preserve">
+    <value>Инициализирован</value>
+  </data>
+  <data name="ZombieBuddy_StatusLeftovers" xml:space="preserve">
+    <value>Нет подписки (остались файлы)</value>
+  </data>
+  <data name="ZombieBuddy_Channel" xml:space="preserve">
+    <value>Канал</value>
+  </data>
+  <data name="ZombieBuddy_ChannelHint" xml:space="preserve">
+    <value>Смена канала вступит в силу после нажатия «Инициализировать заново».</value>
+  </data>
+  <data name="ZombieBuddy_Source" xml:space="preserve">
+    <value>Папка Мастерской</value>
+  </data>
+  <data name="ZombieBuddy_Initialize" xml:space="preserve">
+    <value>Инициализировать</value>
+  </data>
+  <data name="ZombieBuddy_Reinitialize" xml:space="preserve">
+    <value>Инициализировать заново</value>
+  </data>
+  <data name="ZombieBuddy_Remove" xml:space="preserve">
+    <value>Удалить</value>
+  </data>
+  <data name="ZombieBuddy_GameRunning" xml:space="preserve">
+    <value>ZombieBuddy нельзя изменить, пока игра запущена.</value>
+  </data>
+  <data name="ZombieBuddy_InstrumentWarning" xml:space="preserve">
+    <value>ZombieBuddy требуется модуль java.instrument, которого нет в выбранной Java. С этой Java ZombieBuddy может не загрузиться.</value>
+  </data>
+  <data name="ZombieBuddy_AllowAll" xml:space="preserve">
+    <value>Разрешать все Java-моды без запроса</value>
+  </data>
+  <data name="ZombieBuddy_AllowAllWarning" xml:space="preserve">
+    <value>Java-моды загружаются без запросов на одобрение и без проверки подписей. Это действует для каждого запуска, читающего ProjectZomboid64.json, в том числе из Steam.</value>
+  </data>
+  <data name="ZombieBuddy_InitializeTitle" xml:space="preserve">
+    <value>Настройка ZombieBuddy</value>
+  </data>
+  <data name="ZombieBuddy_RemoveTitle" xml:space="preserve">
+    <value>Удаление ZombieBuddy</value>
+  </data>
+  <data name="ZombieBuddy_InitializeIntro" xml:space="preserve">
+    <value>Вы подписаны на ZombieBuddy, но для этой установки он не настроен. PzLauncher скопирует его файлы в папку игры и добавит его Java-агент в ProjectZomboid64.json.</value>
+  </data>
+  <data name="ZombieBuddy_RemoveIntro" xml:space="preserve">
+    <value>Вы больше не подписаны на ZombieBuddy. PzLauncher удалит его файлы из папки игры и его Java-агент из ProjectZomboid64.json.</value>
+  </data>
+  <data name="ZombieBuddy_Launch" xml:space="preserve">
+    <value>Запустить игру</value>
+  </data>
+  <data name="ZombieBuddy_Close" xml:space="preserve">
+    <value>Закрыть</value>
+  </data>
+  <data name="ZombieBuddy_Cancel" xml:space="preserve">
+    <value>Отмена</value>
+  </data>
+  <data name="ZombieBuddy_Retry" xml:space="preserve">
+    <value>Повторить</value>
+  </data>
+  <data name="ZombieBuddyChannel_Stable" xml:space="preserve">
+    <value>Стабильный</value>
+  </data>
+  <data name="ZombieBuddyChannel_Beta" xml:space="preserve">
+    <value>Бета</value>
+  </data>
+  <data name="ZombieBuddyStep_FindItem" xml:space="preserve">
+    <value>Поиск предмета Мастерской</value>
+  </data>
+  <data name="ZombieBuddyStep_CopyNativeLoader" xml:space="preserve">
+    <value>Копирование zbNative.dll</value>
+  </data>
+  <data name="ZombieBuddyStep_CopyAgentJar" xml:space="preserve">
+    <value>Копирование ZombieBuddy.jar</value>
+  </data>
+  <data name="ZombieBuddyStep_AddAgentArg" xml:space="preserve">
+    <value>Добавление Java-агента в ProjectZomboid64.json</value>
+  </data>
+  <data name="ZombieBuddyStep_DeleteFiles" xml:space="preserve">
+    <value>Удаление файлов ZombieBuddy</value>
+  </data>
+  <data name="ZombieBuddyStep_RemoveAgentArg" xml:space="preserve">
+    <value>Удаление Java-агента из ProjectZomboid64.json</value>
   </data>
 </root>

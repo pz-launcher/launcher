@@ -3,10 +3,12 @@ using PzLauncher.Core.Installs;
 using PzLauncher.Core.Java;
 using PzLauncher.Core.Launch;
 using PzLauncher.Core.Platform;
+using PzLauncher.Core.ZombieBuddy;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Services;
 using PzLauncher.Desktop.Themes;
 using PzLauncher.Desktop.ViewModels.Java;
+using PzLauncher.Desktop.ViewModels.ZombieBuddy;
 
 namespace PzLauncher.Desktop.Tests.TestSupport;
 
@@ -90,10 +92,10 @@ public static class TestJava
         new(discovery, new FakeFolderPicker(), store, new UserPreferences(null, null, null), new FakePlatformEnvironment(), localization);
 
     public static JavaRuntime Manual(string home) =>
-        new(home, home + @"\bin\javaw.exe", null, null, JavaRuntimeSource.Manual, HasGraalCompiler: false);
+        new(home, home + @"\bin\javaw.exe", null, null, JavaRuntimeSource.Manual, HasGraalCompiler: false, HasInstrumentLibrary: true);
 
     private static JavaRuntime Discovered(string home, int major, JavaRuntimeSource source) =>
-        new(home, home + @"\bin\javaw.exe", new JavaVersion(major, $"{major}.0.1"), "Eclipse Adoptium", source, HasGraalCompiler: false);
+        new(home, home + @"\bin\javaw.exe", new JavaVersion(major, $"{major}.0.1"), "Eclipse Adoptium", source, HasGraalCompiler: false, HasInstrumentLibrary: true);
 }
 
 public static class TestInstalls
@@ -166,6 +168,14 @@ public sealed class FakePreferenceStore : IPreferenceStore
         SavedInstallOverrides.Add((installRoot, overrides));
         return InstallOverridesSaveGate?.Task ?? Task.CompletedTask;
     }
+
+    public List<(string Root, ZombieBuddyChannel Channel)> SavedZombieBuddyChannels { get; } = [];
+
+    public Task SaveZombieBuddyChannelAsync(string installRoot, ZombieBuddyChannel channel, CancellationToken ct = default)
+    {
+        SavedZombieBuddyChannels.Add((installRoot, channel));
+        return Task.CompletedTask;
+    }
 }
 
 /// <summary>Each successful launch starts a game that runs until <see cref="Exit"/> completes.</summary>
@@ -224,7 +234,7 @@ public static class TestLaunch
     private static readonly string BundledHome = TestInstalls.SteamGame.RootPath + @"\jre64";
 
     public static readonly JavaRuntime BundledJava =
-        new(BundledHome, BundledHome + @"\bin\javaw.exe", new JavaVersion(25, "25.0.1"), "Azul Systems, Inc.", JavaRuntimeSource.Manual, HasGraalCompiler: false);
+        new(BundledHome, BundledHome + @"\bin\javaw.exe", new JavaVersion(25, "25.0.1"), "Azul Systems, Inc.", JavaRuntimeSource.Manual, HasGraalCompiler: false, HasInstrumentLibrary: true);
 
     public static GameLaunchDefaults Defaults(int? maxMemoryMb = 3072, int? minMemoryMb = null, params Error[] warnings) =>
         new(maxMemoryMb, minMemoryMb, ["-Xmx3072m", "-XX:+UseZGC"], BundledJava, 16 * 1024, warnings, GarbageCollector.Z, GarbageCollectorSetByViewpoint: false);
@@ -250,9 +260,14 @@ public sealed class FakeInstallOverridesService : IInstallOverridesService
     public Task FlushAsync(CancellationToken ct = default) => Task.CompletedTask;
 }
 
+/// <summary>The setup dialog returns <see cref="SetupResult"/>'s answer without running the operation unless the handler starts it.</summary>
 public sealed class FakeDialogService : IDialogService
 {
     public List<string> Errors { get; } = [];
+
+    public List<ZombieBuddySetupViewModel> Setups { get; } = [];
+
+    public Func<ZombieBuddySetupViewModel, Task<bool>> SetupResult { get; set; } = _ => Task.FromResult(true);
 
     public event Action? Shown;
 
@@ -261,6 +276,121 @@ public sealed class FakeDialogService : IDialogService
         Errors.Add(message);
         Shown?.Invoke();
         return Task.CompletedTask;
+    }
+
+    public Task<bool> ShowZombieBuddySetupAsync(ZombieBuddySetupViewModel setup)
+    {
+        Setups.Add(setup);
+        return SetupResult(setup);
+    }
+
+    /// <summary>Runs the operation as the real dialog does on open, then answers.</summary>
+    public static Func<ZombieBuddySetupViewModel, Task<bool>> RunsSetup(bool launch = true) => async setup =>
+    {
+        await setup.StartAsync();
+        return launch;
+    };
+}
+
+/// <summary>Initialize and remove run <see cref="Operation"/>, which by default reports every step and succeeds.</summary>
+public sealed class FakeZombieBuddyService : IZombieBuddyService
+{
+    public Func<string, Result<ZombieBuddyStatus>> Status { get; set; } = _ => ZombieBuddyStatus.Unsupported;
+
+    public Func<IProgress<ZombieBuddyProgress>?, CancellationToken, Task<Result>> Operation { get; set; } =
+        (progress, _) => Task.FromResult(TestZombieBuddy.Run(TestZombieBuddy.InitializeSteps, progress));
+
+    public Func<bool, Task<Result>> SetAllowAll { get; set; } = _ => Task.FromResult(Result.Ok());
+
+    public List<string> StatusRequests { get; } = [];
+
+    public List<(string Root, ZombieBuddyChannel Channel)> Initializations { get; } = [];
+
+    public List<string> Removals { get; } = [];
+
+    public List<(string Root, bool AllowAll)> AllowAllChanges { get; } = [];
+
+    public Task<Result<ZombieBuddyStatus>> GetStatusAsync(string installRoot, CancellationToken ct = default)
+    {
+        StatusRequests.Add(installRoot);
+        return Task.FromResult(Status(installRoot));
+    }
+
+    public Task<Result> InitializeAsync(
+        string installRoot, ZombieBuddyChannel channel, IProgress<ZombieBuddyProgress>? progress = null, CancellationToken ct = default)
+    {
+        Initializations.Add((installRoot, channel));
+        return Operation(progress, ct);
+    }
+
+    public Task<Result> RemoveAsync(string installRoot, IProgress<ZombieBuddyProgress>? progress = null, CancellationToken ct = default)
+    {
+        Removals.Add(installRoot);
+        return Operation(progress, ct);
+    }
+
+    public Task<Result> SetAllowAllAsync(string installRoot, bool allowAll, CancellationToken ct = default)
+    {
+        AllowAllChanges.Add((installRoot, allowAll));
+        return SetAllowAll(allowAll);
+    }
+}
+
+public sealed class FakeZombieBuddyChannelService : IZombieBuddyChannelService
+{
+    private readonly Dictionary<string, ZombieBuddyChannel> _channels = new(StringComparer.OrdinalIgnoreCase);
+
+    public List<(string Root, ZombieBuddyChannel Channel)> Saved { get; } = [];
+
+    public ZombieBuddyChannel Get(string installRoot) => _channels.GetValueOrDefault(installRoot, ZombieBuddyChannel.Stable);
+
+    /// <summary>Arranges a saved value without recording a save.</summary>
+    public void Set(string installRoot, ZombieBuddyChannel channel) => _channels[installRoot] = channel;
+
+    public void Save(string installRoot, ZombieBuddyChannel channel)
+    {
+        _channels[installRoot] = channel;
+        Saved.Add((installRoot, channel));
+    }
+}
+
+public static class TestZombieBuddy
+{
+    public static readonly ZombieBuddyItem StableItem =
+        new(ZombieBuddyChannel.Stable, @"E:\SteamLibrary\steamapps\workshop\content\108600\3619862853");
+
+    public static readonly ZombieBuddyItem BetaItem =
+        new(ZombieBuddyChannel.Beta, @"E:\SteamLibrary\steamapps\workshop\content\108600\3812624292");
+
+    public static readonly ZombieBuddyStep[] InitializeSteps =
+        [ZombieBuddyStep.FindItem, ZombieBuddyStep.CopyNativeLoader, ZombieBuddyStep.CopyAgentJar, ZombieBuddyStep.AddAgentArg];
+
+    public static readonly ZombieBuddyStep[] RemoveSteps = [ZombieBuddyStep.DeleteFiles, ZombieBuddyStep.RemoveAgentArg];
+
+    public static readonly ZombieBuddyStatus NotSubscribed = new(true, [], false, false, false, ZombieBuddyAction.None);
+
+    public static readonly ZombieBuddyStatus Leftovers = new(true, [], false, true, false, ZombieBuddyAction.Remove);
+
+    public static ZombieBuddyStatus NotInitialized(params ZombieBuddyItem[] subscribed) =>
+        new(true, subscribed.Length == 0 ? [StableItem] : subscribed, false, false, false, ZombieBuddyAction.Initialize);
+
+    public static ZombieBuddyStatus Initialized(bool allowAll = false, params ZombieBuddyItem[] subscribed) =>
+        new(true, subscribed.Length == 0 ? [StableItem] : subscribed, true, true, allowAll, ZombieBuddyAction.None);
+
+    /// <summary>Reports like the real service: each step as it starts, then completion; fails at <paramref name="failAt"/> with <paramref name="error"/>.</summary>
+    public static Result Run(IReadOnlyList<ZombieBuddyStep> steps, IProgress<ZombieBuddyProgress>? progress, int? failAt = null, Error? error = null)
+    {
+        for (var i = 0; i < steps.Count; i++)
+        {
+            progress?.Report(new ZombieBuddyProgress(steps, i, IsComplete: false));
+            if (i == failAt)
+            {
+                return error ?? TestErrors.Create(ErrorCode.ZombieBuddyCopyFailed, @"E:\SteamLibrary\steamapps\common\ProjectZomboid\ZombieBuddy.jar");
+            }
+        }
+
+        progress?.Report(new ZombieBuddyProgress(steps, steps.Count, IsComplete: true));
+        return Result.Ok();
     }
 }
 

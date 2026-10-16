@@ -4,6 +4,7 @@ using PzLauncher.Core.Installs;
 using PzLauncher.Core.Java;
 using PzLauncher.Core.Launch;
 using PzLauncher.Core.Serialization;
+using PzLauncher.Core.ZombieBuddy;
 
 namespace PzLauncher.Core.Tests.Serialization;
 
@@ -88,8 +89,8 @@ public class CoreJsonContextTests
     {
         var original = new JavaScanResult(
             [
-                new JavaRuntime(@"C:\Java\jdk-21", @"C:\Java\jdk-21\bin\javaw.exe", new JavaVersion(21, "21.0.9"), "Eclipse Adoptium", JavaRuntimeSource.Registry, HasGraalCompiler: false),
-                new JavaRuntime("/opt/jdk", "/opt/jdk/bin/java", Version: null, Vendor: null, JavaRuntimeSource.Manual, HasGraalCompiler: true),
+                new JavaRuntime(@"C:\Java\jdk-21", @"C:\Java\jdk-21\bin\javaw.exe", new JavaVersion(21, "21.0.9"), "Eclipse Adoptium", JavaRuntimeSource.Registry, HasGraalCompiler: false, HasInstrumentLibrary: true),
+                new JavaRuntime("/opt/jdk", "/opt/jdk/bin/java", Version: null, Vendor: null, JavaRuntimeSource.Manual, HasGraalCompiler: true, HasInstrumentLibrary: false),
             ],
             [new Error(ErrorCode.JavaReleaseUnreadable, "msg", ErrorKind.External) { Details = new Dictionary<string, string> { ["path"] = "p" } }]);
 
@@ -104,9 +105,9 @@ public class CoreJsonContextTests
     }
 
     [Theory]
-    [InlineData("""{"homePath":null,"executablePath":"/x/bin/java","version":null,"vendor":null,"source":"Manual","hasGraalCompiler":false}""")]
-    [InlineData("""{"executablePath":"/x/bin/java","version":null,"vendor":null,"source":"Manual","hasGraalCompiler":false}""")]
-    [InlineData("""{"homePath":"/x","executablePath":"/x/bin/java","version":{"major":21,"full":null},"vendor":null,"source":"Manual","hasGraalCompiler":false}""")]
+    [InlineData("""{"homePath":null,"executablePath":"/x/bin/java","version":null,"vendor":null,"source":"Manual","hasGraalCompiler":false,"hasInstrumentLibrary":true}""")]
+    [InlineData("""{"executablePath":"/x/bin/java","version":null,"vendor":null,"source":"Manual","hasGraalCompiler":false,"hasInstrumentLibrary":true}""")]
+    [InlineData("""{"homePath":"/x","executablePath":"/x/bin/java","version":{"major":21,"full":null},"vendor":null,"source":"Manual","hasGraalCompiler":false,"hasInstrumentLibrary":true}""")]
     public void JavaRuntime_NonNullMemberNullOrMissingInJson_Throws(string json) =>
         Assert.Throws<JsonException>(() => JsonSerializer.Deserialize(json, CoreJsonContext.Default.JavaRuntime));
 
@@ -143,7 +144,7 @@ public class CoreJsonContextTests
             3072,
             null,
             ["-Xmx3072m", "-XX:+UseZGC"],
-            new JavaRuntime("/games/pz/jre64", "/games/pz/jre64/bin/java", new JavaVersion(25, "25.0.1"), "Azul Systems, Inc.", JavaRuntimeSource.Manual, HasGraalCompiler: false),
+            new JavaRuntime("/games/pz/jre64", "/games/pz/jre64/bin/java", new JavaVersion(25, "25.0.1"), "Azul Systems, Inc.", JavaRuntimeSource.Manual, HasGraalCompiler: false, HasInstrumentLibrary: true),
             32768,
             [new Error(ErrorCode.LaunchConfigMissing, "msg", ErrorKind.NotFound) { Details = new Dictionary<string, string> { ["path"] = "p" } }],
             GarbageCollector.Shenandoah,
@@ -169,5 +170,45 @@ public class CoreJsonContextTests
 
         Assert.Equal("""{"installRoot":"/games/pz","processId":4242}""", json);
         Assert.Equal(original, JsonSerializer.Deserialize(json, CoreJsonContext.Default.GameSession));
+    }
+
+    [Fact]
+    public void ZombieBuddyStatus_RoundTrips_WithStringEnums()
+    {
+        var original = new ZombieBuddyStatus(
+            IsSupported: true,
+            [
+                new ZombieBuddyItem(ZombieBuddyChannel.Stable, @"E:\SteamLibrary\steamapps\workshop\content\108600\3619862853"),
+                new ZombieBuddyItem(ZombieBuddyChannel.Beta, "/home/u/.local/share/Steam/steamapps/workshop/content/108600/3812624292"),
+            ],
+            IsInitialized: false,
+            HasLeftovers: true,
+            IsAllowAll: true,
+            ZombieBuddyAction.Initialize);
+
+        var json = JsonSerializer.Serialize(original, CoreJsonContext.Default.ZombieBuddyStatus);
+        var copy = JsonSerializer.Deserialize(json, CoreJsonContext.Default.ZombieBuddyStatus);
+
+        Assert.Contains("\"channel\":\"Stable\"", json, StringComparison.Ordinal);
+        Assert.Contains("\"neededAction\":\"Initialize\"", json, StringComparison.Ordinal);
+        Assert.NotNull(copy);
+        Assert.Equal(original.Subscribed, copy.Subscribed);
+        Assert.Equal(
+            (original.IsSupported, original.IsInitialized, original.HasLeftovers, original.IsAllowAll, original.NeededAction),
+            (copy.IsSupported, copy.IsInitialized, copy.HasLeftovers, copy.IsAllowAll, copy.NeededAction));
+    }
+
+    [Fact]
+    public void ZombieBuddyProgress_RoundTrips_WithStringEnums()
+    {
+        var original = new ZombieBuddyProgress([ZombieBuddyStep.FindItem, ZombieBuddyStep.CopyAgentJar, ZombieBuddyStep.AddAgentArg], 3, IsComplete: true);
+
+        var json = JsonSerializer.Serialize(original, CoreJsonContext.Default.ZombieBuddyProgress);
+        var copy = JsonSerializer.Deserialize(json, CoreJsonContext.Default.ZombieBuddyProgress);
+
+        Assert.Equal("""{"steps":["FindItem","CopyAgentJar","AddAgentArg"],"current":3,"isComplete":true}""", json);
+        Assert.NotNull(copy);
+        Assert.Equal(original.Steps, copy.Steps);
+        Assert.Equal((3, true), (copy.Current, copy.IsComplete));
     }
 }

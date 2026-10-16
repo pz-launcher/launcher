@@ -40,6 +40,12 @@ public static class ErrorMessages
             ErrorCode.LaunchGameCrashed => Format(UiText.Error_LaunchGameCrashed, path, Detail(error, "exitCode")),
             ErrorCode.LaunchGameExitedEarly => Format(UiText.Error_LaunchGameExitedEarly, Detail(error, "exitCode"), Detail(error, "output")),
             ErrorCode.LaunchGcConflict => Format(UiText.Error_LaunchGcConflict, Detail(error, "value")),
+            ErrorCode.ZombieBuddyNotSubscribed => Format(UiText.Error_ZombieBuddyNotSubscribed, Detail(error, "itemId")),
+            ErrorCode.ZombieBuddySourceFileMissing => Format(UiText.Error_ZombieBuddySourceFileMissing, path),
+            ErrorCode.ZombieBuddyCopyFailed => Format(UiText.Error_ZombieBuddyCopyFailed, path),
+            ErrorCode.ZombieBuddyDeleteFailed => Format(UiText.Error_ZombieBuddyDeleteFailed, path),
+            ErrorCode.ZombieBuddyConfigWriteFailed => Format(UiText.Error_ZombieBuddyConfigWriteFailed, path),
+            ErrorCode.ZombieBuddyNotInitialized => UiText.Error_ZombieBuddyNotInitialized,
             ErrorCode.ResultUninitialized => UiText.Error_ResultUninitialized,
         };
     }

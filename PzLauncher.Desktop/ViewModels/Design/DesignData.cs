@@ -8,6 +8,7 @@ using PzLauncher.Core.Installs;
 using PzLauncher.Core.Java;
 using PzLauncher.Core.Launch;
 using PzLauncher.Core.Platform;
+using PzLauncher.Core.ZombieBuddy;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Services;
 using PzLauncher.Desktop.Themes;
@@ -16,6 +17,7 @@ using PzLauncher.Desktop.ViewModels.Installs;
 using PzLauncher.Desktop.ViewModels.Java;
 using PzLauncher.Desktop.ViewModels.Settings;
 using PzLauncher.Desktop.ViewModels.LaunchSettings;
+using PzLauncher.Desktop.ViewModels.ZombieBuddy;
 
 namespace PzLauncher.Desktop.ViewModels.Design;
 
@@ -49,13 +51,21 @@ public static class DesignData
 
     private static readonly SampleInstallOverrides InstallOverrides = new();
 
-    public static HomeViewModel Home { get; } = new(Installs, GameLaunch, InstallOverrides, new NoDialogs());
+    private static readonly SampleZombieBuddy ZombieBuddySample = new();
+
+    private static readonly SampleZombieBuddyChannels ZombieBuddyChannels = new();
+
+    private static readonly GameRunState RunState = new();
+
+    public static HomeViewModel Home { get; } = new(Installs, GameLaunch, InstallOverrides, new NoDialogs(), ZombieBuddySample, ZombieBuddyChannels, RunState);
 
     public static JavaRuntimesViewModel Java { get; } = CreateJava();
 
     public static SettingsViewModel Settings { get; } = new(new LightThemeService(), Preferences, new NoWindowPlacement(), Java);
 
     public static LaunchSettingsViewModel LaunchSettings { get; } = CreateLaunchSettings();
+
+    public static ZombieBuddySetupViewModel ZombieBuddySetup { get; } = CreateZombieBuddySetup();
 
     public static MainViewModel Main { get; } = new(Home, Installs, Settings, LaunchSettings, new LanguageMenuViewModel(Localization, Preferences));
 
@@ -81,13 +91,21 @@ public static class DesignData
 
     private static LaunchSettingsViewModel CreateLaunchSettings()
     {
-        var vm = new LaunchSettingsViewModel(Installs, GameLaunch, InstallOverrides, Java, new SamplePlatform(), Localization);
+        var vm = new LaunchSettingsViewModel(
+            Installs, GameLaunch, InstallOverrides, Java, ZombieBuddySample, ZombieBuddyChannels, RunState, new NoDialogs(), new SamplePlatform(), Localization);
         if (Installs.SelectedInstall is { } install)
         {
             vm.Open(install);
         }
 
         vm.ActivateCommand.Execute(null);
+        return vm;
+    }
+
+    private static ZombieBuddySetupViewModel CreateZombieBuddySetup()
+    {
+        var vm = new ZombieBuddySetupViewModel(ZombieBuddySample, ZombieBuddySetupMode.Initialize, SampleAppPath("ProjectZomboid"), ZombieBuddyChannel.Stable, offersLaunch: true);
+        _ = vm.StartAsync();
         return vm;
     }
 
@@ -104,7 +122,8 @@ public static class DesignData
                     new JavaVersion(25, "25.0.1"),
                     "Azul Systems, Inc.",
                     JavaRuntimeSource.Manual,
-                    HasGraalCompiler: false),
+                    HasGraalCompiler: false,
+                    HasInstrumentLibrary: true),
                 SystemMemoryMb: 16 * 1024,
                 Warnings: [],
                 GarbageCollector: GarbageCollector.Shenandoah,
@@ -134,6 +153,48 @@ public static class DesignData
     private sealed class NoDialogs : IDialogService
     {
         public Task ShowErrorAsync(string message) => Task.CompletedTask;
+
+        public Task<bool> ShowZombieBuddySetupAsync(ZombieBuddySetupViewModel setup) => Task.FromResult(false);
+    }
+
+    // Both channels subscribed and initialized with allow-all on, so every part of the section shows; setup stays on its third step.
+    private sealed class SampleZombieBuddy : IZombieBuddyService
+    {
+        private static readonly ZombieBuddyStep[] Steps =
+            [ZombieBuddyStep.FindItem, ZombieBuddyStep.CopyNativeLoader, ZombieBuddyStep.CopyAgentJar, ZombieBuddyStep.AddAgentArg];
+
+        private static string ItemPath(string id) =>
+            Path.Combine(SampleSecondLibrary, "steamapps", "workshop", "content", "108600", id);
+
+        public Task<Result<ZombieBuddyStatus>> GetStatusAsync(string installRoot, CancellationToken ct = default) =>
+            Task.FromResult<Result<ZombieBuddyStatus>>(new ZombieBuddyStatus(
+                IsSupported: true,
+                Subscribed: [new ZombieBuddyItem(ZombieBuddyChannel.Stable, ItemPath("1000010")), new ZombieBuddyItem(ZombieBuddyChannel.Beta, ItemPath("1000011"))],
+                IsInitialized: true,
+                HasLeftovers: true,
+                IsAllowAll: true,
+                NeededAction: ZombieBuddyAction.None));
+
+        public Task<Result> InitializeAsync(
+            string installRoot, ZombieBuddyChannel channel, IProgress<ZombieBuddyProgress>? progress = null, CancellationToken ct = default)
+        {
+            progress?.Report(new ZombieBuddyProgress(Steps, 2, IsComplete: false));
+            return new TaskCompletionSource<Result>().Task;
+        }
+
+        public Task<Result> RemoveAsync(string installRoot, IProgress<ZombieBuddyProgress>? progress = null, CancellationToken ct = default) =>
+            new TaskCompletionSource<Result>().Task;
+
+        public Task<Result> SetAllowAllAsync(string installRoot, bool allowAll, CancellationToken ct = default) => Task.FromResult(Result.Ok());
+    }
+
+    private sealed class SampleZombieBuddyChannels : IZombieBuddyChannelService
+    {
+        public ZombieBuddyChannel Get(string installRoot) => ZombieBuddyChannel.Stable;
+
+        public void Save(string installRoot, ZombieBuddyChannel channel)
+        {
+        }
     }
 
     private sealed class SampleJavaDiscovery : IJavaDiscoveryService
@@ -151,7 +212,7 @@ public static class DesignData
             Task.FromResult<Result<JavaRuntime>>(new Error(ErrorCode.JavaPathNotFound, "sample", ErrorKind.NotFound));
 
         private static JavaRuntime Runtime(string name, JavaVersion? version, string? vendor, JavaRuntimeSource source) =>
-            new(SampleJavaHome(name), Path.Combine(SampleJavaHome(name), "bin", OperatingSystem.IsWindows() ? "javaw.exe" : "java"), version, vendor, source, HasGraalCompiler: false);
+            new(SampleJavaHome(name), Path.Combine(SampleJavaHome(name), "bin", OperatingSystem.IsWindows() ? "javaw.exe" : "java"), version, vendor, source, HasGraalCompiler: false, HasInstrumentLibrary: true);
     }
 
     private sealed class SampleInstallDetection : IInstallDetectionService
@@ -188,6 +249,8 @@ public static class DesignData
         public Task SaveManualJavaHomesAsync(IReadOnlyList<string> homes, CancellationToken ct = default) => Task.CompletedTask;
 
         public Task SaveInstallOverridesAsync(string installRoot, GameLaunchOverrides overrides, CancellationToken ct = default) => Task.CompletedTask;
+
+        public Task SaveZombieBuddyChannelAsync(string installRoot, ZombieBuddyChannel channel, CancellationToken ct = default) => Task.CompletedTask;
     }
 
     private sealed class NoWindowPlacement : IWindowPlacementService

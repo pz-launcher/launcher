@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Microsoft.Extensions.Logging.Abstractions;
 using PzLauncher.Core.Launch;
+using PzLauncher.Core.ZombieBuddy;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Services;
 using PzLauncher.Desktop.Tests.TestSupport;
@@ -26,6 +27,9 @@ public sealed class JsonPreferenceStoreTests : IDisposable
     private static readonly GameLaunchOverrides Overrides = new(JavaA, 8192, 2048, "-Dzomboid.steam=1", "-debug", GarbageCollector.Shenandoah);
 
     private static UserPreferences WithJava(params string[] homes) => new(null, null, null) { ManualJavaHomes = homes };
+
+    private static UserPreferences WithChannels(params (string Root, ZombieBuddyChannel Channel)[] channels) =>
+        new(null, null, null) { ZombieBuddyChannels = channels.ToDictionary(entry => entry.Root, entry => entry.Channel) };
 
     private static UserPreferences WithInstalls(params (string Root, GameLaunchOverrides Overrides)[] installs) =>
         new(null, null, null) { InstallOverrides = installs.ToDictionary(install => install.Root, install => install.Overrides) };
@@ -180,6 +184,7 @@ public sealed class JsonPreferenceStoreTests : IDisposable
     [InlineData(2)]
     [InlineData(3)]
     [InlineData(4)]
+    [InlineData(5)]
     public async Task SaveOneField_FileHoldsTheOthers_KeepsAll(int savedLast)
     {
         var ct = TestContext.Current.CancellationToken;
@@ -190,6 +195,7 @@ public sealed class JsonPreferenceStoreTests : IDisposable
             () => CreateStore().SaveWindowPlacementAsync(Placement, ct),
             () => CreateStore().SaveManualJavaHomesAsync([JavaA], ct),
             () => CreateStore().SaveInstallOverridesAsync(GameRoot, Overrides, ct),
+            () => CreateStore().SaveZombieBuddyChannelAsync(GameRoot, ZombieBuddyChannel.Beta, ct),
         ];
 
         // Separate stores, as across app runs.
@@ -199,7 +205,12 @@ public sealed class JsonPreferenceStoreTests : IDisposable
         }
 
         Assert.Equal(
-            new UserPreferences(AppLanguage.Russian, AppTheme.Dark, Placement) { ManualJavaHomes = [JavaA], InstallOverrides = WithInstalls((GameRoot, Overrides)).InstallOverrides },
+            new UserPreferences(AppLanguage.Russian, AppTheme.Dark, Placement)
+            {
+                ManualJavaHomes = [JavaA],
+                InstallOverrides = WithInstalls((GameRoot, Overrides)).InstallOverrides,
+                ZombieBuddyChannels = WithChannels((GameRoot, ZombieBuddyChannel.Beta)).ZombieBuddyChannels,
+            },
             CreateStore().Load());
     }
 
@@ -215,13 +226,16 @@ public sealed class JsonPreferenceStoreTests : IDisposable
             store.SaveWindowPlacementAsync(Placement, TestContext.Current.CancellationToken),
             store.SaveManualJavaHomesAsync([JavaA, JavaB], TestContext.Current.CancellationToken),
             store.SaveInstallOverridesAsync(GameRoot, Overrides, TestContext.Current.CancellationToken),
-            store.SaveInstallOverridesAsync(OtherRoot, GameLaunchOverrides.Empty, TestContext.Current.CancellationToken));
+            store.SaveInstallOverridesAsync(OtherRoot, GameLaunchOverrides.Empty, TestContext.Current.CancellationToken),
+            store.SaveZombieBuddyChannelAsync(GameRoot, ZombieBuddyChannel.Beta, TestContext.Current.CancellationToken),
+            store.SaveZombieBuddyChannelAsync(OtherRoot, ZombieBuddyChannel.Stable, TestContext.Current.CancellationToken));
 
         Assert.Equal(
             new UserPreferences(AppLanguage.PortugueseBrazil, AppTheme.Dark, Placement)
             {
                 ManualJavaHomes = [JavaA, JavaB],
                 InstallOverrides = WithInstalls((GameRoot, Overrides), (OtherRoot, GameLaunchOverrides.Empty)).InstallOverrides,
+                ZombieBuddyChannels = WithChannels((GameRoot, ZombieBuddyChannel.Beta), (OtherRoot, ZombieBuddyChannel.Stable)).ZombieBuddyChannels,
             },
             CreateStore().Load());
     }
@@ -236,6 +250,7 @@ public sealed class JsonPreferenceStoreTests : IDisposable
         await CreateStore().SaveWindowPlacementAsync(Placement, TestContext.Current.CancellationToken);
         await CreateStore().SaveManualJavaHomesAsync([JavaA], TestContext.Current.CancellationToken);
         await CreateStore().SaveInstallOverridesAsync(GameRoot, Overrides, TestContext.Current.CancellationToken);
+        await CreateStore().SaveZombieBuddyChannelAsync(GameRoot, ZombieBuddyChannel.Beta, TestContext.Current.CancellationToken);
 
         Assert.Equal(new UserPreferences(null, null, null), CreateStore().Load());
     }
@@ -294,6 +309,8 @@ public sealed class JsonPreferenceStoreTests : IDisposable
     [InlineData("""{"javaRuntimes":"/opt/jdk"}""")]
     [InlineData("""{"installs":5}""")]
     [InlineData("""{"installs":[]}""")]
+    [InlineData("""{"zombieBuddyChannels":5}""")]
+    [InlineData("""{"zombieBuddyChannels":["beta"]}""")]
     public void Load_CorruptOrUnknownContent_ReturnsNoChoices(string content)
     {
         WriteFile(content);
@@ -375,5 +392,54 @@ public sealed class JsonPreferenceStoreTests : IDisposable
         WriteFile("""{"installs":{""" + JsonSerializer.Serialize(GameRoot) + """:{"gameArgs":"-debug","gc":"epsilon"}}}""");
 
         Assert.Equal(WithInstalls((GameRoot, GameLaunchOverrides.Empty with { ExtraGameArgs = "-debug" })), CreateStore().Load());
+    }
+
+    [Fact]
+    public async Task SaveZombieBuddyChannelAsync_ThenLoad_RoundTripsPerInstall()
+    {
+        var store = CreateStore();
+
+        await store.SaveZombieBuddyChannelAsync(GameRoot, ZombieBuddyChannel.Beta, TestContext.Current.CancellationToken);
+        await store.SaveZombieBuddyChannelAsync(OtherRoot, ZombieBuddyChannel.Stable, TestContext.Current.CancellationToken);
+        await store.SaveZombieBuddyChannelAsync(GameRoot, ZombieBuddyChannel.Stable, TestContext.Current.CancellationToken);
+
+        Assert.Equal(WithChannels((GameRoot, ZombieBuddyChannel.Stable), (OtherRoot, ZombieBuddyChannel.Stable)), CreateStore().Load());
+    }
+
+    [Theory]
+    [InlineData(ZombieBuddyChannel.Stable, "stable")]
+    [InlineData(ZombieBuddyChannel.Beta, "beta")]
+    public async Task SaveZombieBuddyChannelAsync_WritesStableNamesKeyedByRoot(ZombieBuddyChannel channel, string name)
+    {
+        await CreateStore().SaveZombieBuddyChannelAsync(GameRoot, channel, TestContext.Current.CancellationToken);
+
+        Assert.Equal(
+            "{\"zombieBuddyChannels\":{" + JsonSerializer.Serialize(GameRoot) + ":\"" + name + "\"}}",
+            await File.ReadAllTextAsync(FilePath, TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
+    public void Load_ZombieBuddyChannelsWithInvalidEntries_KeepsTheValidOnesAndOtherFields()
+    {
+        string Key(string root) => JsonSerializer.Serialize(root);
+        WriteFile($$"""
+            {"theme":"dark","zombieBuddyChannels":{
+              {{Key(GameRoot)}}:"beta",
+              {{Key(OtherRoot)}}:"stable",
+              {{Key("relative/ProjectZomboid")}}:"beta",
+              {{Key(Path.Combine(GameRoot, "unknown"))}}:"nightly",
+              {{Key(Path.Combine(GameRoot, "number"))}}:1,
+              {{Key(Path.Combine(GameRoot, "null"))}}:null,
+              {{Key(Path.Combine(GameRoot, "object"))}}:{"channel":"beta"}
+            }
+            }
+            """);
+
+        Assert.Equal(
+            new UserPreferences(null, AppTheme.Dark, null)
+            {
+                ZombieBuddyChannels = WithChannels((GameRoot, ZombieBuddyChannel.Beta), (OtherRoot, ZombieBuddyChannel.Stable)).ZombieBuddyChannels,
+            },
+            CreateStore().Load());
     }
 }

@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using PzLauncher.Core.Launch;
+using PzLauncher.Core.ZombieBuddy;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Themes;
 
@@ -14,7 +15,7 @@ namespace PzLauncher.Desktop.Services;
 
 public sealed partial class JsonPreferenceStore(string filePath, ILogger logger) : IPreferenceStore
 {
-    private static readonly PreferencesFile Empty = new(null, null, null, null, null);
+    private static readonly PreferencesFile Empty = new(null, null, null, null, null, null);
 
     // Saves are fire-and-forget; one at a time so the last choice is the one left on disk.
     private readonly SemaphoreSlim _saveGate = new(1, 1);
@@ -57,7 +58,18 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger)
             LogInvalidInstallOverrides(logger, filePath);
         }
 
-        return new UserPreferences(language, theme, window) { ManualJavaHomes = javaHomes, InstallOverrides = installs };
+        var channels = ToZombieBuddyChannels(file.ZombieBuddyChannels);
+        if (channels.Count != (file.ZombieBuddyChannels?.Count ?? 0))
+        {
+            LogInvalidZombieBuddyChannels(logger, filePath);
+        }
+
+        return new UserPreferences(language, theme, window)
+        {
+            ManualJavaHomes = javaHomes,
+            InstallOverrides = installs,
+            ZombieBuddyChannels = channels,
+        };
     }
 
     public Task SaveLanguageAsync(AppLanguage language, CancellationToken ct = default) =>
@@ -100,6 +112,21 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger)
             ct);
     }
 
+    public Task SaveZombieBuddyChannelAsync(string installRoot, ZombieBuddyChannel channel, CancellationToken ct = default)
+    {
+        var entry = JsonSerializer.SerializeToElement(channel.PreferenceName(), DesktopJsonContext.Default.String);
+        return SaveAsync(
+            file => file with
+            {
+                ZombieBuddyChannels = new Dictionary<string, JsonElement>(
+                    file.ZombieBuddyChannels ?? new Dictionary<string, JsonElement>(), StringComparer.Ordinal)
+                {
+                    [installRoot] = entry,
+                },
+            },
+            ct);
+    }
+
     private static List<string> ToManualJavaHomes(IReadOnlyList<JsonElement>? entries) =>
     [
         .. (entries ?? [])
@@ -116,6 +143,22 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger)
             if (IsAbsolutePath(root) && ToOverrides(element) is { } overrides)
             {
                 result[root] = overrides;
+            }
+        }
+
+        return result;
+    }
+
+    private static Dictionary<string, ZombieBuddyChannel> ToZombieBuddyChannels(IReadOnlyDictionary<string, JsonElement>? entries)
+    {
+        var result = new Dictionary<string, ZombieBuddyChannel>(StringComparer.Ordinal);
+        foreach (var (root, element) in entries ?? new Dictionary<string, JsonElement>())
+        {
+            if (IsAbsolutePath(root)
+                && element.ValueKind == JsonValueKind.String
+                && ZombieBuddyChannelPreferences.FromPreferenceName(element.GetString()) is { } channel)
+            {
+                result[root] = channel;
             }
         }
 
@@ -244,6 +287,9 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger)
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Install settings preference {Path} holds entries that aren't valid; ignoring them")]
     private static partial void LogInvalidInstallOverrides(ILogger logger, string path);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "ZombieBuddy channel preference {Path} holds entries that aren't valid; ignoring them")]
+    private static partial void LogInvalidZombieBuddyChannels(ILogger logger, string path);
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Preferences {Path} could not be saved")]
     private static partial void LogSaveFailed(ILogger logger, string path, Exception exception);

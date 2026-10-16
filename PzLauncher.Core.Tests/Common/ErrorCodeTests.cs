@@ -7,6 +7,7 @@ using PzLauncher.Core.Launch;
 using PzLauncher.Core.Platform;
 using PzLauncher.Core.Serialization;
 using PzLauncher.Core.Steam;
+using PzLauncher.Core.ZombieBuddy;
 
 namespace PzLauncher.Core.Tests.Common;
 
@@ -45,6 +46,12 @@ public partial class ErrorCodeTests
         [ErrorCode.LaunchGameCrashed] = (LaunchErrors.GameCrashed("p", 1), ErrorKind.External),
         [ErrorCode.LaunchGameExitedEarly] = (LaunchErrors.GameExitedEarly(1, "o"), ErrorKind.External),
         [ErrorCode.LaunchGcConflict] = (LaunchErrors.GcConflict("v"), ErrorKind.Validation),
+        [ErrorCode.ZombieBuddyNotSubscribed] = (ZombieBuddyErrors.NotSubscribed("1"), ErrorKind.NotFound),
+        [ErrorCode.ZombieBuddySourceFileMissing] = (ZombieBuddyErrors.SourceFileMissing("p"), ErrorKind.NotFound),
+        [ErrorCode.ZombieBuddyCopyFailed] = (ZombieBuddyErrors.CopyFailed("p", "r"), ErrorKind.External),
+        [ErrorCode.ZombieBuddyDeleteFailed] = (ZombieBuddyErrors.DeleteFailed("p", "r"), ErrorKind.External),
+        [ErrorCode.ZombieBuddyConfigWriteFailed] = (ZombieBuddyErrors.ConfigWriteFailed("p", "r"), ErrorKind.External),
+        [ErrorCode.ZombieBuddyNotInitialized] = (ZombieBuddyErrors.NotInitialized("p"), ErrorKind.Conflict),
     };
 
     [GeneratedRegex(@"^[a-z]+\.[a-z0-9]+(_[a-z0-9]+)*$")]
@@ -104,6 +111,12 @@ public partial class ErrorCodeTests
     [InlineData(ErrorCode.LaunchGameCrashed, "launch.game_crashed")]
     [InlineData(ErrorCode.LaunchGameExitedEarly, "launch.game_exited_early")]
     [InlineData(ErrorCode.LaunchGcConflict, "launch.gc_conflict")]
+    [InlineData(ErrorCode.ZombieBuddyNotSubscribed, "zombiebuddy.not_subscribed")]
+    [InlineData(ErrorCode.ZombieBuddySourceFileMissing, "zombiebuddy.source_file_missing")]
+    [InlineData(ErrorCode.ZombieBuddyCopyFailed, "zombiebuddy.copy_failed")]
+    [InlineData(ErrorCode.ZombieBuddyDeleteFailed, "zombiebuddy.delete_failed")]
+    [InlineData(ErrorCode.ZombieBuddyConfigWriteFailed, "zombiebuddy.config_write_failed")]
+    [InlineData(ErrorCode.ZombieBuddyNotInitialized, "zombiebuddy.not_initialized")]
     public void ToWireName_ExistingCodes_AreStable(ErrorCode code, string wireName) =>
         Assert.Equal(wireName, code.ToWireName());
 
