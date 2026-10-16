@@ -9,7 +9,7 @@ PzLauncher.Core/
 ├── Steam/           # Steam root/library discovery, KeyValues parsing
 ├── Installs/        # PZ game + dedicated server install detection
 ├── Java/            # Java runtime discovery (Windows + Linux sources)
-├── Launch/          # game launch: ProjectZomboid64.json, java command, Linux environment, running game
+├── Launch/          # game launch
 ├── Serialization/   # CoreJsonContext (source-gen JSON)
 └── ServiceCollectionExtensions.cs   # AddPzLauncherCore()
 ```
