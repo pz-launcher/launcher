@@ -21,7 +21,7 @@ Reference: `MainViewModel.CurrentPageKind`, `ShellPage`, `PzLauncher.Desktop/Vie
 - Page state lives in the page ViewModels (singletons), never in views.
 - A page asks for navigation through an event the shell handles, never by referencing `MainViewModel`. Reference: `HomeViewModel.ChooseInstallRequested`.
 - A sub-page keeps the tab it was opened from highlighted, and has a back button; back and clicking that tab return to the page it was opened from. Reference: `ShellPage.LaunchSettings`, `MainViewModel.CurrentTab`.
-- A list whose row click opens a page uses `Shell.ListRow` button rows, never a selection. Reference: `PzLauncher.Desktop/Views/Installs/InstallsView.axaml`.
+- A list whose row click acts on the row uses `Shell.ListRow` button rows, never a selection; another action on the row is a sibling button, never nested in the row. Reference: `PzLauncher.Desktop/Views/Installs/InstallsView.axaml`.
 
 ## Page sidebars
 

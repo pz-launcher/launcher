@@ -296,16 +296,35 @@ public class InstallsViewModelTests : UiTextCultureTest
     }
 
     [Fact]
+    public async Task Choose_UsesTheRowAndRequestsHome()
+    {
+        var vm = await CreateScannedViewModelAsync(SteamGame, ManualGame);
+        var homeRequests = 0;
+        var settingsRequests = 0;
+        vm.HomeRequested += (_, _) => homeRequests++;
+        vm.LaunchSettingsRequested += (_, _) => settingsRequests++;
+
+        vm.ChooseCommand.Execute(ManualGame);
+
+        Assert.Equal(ManualGame, vm.SelectedInstall);
+        Assert.Equal(1, homeRequests);
+        Assert.Equal(0, settingsRequests);
+    }
+
+    [Fact]
     public async Task OpenSettings_RequestsLaunchSettingsForTheRowAndKeepsTheInstallInUse()
     {
         var vm = await CreateScannedViewModelAsync(SteamGame, ManualGame);
         var requested = new List<PzInstall>();
+        var homeRequests = 0;
         vm.LaunchSettingsRequested += (_, install) => requested.Add(install);
+        vm.HomeRequested += (_, _) => homeRequests++;
 
         vm.OpenSettingsCommand.Execute(ManualGame);
 
         Assert.Equal([ManualGame], requested);
         Assert.Equal(SteamGame, vm.SelectedInstall);
+        Assert.Equal(0, homeRequests);
     }
 
     [Theory]

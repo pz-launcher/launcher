@@ -121,7 +121,18 @@ public class MainViewModelTests : UiTextCultureTest
     }
 
     [Fact]
-    public async Task InstallsRowClick_OpensThatInstall_InstallsTabStaysAndBackReturnsToInstalls()
+    public async Task InstallsRowClick_ShowsHome()
+    {
+        var vm = await CreateScannedViewModelAsync();
+        vm.CurrentPageKind = ShellPage.Installs;
+
+        vm.Installs.ChooseCommand.Execute(ManualGame);
+
+        Assert.Same(vm.Home, vm.CurrentPage);
+    }
+
+    [Fact]
+    public async Task InstallsLaunchSettings_OpensThatInstall_InstallsTabStaysAndBackReturnsToInstalls()
     {
         var vm = await CreateScannedViewModelAsync();
         vm.CurrentPageKind = ShellPage.Installs;

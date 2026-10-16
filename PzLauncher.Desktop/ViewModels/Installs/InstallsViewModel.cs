@@ -47,6 +47,8 @@ public partial class InstallsViewModel : ViewModelBase
 
     public ObservableCollection<PzInstall> Installs { get; } = [];
 
+    public event EventHandler? HomeRequested;
+
     public event EventHandler<PzInstall>? LaunchSettingsRequested;
 
     [ObservableProperty]
@@ -191,6 +193,13 @@ public partial class InstallsViewModel : ViewModelBase
 
     public bool IsInUse(string rootPath) =>
         SelectedInstall is { } selected && string.Equals(selected.RootPath, rootPath, _platform.PathComparison);
+
+    [RelayCommand]
+    private void Choose(PzInstall install)
+    {
+        Use(install.RootPath);
+        HomeRequested?.Invoke(this, EventArgs.Empty);
+    }
 
     [RelayCommand]
     private void OpenSettings(PzInstall install) => LaunchSettingsRequested?.Invoke(this, install);

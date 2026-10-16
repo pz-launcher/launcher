@@ -28,6 +28,7 @@ public partial class MainViewModel : ViewModelBase
         // Never unsubscribed: these view models are app-lifetime singletons.
         home.ChooseInstallRequested += (_, _) => CurrentPageKind = ShellPage.Installs;
         home.LaunchSettingsRequested += (_, install) => OpenLaunchSettings(install, ShellPage.Home);
+        installs.HomeRequested += (_, _) => CurrentPageKind = ShellPage.Home;
         installs.LaunchSettingsRequested += (_, install) => OpenLaunchSettings(install, ShellPage.Installs);
         launchSettings.BackRequested += (_, _) => CurrentPageKind = _launchSettingsOrigin;
         launchSettings.HomeRequested += (_, _) => CurrentPageKind = ShellPage.Home;

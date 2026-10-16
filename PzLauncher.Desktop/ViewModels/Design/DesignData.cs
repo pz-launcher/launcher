@@ -33,6 +33,9 @@ public static class DesignData
         : OperatingSystem.IsMacOS() ? Path.Combine(SampleHome, "Library", "Application Support", "Steam")
         : Path.Combine(SampleHome, ".local", "share", "Steam");
 
+    private static readonly string SampleSecondLibrary =
+        OperatingSystem.IsWindows() ? @"D:\SteamLibrary" : Path.Combine(SampleHome, "SteamLibrary");
+
     private static readonly string SampleJavaRoot = OperatingSystem.IsWindows() ? @"C:\Java" : "/opt/java";
 
     // Declared first: the properties below are initialized in textual order and need it.
@@ -157,6 +160,7 @@ public static class DesignData
             Task.FromResult<Result<InstallScanResult>>(new InstallScanResult(
                 [
                     new PzInstall(PzInstallKind.Game, SampleAppPath("ProjectZomboid"), new SteamAppInfo("1000001", null)),
+                    new PzInstall(PzInstallKind.Game, Path.Combine(SampleSecondLibrary, "steamapps", "common", "ProjectZomboid"), new SteamAppInfo("1000003", "unstable")),
                     new PzInstall(PzInstallKind.DedicatedServer, SampleAppPath("Project Zomboid Dedicated Server"), new SteamAppInfo("1000002", "unstable")),
                 ],
                 [new Error(ErrorCode.SteamLibraryUnreadable, "sample", ErrorKind.External)]));
