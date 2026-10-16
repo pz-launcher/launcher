@@ -40,6 +40,11 @@ public partial class ErrorCodeTests
         [ErrorCode.LaunchConfigMalformed] = (LaunchErrors.ConfigMalformed("p", "r"), ErrorKind.External),
         [ErrorCode.LaunchJavaMissing] = (LaunchErrors.JavaMissing("p"), ErrorKind.NotFound),
         [ErrorCode.LaunchStartFailed] = (LaunchErrors.StartFailed("p", "r"), ErrorKind.External),
+        [ErrorCode.LaunchGcIncompatible] = (LaunchErrors.GcIncompatible("p"), ErrorKind.Validation),
+        [ErrorCode.LaunchGcIncompatibleViewpoint] = (LaunchErrors.GcIncompatibleViewpoint("p"), ErrorKind.Validation),
+        [ErrorCode.LaunchGameCrashed] = (LaunchErrors.GameCrashed("p", 1), ErrorKind.External),
+        [ErrorCode.LaunchGameExitedEarly] = (LaunchErrors.GameExitedEarly(1, "o"), ErrorKind.External),
+        [ErrorCode.LaunchGcConflict] = (LaunchErrors.GcConflict("v"), ErrorKind.Validation),
     };
 
     [GeneratedRegex(@"^[a-z]+\.[a-z0-9]+(_[a-z0-9]+)*$")]
@@ -94,6 +99,11 @@ public partial class ErrorCodeTests
     [InlineData(ErrorCode.LaunchConfigMalformed, "launch.config_malformed")]
     [InlineData(ErrorCode.LaunchJavaMissing, "launch.java_missing")]
     [InlineData(ErrorCode.LaunchStartFailed, "launch.start_failed")]
+    [InlineData(ErrorCode.LaunchGcIncompatible, "launch.gc_incompatible")]
+    [InlineData(ErrorCode.LaunchGcIncompatibleViewpoint, "launch.gc_incompatible_viewpoint")]
+    [InlineData(ErrorCode.LaunchGameCrashed, "launch.game_crashed")]
+    [InlineData(ErrorCode.LaunchGameExitedEarly, "launch.game_exited_early")]
+    [InlineData(ErrorCode.LaunchGcConflict, "launch.gc_conflict")]
     public void ToWireName_ExistingCodes_AreStable(ErrorCode code, string wireName) =>
         Assert.Equal(wireName, code.ToWireName());
 

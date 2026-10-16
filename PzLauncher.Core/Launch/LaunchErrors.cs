@@ -48,4 +48,36 @@ internal static class LaunchErrors
         {
             Details = new Dictionary<string, string> { ["path"] = path, ["reason"] = reason },
         };
+
+    public static Error GcIncompatible(string javaHome) =>
+        new(ErrorCode.LaunchGcIncompatible, $"The Graal JIT of {javaHome} doesn't support the Shenandoah GC.", ErrorKind.Validation)
+        {
+            Details = new Dictionary<string, string> { ["path"] = javaHome },
+        };
+
+    public static Error GcIncompatibleViewpoint(string javaHome) =>
+        new(ErrorCode.LaunchGcIncompatibleViewpoint, $"The Graal JIT of {javaHome} doesn't support the Shenandoah GC set by the Viewpoint mod.", ErrorKind.Validation)
+        {
+            Details = new Dictionary<string, string> { ["path"] = javaHome },
+        };
+
+    public static Error GameCrashed(string path, int exitCode) =>
+        new(ErrorCode.LaunchGameCrashed, $"The game's JVM crashed with exit code {exitCode}: {path}", ErrorKind.External)
+        {
+            Details = new Dictionary<string, string> { ["path"] = path, ["exitCode"] = exitCode.ToString(CultureInfo.InvariantCulture) },
+        };
+
+    /// <param name="output">The tail of the JVM's stderr; may be empty.</param>
+    public static Error GameExitedEarly(int exitCode, string output) =>
+        new(ErrorCode.LaunchGameExitedEarly, $"The game exited right after the start with exit code {exitCode}: {output}", ErrorKind.External)
+        {
+            Details = new Dictionary<string, string> { ["exitCode"] = exitCode.ToString(CultureInfo.InvariantCulture), ["output"] = output },
+        };
+
+    /// <param name="flags">The GC flags that select different collectors, space-separated.</param>
+    public static Error GcConflict(string flags) =>
+        new(ErrorCode.LaunchGcConflict, $"More than one garbage collector is selected: {flags}", ErrorKind.Validation)
+        {
+            Details = new Dictionary<string, string> { ["value"] = flags },
+        };
 }

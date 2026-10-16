@@ -178,6 +178,22 @@
   <data name="Error_LaunchStartFailed" xml:space="preserve">
     <value>Не удалось запустить игру с помощью {0}.</value>
   </data>
+  <data name="Error_LaunchGcIncompatible" xml:space="preserve">
+    <value>В {0} используется компилятор Graal, который не поддерживает Shenandoah GC. Выберите в «Настройках версии» GC G1 или ZGC либо другую Java.</value>
+  </data>
+  <data name="Error_LaunchGcIncompatibleViewpoint" xml:space="preserve">
+    <value>Мод Viewpoint переключил GC игры на Shenandoah, чтобы сэкономить память, но выбранная GraalVM его не поддерживает, и игра сразу аварийно завершится. Выберите в «Настройках версии» GC G1 или ZGC (Viewpoint продолжит работать, просто памяти уйдёт больше) или вернитесь к встроенной в игру Java.</value>
+  </data>
+  <data name="Error_LaunchGameCrashed" xml:space="preserve">
+    <value>Java игры аварийно завершилась (код выхода {1}). Журнал сбоя: {0}</value>
+  </data>
+  <data name="Error_LaunchGameExitedEarly" xml:space="preserve">
+    <value>Игра закрылась сразу после запуска (код выхода {0}). Проверьте дополнительные аргументы JVM, Java и GC в «Настройках версии».
+{1}</value>
+  </data>
+  <data name="Error_LaunchGcConflict" xml:space="preserve">
+    <value>Выбрано несколько разных сборщиков мусора ({0}). Оставьте один: в списке GC или в дополнительных аргументах JVM.</value>
+  </data>
   <data name="Error_FolderNotLocal" xml:space="preserve">
     <value>{0} — не папка на этом компьютере, поэтому лаунчер не может её открыть. Выберите локальную папку.</value>
   </data>
@@ -294,5 +310,32 @@
   </data>
   <data name="VersionSettings_ArgsHint" xml:space="preserve">
     <value>Разделяйте аргументы пробелами; значение с пробелами заключите в двойные кавычки.</value>
+  </data>
+  <data name="VersionSettings_Gc" xml:space="preserve">
+    <value>Сборщик мусора (GC)</value>
+  </data>
+  <data name="VersionSettings_GcFollowJson" xml:space="preserve">
+    <value>Как в json (сейчас {0})</value>
+  </data>
+  <data name="VersionSettings_GcNotSet" xml:space="preserve">
+    <value>Как в json (не задано)</value>
+  </data>
+  <data name="VersionSettings_GcSetByViewpoint" xml:space="preserve">
+    <value>Как в json (сейчас {0}, задано Viewpoint)</value>
+  </data>
+  <data name="GarbageCollector_G1" xml:space="preserve">
+    <value>G1</value>
+  </data>
+  <data name="GarbageCollector_Z" xml:space="preserve">
+    <value>ZGC</value>
+  </data>
+  <data name="GarbageCollector_Shenandoah" xml:space="preserve">
+    <value>Shenandoah</value>
+  </data>
+  <data name="GarbageCollector_Parallel" xml:space="preserve">
+    <value>Parallel</value>
+  </data>
+  <data name="GarbageCollector_Serial" xml:space="preserve">
+    <value>Serial</value>
   </data>
 </root>

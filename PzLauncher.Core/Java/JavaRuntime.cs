@@ -4,9 +4,11 @@ namespace PzLauncher.Core.Java;
 /// <param name="ExecutablePath"><c>bin/javaw.exe</c> on Windows, <c>bin/java</c> elsewhere.</param>
 /// <param name="Version"><c>null</c> when the <c>release</c> file doesn't say.</param>
 /// <param name="Vendor"><c>null</c> when the <c>release</c> file doesn't say.</param>
+/// <param name="HasGraalCompiler">The Graal JIT is the default compiler (GraalVM), per the <c>release</c> file.</param>
 public sealed record JavaRuntime(
     string HomePath,
     string ExecutablePath,
     JavaVersion? Version,
     string? Vendor,
-    JavaRuntimeSource Source);
+    JavaRuntimeSource Source,
+    bool HasGraalCompiler);

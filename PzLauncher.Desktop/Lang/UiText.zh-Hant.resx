@@ -178,6 +178,22 @@
   <data name="Error_LaunchStartFailed" xml:space="preserve">
     <value>無法使用 {0} 啟動遊戲。</value>
   </data>
+  <data name="Error_LaunchGcIncompatible" xml:space="preserve">
+    <value>{0} 內含 Graal 編譯器，不支援 Shenandoah GC。請在「版本設定」中將 GC 改為 G1 或 ZGC，或改用其他 Java。</value>
+  </data>
+  <data name="Error_LaunchGcIncompatibleViewpoint" xml:space="preserve">
+    <value>Viewpoint 模組為了節省記憶體，把遊戲的 GC 改成了 Shenandoah，但目前選擇的 GraalVM 不支援它，遊戲會直接當掉。請在「版本設定」中將 GC 改為 G1 或 ZGC（Viewpoint 仍可正常使用，只是記憶體用量較高），或改回遊戲內建的 Java。</value>
+  </data>
+  <data name="Error_LaunchGameCrashed" xml:space="preserve">
+    <value>遊戲的 Java 當掉了（結束代碼 {1}）。當機記錄：{0}</value>
+  </data>
+  <data name="Error_LaunchGameExitedEarly" xml:space="preserve">
+    <value>遊戲剛啟動就結束了（結束代碼 {0}）。請檢查「版本設定」中的額外 JVM 參數、Java 和 GC。
+{1}</value>
+  </data>
+  <data name="Error_LaunchGcConflict" xml:space="preserve">
+    <value>同時選擇了多個不同的 GC（{0}）。請只保留一個：在 GC 下拉選單中選擇，或寫在額外 JVM 參數裡。</value>
+  </data>
   <data name="Error_FolderNotLocal" xml:space="preserve">
     <value>{0} 不是這台電腦上的資料夾，啟動器無法開啟它。請選擇本機資料夾。</value>
   </data>
@@ -294,5 +310,32 @@
   </data>
   <data name="VersionSettings_ArgsHint" xml:space="preserve">
     <value>參數之間以空格分隔；包含空格的值請用英文雙引號括起來。</value>
+  </data>
+  <data name="VersionSettings_Gc" xml:space="preserve">
+    <value>垃圾回收器（GC）</value>
+  </data>
+  <data name="VersionSettings_GcFollowJson" xml:space="preserve">
+    <value>跟隨 json（目前 {0}）</value>
+  </data>
+  <data name="VersionSettings_GcNotSet" xml:space="preserve">
+    <value>跟隨 json（未設定）</value>
+  </data>
+  <data name="VersionSettings_GcSetByViewpoint" xml:space="preserve">
+    <value>跟隨 json（目前 {0}，由 Viewpoint 設定）</value>
+  </data>
+  <data name="GarbageCollector_G1" xml:space="preserve">
+    <value>G1</value>
+  </data>
+  <data name="GarbageCollector_Z" xml:space="preserve">
+    <value>ZGC</value>
+  </data>
+  <data name="GarbageCollector_Shenandoah" xml:space="preserve">
+    <value>Shenandoah</value>
+  </data>
+  <data name="GarbageCollector_Parallel" xml:space="preserve">
+    <value>Parallel</value>
+  </data>
+  <data name="GarbageCollector_Serial" xml:space="preserve">
+    <value>Serial</value>
   </data>
 </root>

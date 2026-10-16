@@ -9,6 +9,9 @@ public interface IGameLaunchService
 
     Task<Result<GameSession>> LaunchAsync(LaunchGameRequest request, CancellationToken ct = default);
 
-    /// <summary>Completes when the tracked game exits, immediately when none runs.</summary>
-    Task WaitForExitAsync(CancellationToken ct = default);
+    /// <summary><see cref="LaunchAsync"/>'s checks without starting anything; never <c>launch.already_running</c>.</summary>
+    Task<Result> ValidateAsync(LaunchGameRequest request, CancellationToken ct = default);
+
+    /// <summary>Completes when the tracked game exits (a failure when its JVM crashed or failed to start), immediately when none runs.</summary>
+    Task<Result> WaitForExitAsync(CancellationToken ct = default);
 }

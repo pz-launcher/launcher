@@ -8,10 +8,14 @@ namespace PzLauncher.Core.Launch;
 /// <param name="VmArgs">The json's JVM args, including the entry for this Windows version.</param>
 /// <param name="BundledJava">The install's own <c>jre64</c>; <c>null</c> when it isn't a usable Java.</param>
 /// <param name="Warnings">A <c>ProjectZomboid64.json</c> that can't be read; the json values are then empty.</param>
+/// <param name="GarbageCollector">The json's effective GC flag; <c>null</c> when it sets none, or one without a member.</param>
+/// <param name="GarbageCollectorSetByViewpoint">It is Shenandoah and the Viewpoint mod's json backup exists.</param>
 public sealed record GameLaunchDefaults(
     int? MaxMemoryMb,
     int? MinMemoryMb,
     IReadOnlyList<string> VmArgs,
     JavaRuntime? BundledJava,
     int SystemMemoryMb,
-    IReadOnlyList<Error> Warnings);
+    IReadOnlyList<Error> Warnings,
+    GarbageCollector? GarbageCollector,
+    bool GarbageCollectorSetByViewpoint);

@@ -81,7 +81,13 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger)
     public Task SaveInstallOverridesAsync(string installRoot, GameLaunchOverrides overrides, CancellationToken ct = default)
     {
         var entry = JsonSerializer.SerializeToElement(
-            new InstallOverridesFile(overrides.JavaHome, overrides.MaxMemoryMb, overrides.MinMemoryMb, overrides.ExtraJvmArgs, overrides.ExtraGameArgs),
+            new InstallOverridesFile(
+                overrides.JavaHome,
+                overrides.MaxMemoryMb,
+                overrides.MinMemoryMb,
+                overrides.ExtraJvmArgs,
+                overrides.ExtraGameArgs,
+                overrides.GarbageCollector?.PreferenceName()),
             DesktopJsonContext.Default.InstallOverridesFile);
         return SaveAsync(
             file => file with
@@ -131,7 +137,13 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger)
         return entry is { MaxMemoryMb: null or > 0, MinMemoryMb: null or > 0 }
                && (entry.JavaHome is null || IsAbsolutePath(entry.JavaHome))
                && !(entry.MinMemoryMb > entry.MaxMemoryMb)
-            ? new GameLaunchOverrides(entry.JavaHome, entry.MaxMemoryMb, entry.MinMemoryMb, entry.JvmArgs ?? "", entry.GameArgs ?? "")
+            ? new GameLaunchOverrides(
+                entry.JavaHome,
+                entry.MaxMemoryMb,
+                entry.MinMemoryMb,
+                entry.JvmArgs ?? "",
+                entry.GameArgs ?? "",
+                GarbageCollectorPreferences.FromPreferenceName(entry.Gc))
             : null;
     }
 

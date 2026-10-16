@@ -90,10 +90,10 @@ public static class TestJava
         new(discovery, new FakeFolderPicker(), store, new UserPreferences(null, null, null), new FakePlatformEnvironment(), localization);
 
     public static JavaRuntime Manual(string home) =>
-        new(home, home + @"\bin\javaw.exe", null, null, JavaRuntimeSource.Manual);
+        new(home, home + @"\bin\javaw.exe", null, null, JavaRuntimeSource.Manual, HasGraalCompiler: false);
 
     private static JavaRuntime Discovered(string home, int major, JavaRuntimeSource source) =>
-        new(home, home + @"\bin\javaw.exe", new JavaVersion(major, $"{major}.0.1"), "Eclipse Adoptium", source);
+        new(home, home + @"\bin\javaw.exe", new JavaVersion(major, $"{major}.0.1"), "Eclipse Adoptium", source, HasGraalCompiler: false);
 }
 
 public static class TestInstalls
@@ -175,9 +175,13 @@ public sealed class FakeGameLaunchService : IGameLaunchService
 
     public Func<LaunchGameRequest, Result<GameSession>> Launch { get; set; } = request => new GameSession(request.InstallRoot, 4242);
 
+    public Func<LaunchGameRequest, Task<Result>> Validate { get; set; } = _ => Task.FromResult(Result.Ok());
+
     public List<LaunchGameRequest> Launches { get; } = [];
 
-    public TaskCompletionSource Exit { get; private set; } = Exited();
+    public List<LaunchGameRequest> Validations { get; } = [];
+
+    public TaskCompletionSource<Result> Exit { get; private set; } = Exited();
 
     public Task<Result<GameLaunchDefaults>> GetDefaultsAsync(string installRoot, CancellationToken ct = default) =>
         Task.FromResult(Defaults(installRoot));
@@ -188,18 +192,24 @@ public sealed class FakeGameLaunchService : IGameLaunchService
         var result = Launch(request);
         if (result.IsSuccess)
         {
-            Exit = new TaskCompletionSource();
+            Exit = new TaskCompletionSource<Result>();
         }
 
         return Task.FromResult(result);
     }
 
-    public Task WaitForExitAsync(CancellationToken ct = default) => Exit.Task.WaitAsync(ct);
-
-    private static TaskCompletionSource Exited()
+    public Task<Result> ValidateAsync(LaunchGameRequest request, CancellationToken ct = default)
     {
-        var exited = new TaskCompletionSource();
-        exited.SetResult();
+        Validations.Add(request);
+        return Validate(request);
+    }
+
+    public Task<Result> WaitForExitAsync(CancellationToken ct = default) => Exit.Task.WaitAsync(ct);
+
+    private static TaskCompletionSource<Result> Exited()
+    {
+        var exited = new TaskCompletionSource<Result>();
+        exited.SetResult(Result.Ok());
         return exited;
     }
 }
@@ -209,10 +219,10 @@ public static class TestLaunch
     private static readonly string BundledHome = TestInstalls.SteamGame.RootPath + @"\jre64";
 
     public static readonly JavaRuntime BundledJava =
-        new(BundledHome, BundledHome + @"\bin\javaw.exe", new JavaVersion(25, "25.0.1"), "Azul Systems, Inc.", JavaRuntimeSource.Manual);
+        new(BundledHome, BundledHome + @"\bin\javaw.exe", new JavaVersion(25, "25.0.1"), "Azul Systems, Inc.", JavaRuntimeSource.Manual, HasGraalCompiler: false);
 
     public static GameLaunchDefaults Defaults(int? maxMemoryMb = 3072, int? minMemoryMb = null, params Error[] warnings) =>
-        new(maxMemoryMb, minMemoryMb, ["-Xmx3072m", "-XX:+UseZGC"], BundledJava, 16 * 1024, warnings);
+        new(maxMemoryMb, minMemoryMb, ["-Xmx3072m", "-XX:+UseZGC"], BundledJava, 16 * 1024, warnings, GarbageCollector.Z, GarbageCollectorSetByViewpoint: false);
 }
 
 public sealed class FakeInstallOverridesService : IInstallOverridesService
@@ -239,9 +249,12 @@ public sealed class FakeDialogService : IDialogService
 {
     public List<string> Errors { get; } = [];
 
+    public event Action? Shown;
+
     public Task ShowErrorAsync(string message)
     {
         Errors.Add(message);
+        Shown?.Invoke();
         return Task.CompletedTask;
     }
 }

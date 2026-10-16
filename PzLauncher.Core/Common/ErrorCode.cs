@@ -44,6 +44,11 @@ public enum ErrorCode
     [JsonStringEnumMemberName("launch.config_malformed")] LaunchConfigMalformed,
     [JsonStringEnumMemberName("launch.java_missing")] LaunchJavaMissing,
     [JsonStringEnumMemberName("launch.start_failed")] LaunchStartFailed,
+    [JsonStringEnumMemberName("launch.gc_incompatible")] LaunchGcIncompatible,
+    [JsonStringEnumMemberName("launch.gc_incompatible_viewpoint")] LaunchGcIncompatibleViewpoint,
+    [JsonStringEnumMemberName("launch.game_crashed")] LaunchGameCrashed,
+    [JsonStringEnumMemberName("launch.game_exited_early")] LaunchGameExitedEarly,
+    [JsonStringEnumMemberName("launch.gc_conflict")] LaunchGcConflict,
 }
 
 public static class ErrorCodeExtensions

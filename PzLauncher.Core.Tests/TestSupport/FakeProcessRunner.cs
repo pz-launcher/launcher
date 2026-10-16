@@ -33,9 +33,17 @@ internal sealed class FakeRunningProcess(int id) : IRunningProcess
 
     public int Id => id;
 
+    public int ExitCode { get; private set; }
+
+    public IReadOnlyList<string> ErrorOutputTail { get; set; } = [];
+
     public bool IsDisposed { get; private set; }
 
-    public void Exit() => _exited.TrySetResult();
+    public void Exit(int exitCode = 0)
+    {
+        ExitCode = exitCode;
+        _exited.TrySetResult();
+    }
 
     public Task WaitForExitAsync(CancellationToken ct) => _exited.Task.WaitAsync(ct);
 

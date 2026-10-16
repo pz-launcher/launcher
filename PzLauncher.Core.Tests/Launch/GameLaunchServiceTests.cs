@@ -19,6 +19,7 @@ public sealed class GameLaunchServiceTests : IDisposable
 
     private readonly TempDirectory _temp = new();
     private readonly FakeProcessRunner _runner = new();
+    private readonly ManualTimeProvider _time = new();
     private FakePlatformEnvironment _platform = Platform(PlatformKind.Windows);
     private GameInstallBuilder _installs;
     private GameLaunchService _service;
@@ -46,6 +47,7 @@ public sealed class GameLaunchServiceTests : IDisposable
         JavaDiscoveryServiceScanTests.CreateService(_platform),
         _platform,
         _runner,
+        _time,
         NullLogger<GameLaunchService>.Instance);
 
     private void UseLinux()
@@ -59,6 +61,28 @@ public sealed class GameLaunchServiceTests : IDisposable
         _service.LaunchAsync(new LaunchGameRequest(root, overrides ?? GameLaunchOverrides.Empty), Ct);
 
     private static GameLaunchOverrides WithMemory(int? max, int? min) => GameLaunchOverrides.Empty with { MaxMemoryMb = max, MinMemoryMb = min };
+
+    // What the Viewpoint mod writes: the stock json with the OS-version entry's ZGC switched to Shenandoah.
+    private static string ShenandoahGameJson => GameInstallBuilder.WindowsGameJson.Replace("-XX:+UseZGC", "-XX:+UseShenandoahGC", StringComparison.Ordinal);
+
+    private string CreateGraalJava() =>
+        new JavaHomeBuilder(_temp.Path, PlatformKind.Windows).Create("graalvm-ce-25", JavaHomeBuilder.Release("25.0.2", "GraalVM Community", graalVersion: "25.0.2"));
+
+    private static void AddViewpointBackup(string game) =>
+        File.WriteAllText(Path.Combine(game, "ProjectZomboid64.json.viewpoint-backup"), GameInstallBuilder.WindowsGameJson);
+
+    private async Task<Result> ExitAsync(int exitCode)
+    {
+        _runner.Processes[^1].Exit(exitCode);
+        return await _service.WaitForExitAsync(Ct);
+    }
+
+    private void WriteLog(string path, TimeSpan sinceLaunch)
+    {
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        File.WriteAllText(path, "# A fatal error has been detected by the Java Runtime Environment");
+        File.SetLastWriteTimeUtc(path, (_time.GetUtcNow() + sinceLaunch).UtcDateTime);
+    }
 
     [Fact]
     public async Task LaunchAsync_WindowsInstall_StartsBundledJavawWithJsonArgsInGameFolder()
@@ -86,7 +110,7 @@ public sealed class GameLaunchServiceTests : IDisposable
     {
         var root = _installs.CreateFlat("PZ", GameInstallBuilder.WindowsGameJson);
 
-        ResultAssert.Ok(await LaunchAsync(root, new GameLaunchOverrides(null, 8192, 4096, "-Da=1", "-debug")));
+        ResultAssert.Ok(await LaunchAsync(root, new GameLaunchOverrides(null, 8192, 4096, "-Da=1", "-debug", null)));
 
         var args = _runner.LastRequest.Arguments;
         Assert.DoesNotContain("-Xmx3072m", args);
@@ -291,8 +315,13 @@ public sealed class GameLaunchServiceTests : IDisposable
     }
 
     [Fact]
-    public void WaitForExitAsync_NothingRunning_CompletesImmediately() =>
-        Assert.True(_service.WaitForExitAsync(Ct).IsCompletedSuccessfully);
+    public async Task WaitForExitAsync_NothingRunning_CompletesImmediatelyWithSuccess()
+    {
+        var wait = _service.WaitForExitAsync(Ct);
+
+        Assert.True(wait.IsCompletedSuccessfully);
+        ResultAssert.Ok(await wait);
+    }
 
     [Fact]
     public async Task WaitForExitAsync_GameRunning_CompletesWhenItExits()
@@ -302,7 +331,7 @@ public sealed class GameLaunchServiceTests : IDisposable
 
         Assert.False(wait.IsCompleted);
         _runner.Processes[0].Exit();
-        await wait;
+        ResultAssert.Ok(await wait);
     }
 
     [Fact]
@@ -335,6 +364,8 @@ public sealed class GameLaunchServiceTests : IDisposable
         Assert.Equal("Azul Systems, Inc.", defaults.BundledJava.Vendor);
         Assert.Equal(32 * 1024, defaults.SystemMemoryMb);
         Assert.Empty(defaults.Warnings);
+        Assert.Equal(GarbageCollector.Z, defaults.GarbageCollector);
+        Assert.False(defaults.GarbageCollectorSetByViewpoint);
     }
 
     [Fact]
@@ -367,4 +398,267 @@ public sealed class GameLaunchServiceTests : IDisposable
     [Fact]
     public async Task GetDefaultsAsync_ServerFolder_ReturnsNotAGame() =>
         ResultAssert.Failed(await _service.GetDefaultsAsync(_installs.CreateServer("Server"), Ct), ErrorCode.LaunchNotAGame);
+
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(true, true)]
+    public async Task GetDefaultsAsync_ShenandoahJson_ReportsViewpointOnlyWithItsBackup(bool backup, bool setByViewpoint)
+    {
+        var root = _installs.CreateFlat("PZ", ShenandoahGameJson);
+        if (backup)
+        {
+            AddViewpointBackup(root);
+        }
+
+        var defaults = ResultAssert.Ok(await _service.GetDefaultsAsync(root, Ct));
+
+        Assert.Equal(GarbageCollector.Shenandoah, defaults.GarbageCollector);
+        Assert.Equal(setByViewpoint, defaults.GarbageCollectorSetByViewpoint);
+    }
+
+    [Fact]
+    public async Task GetDefaultsAsync_ViewpointBackupWithoutShenandoah_IsNotViewpoint()
+    {
+        var root = _installs.CreateFlat("PZ", GameInstallBuilder.WindowsGameJson);
+        AddViewpointBackup(root);
+
+        Assert.False(ResultAssert.Ok(await _service.GetDefaultsAsync(root, Ct)).GarbageCollectorSetByViewpoint);
+    }
+
+    [Fact]
+    public async Task GetDefaultsAsync_JsonWithoutGc_ReportsNone() =>
+        Assert.Null(ResultAssert.Ok(await _service.GetDefaultsAsync(
+            _installs.CreateFlat("PZ", """{"mainClass":"a/B","classpath":["."]}"""), Ct)).GarbageCollector);
+
+    [Theory]
+    [InlineData(GarbageCollector.G1, "-XX:+UseG1GC")]
+    [InlineData(GarbageCollector.Shenandoah, "-XX:+UseShenandoahGC")]
+    public async Task LaunchAsync_GcOverride_ReplacesJsonGcWithOneFlag(GarbageCollector gc, string flag)
+    {
+        var root = _installs.CreateFlat("PZ", GameInstallBuilder.WindowsGameJson);
+
+        ResultAssert.Ok(await LaunchAsync(root, GameLaunchOverrides.Empty with { GarbageCollector = gc }));
+
+        Assert.Equal([flag], _runner.LastRequest.Arguments.Where(GarbageCollectors.IsFlag));
+    }
+
+    [Fact]
+    public async Task LaunchAsync_GcInExtraJvmArgs_ReplacesJsonGc()
+    {
+        var root = _installs.CreateFlat("PZ", GameInstallBuilder.WindowsGameJson);
+
+        ResultAssert.Ok(await LaunchAsync(root, GameLaunchOverrides.Empty with { ExtraJvmArgs = "-XX:+UseG1GC" }));
+
+        Assert.Equal(["-XX:+UseG1GC"], _runner.LastRequest.Arguments.Where(GarbageCollectors.IsFlag));
+    }
+
+    [Fact]
+    public async Task LaunchAsync_SameGcInDropdownAndExtraJvmArgs_PassesOneFlag()
+    {
+        var root = _installs.CreateFlat("PZ", GameInstallBuilder.WindowsGameJson);
+
+        ResultAssert.Ok(await LaunchAsync(root, GameLaunchOverrides.Empty with { GarbageCollector = GarbageCollector.G1, ExtraJvmArgs = "-XX:+UseG1GC" }));
+
+        Assert.Equal(["-XX:+UseG1GC"], _runner.LastRequest.Arguments.Where(GarbageCollectors.IsFlag));
+    }
+
+    [Theory]
+    [InlineData(GarbageCollector.G1, "-XX:+UseZGC", "-XX:+UseG1GC -XX:+UseZGC")]
+    [InlineData(null, "-XX:+UseZGC -Dx -XX:+UseShenandoahGC", "-XX:+UseZGC -XX:+UseShenandoahGC")]
+    public async Task LaunchAsync_TwoDifferentUserGcs_ReturnsGcConflict(GarbageCollector? gc, string extraJvmArgs, string flags)
+    {
+        var root = _installs.CreateFlat("PZ", GameInstallBuilder.WindowsGameJson);
+
+        var error = ResultAssert.Failed(
+            await LaunchAsync(root, GameLaunchOverrides.Empty with { GarbageCollector = gc, ExtraJvmArgs = extraJvmArgs }), ErrorCode.LaunchGcConflict);
+
+        Assert.Equal(flags, error.Details["value"]);
+        Assert.Empty(_runner.Requests);
+    }
+
+    [Fact]
+    public async Task LaunchAsync_GraalJavaWithJsonShenandoah_ReturnsGcIncompatible()
+    {
+        var root = _installs.CreateFlat("PZ", ShenandoahGameJson);
+        var graal = CreateGraalJava();
+
+        var error = ResultAssert.Failed(await LaunchAsync(root, GameLaunchOverrides.Empty with { JavaHome = graal }), ErrorCode.LaunchGcIncompatible);
+
+        Assert.Equal(graal, error.Details["path"]);
+        Assert.Empty(_runner.Requests);
+    }
+
+    [Fact]
+    public async Task LaunchAsync_GraalJavaWithViewpointShenandoah_ReturnsGcIncompatibleViewpoint()
+    {
+        var root = _installs.CreateFlat("PZ", ShenandoahGameJson);
+        AddViewpointBackup(root);
+
+        ResultAssert.Failed(
+            await LaunchAsync(root, GameLaunchOverrides.Empty with { JavaHome = CreateGraalJava() }), ErrorCode.LaunchGcIncompatibleViewpoint);
+    }
+
+    [Theory]
+    [InlineData(GarbageCollector.Shenandoah, "")]
+    [InlineData(null, "-XX:+UseShenandoahGC")]
+    public async Task LaunchAsync_GraalJavaWithChosenShenandoah_IsNotBlamedOnViewpoint(GarbageCollector? gc, string extraJvmArgs)
+    {
+        var root = _installs.CreateFlat("PZ", GameInstallBuilder.WindowsGameJson);
+        AddViewpointBackup(root);
+
+        ResultAssert.Failed(
+            await LaunchAsync(root, new GameLaunchOverrides(CreateGraalJava(), null, null, extraJvmArgs, "", gc)), ErrorCode.LaunchGcIncompatible);
+    }
+
+    [Fact]
+    public async Task LaunchAsync_GraalBundledJavaWithShenandoah_ReturnsGcIncompatibleForTheBundledHome()
+    {
+        var root = _installs.CreateFlat("PZ", ShenandoahGameJson, withJre: false);
+        new JavaHomeBuilder(root, PlatformKind.Windows).Create("jre64", JavaHomeBuilder.Release("25.0.2", "GraalVM Community", graalVersion: "25.0.2"));
+
+        var error = ResultAssert.Failed(await LaunchAsync(root), ErrorCode.LaunchGcIncompatible);
+
+        Assert.Equal(Path.Combine(root, "jre64"), error.Details["path"]);
+    }
+
+    public static TheoryData<bool, GarbageCollector?, string> GraalCompatibleCases => new()
+    {
+        { true, null, "-XX:-UseJVMCICompiler" },
+        { true, GarbageCollector.G1, "" },
+        { true, GarbageCollector.Z, "" },
+        { false, null, "" },
+    };
+
+    [Theory]
+    [MemberData(nameof(GraalCompatibleCases))]
+    public async Task LaunchAsync_GraalJitOffOrOtherGcOrNoGraal_Launches(bool graal, GarbageCollector? gc, string extraJvmArgs)
+    {
+        var root = _installs.CreateFlat("PZ", ShenandoahGameJson);
+        AddViewpointBackup(root);
+        var java = graal ? CreateGraalJava() : new JavaHomeBuilder(_temp.Path, PlatformKind.Windows).Create("jdk-25", JavaHomeBuilder.Release("25.0.1"));
+
+        ResultAssert.Ok(await LaunchAsync(root, new GameLaunchOverrides(java, null, null, extraJvmArgs, "", gc)));
+    }
+
+    [Fact]
+    public async Task ValidateAsync_SameChecksAsLaunch_StartsNothing()
+    {
+        var root = _installs.CreateFlat("PZ", ShenandoahGameJson);
+        var graal = CreateGraalJava();
+
+        ResultAssert.Failed(
+            await _service.ValidateAsync(new LaunchGameRequest(root, GameLaunchOverrides.Empty with { JavaHome = graal }), Ct), ErrorCode.LaunchGcIncompatible);
+        ResultAssert.Ok(await _service.ValidateAsync(new LaunchGameRequest(root, GameLaunchOverrides.Empty), Ct));
+        Assert.Empty(_runner.Requests);
+    }
+
+    [Theory]
+    [InlineData(PlatformKind.MacOS, 8192, ErrorCode.LaunchPlatformUnsupported)]
+    [InlineData(PlatformKind.Windows, 0, ErrorCode.LaunchInvalidMemory)]
+    public async Task ValidateAsync_RequestChecks_ReturnTheirCodes(PlatformKind os, int maxMemoryMb, ErrorCode code)
+    {
+        var root = _installs.CreateFlat("PZ", GameInstallBuilder.WindowsGameJson);
+        _platform.Os = os;
+
+        ResultAssert.Failed(await _service.ValidateAsync(new LaunchGameRequest(root, WithMemory(maxMemoryMb, null)), Ct), code);
+    }
+
+    [Fact]
+    public async Task ValidateAsync_GameRunning_IsNotAlreadyRunning()
+    {
+        var root = _installs.CreateFlat("PZ", GameInstallBuilder.WindowsGameJson);
+        ResultAssert.Ok(await LaunchAsync(root));
+
+        ResultAssert.Ok(await _service.ValidateAsync(new LaunchGameRequest(root, GameLaunchOverrides.Empty), Ct));
+    }
+
+    [Fact]
+    public async Task ValidateAsync_Cancelled_Throws()
+    {
+        using var cts = new CancellationTokenSource();
+        await cts.CancelAsync();
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(
+            () => _service.ValidateAsync(new LaunchGameRequest(_temp.Path, GameLaunchOverrides.Empty), cts.Token));
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    public async Task WaitForExitAsync_CrashLogWrittenAfterLaunch_ReturnsGameCrashed(int exitCode)
+    {
+        var root = _installs.CreateFlat("PZ", GameInstallBuilder.WindowsGameJson);
+        var session = ResultAssert.Ok(await LaunchAsync(root));
+        var log = Path.Combine(root, $"hs_err_pid{session.ProcessId}.log");
+        WriteLog(log, TimeSpan.FromSeconds(1));
+
+        var error = ResultAssert.Failed(await ExitAsync(exitCode), ErrorCode.LaunchGameCrashed);
+
+        Assert.Equal(log, error.Details["path"]);
+        Assert.Equal($"{exitCode}", error.Details["exitCode"]);
+        Assert.True(_runner.Processes[0].IsDisposed);
+    }
+
+    [Fact]
+    public async Task WaitForExitAsync_CrashLogOlderThanLaunch_IsIgnored()
+    {
+        var root = _installs.CreateFlat("PZ", GameInstallBuilder.WindowsGameJson);
+        var session = ResultAssert.Ok(await LaunchAsync(root));
+        WriteLog(Path.Combine(root, $"hs_err_pid{session.ProcessId}.log"), TimeSpan.FromMinutes(-5));
+
+        ResultAssert.Failed(await ExitAsync(1), ErrorCode.LaunchGameExitedEarly);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task WaitForExitAsync_ErrorFileOption_IsWhereTheCrashLogIsLooked(bool absolute)
+    {
+        var root = _installs.CreateFlat("PZ", GameInstallBuilder.WindowsGameJson);
+        var option = absolute ? Path.Combine(_temp.Path, "crash dumps", "jvm-%p.log") : Path.Combine("logs", "crash_%p.log");
+        var session = ResultAssert.Ok(await LaunchAsync(root, GameLaunchOverrides.Empty with { ExtraJvmArgs = $"\"-XX:ErrorFile={option}\"" }));
+        var log = Path.GetFullPath(option.Replace("%p", $"{session.ProcessId}", StringComparison.Ordinal), root);
+        WriteLog(log, TimeSpan.Zero);
+
+        var error = ResultAssert.Failed(await ExitAsync(134), ErrorCode.LaunchGameCrashed);
+
+        Assert.Equal(log, error.Details["path"]);
+    }
+
+    [Fact]
+    public async Task WaitForExitAsync_NonZeroExitWithinThirtySeconds_ReturnsExitedEarlyWithStderrTail()
+    {
+        ResultAssert.Ok(await LaunchAsync(_installs.CreateFlat("PZ", GameInstallBuilder.WindowsGameJson)));
+        _runner.Processes[0].ErrorOutputTail = ["Error occurred during initialization of VM", "Multiple garbage collectors selected"];
+        _time.Advance(TimeSpan.FromSeconds(29));
+
+        var error = ResultAssert.Failed(await ExitAsync(1), ErrorCode.LaunchGameExitedEarly);
+
+        Assert.Equal("1", error.Details["exitCode"]);
+        Assert.Equal("Error occurred during initialization of VM\nMultiple garbage collectors selected", error.Details["output"]);
+    }
+
+    [Fact]
+    public async Task WaitForExitAsync_AfterAFailedExit_KeepsItsResultUntilTheNextLaunch()
+    {
+        var root = _installs.CreateFlat("PZ", GameInstallBuilder.WindowsGameJson);
+        ResultAssert.Ok(await LaunchAsync(root));
+        ResultAssert.Failed(await ExitAsync(1), ErrorCode.LaunchGameExitedEarly);
+
+        ResultAssert.Failed(await _service.WaitForExitAsync(Ct), ErrorCode.LaunchGameExitedEarly);
+        ResultAssert.Ok(await LaunchAsync(root));
+        Assert.False(_service.WaitForExitAsync(Ct).IsCompleted);
+        ResultAssert.Ok(await ExitAsync(0));
+    }
+
+    [Theory]
+    [InlineData(1, 30)]
+    [InlineData(0, 0)]
+    public async Task WaitForExitAsync_LateOrCleanExitWithoutCrashLog_Succeeds(int exitCode, int secondsRunning)
+    {
+        ResultAssert.Ok(await LaunchAsync(_installs.CreateFlat("PZ", GameInstallBuilder.WindowsGameJson)));
+        _time.Advance(TimeSpan.FromSeconds(secondsRunning));
+
+        ResultAssert.Ok(await ExitAsync(exitCode));
+    }
 }

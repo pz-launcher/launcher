@@ -178,6 +178,22 @@
   <data name="Error_LaunchStartFailed" xml:space="preserve">
     <value>No se pudo iniciar el juego con {0}.</value>
   </data>
+  <data name="Error_LaunchGcIncompatible" xml:space="preserve">
+    <value>{0} incluye el compilador Graal, que no es compatible con el GC Shenandoah. En Configuración de la versión, cambiá el GC a G1 o ZGC, o elegí otro Java.</value>
+  </data>
+  <data name="Error_LaunchGcIncompatibleViewpoint" xml:space="preserve">
+    <value>El mod Viewpoint cambió el GC del juego a Shenandoah para ahorrar memoria, pero el GraalVM que elegiste no es compatible con él y el juego se cerraría de inmediato. En Configuración de la versión, cambiá el GC a G1 o ZGC (Viewpoint sigue funcionando, solo usa más memoria) o volvé al Java incluido con el juego.</value>
+  </data>
+  <data name="Error_LaunchGameCrashed" xml:space="preserve">
+    <value>El Java del juego falló (código de salida {1}). Registro del fallo: {0}</value>
+  </data>
+  <data name="Error_LaunchGameExitedEarly" xml:space="preserve">
+    <value>El juego se cerró justo después de iniciar (código de salida {0}). Revisá los argumentos adicionales de JVM, el Java y el GC en Configuración de la versión.
+{1}</value>
+  </data>
+  <data name="Error_LaunchGcConflict" xml:space="preserve">
+    <value>Hay varios recolectores de basura distintos seleccionados ({0}). Dejá solo uno: en la lista de GC o en los argumentos adicionales de JVM.</value>
+  </data>
   <data name="Error_FolderNotLocal" xml:space="preserve">
     <value>{0} no es una carpeta de esta computadora, así que el launcher no puede abrirla. Elegí una carpeta local.</value>
   </data>
@@ -294,5 +310,32 @@
   </data>
   <data name="VersionSettings_ArgsHint" xml:space="preserve">
     <value>Separá los argumentos con espacios; poné entre comillas dobles un valor que tenga espacios.</value>
+  </data>
+  <data name="VersionSettings_Gc" xml:space="preserve">
+    <value>Recolector de basura (GC)</value>
+  </data>
+  <data name="VersionSettings_GcFollowJson" xml:space="preserve">
+    <value>Según el json (actual: {0})</value>
+  </data>
+  <data name="VersionSettings_GcNotSet" xml:space="preserve">
+    <value>Según el json (sin definir)</value>
+  </data>
+  <data name="VersionSettings_GcSetByViewpoint" xml:space="preserve">
+    <value>Según el json (actual: {0}, definido por Viewpoint)</value>
+  </data>
+  <data name="GarbageCollector_G1" xml:space="preserve">
+    <value>G1</value>
+  </data>
+  <data name="GarbageCollector_Z" xml:space="preserve">
+    <value>ZGC</value>
+  </data>
+  <data name="GarbageCollector_Shenandoah" xml:space="preserve">
+    <value>Shenandoah</value>
+  </data>
+  <data name="GarbageCollector_Parallel" xml:space="preserve">
+    <value>Parallel</value>
+  </data>
+  <data name="GarbageCollector_Serial" xml:space="preserve">
+    <value>Serial</value>
   </data>
 </root>

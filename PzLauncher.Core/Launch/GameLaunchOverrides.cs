@@ -5,12 +5,14 @@ namespace PzLauncher.Core.Launch;
 /// <param name="MinMemoryMb"><c>null</c>: keep the json's <c>-Xms</c>.</param>
 /// <param name="ExtraJvmArgs">Space-separated; double quotes group a value with spaces.</param>
 /// <param name="ExtraGameArgs">Same syntax as <paramref name="ExtraJvmArgs"/>; passed after the main class.</param>
+/// <param name="GarbageCollector"><c>null</c>: keep the json's GC flags (unless the extra JVM args pick one).</param>
 public sealed record GameLaunchOverrides(
     string? JavaHome,
     int? MaxMemoryMb,
     int? MinMemoryMb,
     string ExtraJvmArgs,
-    string ExtraGameArgs)
+    string ExtraGameArgs,
+    GarbageCollector? GarbageCollector)
 {
-    public static GameLaunchOverrides Empty { get; } = new(null, null, null, "", "");
+    public static GameLaunchOverrides Empty { get; } = new(null, null, null, "", "", null);
 }

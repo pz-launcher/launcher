@@ -23,4 +23,5 @@ internal sealed record PreferencesFile(
 /// <summary>Nullable members, so a missing one is told apart from a zero.</summary>
 internal sealed record WindowFile(int? X, int? Y, double? Width, double? Height, bool? Maximized);
 
-internal sealed record InstallOverridesFile(string? JavaHome, int? MaxMemoryMb, int? MinMemoryMb, string? JvmArgs, string? GameArgs);
+/// <param name="Gc"><see cref="GarbageCollectorPreferences.PreferenceName"/>; an unknown value follows the json.</param>
+internal sealed record InstallOverridesFile(string? JavaHome, int? MaxMemoryMb, int? MinMemoryMb, string? JvmArgs, string? GameArgs, string? Gc);

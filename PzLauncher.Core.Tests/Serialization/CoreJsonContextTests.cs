@@ -88,8 +88,8 @@ public class CoreJsonContextTests
     {
         var original = new JavaScanResult(
             [
-                new JavaRuntime(@"C:\Java\jdk-21", @"C:\Java\jdk-21\bin\javaw.exe", new JavaVersion(21, "21.0.9"), "Eclipse Adoptium", JavaRuntimeSource.Registry),
-                new JavaRuntime("/opt/jdk", "/opt/jdk/bin/java", Version: null, Vendor: null, JavaRuntimeSource.Manual),
+                new JavaRuntime(@"C:\Java\jdk-21", @"C:\Java\jdk-21\bin\javaw.exe", new JavaVersion(21, "21.0.9"), "Eclipse Adoptium", JavaRuntimeSource.Registry, HasGraalCompiler: false),
+                new JavaRuntime("/opt/jdk", "/opt/jdk/bin/java", Version: null, Vendor: null, JavaRuntimeSource.Manual, HasGraalCompiler: true),
             ],
             [new Error(ErrorCode.JavaReleaseUnreadable, "msg", ErrorKind.External) { Details = new Dictionary<string, string> { ["path"] = "p" } }]);
 
@@ -104,20 +104,21 @@ public class CoreJsonContextTests
     }
 
     [Theory]
-    [InlineData("""{"homePath":null,"executablePath":"/x/bin/java","version":null,"vendor":null,"source":"Manual"}""")]
-    [InlineData("""{"executablePath":"/x/bin/java","version":null,"vendor":null,"source":"Manual"}""")]
-    [InlineData("""{"homePath":"/x","executablePath":"/x/bin/java","version":{"major":21,"full":null},"vendor":null,"source":"Manual"}""")]
+    [InlineData("""{"homePath":null,"executablePath":"/x/bin/java","version":null,"vendor":null,"source":"Manual","hasGraalCompiler":false}""")]
+    [InlineData("""{"executablePath":"/x/bin/java","version":null,"vendor":null,"source":"Manual","hasGraalCompiler":false}""")]
+    [InlineData("""{"homePath":"/x","executablePath":"/x/bin/java","version":{"major":21,"full":null},"vendor":null,"source":"Manual","hasGraalCompiler":false}""")]
     public void JavaRuntime_NonNullMemberNullOrMissingInJson_Throws(string json) =>
         Assert.Throws<JsonException>(() => JsonSerializer.Deserialize(json, CoreJsonContext.Default.JavaRuntime));
 
     [Fact]
     public void LaunchGameRequest_RoundTrips()
     {
-        var original = new LaunchGameRequest(@"E:\Games\PZ", new GameLaunchOverrides(@"C:\Java\jdk-25", 8192, null, "-Da=\"b c\"", "-debug"));
+        var original = new LaunchGameRequest(@"E:\Games\PZ", new GameLaunchOverrides(@"C:\Java\jdk-25", 8192, null, "-Da=\"b c\"", "-debug", GarbageCollector.Shenandoah));
 
         var json = JsonSerializer.Serialize(original, CoreJsonContext.Default.LaunchGameRequest);
 
         Assert.Contains("\"maxMemoryMb\":8192", json, StringComparison.Ordinal);
+        Assert.Contains("\"garbageCollector\":\"Shenandoah\"", json, StringComparison.Ordinal);
         Assert.Equal(original, JsonSerializer.Deserialize(json, CoreJsonContext.Default.LaunchGameRequest));
     }
 
@@ -142,9 +143,11 @@ public class CoreJsonContextTests
             3072,
             null,
             ["-Xmx3072m", "-XX:+UseZGC"],
-            new JavaRuntime("/games/pz/jre64", "/games/pz/jre64/bin/java", new JavaVersion(25, "25.0.1"), "Azul Systems, Inc.", JavaRuntimeSource.Manual),
+            new JavaRuntime("/games/pz/jre64", "/games/pz/jre64/bin/java", new JavaVersion(25, "25.0.1"), "Azul Systems, Inc.", JavaRuntimeSource.Manual, HasGraalCompiler: false),
             32768,
-            [new Error(ErrorCode.LaunchConfigMissing, "msg", ErrorKind.NotFound) { Details = new Dictionary<string, string> { ["path"] = "p" } }]);
+            [new Error(ErrorCode.LaunchConfigMissing, "msg", ErrorKind.NotFound) { Details = new Dictionary<string, string> { ["path"] = "p" } }],
+            GarbageCollector.Shenandoah,
+            GarbageCollectorSetByViewpoint: true);
 
         var json = JsonSerializer.Serialize(original, CoreJsonContext.Default.GameLaunchDefaults);
         var copy = JsonSerializer.Deserialize(json, CoreJsonContext.Default.GameLaunchDefaults);
@@ -152,6 +155,7 @@ public class CoreJsonContextTests
         Assert.Contains("\"code\":\"launch.config_missing\"", json, StringComparison.Ordinal);
         Assert.NotNull(copy);
         Assert.Equal((original.MaxMemoryMb, original.MinMemoryMb, original.BundledJava, original.SystemMemoryMb), (copy.MaxMemoryMb, copy.MinMemoryMb, copy.BundledJava, copy.SystemMemoryMb));
+        Assert.Equal((GarbageCollector.Shenandoah, true), (copy.GarbageCollector, copy.GarbageCollectorSetByViewpoint));
         Assert.Equal(original.VmArgs, copy.VmArgs);
         Assert.Equal(ErrorCode.LaunchConfigMissing, Assert.Single(copy.Warnings).Code);
     }

@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Globalization;
 using Microsoft.Extensions.Logging;
 using PzLauncher.Core.Common;
 using PzLauncher.Core.Installs;
@@ -12,14 +13,18 @@ internal sealed partial class GameLaunchService(
     IJavaDiscoveryService javaDiscovery,
     IPlatformEnvironment platform,
     IProcessRunner processes,
+    TimeProvider time,
     ILogger<GameLaunchService> logger) : IGameLaunchService
 {
     private const long BytesPerMb = 1024 * 1024;
 
+    // A failed JVM start (bad option, missing GC) exits within a few seconds; later exits are the game's own.
+    private static readonly TimeSpan EarlyExitWindow = TimeSpan.FromSeconds(30);
+
     private readonly SemaphoreSlim _launchGate = new(1, 1);
 
     // Completes once the tracked game has exited and its process handle is released.
-    private volatile Task _exit = Task.CompletedTask;
+    private volatile Task<Result> _exit = Task.FromResult(Result.Ok());
 
     public async Task<Result<GameLaunchDefaults>> GetDefaultsAsync(string installRoot, CancellationToken ct = default)
     {
@@ -38,41 +43,41 @@ internal sealed partial class GameLaunchService(
         var config = await ReadConfigAsync(game, ct).ConfigureAwait(false);
         if (!config.IsSuccess)
         {
-            return new GameLaunchDefaults(null, null, [], bundledJava, systemMemoryMb, [config.Error]);
+            return new GameLaunchDefaults(null, null, [], bundledJava, systemMemoryMb, [config.Error], null, false);
         }
 
         var vmArgs = config.Value.JvmArgs(platform.Os, platform.OsVersion);
+        var gc = GarbageCollectors.FromFlag(vmArgs.LastOrDefault(GarbageCollectors.IsFlag));
         return new GameLaunchDefaults(
             LaunchArguments.HeapSizeMb(vmArgs, LaunchArguments.MaxHeapPrefix),
             LaunchArguments.HeapSizeMb(vmArgs, LaunchArguments.InitialHeapPrefix),
             vmArgs,
             bundledJava,
             systemMemoryMb,
-            []);
+            [],
+            gc,
+            gc == GarbageCollector.Shenandoah && HasViewpointBackup(game));
     }
 
     public async Task<Result<GameSession>> LaunchAsync(LaunchGameRequest request, CancellationToken ct = default)
     {
         ct.ThrowIfCancellationRequested();
-        if (platform.Os == PlatformKind.MacOS)
+        var check = CheckRequest(request.Overrides);
+        if (!check.IsSuccess)
         {
-            return LaunchErrors.PlatformUnsupported(platform.Os);
-        }
-
-        if (request.Overrides.MaxMemoryMb is int max and <= 0)
-        {
-            return LaunchErrors.InvalidMemory(max);
-        }
-
-        if (request.Overrides.MinMemoryMb is int min and <= 0)
-        {
-            return LaunchErrors.InvalidMemory(min);
+            return check.Error;
         }
 
         await _launchGate.WaitAsync(ct).ConfigureAwait(false);
         try
         {
-            return await StartGameAsync(request.InstallRoot, request.Overrides, ct).ConfigureAwait(false);
+            if (!_exit.IsCompleted)
+            {
+                return LaunchErrors.AlreadyRunning();
+            }
+
+            var plan = await PlanAsync(request.InstallRoot, request.Overrides, ct).ConfigureAwait(false);
+            return plan.IsSuccess ? Start(plan.Value) : plan.Error;
         }
         finally
         {
@@ -80,15 +85,43 @@ internal sealed partial class GameLaunchService(
         }
     }
 
-    public Task WaitForExitAsync(CancellationToken ct = default) => _exit.WaitAsync(ct);
-
-    private async Task<Result<GameSession>> StartGameAsync(string installRoot, GameLaunchOverrides overrides, CancellationToken ct)
+    public async Task<Result> ValidateAsync(LaunchGameRequest request, CancellationToken ct = default)
     {
-        if (!_exit.IsCompleted)
+        ct.ThrowIfCancellationRequested();
+        var check = CheckRequest(request.Overrides);
+        if (!check.IsSuccess)
         {
-            return LaunchErrors.AlreadyRunning();
+            return check;
         }
 
+        var plan = await PlanAsync(request.InstallRoot, request.Overrides, ct).ConfigureAwait(false);
+        return plan.IsSuccess ? Result.Ok() : plan.Error;
+    }
+
+    public Task<Result> WaitForExitAsync(CancellationToken ct = default) => _exit.WaitAsync(ct);
+
+    private Result CheckRequest(GameLaunchOverrides overrides)
+    {
+        if (platform.Os == PlatformKind.MacOS)
+        {
+            return LaunchErrors.PlatformUnsupported(platform.Os);
+        }
+
+        if (overrides.MaxMemoryMb is int max and <= 0)
+        {
+            return LaunchErrors.InvalidMemory(max);
+        }
+
+        if (overrides.MinMemoryMb is int min and <= 0)
+        {
+            return LaunchErrors.InvalidMemory(min);
+        }
+
+        return Result.Ok();
+    }
+
+    private async Task<Result<LaunchPlan>> PlanAsync(string installRoot, GameLaunchOverrides overrides, CancellationToken ct)
+    {
         var install = await InspectGameAsync(installRoot, ct).ConfigureAwait(false);
         if (!install.IsSuccess)
         {
@@ -122,43 +155,125 @@ internal sealed partial class GameLaunchService(
             return LaunchErrors.JavaMissing(executable);
         }
 
-        var jvmArgs = config.Value.JvmArgs(platform.Os, platform.OsVersion);
-        var maxMb = overrides.MaxMemoryMb ?? LaunchArguments.HeapSizeMb(jvmArgs, LaunchArguments.MaxHeapPrefix);
-        var minMb = overrides.MinMemoryMb ?? LaunchArguments.HeapSizeMb(jvmArgs, LaunchArguments.InitialHeapPrefix);
+        var jsonJvmArgs = config.Value.JvmArgs(platform.Os, platform.OsVersion);
+        var maxMb = overrides.MaxMemoryMb ?? LaunchArguments.HeapSizeMb(jsonJvmArgs, LaunchArguments.MaxHeapPrefix);
+        var minMb = overrides.MinMemoryMb ?? LaunchArguments.HeapSizeMb(jsonJvmArgs, LaunchArguments.InitialHeapPrefix);
         if (minMb is int min && maxMb is int max && min > max)
         {
             return LaunchErrors.InvalidMemory(min);
         }
 
+        var extraJvmArgs = LaunchArguments.Split(overrides.ExtraJvmArgs);
+        var gc = GarbageCollectors.Choose(overrides.GarbageCollector, extraJvmArgs, jsonJvmArgs);
+        if (!gc.IsSuccess)
+        {
+            return gc.Error;
+        }
+
+        var jvmArgs = LaunchArguments.JvmArgs(jsonJvmArgs, overrides, extraJvmArgs);
+        var gcCheck = await CheckGraalShenandoahAsync(gc.Value, jvmArgs, javaHome, game, ct).ConfigureAwait(false);
+        if (!gcCheck.IsSuccess)
+        {
+            return gcCheck.Error;
+        }
+
         var start = new ProcessStartRequest(
             executable,
-            LaunchArguments.Build(config.Value, platform.Os, platform.OsVersion, overrides),
+            LaunchArguments.Build(config.Value, platform.Os, jvmArgs, overrides),
             game,
             BuildEnvironment(game, javaHome));
+        return new LaunchPlan(install.Value.RootPath, game, start, jvmArgs);
+    }
 
+    // The Graal JIT rejects Shenandoah at JVM start (task research/gc-graal-viewpoint.md); other GCs work with it.
+    private async Task<Result> CheckGraalShenandoahAsync(
+        GcChoice gc, IReadOnlyList<string> jvmArgs, string javaHome, string game, CancellationToken ct)
+    {
+        if (!string.Equals(gc.Flag, GarbageCollectors.Flag(GarbageCollector.Shenandoah), StringComparison.Ordinal)
+            || GarbageCollectors.DisablesJvmciCompiler(jvmArgs))
+        {
+            return Result.Ok();
+        }
+
+        var java = await javaDiscovery.InspectAsync(javaHome, ct).ConfigureAwait(false);
+        if (!java.IsSuccess || !java.Value.HasGraalCompiler)
+        {
+            return Result.Ok();
+        }
+
+        return gc.FromJson && HasViewpointBackup(game)
+            ? LaunchErrors.GcIncompatibleViewpoint(javaHome)
+            : LaunchErrors.GcIncompatible(javaHome);
+    }
+
+    private Result<GameSession> Start(LaunchPlan plan)
+    {
+        var startedAt = time.GetUtcNow();
         IRunningProcess process;
         try
         {
-            process = processes.Start(start);
+            process = processes.Start(plan.Start);
         }
         catch (Exception ex) when (ex is Win32Exception or IOException or UnauthorizedAccessException)
         {
-            var error = LaunchErrors.StartFailed(executable, ex.Message);
+            var error = LaunchErrors.StartFailed(plan.Start.FileName, ex.Message);
             LogWarning(logger, error.Code.ToWireName(), error.Message);
             return error;
         }
 
-        var session = new GameSession(install.Value.RootPath, process.Id);
-        _exit = TrackAsync(process);
+        var session = new GameSession(plan.InstallRoot, process.Id);
+        _exit = TrackAsync(process, plan, startedAt);
         return session;
     }
 
-    private static async Task TrackAsync(IRunningProcess process)
+    private async Task<Result> TrackAsync(IRunningProcess process, LaunchPlan plan, DateTimeOffset startedAt)
     {
         using (process)
         {
             await process.WaitForExitAsync(CancellationToken.None).ConfigureAwait(false);
+            var exit = ExitResult(process, plan, startedAt);
+            if (!exit.IsSuccess)
+            {
+                LogWarning(logger, exit.Error.Code.ToWireName(), exit.Error.Message);
+            }
+
+            return exit;
         }
+    }
+
+    private Result ExitResult(IRunningProcess process, LaunchPlan plan, DateTimeOffset startedAt)
+    {
+        if (FindCrashLog(plan, process.Id, startedAt) is { } crashLog)
+        {
+            return LaunchErrors.GameCrashed(crashLog, process.ExitCode);
+        }
+
+        if (process.ExitCode != 0 && time.GetUtcNow() - startedAt < EarlyExitWindow)
+        {
+            return LaunchErrors.GameExitedEarly(process.ExitCode, string.Join('\n', process.ErrorOutputTail));
+        }
+
+        return Result.Ok();
+    }
+
+    // A log left by an earlier process with the same id is older than this launch.
+    private static string? FindCrashLog(LaunchPlan plan, int processId, DateTimeOffset startedAt)
+    {
+        var candidates = new List<string>();
+        if (plan.JvmArgs.LastOrDefault(arg => arg.StartsWith(PzLaunchFiles.ErrorFileOption, StringComparison.Ordinal)) is { } option)
+        {
+            var path = option[PzLaunchFiles.ErrorFileOption.Length..]
+                .Replace("%p", processId.ToString(CultureInfo.InvariantCulture), StringComparison.Ordinal);
+            if (path.Length > 0 && !PathNormalizer.HasInvalidPathChars(path))
+            {
+                candidates.Add(Path.GetFullPath(path, plan.GameFolder));
+            }
+        }
+
+        // The JVM falls back to its working directory when it can't write the ErrorFile.
+        candidates.Add(Path.Combine(plan.GameFolder, PzLaunchFiles.DefaultCrashLog(processId)));
+        return candidates.FirstOrDefault(path =>
+            new FileInfo(path) is { Exists: true } log && new DateTimeOffset(log.LastWriteTimeUtc) >= startedAt);
     }
 
     private async Task<Result<PzInstall>> InspectGameAsync(string installRoot, CancellationToken ct)
@@ -188,6 +303,8 @@ internal sealed partial class GameLaunchService(
         return File.Exists(Path.Combine(nested, PzLaunchFiles.ConfigFile)) ? nested : root;
     }
 
+    private static bool HasViewpointBackup(string game) => File.Exists(Path.Combine(game, PzLaunchFiles.ViewpointBackupFile));
+
     private async Task<Result<PzLaunchConfig>> ReadConfigAsync(string game, CancellationToken ct)
     {
         var config = await PzLaunchConfig.ReadAsync(Path.Combine(game, PzLaunchFiles.ConfigFile), ct).ConfigureAwait(false);
@@ -211,4 +328,7 @@ internal sealed partial class GameLaunchService(
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Game launch: {Code}: {Detail}")]
     private static partial void LogWarning(ILogger logger, string code, string detail);
+
+    /// <param name="JvmArgs">The effective JVM args, read again when the game exits (<c>-XX:ErrorFile</c>).</param>
+    private sealed record LaunchPlan(string InstallRoot, string GameFolder, ProcessStartRequest Start, IReadOnlyList<string> JvmArgs);
 }

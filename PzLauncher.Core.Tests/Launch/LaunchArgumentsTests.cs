@@ -13,8 +13,12 @@ public class LaunchArgumentsTests
             ["10.0.17134"] = ["-XX:+UseZGC"],
         });
 
-    private static GameLaunchOverrides Overrides(int? max = null, int? min = null, string jvm = "", string game = "") =>
-        new(null, max, min, jvm, game);
+    private static GameLaunchOverrides Overrides(int? max = null, int? min = null, string jvm = "", string game = "", GarbageCollector? gc = null) =>
+        new(null, max, min, jvm, game, gc);
+
+    private static List<string> Build(PzLaunchConfig config, PlatformKind os, Version osVersion, GameLaunchOverrides overrides) =>
+        LaunchArguments.Build(
+            config, os, LaunchArguments.JvmArgs(config.JvmArgs(os, osVersion), overrides, LaunchArguments.Split(overrides.ExtraJvmArgs)), overrides);
 
     [Theory]
     [InlineData("", new string[0])]
@@ -59,7 +63,7 @@ public class LaunchArgumentsTests
     [Fact]
     public void Build_Windows_OrdersJsonExtraJvmClasspathMainClassGameArgs()
     {
-        var args = LaunchArguments.Build(
+        var args = Build(
             Config("-Djava.awt.headless=true", "-Xmx3072m"), PlatformKind.Windows, Windows11, Overrides(jvm: "-Dx=\"a b\"", game: "-debug -nosteam"));
 
         Assert.Equal(
@@ -72,7 +76,7 @@ public class LaunchArgumentsTests
     public void Build_Linux_JoinsClasspathWithColonAndSkipsWindowsMap() =>
         Assert.Equal(
             ["-Xmx3072m", "-cp", ".:projectzomboid.jar", "zombie.gameStates.MainScreenState"],
-            LaunchArguments.Build(Config("-Xmx3072m"), PlatformKind.Linux, new Version(6, 8), Overrides()));
+            Build(Config("-Xmx3072m"), PlatformKind.Linux, new Version(6, 8), Overrides()));
 
     [Theory]
     [InlineData("-Xmx3072m")]
@@ -80,7 +84,7 @@ public class LaunchArgumentsTests
     [InlineData("-Xmx3221225472")]
     public void Build_MemoryOverrides_ReplaceEveryJsonValueInAnyUnit(string jsonMax)
     {
-        var args = LaunchArguments.Build(
+        var args = Build(
             Config("-Xms512m", jsonMax, "-Dx", "-Xmx1g", "-Xms1g"), PlatformKind.Linux, new Version(6, 8), Overrides(max: 8192, min: 4096));
 
         Assert.Equal(["-Dx", "-Xmx8192m", "-Xms4096m"], args[..^3]);
@@ -90,11 +94,36 @@ public class LaunchArgumentsTests
     public void Build_MemoryOverridesWithoutJsonValues_AreAdded() =>
         Assert.Equal(
             ["-Dx", "-Xmx8192m", "-Xms2048m"],
-            LaunchArguments.Build(Config("-Dx"), PlatformKind.Linux, new Version(6, 8), Overrides(max: 8192, min: 2048))[..^3]);
+            Build(Config("-Dx"), PlatformKind.Linux, new Version(6, 8), Overrides(max: 8192, min: 2048))[..^3]);
 
     [Fact]
     public void Build_NoMemoryOverrides_KeepsJsonValues() =>
         Assert.Equal(
             ["-Xmx3g", "-Xms1g"],
-            LaunchArguments.Build(Config("-Xmx3g", "-Xms1g"), PlatformKind.Linux, new Version(6, 8), Overrides())[..^3]);
+            Build(Config("-Xmx3g", "-Xms1g"), PlatformKind.Linux, new Version(6, 8), Overrides())[..^3]);
+
+    [Theory]
+    [InlineData(GarbageCollector.G1, "-XX:+UseG1GC")]
+    [InlineData(GarbageCollector.Shenandoah, "-XX:+UseShenandoahGC")]
+    public void Build_GcOverride_RemovesJsonAndOsVersionGcFlagsAndAddsOne(GarbageCollector gc, string flag)
+    {
+        var args = Build(
+            Config("-XX:+UseParallelGC", "-Dx", "-XX:+UseConcMarkSweepGC"), PlatformKind.Windows, Windows11, Overrides(jvm: "-Dy", gc: gc));
+
+        Assert.Equal(["-Dx", flag, "-Dy"], args[..^3]);
+    }
+
+    [Fact]
+    public void Build_NoGcOverride_KeepsJsonGcFlags() =>
+        Assert.Equal(["-XX:+UseG1GC", "-XX:+UseZGC"], Build(Config("-XX:+UseG1GC"), PlatformKind.Windows, Windows11, Overrides())[..^3]);
+
+    [Fact]
+    public void Build_GcInExtraJvmArgs_RemovesJsonGcFlags() =>
+        Assert.Equal(["-Dx", "-XX:+UseG1GC"], Build(Config("-Dx"), PlatformKind.Windows, Windows11, Overrides(jvm: "-XX:+UseG1GC"))[..^3]);
+
+    [Fact]
+    public void Build_SameGcInDropdownAndExtraJvmArgs_PassesOneFlag() =>
+        Assert.Equal(
+            ["-Dx", "-XX:+UseG1GC"],
+            Build(Config("-Dx"), PlatformKind.Windows, Windows11, Overrides(jvm: "-XX:+UseG1GC", gc: GarbageCollector.G1))[..^3]);
 }

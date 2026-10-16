@@ -116,7 +116,7 @@ public sealed class JavaDiscoveryServiceScanTests : IDisposable
             (fromProgramFiles, JavaRuntimeSource.KnownFolder),
             (fromJdks, JavaRuntimeSource.KnownFolder));
         Assert.Equal(
-            new JavaRuntime(fromProgramFiles, _windows.ExecutableOf(fromProgramFiles), new JavaVersion(21, "21.0.9"), "Eclipse Adoptium", JavaRuntimeSource.KnownFolder),
+            new JavaRuntime(fromProgramFiles, _windows.ExecutableOf(fromProgramFiles), new JavaVersion(21, "21.0.9"), "Eclipse Adoptium", JavaRuntimeSource.KnownFolder, HasGraalCompiler: false),
             scan.Runtimes[4]);
     }
 
@@ -287,7 +287,7 @@ public sealed class JavaDiscoveryServiceScanTests : IDisposable
         var scan = await ScanAsync(env);
 
         Assert.Empty(scan.Warnings);
-        Assert.Equal(new JavaRuntime(home, _windows.ExecutableOf(home), null, null, JavaRuntimeSource.JavaHome), Assert.Single(scan.Runtimes));
+        Assert.Equal(new JavaRuntime(home, _windows.ExecutableOf(home), null, null, JavaRuntimeSource.JavaHome, HasGraalCompiler: false), Assert.Single(scan.Runtimes));
     }
 
     [Fact]

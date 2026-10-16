@@ -121,7 +121,7 @@ public class HomeViewModelTests : UiTextCultureTest
         Assert.False(vm.LaunchCommand.CanExecute(null));
         Assert.True(vm.VersionSettingsCommand.CanExecute(null));
 
-        _launcher.Exit.SetResult();
+        _launcher.Exit.SetResult(Result.Ok());
         await launch;
 
         Assert.False(vm.IsGameRunning);
@@ -132,14 +132,14 @@ public class HomeViewModelTests : UiTextCultureTest
     [Fact]
     public async Task Launch_PassesTheSelectedInstallsStoredOverrides()
     {
-        var stored = new GameLaunchOverrides(@"C:\Java\jdk-25", 8192, 4096, "-XX:+UseZGC", "-debug");
+        var stored = new GameLaunchOverrides(@"C:\Java\jdk-25", 8192, 4096, "-XX:+UseZGC", "-debug", GarbageCollector.G1);
         _overrides.Set(ManualGame.RootPath, stored);
         _overrides.Set(SteamGame.RootPath, GameLaunchOverrides.Empty with { ExtraGameArgs = "-other" });
         var vm = await CreateActivatedViewModelAsync(SteamGame, ManualGame);
         Installs.ListSelection = ManualGame;
 
         var launch = vm.LaunchCommand.ExecuteAsync(null);
-        _launcher.Exit.SetResult();
+        _launcher.Exit.SetResult(Result.Ok());
         await launch;
 
         Assert.Equal([new LaunchGameRequest(ManualGame.RootPath, stored)], _launcher.Launches);
@@ -156,6 +156,25 @@ public class HomeViewModelTests : UiTextCultureTest
 
         Assert.Equal([ErrorMessages.ToUserText(error)], _dialogs.Errors);
         Assert.False(vm.IsGameRunning);
+        Assert.True(vm.LaunchCommand.CanExecute(null));
+    }
+
+    [Theory]
+    [InlineData(ErrorCode.LaunchGameCrashed)]
+    [InlineData(ErrorCode.LaunchGameExitedEarly)]
+    public async Task Launch_GameExitsWithAFailure_ShowsItAfterTheButtonIsBack(ErrorCode code)
+    {
+        var crash = TestErrors.Create(code, @"E:\SteamLibrary\steamapps\common\ProjectZomboid\hs_err_pid4242.log");
+        var vm = await CreateActivatedViewModelAsync(SteamGame);
+        var runningWhenShown = new List<bool>();
+        _dialogs.Shown += () => runningWhenShown.Add(vm.IsGameRunning);
+
+        var launch = vm.LaunchCommand.ExecuteAsync(null);
+        _launcher.Exit.SetResult(crash);
+        await launch;
+
+        Assert.Equal([ErrorMessages.ToUserText(crash)], _dialogs.Errors);
+        Assert.Equal([false], runningWhenShown);
         Assert.True(vm.LaunchCommand.CanExecute(null));
     }
 

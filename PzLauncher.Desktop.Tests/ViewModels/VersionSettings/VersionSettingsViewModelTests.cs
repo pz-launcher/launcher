@@ -46,6 +46,10 @@ public class VersionSettingsViewModelTests : UiTextCultureTest
     private JavaOption Option(JavaRuntime runtime) =>
         _vm.JavaOptions.Single(option => option.HomePath == runtime.HomePath);
 
+    private GcOption Gc(GarbageCollector? collector) => _vm.GcOptions.Single(option => option.Collector == collector);
+
+    private static Task<Result> Fails(ErrorCode code) => Task.FromResult<Result>(TestErrors.Create(code, Jdk25.HomePath));
+
     [Fact]
     public async Task Activate_GameSelected_ShowsJsonValuesAndFollowsThem()
     {
@@ -73,7 +77,7 @@ public class VersionSettingsViewModelTests : UiTextCultureTest
     [Fact]
     public async Task Activate_SavedOverrides_ShowsThem()
     {
-        _overrides.Set(ManualGame.RootPath, new GameLaunchOverrides(Jdk21.HomePath, 8192, 4096, "-XX:+UseZGC", "-debug \"a b\""));
+        _overrides.Set(ManualGame.RootPath, new GameLaunchOverrides(Jdk21.HomePath, 8192, 4096, "-XX:+UseZGC", "-debug \"a b\"", GarbageCollector.G1));
 
         await ActivateAsync(ManualGame);
 
@@ -85,6 +89,7 @@ public class VersionSettingsViewModelTests : UiTextCultureTest
         Assert.Equal(8192, _vm.MinMemorySliderMaximum);
         Assert.Equal("-XX:+UseZGC", _vm.ExtraJvmArgs);
         Assert.Equal("-debug \"a b\"", _vm.ExtraGameArgs);
+        Assert.Equal(GarbageCollector.G1, _vm.SelectedGc?.Collector);
         Assert.Empty(_overrides.Saved);
     }
 
@@ -192,7 +197,7 @@ public class VersionSettingsViewModelTests : UiTextCultureTest
     [Fact]
     public async Task EachChange_SavesForThatInstallOnly()
     {
-        _overrides.Set(SteamGame.RootPath, new GameLaunchOverrides(null, null, null, "", "-steam"));
+        _overrides.Set(SteamGame.RootPath, new GameLaunchOverrides(null, null, null, "", "-steam", null));
         await ActivateAsync(ManualGame);
 
         _vm.JavaSelection = Option(Jdk21);
@@ -202,22 +207,24 @@ public class VersionSettingsViewModelTests : UiTextCultureTest
         _vm.CustomMinMemoryMb = 1024;
         _vm.ExtraJvmArgs = "-XX:+UseZGC";
         _vm.ExtraGameArgs = "-debug";
+        _vm.GcSelection = Gc(GarbageCollector.Shenandoah);
         _vm.JavaSelection = _vm.JavaOptions[0];
 
         Assert.All(_overrides.Saved, save => Assert.Equal(ManualGame.RootPath, save.Root));
         Assert.Equal(
             [
-                new GameLaunchOverrides(Jdk21.HomePath, null, null, "", ""),
-                new GameLaunchOverrides(Jdk21.HomePath, 3072, null, "", ""),
-                new GameLaunchOverrides(Jdk21.HomePath, 6144, null, "", ""),
-                new GameLaunchOverrides(Jdk21.HomePath, 6144, 512, "", ""),
-                new GameLaunchOverrides(Jdk21.HomePath, 6144, 1024, "", ""),
-                new GameLaunchOverrides(Jdk21.HomePath, 6144, 1024, "-XX:+UseZGC", ""),
-                new GameLaunchOverrides(Jdk21.HomePath, 6144, 1024, "-XX:+UseZGC", "-debug"),
-                new GameLaunchOverrides(null, 6144, 1024, "-XX:+UseZGC", "-debug"),
+                new GameLaunchOverrides(Jdk21.HomePath, null, null, "", "", null),
+                new GameLaunchOverrides(Jdk21.HomePath, 3072, null, "", "", null),
+                new GameLaunchOverrides(Jdk21.HomePath, 6144, null, "", "", null),
+                new GameLaunchOverrides(Jdk21.HomePath, 6144, 512, "", "", null),
+                new GameLaunchOverrides(Jdk21.HomePath, 6144, 1024, "", "", null),
+                new GameLaunchOverrides(Jdk21.HomePath, 6144, 1024, "-XX:+UseZGC", "", null),
+                new GameLaunchOverrides(Jdk21.HomePath, 6144, 1024, "-XX:+UseZGC", "-debug", null),
+                new GameLaunchOverrides(Jdk21.HomePath, 6144, 1024, "-XX:+UseZGC", "-debug", GarbageCollector.Shenandoah),
+                new GameLaunchOverrides(null, 6144, 1024, "-XX:+UseZGC", "-debug", GarbageCollector.Shenandoah),
             ],
             _overrides.Saved.Select(save => save.Overrides));
-        Assert.Equal(new GameLaunchOverrides(null, null, null, "", "-steam"), _overrides.Get(SteamGame.RootPath));
+        Assert.Equal(new GameLaunchOverrides(null, null, null, "", "-steam", null), _overrides.Get(SteamGame.RootPath));
     }
 
     [Fact]
@@ -343,5 +350,172 @@ public class VersionSettingsViewModelTests : UiTextCultureTest
         _vm.BackCommand.Execute(null);
 
         Assert.Equal(1, raised);
+    }
+
+    [Fact]
+    public async Task Activate_GcOptions_FollowJsonThenOfferedCollectors()
+    {
+        await ActivateAsync();
+
+        Assert.Equal([null, GarbageCollector.G1, GarbageCollector.Z, GarbageCollector.Shenandoah], _vm.GcOptions.Select(option => option.Collector));
+        Assert.Same(_vm.GcOptions[0], _vm.SelectedGc);
+        Assert.Equal("Follow json (currently ZGC)", _vm.GcOptions[0].Label);
+        Assert.Equal(["G1", "ZGC", "Shenandoah"], _vm.GcOptions.Skip(1).Select(option => option.Label));
+    }
+
+    [Theory]
+    [InlineData(GarbageCollector.Shenandoah, true, "Follow json (currently Shenandoah, set by Viewpoint)")]
+    [InlineData(GarbageCollector.Shenandoah, false, "Follow json (currently Shenandoah)")]
+    [InlineData(null, false, "Follow json (not set)")]
+    public async Task Activate_FollowJsonLabel_NamesTheJsonGcAndViewpoint(GarbageCollector? jsonGc, bool setByViewpoint, string label)
+    {
+        _launcher.Defaults = _ => TestLaunch.Defaults() with { GarbageCollector = jsonGc, GarbageCollectorSetByViewpoint = setByViewpoint };
+
+        await ActivateAsync();
+
+        Assert.Equal(label, _vm.GcOptions[0].Label);
+    }
+
+    [Fact]
+    public async Task Activate_SavedGcThePageDoesNotOffer_ListedAndSelected()
+    {
+        _overrides.Set(SteamGame.RootPath, GameLaunchOverrides.Empty with { GarbageCollector = GarbageCollector.Parallel });
+
+        await ActivateAsync();
+
+        Assert.Equal(GarbageCollector.Parallel, _vm.SelectedGc?.Collector);
+        Assert.Same(_vm.GcOptions[^1], _vm.SelectedGc);
+        Assert.Empty(_overrides.Saved);
+    }
+
+    [Fact]
+    public async Task GcSelection_Null_KeepsTheChoice()
+    {
+        await ActivateAsync();
+        _vm.GcSelection = Gc(GarbageCollector.G1);
+
+        _vm.GcSelection = null;
+
+        Assert.Same(Gc(GarbageCollector.G1), _vm.SelectedGc);
+    }
+
+    [Fact]
+    public async Task Activate_ValidatesTheSavedSettings()
+    {
+        var saved = GameLaunchOverrides.Empty with { JavaHome = Jdk25.HomePath, GarbageCollector = GarbageCollector.Shenandoah };
+        _overrides.Set(SteamGame.RootPath, saved);
+
+        await ActivateAsync();
+
+        Assert.Equal([new LaunchGameRequest(SteamGame.RootPath, saved)], _launcher.Validations);
+    }
+
+    [Theory]
+    [InlineData(ErrorCode.LaunchGcIncompatible)]
+    [InlineData(ErrorCode.LaunchGcIncompatibleViewpoint)]
+    [InlineData(ErrorCode.LaunchGcConflict)]
+    public async Task GcProblem_ShownUnderGcAndClearedWhenGcChanges(ErrorCode code)
+    {
+        _launcher.Validate = _ => Fails(code);
+        await ActivateAsync();
+
+        Assert.Equal(ErrorMessages.ToUserText(TestErrors.Create(code, Jdk25.HomePath)), _vm.GcProblemText);
+        Assert.Null(_vm.LaunchProblemText);
+
+        _launcher.Validate = _ => Task.FromResult(Result.Ok());
+        _vm.GcSelection = Gc(GarbageCollector.G1);
+
+        Assert.Null(_vm.GcProblemText);
+        Assert.Equal(GarbageCollector.G1, _launcher.Validations[^1].Overrides.GarbageCollector);
+    }
+
+    [Fact]
+    public async Task GcProblem_ClearedWhenJavaChanges()
+    {
+        _launcher.Validate = request => request.Overrides.JavaHome == Jdk25.HomePath ? Fails(ErrorCode.LaunchGcIncompatible) : Task.FromResult(Result.Ok());
+        await ActivateAsync();
+
+        _vm.JavaSelection = Option(Jdk25);
+        Assert.NotNull(_vm.GcProblemText);
+
+        _vm.JavaSelection = Option(Jdk21);
+        Assert.Null(_vm.GcProblemText);
+    }
+
+    [Fact]
+    public async Task ExtraJvmArgsChange_IsValidated()
+    {
+        await ActivateAsync();
+        _launcher.Validate = _ => Fails(ErrorCode.LaunchGcConflict);
+
+        _vm.ExtraJvmArgs = "-XX:+UseG1GC";
+
+        Assert.Equal("-XX:+UseG1GC", _launcher.Validations[^1].Overrides.ExtraJvmArgs);
+        Assert.NotNull(_vm.GcProblemText);
+    }
+
+    [Fact]
+    public async Task MemoryChange_IsNotValidated()
+    {
+        await ActivateAsync();
+
+        _vm.MaxMemoryMode = MemoryMode.Custom;
+        _vm.CustomMaxMemoryMb = 6144;
+
+        Assert.Single(_launcher.Validations);
+    }
+
+    [Fact]
+    public async Task OtherLaunchProblem_ShownAtTheTopNotUnderGc()
+    {
+        _launcher.Validate = _ => Fails(ErrorCode.LaunchJavaMissing);
+
+        await ActivateAsync();
+
+        Assert.Equal(ErrorMessages.ToUserText(TestErrors.Create(ErrorCode.LaunchJavaMissing, Jdk25.HomePath)), _vm.LaunchProblemText);
+        Assert.Null(_vm.GcProblemText);
+    }
+
+    [Fact]
+    public async Task LaunchProblem_SameAsTheJsonWarning_NotRepeated()
+    {
+        var warning = TestErrors.Create(ErrorCode.LaunchConfigMalformed, "ProjectZomboid64.json");
+        _launcher.Defaults = _ => TestLaunch.Defaults(warnings: [warning]);
+        _launcher.Validate = _ => Task.FromResult<Result>(warning);
+
+        await ActivateAsync();
+
+        Assert.Single(_vm.Warnings);
+        Assert.Null(_vm.LaunchProblemText);
+    }
+
+    [Fact]
+    public async Task Validation_LatestChangeWins()
+    {
+        await ActivateAsync();
+        var slow = new TaskCompletionSource<Result>();
+        _launcher.Validate = _ => slow.Task;
+        _vm.GcSelection = Gc(GarbageCollector.Shenandoah);
+
+        _launcher.Validate = _ => Task.FromResult(Result.Ok());
+        _vm.GcSelection = Gc(GarbageCollector.G1);
+        slow.SetResult(TestErrors.Create(ErrorCode.LaunchGcIncompatible, Jdk25.HomePath));
+        await Task.Yield();
+
+        Assert.Null(_vm.GcProblemText);
+    }
+
+    [Fact]
+    public async Task LanguageChanged_RerendersTheGcProblem()
+    {
+        var problem = TestErrors.Create(ErrorCode.LaunchGcIncompatible, Jdk25.HomePath);
+        _launcher.Validate = _ => Task.FromResult<Result>(problem);
+        await ActivateAsync();
+        var english = _vm.GcProblemText;
+
+        Localization.SetLanguage(AppLanguage.Russian);
+
+        Assert.NotEqual(english, _vm.GcProblemText);
+        Assert.Equal(ErrorMessages.ToUserText(problem), _vm.GcProblemText);
     }
 }

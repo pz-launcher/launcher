@@ -15,6 +15,7 @@ public static class ServiceCollectionExtensions
     {
         services.TryAddSingleton<IPlatformEnvironment, PlatformEnvironment>();
         services.TryAddSingleton<IProcessRunner, ProcessRunner>();
+        services.TryAddSingleton(TimeProvider.System);
 
         services.TryAddSingleton<SteamLocator>();
         services.TryAddSingleton<SteamLibraryReader>();

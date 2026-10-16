@@ -21,6 +21,15 @@ public static class ResultAssert
         return result.Error;
     }
 
+    public static void Ok(Result result) => Assert.True(result.IsSuccess, result.Error?.Message);
+
+    public static Error Failed(Result result, ErrorCode code)
+    {
+        Assert.False(result.IsSuccess);
+        Assert.Equal(code, result.Error.Code);
+        return result.Error;
+    }
+
     public static Error SingleWarning(InstallScanResult scan, ErrorCode code) => SingleWarning(scan.Warnings, code);
 
     public static Error SingleWarning(JavaScanResult scan, ErrorCode code) => SingleWarning(scan.Warnings, code);

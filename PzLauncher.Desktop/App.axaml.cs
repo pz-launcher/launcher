@@ -43,7 +43,6 @@ public partial class App : Application
             var services = new ServiceCollection();
             services.AddLogging(logging => logging.AddDebug());
             services.AddPzLauncherCore();
-            services.AddSingleton(TimeProvider.System);
             services.AddSingleton<IFolderPicker>(new AvaloniaFolderPicker(() => desktop.MainWindow));
             services.AddSingleton<IDialogService>(new AvaloniaDialogService(() => desktop.MainWindow));
             WindowPlacementPersistence? windowPlacement = null;

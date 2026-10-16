@@ -11,7 +11,7 @@ public class InstallOverridesServiceTests
 
     private static readonly TimeSpan SaveDelay = TimeSpan.FromMilliseconds(300);
 
-    private static readonly GameLaunchOverrides Saved = new(@"C:\Java\jdk-25", 8192, 2048, "-XX:+UseZGC", "-debug");
+    private static readonly GameLaunchOverrides Saved = new(@"C:\Java\jdk-25", 8192, 2048, "-XX:+UseZGC", "-debug", GarbageCollector.Z);
 
     private readonly FakePreferenceStore _store = new();
     private readonly ManualTimeProvider _time = new();

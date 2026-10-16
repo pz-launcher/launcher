@@ -67,6 +67,8 @@
                 <Border Padding="16" CornerRadius="4" BorderThickness="1" BorderBrush="{DynamicResource Shell.Border}">
                     <StackPanel Spacing="8">
                         <TextBlock Text="{x:Static lang:UiText.VersionSettings_LaunchSection}" FontSize="16" FontWeight="SemiBold" />
+                        <TextBlock Text="{Binding LaunchProblemText}" Foreground="{DynamicResource Shell.ErrorForeground}" TextWrapping="Wrap"
+                                   IsVisible="{Binding LaunchProblemText, Converter={x:Static ObjectConverters.IsNotNull}}" />
 
                         <TextBlock Classes="sectionLabel" Text="{x:Static lang:UiText.VersionSettings_Java}" />
                         <ComboBox ItemsSource="{Binding JavaOptions}" SelectedItem="{Binding JavaSelection}"
@@ -85,6 +87,17 @@
                         <TextBlock Text="{Binding BundledJavaMajor, StringFormat={x:Static lang:UiText.VersionSettings_JavaVersionWarning}}"
                                    Foreground="{DynamicResource Shell.WarningForeground}" TextWrapping="Wrap"
                                    IsVisible="{Binding ShowJavaVersionWarning}" />
+
+                        <TextBlock Classes="sectionLabel" Text="{x:Static lang:UiText.VersionSettings_Gc}" />
+                        <ComboBox ItemsSource="{Binding GcOptions}" SelectedItem="{Binding GcSelection}" HorizontalAlignment="Stretch">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate x:DataType="vm:GcOption">
+                                    <TextBlock Text="{Binding Label}" />
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                        <TextBlock Text="{Binding GcProblemText}" Foreground="{DynamicResource Shell.ErrorForeground}" TextWrapping="Wrap"
+                                   IsVisible="{Binding GcProblemText, Converter={x:Static ObjectConverters.IsNotNull}}" />
 
                         <TextBlock Classes="sectionLabel" Text="{x:Static lang:UiText.VersionSettings_Memory}" />
                         <StackPanel Orientation="Horizontal" Spacing="24">

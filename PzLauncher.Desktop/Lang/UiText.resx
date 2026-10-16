@@ -178,6 +178,22 @@
   <data name="Error_LaunchStartFailed" xml:space="preserve">
     <value>Couldn't start the game with {0}.</value>
   </data>
+  <data name="Error_LaunchGcIncompatible" xml:space="preserve">
+    <value>{0} has the Graal compiler, which doesn't support the Shenandoah GC. In Version settings, change the GC to G1 or ZGC, or choose another Java.</value>
+  </data>
+  <data name="Error_LaunchGcIncompatibleViewpoint" xml:space="preserve">
+    <value>The Viewpoint mod switched the game's GC to Shenandoah to save memory, but the GraalVM you chose doesn't support it, so the game would crash at start. In Version settings, change the GC to G1 or ZGC (Viewpoint keeps working, it just uses more memory), or switch back to the game's bundled Java.</value>
+  </data>
+  <data name="Error_LaunchGameCrashed" xml:space="preserve">
+    <value>The game's Java crashed (exit code {1}). Crash log: {0}</value>
+  </data>
+  <data name="Error_LaunchGameExitedEarly" xml:space="preserve">
+    <value>The game closed right after starting (exit code {0}). Check the extra JVM arguments, the Java and the GC in Version settings.
+{1}</value>
+  </data>
+  <data name="Error_LaunchGcConflict" xml:space="preserve">
+    <value>More than one garbage collector is selected ({0}). Keep only one: in the GC list or in the extra JVM arguments.</value>
+  </data>
   <data name="Error_FolderNotLocal" xml:space="preserve">
     <value>{0} isn't a folder on this computer, so the launcher can't open it. Pick a local folder instead.</value>
   </data>
@@ -294,5 +310,32 @@
   </data>
   <data name="VersionSettings_ArgsHint" xml:space="preserve">
     <value>Separate arguments with spaces; put a value that contains spaces in double quotes.</value>
+  </data>
+  <data name="VersionSettings_Gc" xml:space="preserve">
+    <value>Garbage collector (GC)</value>
+  </data>
+  <data name="VersionSettings_GcFollowJson" xml:space="preserve">
+    <value>Follow json (currently {0})</value>
+  </data>
+  <data name="VersionSettings_GcNotSet" xml:space="preserve">
+    <value>Follow json (not set)</value>
+  </data>
+  <data name="VersionSettings_GcSetByViewpoint" xml:space="preserve">
+    <value>Follow json (currently {0}, set by Viewpoint)</value>
+  </data>
+  <data name="GarbageCollector_G1" xml:space="preserve">
+    <value>G1</value>
+  </data>
+  <data name="GarbageCollector_Z" xml:space="preserve">
+    <value>ZGC</value>
+  </data>
+  <data name="GarbageCollector_Shenandoah" xml:space="preserve">
+    <value>Shenandoah</value>
+  </data>
+  <data name="GarbageCollector_Parallel" xml:space="preserve">
+    <value>Parallel</value>
+  </data>
+  <data name="GarbageCollector_Serial" xml:space="preserve">
+    <value>Serial</value>
   </data>
 </root>

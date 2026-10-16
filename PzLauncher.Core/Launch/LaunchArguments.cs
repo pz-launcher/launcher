@@ -12,20 +12,22 @@ internal static class LaunchArguments
 
     private const string ClasspathOption = "-cp";
 
-    /// <summary>JVM args, <c>-cp</c>, main class and game args, in the order the JVM expects them.</summary>
-    public static List<string> Build(PzLaunchConfig config, PlatformKind os, Version osVersion, GameLaunchOverrides overrides)
+    /// <summary>JVM args (from <see cref="JvmArgs"/>), <c>-cp</c>, main class and game args, in the order the JVM expects them.</summary>
+    public static List<string> Build(PzLaunchConfig config, PlatformKind os, IReadOnlyList<string> jvmArgs, GameLaunchOverrides overrides) =>
+    [
+        .. jvmArgs,
+        ClasspathOption,
+        string.Join(JavaLocations.PathListSeparator(os), config.Classpath),
+        config.MainClass.Replace('/', '.'),
+        .. Split(overrides.ExtraGameArgs),
+    ];
+
+    /// <summary>The json's JVM args with the heap and GC overrides applied, then the extra JVM args.</summary>
+    public static List<string> JvmArgs(IReadOnlyList<string> jsonJvmArgs, GameLaunchOverrides overrides, IReadOnlyList<string> extraJvmArgs)
     {
-        var jvmArgs = WithHeapSize(config.JvmArgs(os, osVersion), MaxHeapPrefix, overrides.MaxMemoryMb);
+        var jvmArgs = WithHeapSize(jsonJvmArgs, MaxHeapPrefix, overrides.MaxMemoryMb);
         jvmArgs = WithHeapSize(jvmArgs, InitialHeapPrefix, overrides.MinMemoryMb);
-        return
-        [
-            .. jvmArgs,
-            .. Split(overrides.ExtraJvmArgs),
-            ClasspathOption,
-            string.Join(JavaLocations.PathListSeparator(os), config.Classpath),
-            config.MainClass.Replace('/', '.'),
-            .. Split(overrides.ExtraGameArgs),
-        ];
+        return [.. GarbageCollectors.WithOverride(jvmArgs, overrides.GarbageCollector, extraJvmArgs), .. extraJvmArgs];
     }
 
     /// <summary>Whitespace separates; double quotes group and are removed; an unclosed quote runs to the end. No escapes.</summary>

@@ -95,20 +95,26 @@ public static class DesignData
                     Path.Combine(installRoot, "jre64", "bin", OperatingSystem.IsWindows() ? "javaw.exe" : "java"),
                     new JavaVersion(25, "25.0.1"),
                     "Azul Systems, Inc.",
-                    JavaRuntimeSource.Manual),
+                    JavaRuntimeSource.Manual,
+                    HasGraalCompiler: false),
                 SystemMemoryMb: 16 * 1024,
-                Warnings: []));
+                Warnings: [],
+                GarbageCollector: GarbageCollector.Shenandoah,
+                GarbageCollectorSetByViewpoint: true));
 
         public Task<Result<GameSession>> LaunchAsync(LaunchGameRequest request, CancellationToken ct = default) =>
             Task.FromResult<Result<GameSession>>(new Error(ErrorCode.LaunchPlatformUnsupported, "sample", ErrorKind.Validation));
 
-        public Task WaitForExitAsync(CancellationToken ct = default) => Task.CompletedTask;
+        public Task<Result> ValidateAsync(LaunchGameRequest request, CancellationToken ct = default) =>
+            Task.FromResult<Result>(new Error(ErrorCode.LaunchGcIncompatibleViewpoint, "sample", ErrorKind.Validation));
+
+        public Task<Result> WaitForExitAsync(CancellationToken ct = default) => Task.FromResult(Result.Ok());
     }
 
     private sealed class SampleInstallOverrides : IInstallOverridesService
     {
         public GameLaunchOverrides Get(string installRoot) =>
-            new(SampleJavaHome("zulu-21"), MaxMemoryMb: 8192, MinMemoryMb: null, ExtraJvmArgs: "", ExtraGameArgs: "-debug");
+            new(SampleJavaHome("zulu-21"), MaxMemoryMb: 8192, MinMemoryMb: null, ExtraJvmArgs: "", ExtraGameArgs: "-debug", GarbageCollector: null);
 
         public void Save(string installRoot, GameLaunchOverrides overrides)
         {
@@ -137,7 +143,7 @@ public static class DesignData
             Task.FromResult<Result<JavaRuntime>>(new Error(ErrorCode.JavaPathNotFound, "sample", ErrorKind.NotFound));
 
         private static JavaRuntime Runtime(string name, JavaVersion? version, string? vendor, JavaRuntimeSource source) =>
-            new(SampleJavaHome(name), Path.Combine(SampleJavaHome(name), "bin", OperatingSystem.IsWindows() ? "javaw.exe" : "java"), version, vendor, source);
+            new(SampleJavaHome(name), Path.Combine(SampleJavaHome(name), "bin", OperatingSystem.IsWindows() ? "javaw.exe" : "java"), version, vendor, source, HasGraalCompiler: false);
     }
 
     private sealed class SampleInstallDetection : IInstallDetectionService

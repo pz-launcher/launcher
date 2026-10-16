@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using PzLauncher.Core.Common;
 using PzLauncher.Core.Installs;
 using PzLauncher.Core.Launch;
 using PzLauncher.Desktop.Localization;
@@ -79,13 +80,19 @@ public partial class HomeViewModel : ViewModelBase
         }
 
         IsGameRunning = true;
+        Result exit;
         try
         {
-            await _launcher.WaitForExitAsync();
+            exit = await _launcher.WaitForExitAsync();
         }
         finally
         {
             IsGameRunning = false;
+        }
+
+        if (!exit.IsSuccess)
+        {
+            await _dialogs.ShowErrorAsync(ErrorMessages.ToUserText(exit.Error));
         }
     }
 

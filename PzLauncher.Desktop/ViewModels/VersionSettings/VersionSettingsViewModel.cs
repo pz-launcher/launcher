@@ -26,6 +26,8 @@ public partial class VersionSettingsViewModel : ViewModelBase
     private const int MinMemoryFloorMb = 512;
     private const int DefaultCustomMaxMemoryMb = 8192;
 
+    private static readonly GarbageCollector[] OfferedCollectors = [GarbageCollector.G1, GarbageCollector.Z, GarbageCollector.Shenandoah];
+
     private readonly InstallsViewModel _installs;
     private readonly IGameLaunchService _launcher;
     private readonly IInstallOverridesService _overrides;
@@ -35,12 +37,14 @@ public partial class VersionSettingsViewModel : ViewModelBase
     // Sources of the shown texts, kept so a language switch can re-render them.
     private readonly List<Error> _warningSources = [];
     private Error? _errorSource;
+    private Error? _launchProblemSource;
 
     // Set while fields are filled from saved values, so filling them doesn't save or pull values around.
     private bool _applying;
 
-    // A newer activation supersedes a load still in flight.
+    // A newer activation supersedes a load still in flight; a newer check supersedes one still running.
     private int _loadVersion;
+    private int _validationVersion;
 
     // A saved min above the effective max stays in the min slider's range until a max change pulls it down.
     private int _loadedMinMemoryMb;
@@ -76,6 +80,12 @@ public partial class VersionSettingsViewModel : ViewModelBase
     [ObservableProperty] public partial bool HasSettings { get; private set; }
 
     [ObservableProperty] public partial string? ErrorText { get; private set; }
+
+    /// <summary>Why the next launch would fail with the current settings, other than a GC problem.</summary>
+    [ObservableProperty] public partial string? LaunchProblemText { get; private set; }
+
+    /// <summary>Why the next launch would fail because of the GC; shown under the GC choice.</summary>
+    [ObservableProperty] public partial string? GcProblemText { get; private set; }
 
     public ObservableCollection<string> Warnings { get; } = [];
 
@@ -150,6 +160,27 @@ public partial class VersionSettingsViewModel : ViewModelBase
 
     [ObservableProperty] public partial string ExtraGameArgs { get; set; } = "";
 
+    public ObservableCollection<GcOption> GcOptions { get; } = [];
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(GcSelection))]
+    public partial GcOption? SelectedGc { get; private set; }
+
+    // The combo box pushes null while its items are replaced; that must not clear the choice.
+    public GcOption? GcSelection
+    {
+        get => SelectedGc;
+        set
+        {
+            if (value is not null)
+            {
+                SelectedGc = value;
+            }
+        }
+    }
+
+    private bool IsEditing => !_applying && HasSettings && Install is not null;
+
     // The view calls this on every load: the selected install may have changed since.
     [RelayCommand(AllowConcurrentExecutions = true)]
     private async Task ActivateAsync(CancellationToken ct)
@@ -159,6 +190,8 @@ public partial class VersionSettingsViewModel : ViewModelBase
         Install = install;
         HasSettings = false;
         ShowError(null);
+        _validationVersion++;
+        ShowLaunchProblem(null);
         _warningSources.Clear();
         Warnings.Clear();
         if (install is null)
@@ -185,6 +218,7 @@ public partial class VersionSettingsViewModel : ViewModelBase
 
             Apply(result.Value, _overrides.Get(install.RootPath));
             HasSettings = true;
+            await ValidateAsync(ct);
         }
         catch (OperationCanceledException) when (ct.IsCancellationRequested)
         {
@@ -236,6 +270,7 @@ public partial class VersionSettingsViewModel : ViewModelBase
 
             ExtraJvmArgs = saved.ExtraJvmArgs;
             ExtraGameArgs = saved.ExtraGameArgs;
+            RebuildGcOptions(defaults, saved.GarbageCollector);
         }
         finally
         {
@@ -270,7 +305,27 @@ public partial class VersionSettingsViewModel : ViewModelBase
         SelectedJava = selected;
     }
 
-    partial void OnSelectedJavaChanged(JavaOption? value) => Save();
+    private void RebuildGcOptions(GameLaunchDefaults defaults, GarbageCollector? saved)
+    {
+        GcOptions.Clear();
+        GcOptions.Add(GcOption.FollowJson(defaults.GarbageCollector, defaults.GarbageCollectorSetByViewpoint));
+        foreach (var collector in OfferedCollectors)
+        {
+            GcOptions.Add(GcOption.Override(collector));
+        }
+
+        // A collector the page doesn't offer (a hand-edited file) is listed so the selection stays visible.
+        if (saved is { } kept && !OfferedCollectors.Contains(kept))
+        {
+            GcOptions.Add(GcOption.Override(kept));
+        }
+
+        SelectedGc = GcOptions.First(option => option.Collector == saved);
+    }
+
+    partial void OnSelectedJavaChanged(JavaOption? value) => SaveAndValidate();
+
+    partial void OnSelectedGcChanged(GcOption? value) => SaveAndValidate();
 
     partial void OnMaxMemoryModeChanged(MemoryMode value) => OnMaxMemoryChanged();
 
@@ -288,7 +343,7 @@ public partial class VersionSettingsViewModel : ViewModelBase
         Save();
     }
 
-    partial void OnExtraJvmArgsChanged(string value) => Save();
+    partial void OnExtraJvmArgsChanged(string value) => SaveAndValidate();
 
     partial void OnExtraGameArgsChanged(string value) => Save();
 
@@ -323,19 +378,50 @@ public partial class VersionSettingsViewModel : ViewModelBase
         Save();
     }
 
+    private GameLaunchOverrides CurrentOverrides() => new(
+        SelectedJava?.HomePath,
+        MaxMemoryMode == MemoryMode.Custom ? CustomMaxMemoryMb : null,
+        MinMemoryMode == MemoryMode.Custom ? CustomMinMemoryMb : null,
+        ExtraJvmArgs,
+        ExtraGameArgs,
+        SelectedGc?.Collector);
+
     private void Save()
     {
-        if (_applying || !HasSettings || Install is null)
+        if (IsEditing && Install is not null)
+        {
+            _overrides.Save(Install.RootPath, CurrentOverrides());
+        }
+    }
+
+    // Memory changes aren't checked: the page keeps min <= max itself, and the GC rules don't depend on memory.
+    private void SaveAndValidate()
+    {
+        if (!IsEditing)
         {
             return;
         }
 
-        _overrides.Save(Install.RootPath, new GameLaunchOverrides(
-            SelectedJava?.HomePath,
-            MaxMemoryMode == MemoryMode.Custom ? CustomMaxMemoryMb : null,
-            MinMemoryMode == MemoryMode.Custom ? CustomMinMemoryMb : null,
-            ExtraJvmArgs,
-            ExtraGameArgs));
+        Save();
+        _ = ValidateAsync(CancellationToken.None);
+    }
+
+    private async Task ValidateAsync(CancellationToken ct)
+    {
+        if (Install is not { } install)
+        {
+            return;
+        }
+
+        var version = ++_validationVersion;
+        var result = await _launcher.ValidateAsync(new LaunchGameRequest(install.RootPath, CurrentOverrides()), ct);
+        if (version != _validationVersion)
+        {
+            return;
+        }
+
+        // An unreadable json is already shown as a warning.
+        ShowLaunchProblem(result.IsSuccess || _warningSources.Any(warning => warning.Code == result.Error.Code) ? null : result.Error);
     }
 
     private void ShowError(Error? error)
@@ -344,9 +430,19 @@ public partial class VersionSettingsViewModel : ViewModelBase
         ErrorText = error is null ? null : ErrorMessages.ToUserText(error);
     }
 
+    private void ShowLaunchProblem(Error? problem)
+    {
+        _launchProblemSource = problem;
+        var text = problem is null ? null : ErrorMessages.ToUserText(problem);
+        var isGc = problem?.Code is ErrorCode.LaunchGcIncompatible or ErrorCode.LaunchGcIncompatibleViewpoint or ErrorCode.LaunchGcConflict;
+        GcProblemText = isGc ? text : null;
+        LaunchProblemText = isGc ? null : text;
+    }
+
     private void RenderTexts()
     {
         ErrorText = _errorSource is null ? null : ErrorMessages.ToUserText(_errorSource);
+        ShowLaunchProblem(_launchProblemSource);
         for (var i = 0; i < _warningSources.Count; i++)
         {
             Warnings[i] = ErrorMessages.ToUserText(_warningSources[i]);

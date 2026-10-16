@@ -90,8 +90,16 @@ public sealed class JavaDiscoveryServiceInspectTests : IDisposable
         var runtime = ResultAssert.Ok(await _service.InspectAsync(trailingSeparator ? picked + Path.DirectorySeparatorChar : picked, Ct));
 
         Assert.Equal(
-            new JavaRuntime(home, _java.ExecutableOf(home), new JavaVersion(21, "21.0.9"), "Eclipse Adoptium", JavaRuntimeSource.Manual),
+            new JavaRuntime(home, _java.ExecutableOf(home), new JavaVersion(21, "21.0.9"), "Eclipse Adoptium", JavaRuntimeSource.Manual, HasGraalCompiler: false),
             runtime);
+    }
+
+    [Fact]
+    public async Task InspectAsync_GraalVmHome_ReportsGraalCompiler()
+    {
+        var home = _java.Create("graalvm-ce-25", Release("25.0.2", "GraalVM Community", graalVersion: "25.0.2"));
+
+        Assert.True(ResultAssert.Ok(await _service.InspectAsync(home, Ct)).HasGraalCompiler);
     }
 
     [Fact]
@@ -103,7 +111,7 @@ public sealed class JavaDiscoveryServiceInspectTests : IDisposable
 
         var runtime = ResultAssert.Ok(await service.InspectAsync(home, Ct));
 
-        Assert.Equal(new JavaRuntime(home, linux.ExecutableOf(home), null, null, JavaRuntimeSource.Manual), runtime);
+        Assert.Equal(new JavaRuntime(home, linux.ExecutableOf(home), null, null, JavaRuntimeSource.Manual, HasGraalCompiler: false), runtime);
     }
 
     [Fact]

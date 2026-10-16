@@ -23,7 +23,7 @@ public sealed class JsonPreferenceStoreTests : IDisposable
 
     private static readonly string OtherRoot = OperatingSystem.IsWindows() ? @"D:\Games\Project Zomboid" : "/opt/games/Project Zomboid";
 
-    private static readonly GameLaunchOverrides Overrides = new(JavaA, 8192, 2048, "-Dzomboid.steam=1", "-debug");
+    private static readonly GameLaunchOverrides Overrides = new(JavaA, 8192, 2048, "-Dzomboid.steam=1", "-debug", GarbageCollector.Shenandoah);
 
     private static UserPreferences WithJava(params string[] homes) => new(null, null, null) { ManualJavaHomes = homes };
 
@@ -128,7 +128,7 @@ public sealed class JsonPreferenceStoreTests : IDisposable
         await store.SaveInstallOverridesAsync(GameRoot, Overrides, TestContext.Current.CancellationToken);
         await store.SaveInstallOverridesAsync(OtherRoot, GameLaunchOverrides.Empty, TestContext.Current.CancellationToken);
 
-        var game = $$"""{{JsonSerializer.Serialize(GameRoot)}}:{"javaHome":{{JsonSerializer.Serialize(JavaA)}},"maxMemoryMb":8192,"minMemoryMb":2048,"jvmArgs":"-Dzomboid.steam=1","gameArgs":"-debug"}""";
+        var game = $$"""{{JsonSerializer.Serialize(GameRoot)}}:{"javaHome":{{JsonSerializer.Serialize(JavaA)}},"maxMemoryMb":8192,"minMemoryMb":2048,"jvmArgs":"-Dzomboid.steam=1","gameArgs":"-debug","gc":"shenandoah"}""";
         var other = $$"""{{JsonSerializer.Serialize(OtherRoot)}}:{"jvmArgs":"","gameArgs":""}""";
         Assert.Equal(
             """{"installs":{""" + game + "," + other + "}}",
@@ -319,7 +319,7 @@ public sealed class JsonPreferenceStoreTests : IDisposable
         string Child(string name) => Key(Path.Combine(GameRoot, name));
         WriteFile($$"""
             {"theme":"dark","installs":{
-              {{Key(GameRoot)}}:{"javaHome":{{java}},"maxMemoryMb":8192,"minMemoryMb":2048,"jvmArgs":"-Dzomboid.steam=1","gameArgs":"-debug"},
+              {{Key(GameRoot)}}:{"javaHome":{{java}},"maxMemoryMb":8192,"minMemoryMb":2048,"jvmArgs":"-Dzomboid.steam=1","gameArgs":"-debug","gc":"shenandoah"},
               {{Key(OtherRoot)}}:{},
               {{relativeRoot}}:{"gameArgs":"-debug"},
               {{Child("zero")}}:{"maxMemoryMb":0},
@@ -328,6 +328,7 @@ public sealed class JsonPreferenceStoreTests : IDisposable
               {{Child("relative-java")}}:{"javaHome":"jdk-21"},
               {{Child("text-memory")}}:{"maxMemoryMb":"8g"},
               {{Child("fraction")}}:{"maxMemoryMb":1.5},
+              {{Child("number-gc")}}:{"gc":1},
               {{Child("number")}}:5,
               {{Child("null")}}:null
             }
@@ -340,5 +341,39 @@ public sealed class JsonPreferenceStoreTests : IDisposable
                 InstallOverrides = WithInstalls((GameRoot, Overrides), (OtherRoot, GameLaunchOverrides.Empty)).InstallOverrides,
             },
             CreateStore().Load());
+    }
+
+    public static TheoryData<GarbageCollector> Collectors => [.. Enum.GetValues<GarbageCollector>()];
+
+    [Theory]
+    [MemberData(nameof(Collectors))]
+    public async Task SaveInstallOverridesAsync_EveryGc_RoundTrips(GarbageCollector gc)
+    {
+        var overrides = GameLaunchOverrides.Empty with { GarbageCollector = gc };
+
+        await CreateStore().SaveInstallOverridesAsync(GameRoot, overrides, TestContext.Current.CancellationToken);
+
+        Assert.Equal(WithInstalls((GameRoot, overrides)), CreateStore().Load());
+    }
+
+    [Theory]
+    [InlineData("g1", GarbageCollector.G1)]
+    [InlineData("zgc", GarbageCollector.Z)]
+    [InlineData("shenandoah", GarbageCollector.Shenandoah)]
+    [InlineData("parallel", GarbageCollector.Parallel)]
+    [InlineData("serial", GarbageCollector.Serial)]
+    public async Task SaveInstallOverridesAsync_WritesStableGcNames(string name, GarbageCollector gc)
+    {
+        await CreateStore().SaveInstallOverridesAsync(GameRoot, GameLaunchOverrides.Empty with { GarbageCollector = gc }, TestContext.Current.CancellationToken);
+
+        Assert.Contains($"\"gc\":\"{name}\"", await File.ReadAllTextAsync(FilePath, TestContext.Current.CancellationToken), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Load_UnknownGc_KeepsTheEntryFollowingJson()
+    {
+        WriteFile("""{"installs":{""" + JsonSerializer.Serialize(GameRoot) + """:{"gameArgs":"-debug","gc":"epsilon"}}}""");
+
+        Assert.Equal(WithInstalls((GameRoot, GameLaunchOverrides.Empty with { ExtraGameArgs = "-debug" })), CreateStore().Load());
     }
 }
