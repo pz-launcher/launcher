@@ -49,8 +49,14 @@
   <data name="Home_Launch" xml:space="preserve">
     <value>启动游戏</value>
   </data>
-  <data name="Home_SelectVersion" xml:space="preserve">
-    <value>版本选择</value>
+  <data name="Home_ChooseInstall" xml:space="preserve">
+    <value>选择安装</value>
+  </data>
+  <data name="Home_GameRunning" xml:space="preserve">
+    <value>游戏运行中</value>
+  </data>
+  <data name="Home_LaunchSettings" xml:space="preserve">
+    <value>启动设置</value>
   </data>
   <data name="Installs_Title" xml:space="preserve">
     <value>已安装</value>
@@ -63,9 +69,6 @@
   </data>
   <data name="Installs_Empty" xml:space="preserve">
     <value>未找到 Project Zomboid 的安装。请通过 Steam 安装游戏或专用服务器，或使用“添加文件夹…”。</value>
-  </data>
-  <data name="Installs_FilterAll" xml:space="preserve">
-    <value>全部</value>
   </data>
   <data name="Installs_FilterKindGroup" xml:space="preserve">
     <value>类型</value>
@@ -81,6 +84,9 @@
   </data>
   <data name="Installs_PickFolderTitle" xml:space="preserve">
     <value>选择 Project Zomboid 游戏或服务器文件夹</value>
+  </data>
+  <data name="Installs_InUse" xml:space="preserve">
+    <value>正在使用</value>
   </data>
   <data name="InstallKind_Game" xml:space="preserve">
     <value>游戏</value>
@@ -148,6 +154,46 @@
   <data name="Error_JavaReleaseUnreadable" xml:space="preserve">
     <value>无法读取版本文件 {0}。该 Java 将以未知版本列出。</value>
   </data>
+  <data name="Error_LaunchPlatformUnsupported" xml:space="preserve">
+    <value>此平台暂不支持启动游戏。</value>
+  </data>
+  <data name="Error_LaunchInvalidMemory" xml:space="preserve">
+    <value>内存设置 {0} MB 无效。内存必须大于 0，且最小内存不能大于最大内存。</value>
+  </data>
+  <data name="Error_LaunchAlreadyRunning" xml:space="preserve">
+    <value>游戏已在运行。</value>
+  </data>
+  <data name="Error_LaunchNotAGame" xml:space="preserve">
+    <value>{0} 不是 Project Zomboid 游戏文件夹。</value>
+  </data>
+  <data name="Error_LaunchConfigMissing" xml:space="preserve">
+    <value>启动配置 {0} 不存在。请尝试在 Steam 中验证游戏文件的完整性。</value>
+  </data>
+  <data name="Error_LaunchConfigMalformed" xml:space="preserve">
+    <value>无法读取启动配置 {0}。请尝试在 Steam 中验证游戏文件的完整性。</value>
+  </data>
+  <data name="Error_LaunchJavaMissing" xml:space="preserve">
+    <value>Java 程序 {0} 不存在。请在“启动设置”中为此安装选择其他 Java。</value>
+  </data>
+  <data name="Error_LaunchStartFailed" xml:space="preserve">
+    <value>无法使用 {0} 启动游戏。</value>
+  </data>
+  <data name="Error_LaunchGcIncompatible" xml:space="preserve">
+    <value>{0} 带 Graal 编译器，不支持 Shenandoah GC。请在“启动设置”中把 GC 改为 G1 或 ZGC，或换用其他 Java。</value>
+  </data>
+  <data name="Error_LaunchGcIncompatibleViewpoint" xml:space="preserve">
+    <value>Viewpoint mod 为了省内存把游戏的 GC 改成了 Shenandoah，当前选择的 GraalVM 不支持它，游戏会直接崩溃。请在“启动设置”中把 GC 改为 G1 或 ZGC（Viewpoint 照常可用，只是内存占用高一些），或换回游戏自带的 Java。</value>
+  </data>
+  <data name="Error_LaunchGameCrashed" xml:space="preserve">
+    <value>游戏的 Java 崩溃了（退出代码 {1}）。崩溃日志：{0}</value>
+  </data>
+  <data name="Error_LaunchGameExitedEarly" xml:space="preserve">
+    <value>游戏刚启动就退出了（退出代码 {0}）。请检查“启动设置”中的额外 JVM 参数、Java 和 GC。
+{1}</value>
+  </data>
+  <data name="Error_LaunchGcConflict" xml:space="preserve">
+    <value>同时选择了多个不同的 GC（{0}）。请只保留一个：在 GC 下拉框中选择，或写在额外 JVM 参数里。</value>
+  </data>
   <data name="Error_FolderNotLocal" xml:space="preserve">
     <value>{0} 不是这台电脑上的文件夹，启动器无法打开它。请选择本地文件夹。</value>
   </data>
@@ -213,5 +259,86 @@
   </data>
   <data name="JavaSource_Manual" xml:space="preserve">
     <value>手动</value>
+  </data>
+  <data name="LaunchSettings_Title" xml:space="preserve">
+    <value>启动设置</value>
+  </data>
+  <data name="LaunchSettings_Back" xml:space="preserve">
+    <value>返回</value>
+  </data>
+  <data name="LaunchSettings_Use" xml:space="preserve">
+    <value>使用此安装</value>
+  </data>
+  <data name="LaunchSettings_LaunchSection" xml:space="preserve">
+    <value>启动参数</value>
+  </data>
+  <data name="LaunchSettings_Java" xml:space="preserve">
+    <value>Java</value>
+  </data>
+  <data name="LaunchSettings_JavaBundled" xml:space="preserve">
+    <value>游戏自带（{0}）</value>
+  </data>
+  <data name="LaunchSettings_JavaVersionWarning" xml:space="preserve">
+    <value>此 Java 比游戏自带的 Java {0} 旧，游戏可能无法启动。</value>
+  </data>
+  <data name="LaunchSettings_Memory" xml:space="preserve">
+    <value>最大内存</value>
+  </data>
+  <data name="LaunchSettings_MinMemory" xml:space="preserve">
+    <value>最小内存</value>
+  </data>
+  <data name="LaunchSettings_MemoryFollowJson" xml:space="preserve">
+    <value>跟随 json（当前 {0} MB）</value>
+  </data>
+  <data name="LaunchSettings_MemoryNotSet" xml:space="preserve">
+    <value>跟随 json（未设置）</value>
+  </data>
+  <data name="LaunchSettings_MemoryCustom" xml:space="preserve">
+    <value>自定义</value>
+  </data>
+  <data name="LaunchSettings_MemoryValue" xml:space="preserve">
+    <value>{0} GB</value>
+  </data>
+  <data name="LaunchSettings_SystemMemory" xml:space="preserve">
+    <value>本机内存：{0} GB</value>
+  </data>
+  <data name="LaunchSettings_JvmArgs" xml:space="preserve">
+    <value>额外 JVM 参数</value>
+  </data>
+  <data name="LaunchSettings_JsonVmArgs" xml:space="preserve">
+    <value>ProjectZomboid64.json 中的 JVM 参数：</value>
+  </data>
+  <data name="LaunchSettings_GameArgs" xml:space="preserve">
+    <value>额外游戏参数</value>
+  </data>
+  <data name="LaunchSettings_ArgsHint" xml:space="preserve">
+    <value>参数之间用空格分隔；包含空格的值请用英文双引号括起来。</value>
+  </data>
+  <data name="LaunchSettings_Gc" xml:space="preserve">
+    <value>垃圾回收器（GC）</value>
+  </data>
+  <data name="LaunchSettings_GcFollowJson" xml:space="preserve">
+    <value>跟随 json（当前 {0}）</value>
+  </data>
+  <data name="LaunchSettings_GcNotSet" xml:space="preserve">
+    <value>跟随 json（未设置）</value>
+  </data>
+  <data name="LaunchSettings_GcSetByViewpoint" xml:space="preserve">
+    <value>跟随 json（当前 {0}，由 Viewpoint 设置）</value>
+  </data>
+  <data name="GarbageCollector_G1" xml:space="preserve">
+    <value>G1</value>
+  </data>
+  <data name="GarbageCollector_Z" xml:space="preserve">
+    <value>ZGC</value>
+  </data>
+  <data name="GarbageCollector_Shenandoah" xml:space="preserve">
+    <value>Shenandoah</value>
+  </data>
+  <data name="GarbageCollector_Parallel" xml:space="preserve">
+    <value>Parallel</value>
+  </data>
+  <data name="GarbageCollector_Serial" xml:space="preserve">
+    <value>Serial</value>
   </data>
 </root>

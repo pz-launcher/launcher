@@ -7,6 +7,11 @@ public interface IPlatformEnvironment
 
     string HomeDirectory { get; }
 
+    /// <summary>The running OS's version number, e.g. <c>10.0.26100.0</c> on Windows 11.</summary>
+    Version OsVersion { get; }
+
+    long TotalMemoryBytes { get; }
+
     string? GetEnvironmentVariable(string name);
 
     /// <summary><c>HKCU\Software\Valve\Steam\SteamPath</c>; <c>null</c> off Windows.</summary>

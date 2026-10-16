@@ -132,3 +132,53 @@ Planned launching as parent 10-15-launch-installs with children: Java discovery,
 ### Status
 
 [OK] **Completed**
+
+
+## Session 6: Launch the game client, GC choice and install selection
+<!-- trellis-session: v=2 fp=e0873d8a20261e79 -->
+
+**Date**: 2026-10-16
+**Task**: Launch the game client, GC choice and install selection
+**Branch**: `feat/launch-game-client`
+
+### Summary
+
+Home's 启动游戏 starts the selected game install with a launcher-built java command (Windows + Linux), with per-install launch settings, a GC choice, GraalVM+Shenandoah blocking (Viewpoint-aware), crash/failed-start notices, and install choice through 选择安装 / 启动设置. PR pz-launcher/launcher#6.
+
+### Main Changes
+
+- Core Launch/: IGameLaunchService builds the command from ProjectZomboid64.json plus overrides; Linux env mirrors the user's B42 projectzomboid.sh; nested projectzomboid/ game folder; IProcessRunner seam
+- 启动设置 page: Java, max/min memory, extra JVM/game args, GC (follow json, ZGC, G1, Shenandoah); per-install preferences with debounced writes flushed on close
+- GraalVM + Shenandoah blocked (launch.gc_incompatible[_viewpoint]); GC in extra args counts (launch.gc_conflict); hs_err crash and early-exit notices with captured stderr tail
+- 选择安装: no 全部 filter; row click applies the install and goes Home; per-row 启动设置 button (gear); 使用此安装 on the page; 'version' wording replaced by install / launch settings in all 10 languages
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `95bc8b0` | chore(task): fold Linux launch research into the game client plan |
+| `5bfb616` | Launch the game client from Home with per-install launch settings |
+| `caa2617` | chore(spec): keep launch spec additions to rules and references |
+| `f076b2c` | chore(task): plan the GC override, GraalVM check and exit notices |
+| `1bc491d` | Add a GC choice per install and report crashed or failed game starts |
+| `319b250` | Offer ZGC before G1 in the version settings GC list |
+| `52acdf7` | chore(task): plan choosing the install through version settings |
+| `2c6deac` | Choose the install in use from its version settings page |
+| `8854945` | chore(task): stop calling an install a version |
+| `fc54408` | Rename version settings to launch settings |
+| `d1c2716` | chore(task): clicking an install in 选择安装 applies it |
+| `0c051d7` | Apply an install by clicking it, with a launch settings button per row |
+| `068bdec` | Use the settings gear icon on the launch settings buttons |
+
+### Testing
+
+- [OK] dotnet build -warnaserror clean; Core 522 passed / 3 skipped (symlink), Desktop 665 passed (run by trellis-check)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- Manual smoke: AC9 (Windows), AC10 (Linux), AC14 (GraalVM + Viewpoint json, forced crash, bad JVM arg, closing the launcher while the game runs), and a visual pass over 启动设置 and 选择安装 in light/dark
+- Merge PR pz-launcher/launcher#6, then plan 10-15-host-dedicated-server on top of the Core launch feature

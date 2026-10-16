@@ -61,4 +61,27 @@ public class ErrorMessagesTests : UiTextCultureTest
 
         Assert.Contains("smb://nas/pz", ErrorMessages.FolderNotLocal("smb://nas/pz"), StringComparison.Ordinal);
     }
+
+    [Theory]
+    [MemberData(nameof(TestLanguages.All), MemberType = typeof(TestLanguages))]
+    public void ToUserText_GameExitDetails_AreIncluded(AppLanguage language)
+    {
+        Localization.SetLanguage(language);
+        const string log = @"D:\Games\PZ\hs_err_pid42.log";
+        var crashed = new Error(ErrorCode.LaunchGameCrashed, Fallback, ErrorKind.External)
+        {
+            Details = new Dictionary<string, string> { ["path"] = log, ["exitCode"] = "134" },
+        };
+        var early = new Error(ErrorCode.LaunchGameExitedEarly, Fallback, ErrorKind.External)
+        {
+            Details = new Dictionary<string, string> { ["exitCode"] = "1", ["output"] = "Unrecognized VM option 'Foo'" },
+        };
+
+        var crashedText = ErrorMessages.ToUserText(crashed);
+        var earlyText = ErrorMessages.ToUserText(early);
+
+        Assert.Contains(log, crashedText, StringComparison.Ordinal);
+        Assert.Contains("134", crashedText, StringComparison.Ordinal);
+        Assert.Contains("Unrecognized VM option 'Foo'", earlyText, StringComparison.Ordinal);
+    }
 }

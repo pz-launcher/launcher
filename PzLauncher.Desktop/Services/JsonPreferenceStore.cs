@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using PzLauncher.Core.Launch;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Themes;
 
@@ -13,7 +14,7 @@ namespace PzLauncher.Desktop.Services;
 
 public sealed partial class JsonPreferenceStore(string filePath, ILogger logger) : IPreferenceStore
 {
-    private static readonly PreferencesFile Empty = new(null, null, null, null);
+    private static readonly PreferencesFile Empty = new(null, null, null, null, null);
 
     // Saves are fire-and-forget; one at a time so the last choice is the one left on disk.
     private readonly SemaphoreSlim _saveGate = new(1, 1);
@@ -50,7 +51,13 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger)
             LogInvalidJavaRuntimes(logger, filePath);
         }
 
-        return new UserPreferences(language, theme, window) { ManualJavaHomes = javaHomes };
+        var installs = ToInstallOverrides(file.Installs);
+        if (installs.Count != (file.Installs?.Count ?? 0))
+        {
+            LogInvalidInstallOverrides(logger, filePath);
+        }
+
+        return new UserPreferences(language, theme, window) { ManualJavaHomes = javaHomes, InstallOverrides = installs };
     }
 
     public Task SaveLanguageAsync(AppLanguage language, CancellationToken ct = default) =>
@@ -71,13 +78,77 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger)
         return SaveAsync(file => file with { JavaRuntimes = entries }, ct);
     }
 
+    public Task SaveInstallOverridesAsync(string installRoot, GameLaunchOverrides overrides, CancellationToken ct = default)
+    {
+        var entry = JsonSerializer.SerializeToElement(
+            new InstallOverridesFile(
+                overrides.JavaHome,
+                overrides.MaxMemoryMb,
+                overrides.MinMemoryMb,
+                overrides.ExtraJvmArgs,
+                overrides.ExtraGameArgs,
+                overrides.GarbageCollector?.PreferenceName()),
+            DesktopJsonContext.Default.InstallOverridesFile);
+        return SaveAsync(
+            file => file with
+            {
+                Installs = new Dictionary<string, JsonElement>(file.Installs ?? new Dictionary<string, JsonElement>(), StringComparer.Ordinal)
+                {
+                    [installRoot] = entry,
+                },
+            },
+            ct);
+    }
+
     private static List<string> ToManualJavaHomes(IReadOnlyList<JsonElement>? entries) =>
     [
         .. (entries ?? [])
             .Where(entry => entry.ValueKind == JsonValueKind.String)
             .Select(entry => entry.GetString() ?? "")
-            .Where(path => path.AsSpan().IndexOfAny(Path.GetInvalidPathChars()) < 0 && Path.IsPathFullyQualified(path)),
+            .Where(IsAbsolutePath),
     ];
+
+    private static Dictionary<string, GameLaunchOverrides> ToInstallOverrides(IReadOnlyDictionary<string, JsonElement>? entries)
+    {
+        var result = new Dictionary<string, GameLaunchOverrides>(StringComparer.Ordinal);
+        foreach (var (root, element) in entries ?? new Dictionary<string, JsonElement>())
+        {
+            if (IsAbsolutePath(root) && ToOverrides(element) is { } overrides)
+            {
+                result[root] = overrides;
+            }
+        }
+
+        return result;
+    }
+
+    private static GameLaunchOverrides? ToOverrides(JsonElement element)
+    {
+        InstallOverridesFile? entry;
+        try
+        {
+            entry = element.Deserialize(DesktopJsonContext.Default.InstallOverridesFile);
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+
+        return entry is { MaxMemoryMb: null or > 0, MinMemoryMb: null or > 0 }
+               && (entry.JavaHome is null || IsAbsolutePath(entry.JavaHome))
+               && !(entry.MinMemoryMb > entry.MaxMemoryMb)
+            ? new GameLaunchOverrides(
+                entry.JavaHome,
+                entry.MaxMemoryMb,
+                entry.MinMemoryMb,
+                entry.JvmArgs ?? "",
+                entry.GameArgs ?? "",
+                GarbageCollectorPreferences.FromPreferenceName(entry.Gc))
+            : null;
+    }
+
+    private static bool IsAbsolutePath(string path) =>
+        path.AsSpan().IndexOfAny(Path.GetInvalidPathChars()) < 0 && Path.IsPathFullyQualified(path);
 
     private static WindowPlacement? ToPlacement(WindowFile? window) =>
         window is { X: { } x, Y: { } y, Width: { } width, Height: { } height, Maximized: { } maximized }
@@ -170,6 +241,9 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger)
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Java runtime preference {Path} holds entries that aren't absolute paths; ignoring them")]
     private static partial void LogInvalidJavaRuntimes(ILogger logger, string path);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Install settings preference {Path} holds entries that aren't valid; ignoring them")]
+    private static partial void LogInvalidInstallOverrides(ILogger logger, string path);
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Preferences {Path} could not be saved")]
     private static partial void LogSaveFailed(ILogger logger, string path, Exception exception);

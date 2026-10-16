@@ -34,6 +34,21 @@ public enum ErrorCode
     [JsonStringEnumMemberName("java.not_64_bit")] JavaNot64Bit,
     [JsonStringEnumMemberName("java.source_unreadable")] JavaSourceUnreadable,
     [JsonStringEnumMemberName("java.release_unreadable")] JavaReleaseUnreadable,
+
+    // ── launch ────────────────────────────────────────────────
+    [JsonStringEnumMemberName("launch.platform_unsupported")] LaunchPlatformUnsupported,
+    [JsonStringEnumMemberName("launch.invalid_memory")] LaunchInvalidMemory,
+    [JsonStringEnumMemberName("launch.already_running")] LaunchAlreadyRunning,
+    [JsonStringEnumMemberName("launch.not_a_game")] LaunchNotAGame,
+    [JsonStringEnumMemberName("launch.config_missing")] LaunchConfigMissing,
+    [JsonStringEnumMemberName("launch.config_malformed")] LaunchConfigMalformed,
+    [JsonStringEnumMemberName("launch.java_missing")] LaunchJavaMissing,
+    [JsonStringEnumMemberName("launch.start_failed")] LaunchStartFailed,
+    [JsonStringEnumMemberName("launch.gc_incompatible")] LaunchGcIncompatible,
+    [JsonStringEnumMemberName("launch.gc_incompatible_viewpoint")] LaunchGcIncompatibleViewpoint,
+    [JsonStringEnumMemberName("launch.game_crashed")] LaunchGameCrashed,
+    [JsonStringEnumMemberName("launch.game_exited_early")] LaunchGameExitedEarly,
+    [JsonStringEnumMemberName("launch.gc_conflict")] LaunchGcConflict,
 }
 
 public static class ErrorCodeExtensions

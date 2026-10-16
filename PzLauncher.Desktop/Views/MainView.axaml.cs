@@ -5,6 +5,7 @@ using Avalonia.Interactivity;
 using Avalonia.Media;
 using FluentIcons.Common;
 using PzLauncher.Desktop.Lang;
+using PzLauncher.Desktop.ViewModels;
 
 namespace PzLauncher.Desktop.Views;
 
@@ -78,4 +79,6 @@ public partial class MainView : UserControl
     }
 
     private void OnCloseClick(object? sender, RoutedEventArgs e) => _window?.Close();
+
+    private void OnTabClick(object? sender, RoutedEventArgs e) => (DataContext as MainViewModel)?.ShowTabPage();
 }

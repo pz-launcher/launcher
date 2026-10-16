@@ -13,7 +13,7 @@ public sealed class JavaHomeBuilder(string baseDirectory, PlatformKind os)
 
     public string ExecutableName => JavaLocations.ExecutableName(os);
 
-    public static string Release(string? version = "21.0.9", string? vendor = "Eclipse Adoptium", string? arch = "x86_64")
+    public static string Release(string? version = "21.0.9", string? vendor = "Eclipse Adoptium", string? arch = "x86_64", string? graalVersion = null)
     {
         var lines = new List<string>();
         if (vendor is not null)
@@ -29,6 +29,11 @@ public sealed class JavaHomeBuilder(string baseDirectory, PlatformKind os)
         if (arch is not null)
         {
             lines.Add($"OS_ARCH=\"{arch}\"");
+        }
+
+        if (graalVersion is not null)
+        {
+            lines.Add($"GRAALVM_VERSION=\"{graalVersion}\"");
         }
 
         return string.Join("\r\n", lines) + "\r\n";

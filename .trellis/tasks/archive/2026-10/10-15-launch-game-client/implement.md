@@ -5,10 +5,8 @@ Start only after `10-15-discover-java-runtimes` is done (uses
 
 ## Checklist
 
-0. Research (persist to `research/linux-launch.md`): `projectzomboid.sh` and
-   the Linux `ProjectZomboid64.json` from a real Linux install (ask the user
-   for copies) or reliable public copies; confirm `LD_LIBRARY_PATH` /
-   `LD_PRELOAD` entries and whether the Linux json has an OS-version map.
+0. ~~Research~~ done: `research/linux-launch.md`, folded into prd (D4, D18,
+   AC1) and design (step 6, Linux environment).
 1. Core errors: `ErrorCode` `launch` section (8 members), `Launch/LaunchErrors.cs`,
    rows in `PzLauncher.Core.Tests/Common/ErrorCodeTests.cs`.
 2. Core platform: `IPlatformEnvironment.OsVersion` / `TotalMemoryBytes`
@@ -21,20 +19,37 @@ Start only after `10-15-discover-java-runtimes` is done (uses
    (`PzLauncher.Core.Tests/Fixtures/Launch/`, values anonymised where needed).
 4. Core service: `IGameLaunchService`, `GameLaunchService`, DTOs; register in
    `AddPzLauncherCore` and `CoreJsonContext`; service tests with a fake
-   `IProcessRunner` (`TestSupport/`), temp-dir install layout; JSON round-trips.
+   `IProcessRunner` (`TestSupport/`), temp-dir install layouts (flat Windows,
+   nested Linux `projectzomboid/`);
+   JSON round-trips.
 5. Desktop preferences: `installs` field, `UserPreferences.InstallOverrides`,
    `SaveInstallOverridesAsync`, store tests; `IInstallOverridesService`.
 6. Desktop dialog: `IDialogService` + `AvaloniaDialogService`; move the dialog
    out of `App.axaml.cs`; DI wiring.
 7. Desktop errors/text: `ErrorMessages` arms; all resx keys in 10 files.
-8. Desktop navigation + Home: `ShellPage.VersionSettings`, `MainViewModel`
+8. Desktop navigation + Home: `ShellPage.LaunchSettings`, `MainViewModel`
    mapping and events, Home tab highlight; `HomeViewModel` launch/version
    settings commands + `IsGameRunning`; `HomeView.axaml`.
-9. Desktop 版本设置: `VersionSettingsViewModel` (Java dropdown from
-   `JavaRuntimesViewModel`, D17 warning, max/min memory linkage), `VersionSettingsView.axaml`,
+9. Desktop 启动设置: `LaunchSettingsViewModel` (Java dropdown from
+   `JavaRuntimesViewModel`, D17 warning, max/min memory linkage), `LaunchSettingsView.axaml`,
    `App.axaml` DataTemplate, `DesignData`.
 10. Desktop tests: fakes in `TestSupport/Fakes.cs`; `HomeViewModelTests`,
-    `VersionSettingsViewModelTests`, `MainViewModelTests` navigation.
+    `LaunchSettingsViewModelTests`, `MainViewModelTests` navigation.
+12. GC / Graal / Viewpoint / crash (prd D19–D22, design step 7b, GC flags,
+    `ValidateAsync`, `WaitForExitAsync` result): Core `GarbageCollector` +
+    `GarbageCollectors`, `JavaRuntime.HasGraalCompiler` (release file),
+    `IRunningProcess.ExitCode`, 3 error codes; Desktop `gc` preference field,
+    GC dropdown, page validation text, Home crash dialog; D23 stderr tail +
+    early-exit result, D24 extra-args GC + `launch.gc_conflict`, D22 log time
+    and `-XX:ErrorFile`; tests per AC11–AC13, AC15.
+13. Install choice through 启动设置 (prd D25–D29, design "Install choice
+    through 启动设置"): filter without All, row click → 启动设置, 使用此安装
+    button, origin-aware back/tab, server view; tests per AC16–AC18.
+14. Naming (prd D30): rename `VersionSettings` → `LaunchSettings` across
+    code, XAML, resx keys and tests; new texts 选择安装 / 启动设置 / 使用此安装
+    in all 10 languages; error texts naming the page follow.
+15. Row click applies the install (prd D26 revised): row → in use + Home;
+    per-row 启动设置 button → 启动设置; tests per AC16.
 11. Spec update (phase 3): `core/directory-structure.md` (`Launch/`),
     `core/service-api.md` test seams (`IProcessRunner`), `desktop/preferences.md`
     (`installs` row), `desktop/shell-and-theming.md` (sub-page navigation),
@@ -59,12 +74,6 @@ Then `dotnet format` on this task's `.cs` files and the manual smoke (`prd.md` A
 - Exit continuation runs off the UI thread; ViewModels set state after `await`
   on the UI context.
 - Preferences: an invalid `installs` entry must not drop language/theme/window.
-
-## Before `task.py start`: re-review needed
-
-`research/linux-launch.md` (written during the Java child) changes Linux
-details in this plan: the Linux install root is one level deeper
-(`<library>/ProjectZomboid/projectzomboid/`), the B42 client script also
-preloads `libPZXInitThreads64.so` and clears `XMODIFIERS`, `libjsig.so` is in
-`jre64/lib` (not `lib/amd64`), the stock Linux json has no OS-version map.
-Fold these into prd/design and show the user the delta before starting.
+- Linux environment mirrors the user's copy of the B42 script; the user's AC10
+  smoke confirms it works without the native launcher. Keep it in one
+  function so a correction is a one-place change.

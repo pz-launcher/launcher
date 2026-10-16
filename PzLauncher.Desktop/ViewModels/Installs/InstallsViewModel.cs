@@ -47,30 +47,18 @@ public partial class InstallsViewModel : ViewModelBase
 
     public ObservableCollection<PzInstall> Installs { get; } = [];
 
+    public event EventHandler? HomeRequested;
+
+    public event EventHandler<PzInstall>? LaunchSettingsRequested;
+
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsFilterEmpty), nameof(ListSelection))]
-    public partial IReadOnlyList<PzInstall> VisibleInstalls { get; private set; }
+    [NotifyPropertyChangedFor(nameof(IsFilterEmpty))]
+    public partial IReadOnlyList<InstallRow> VisibleInstalls { get; private set; }
 
-    [ObservableProperty] public partial InstallsFilter Filter { get; set; }
+    [ObservableProperty] public partial InstallsFilter Filter { get; set; } = InstallsFilter.Game;
 
-    /// <summary>Session only. <see cref="Filter"/> never changes it.</summary>
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(ListSelection))]
-    public partial PzInstall? SelectedInstall { get; private set; }
-
-    // The list's selection, derived rather than stored: a ListBox pushes null when the filter hides the selected row
-    // or when a MainView rebuild tears it down, and neither may clear SelectedInstall or the next ListBox's highlight.
-    public PzInstall? ListSelection
-    {
-        get => SelectedInstall is { } selected && VisibleInstalls.Contains(selected) ? selected : null;
-        set
-        {
-            if (value is not null)
-            {
-                SelectedInstall = value;
-            }
-        }
-    }
+    /// <summary>The install in use, session only. Only a scan and <see cref="Use"/> change it; the list never does.</summary>
+    [ObservableProperty] public partial PzInstall? SelectedInstall { get; private set; }
 
     public ObservableCollection<string> Warnings { get; } = [];
 
@@ -192,16 +180,42 @@ public partial class InstallsViewModel : ViewModelBase
         }
     }
 
+    /// <summary>Makes the listed install with this root the one in use; an unlisted root changes nothing.</summary>
+    public void Use(string rootPath)
+    {
+        if (FindByPath(rootPath) is { } install)
+        {
+            SelectedInstall = install;
+        }
+    }
+
+    public bool IsListed(string rootPath) => FindByPath(rootPath) is not null;
+
+    public bool IsInUse(string rootPath) =>
+        SelectedInstall is { } selected && string.Equals(selected.RootPath, rootPath, _platform.PathComparison);
+
+    [RelayCommand]
+    private void Choose(PzInstall install)
+    {
+        Use(install.RootPath);
+        HomeRequested?.Invoke(this, EventArgs.Empty);
+    }
+
+    [RelayCommand]
+    private void OpenSettings(PzInstall install) => LaunchSettingsRequested?.Invoke(this, install);
+
     partial void OnFilterChanged(InstallsFilter value) => RefreshVisibleInstalls();
+
+    partial void OnSelectedInstallChanged(PzInstall? value) => RefreshVisibleInstalls();
 
     private PzInstall? FindByPath(string rootPath) =>
         Installs.FirstOrDefault(install => string.Equals(install.RootPath, rootPath, _platform.PathComparison));
 
-    private void RefreshVisibleInstalls() => VisibleInstalls = [.. Installs.Where(Matches)];
+    private void RefreshVisibleInstalls() =>
+        VisibleInstalls = [.. Installs.Where(Matches).Select(install => new InstallRow(install, install == SelectedInstall))];
 
     private bool Matches(PzInstall install) => Filter switch
     {
-        InstallsFilter.All => true,
         InstallsFilter.Game => install.Kind == PzInstallKind.Game,
         InstallsFilter.DedicatedServer => install.Kind == PzInstallKind.DedicatedServer,
     };

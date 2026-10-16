@@ -4,21 +4,37 @@ using PzLauncher.Desktop.ViewModels;
 using PzLauncher.Desktop.ViewModels.Home;
 using PzLauncher.Desktop.ViewModels.Installs;
 using PzLauncher.Desktop.ViewModels.Settings;
+using PzLauncher.Desktop.ViewModels.LaunchSettings;
+using static PzLauncher.Desktop.Tests.TestSupport.TestInstalls;
 
 namespace PzLauncher.Desktop.Tests.ViewModels;
 
 [Collection(UiTextCultureCollection.Name)]
 public class MainViewModelTests : UiTextCultureTest
 {
+    private readonly FakeInstallDetectionService _detection = new();
+
     private MainViewModel CreateViewModel()
     {
         var store = new FakePreferenceStore();
-        var installs = new InstallsViewModel(new FakeInstallDetectionService(), new FakeFolderPicker(), new FakePlatformEnvironment(), Localization);
+        var installs = new InstallsViewModel(_detection, new FakeFolderPicker(), new FakePlatformEnvironment(), Localization);
+        var java = TestJava.ViewModel(Localization, new FakeJavaDiscoveryService(), store);
+        var launcher = new FakeGameLaunchService();
+        var overrides = new FakeInstallOverridesService();
         return new(
-            new HomeViewModel(installs),
+            new HomeViewModel(installs, launcher, overrides, new FakeDialogService()),
             installs,
-            new SettingsViewModel(new FakeThemeService(AppTheme.Light), store, new FakeWindowPlacementService(), TestJava.ViewModel(Localization, new FakeJavaDiscoveryService(), store)),
+            new SettingsViewModel(new FakeThemeService(AppTheme.Light), store, new FakeWindowPlacementService(), java),
+            new LaunchSettingsViewModel(installs, launcher, overrides, java, new FakePlatformEnvironment(), Localization),
             new LanguageMenuViewModel(Localization, store));
+    }
+
+    private async Task<MainViewModel> CreateScannedViewModelAsync()
+    {
+        _detection.ScanResults.Enqueue(FakeInstallDetectionService.Found(SteamGame, ManualGame, SteamServer));
+        var vm = CreateViewModel();
+        await vm.Installs.ActivateCommand.ExecuteAsync(null);
+        return vm;
     }
 
     [Fact]
@@ -45,12 +61,149 @@ public class MainViewModelTests : UiTextCultureTest
         Assert.Contains(nameof(MainViewModel.CurrentPage), changed);
     }
 
-    [Fact]
-    public void HomeSelectVersion_NavigatesToInstalls()
+    [Theory]
+    [InlineData(ShellPage.Home, ShellPage.Home)]
+    [InlineData(ShellPage.Installs, ShellPage.Installs)]
+    [InlineData(ShellPage.Settings, ShellPage.Settings)]
+    [InlineData(ShellPage.LaunchSettings, ShellPage.Home)]
+    public void CurrentTab_SubPageHighlightsItsTab(ShellPage page, ShellPage tab)
     {
         var vm = CreateViewModel();
 
-        vm.Home.SelectVersionCommand.Execute(null);
+        vm.CurrentPageKind = page;
+
+        Assert.Equal(tab, vm.CurrentTab);
+    }
+
+    [Fact]
+    public void CurrentTab_SetFromSubPage_NavigatesThere()
+    {
+        var vm = CreateViewModel();
+        vm.CurrentPageKind = ShellPage.LaunchSettings;
+        var changed = new List<string?>();
+        vm.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
+
+        vm.CurrentTab = ShellPage.Installs;
+
+        Assert.Same(vm.Installs, vm.CurrentPage);
+        Assert.Contains(nameof(MainViewModel.CurrentTab), changed);
+    }
+
+    [Theory]
+    [InlineData(ShellPage.LaunchSettings, ShellPage.Home)]
+    [InlineData(ShellPage.Home, ShellPage.Home)]
+    [InlineData(ShellPage.Installs, ShellPage.Installs)]
+    [InlineData(ShellPage.Settings, ShellPage.Settings)]
+    public void ShowTabPage_ShowsTheHighlightedTabsOwnPage(ShellPage page, ShellPage expected)
+    {
+        var vm = CreateViewModel();
+        vm.CurrentPageKind = page;
+
+        vm.ShowTabPage();
+
+        Assert.Equal(expected, vm.CurrentPageKind);
+    }
+
+    [Fact]
+    public async Task HomeLaunchSettings_OpensTheInstallInUse_HomeTabStaysAndBackReturnsHome()
+    {
+        var vm = await CreateScannedViewModelAsync();
+
+        vm.Home.LaunchSettingsCommand.Execute(null);
+
+        Assert.Same(vm.LaunchSettings, vm.CurrentPage);
+        Assert.Equal(SteamGame, vm.LaunchSettings.Install);
+        Assert.Equal(ShellPage.Home, vm.CurrentTab);
+
+        vm.LaunchSettings.BackCommand.Execute(null);
+
+        Assert.Same(vm.Home, vm.CurrentPage);
+    }
+
+    [Fact]
+    public async Task InstallsRowClick_ShowsHome()
+    {
+        var vm = await CreateScannedViewModelAsync();
+        vm.CurrentPageKind = ShellPage.Installs;
+
+        vm.Installs.ChooseCommand.Execute(ManualGame);
+
+        Assert.Same(vm.Home, vm.CurrentPage);
+    }
+
+    [Fact]
+    public async Task InstallsLaunchSettings_OpensThatInstall_InstallsTabStaysAndBackReturnsToInstalls()
+    {
+        var vm = await CreateScannedViewModelAsync();
+        vm.CurrentPageKind = ShellPage.Installs;
+
+        vm.Installs.OpenSettingsCommand.Execute(SteamServer);
+
+        Assert.Same(vm.LaunchSettings, vm.CurrentPage);
+        Assert.Equal(SteamServer, vm.LaunchSettings.Install);
+        Assert.Equal(ShellPage.Installs, vm.CurrentTab);
+
+        vm.LaunchSettings.BackCommand.Execute(null);
+
+        Assert.Same(vm.Installs, vm.CurrentPage);
+    }
+
+    [Theory]
+    [InlineData(ShellPage.Home)]
+    [InlineData(ShellPage.Installs)]
+    public async Task ShowTabPage_OnLaunchSettings_ReturnsToWhereItWasOpenedFrom(ShellPage origin)
+    {
+        var vm = await CreateScannedViewModelAsync();
+        vm.CurrentPageKind = origin;
+        if (origin == ShellPage.Home)
+        {
+            vm.Home.LaunchSettingsCommand.Execute(null);
+        }
+        else
+        {
+            vm.Installs.OpenSettingsCommand.Execute(ManualGame);
+        }
+
+        vm.ShowTabPage();
+
+        Assert.Equal(origin, vm.CurrentPageKind);
+    }
+
+    [Fact]
+    public async Task LaunchSettings_ReopenedFromHomeAfterInstalls_FollowsTheNewOrigin()
+    {
+        var vm = await CreateScannedViewModelAsync();
+        vm.CurrentPageKind = ShellPage.Installs;
+        vm.Installs.OpenSettingsCommand.Execute(ManualGame);
+        vm.CurrentTab = ShellPage.Settings;
+        vm.CurrentTab = ShellPage.Home;
+
+        vm.Home.LaunchSettingsCommand.Execute(null);
+
+        Assert.Equal(ShellPage.Home, vm.CurrentTab);
+        vm.LaunchSettings.BackCommand.Execute(null);
+        Assert.Same(vm.Home, vm.CurrentPage);
+    }
+
+    [Fact]
+    public async Task LaunchSettingsUse_ShowsHomeWithThatInstallInUse()
+    {
+        var vm = await CreateScannedViewModelAsync();
+        vm.CurrentPageKind = ShellPage.Installs;
+        vm.Installs.OpenSettingsCommand.Execute(ManualGame);
+
+        vm.LaunchSettings.UseCommand.Execute(null);
+
+        Assert.Same(vm.Home, vm.CurrentPage);
+        Assert.Equal(ManualGame, vm.Installs.SelectedInstall);
+    }
+
+    [Fact]
+    public void HomeChooseInstall_NavigatesToInstalls()
+    {
+        var vm = CreateViewModel();
+
+        vm.Home.ChooseInstallCommand.Execute(null);
 
         Assert.Same(vm.Installs, vm.CurrentPage);
     }

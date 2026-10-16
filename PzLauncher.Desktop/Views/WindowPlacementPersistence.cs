@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Platform;
@@ -10,13 +11,14 @@ using PzLauncher.Desktop.Services;
 
 namespace PzLauncher.Desktop.Views;
 
-/// <summary>Restores the window's saved placement before it is shown and saves it when it closes.</summary>
+/// <summary>Restores the window's saved placement before it is shown; when it closes, saves it and flushes the other pending preference writes.</summary>
 public sealed partial class WindowPlacementPersistence
 {
     private static readonly TimeSpan SaveTimeout = TimeSpan.FromSeconds(2);
 
     private readonly Window _window;
     private readonly IPreferenceStore _store;
+    private readonly Func<CancellationToken, Task> _flushPendingSaves;
     private readonly ILogger _logger;
     private readonly Size _defaultSize;
 
@@ -27,10 +29,12 @@ public sealed partial class WindowPlacementPersistence
     private bool _saving;
     private bool _saved;
 
-    private WindowPlacementPersistence(Window window, IPreferenceStore store, WindowPlacement? saved, ILogger logger)
+    private WindowPlacementPersistence(
+        Window window, IPreferenceStore store, WindowPlacement? saved, Func<CancellationToken, Task> flushPendingSaves, ILogger logger)
     {
         _window = window;
         _store = store;
+        _flushPendingSaves = flushPendingSaves;
         _logger = logger;
         _defaultSize = new Size(window.Width, window.Height);
 
@@ -46,9 +50,10 @@ public sealed partial class WindowPlacementPersistence
     }
 
     /// <summary>Call before the window is shown.</summary>
-    public static WindowPlacementPersistence Attach(Window window, IPreferenceStore store, WindowPlacement? saved, ILogger logger)
+    public static WindowPlacementPersistence Attach(
+        Window window, IPreferenceStore store, WindowPlacement? saved, Func<CancellationToken, Task> flushPendingSaves, ILogger logger)
     {
-        return new WindowPlacementPersistence(window, store, saved, logger);
+        return new WindowPlacementPersistence(window, store, saved, flushPendingSaves, logger);
     }
 
     /// <summary>The XAML default size, centered on the screen the window is on.</summary>
@@ -161,6 +166,7 @@ public sealed partial class WindowPlacementPersistence
         if (e.CloseReason == WindowCloseReason.OSShutdown)
         {
             _ = _store.SaveWindowPlacementAsync(placement);
+            _ = _flushPendingSaves(CancellationToken.None);
             return;
         }
 
@@ -175,7 +181,7 @@ public sealed partial class WindowPlacementPersistence
         try
         {
             using var timeout = new CancellationTokenSource(SaveTimeout);
-            await _store.SaveWindowPlacementAsync(placement, timeout.Token);
+            await Task.WhenAll(_store.SaveWindowPlacementAsync(placement, timeout.Token), _flushPendingSaves(timeout.Token));
         }
         catch (OperationCanceledException)
         {
@@ -190,6 +196,6 @@ public sealed partial class WindowPlacementPersistence
         }
     }
 
-    [LoggerMessage(Level = LogLevel.Warning, Message = "Saving the window placement timed out; closing without it")]
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Saving the window placement or pending preferences timed out; closing without them")]
     private static partial void LogSaveTimedOut(ILogger logger);
 }

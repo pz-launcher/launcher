@@ -10,7 +10,7 @@ public class JavaReleaseFileTests
     {
         var info = JavaReleaseFile.Parse(Fixtures.Read("Java", "release-pz-jre64"));
 
-        Assert.Equal(new JavaReleaseInfo(new JavaVersion(25, "25.0.1"), "Azul Systems, Inc.", JavaArch.Bits64), info);
+        Assert.Equal(new JavaReleaseInfo(new JavaVersion(25, "25.0.1"), "Azul Systems, Inc.", JavaArch.Bits64, HasGraalCompiler: false), info);
     }
 
     [Fact]
@@ -20,8 +20,17 @@ public class JavaReleaseFileTests
 
         var info = JavaReleaseFile.Parse(text);
 
-        Assert.Equal(new JavaReleaseInfo(new JavaVersion(21, "21.0.9"), "Eclipse Adoptium", JavaArch.Bits64), info);
+        Assert.Equal(new JavaReleaseInfo(new JavaVersion(21, "21.0.9"), "Eclipse Adoptium", JavaArch.Bits64, HasGraalCompiler: false), info);
     }
+
+    [Theory]
+    [InlineData("IMPLEMENTOR=\"GraalVM Community\"\nJAVA_RUNTIME_VERSION=\"25.0.2+10-jvmci-b01\"\nGRAALVM_VERSION=\"25.0.2\"", true)]
+    [InlineData("IMPLEMENTOR=\"Oracle Corporation\"\nGRAALVM_VERSION=\"25.0.1\"", true)]
+    [InlineData("JAVA_RUNTIME_VERSION=\"21.0.2+13-jvmci-23.1-b30\"", true)]
+    [InlineData("IMPLEMENTOR=\"Oracle Corporation\"\nJAVA_RUNTIME_VERSION=\"25.0.1+8-LTS-27\"", false)]
+    [InlineData("GRAALVM_VERSION=\"\"", false)]
+    public void Parse_GraalMarkers_SetHasGraalCompiler(string text, bool expected) =>
+        Assert.Equal(expected, JavaReleaseFile.Parse(text).HasGraalCompiler);
 
     [Theory]
     [InlineData("")]

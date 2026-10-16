@@ -29,7 +29,38 @@ into ./projectzomboid before exec'ing ProjectZomboid64"); Konijima `test/run.sh`
 **Impact for the PRD:** the Linux install root that holds the json and `jre64` is `<library>/ProjectZomboid/projectzomboid`,
 not the Steam app folder. The Windows depot has no extra level.
 
-## `projectzomboid.sh` (client, Build 42) — Partial
+## `projectzomboid.sh` (client, Build 42) — Confirmed (user's Ubuntu install, 2026-10-15)
+
+Copied by the user from their Ubuntu Steam install. Supersedes the partial/inferred notes below.
+
+```sh
+#!/bin/bash
+
+SCRIPT="`basename \"$0\"`"
+GAMEDIR="${HOME}/Zomboid"
+LOGFILE="${GAMEDIR}/${SCRIPT}.log"
+INSTDIR="`dirname \"$0\"`"/projectzomboid ; cd "${INSTDIR}" ; INSTDIR="`pwd`"
+
+[[ ! -d "${GAMEDIR}" ]] && mkdir -m 0755 "${GAMEDIR}"
+
+if "${INSTDIR}/jre64/bin/java" -version > /dev/null 2>&1; then
+	export PATH="${INSTDIR}/jre64/bin:$PATH"
+	export LD_LIBRARY_PATH="${INSTDIR}/natives:${INSTDIR}:${INSTDIR}/jre64/lib:${LD_LIBRARY_PATH}"
+	JSIG="libjsig.so"
+	# XMODIFIERS is cleared here to prevent SCIM screwing up keyboard input
+	XMODIFIERS= LD_PRELOAD="${LD_PRELOAD}:${JSIG}:libPZXInitThreads64.so" ./ProjectZomboid64 "$@" >"${LOGFILE}"
+else
+	echo "Only 64bit is supported"
+fi
+exit 0
+```
+
+Takeaways: the script sits in the Steam app folder and `cd`s into `projectzomboid/` (confirms the nested layout).
+`LD_LIBRARY_PATH` has no `linux64` and no `lib/amd64`. The preloads use bare names that the loader resolves
+through `LD_LIBRARY_PATH`. `PATH` is only for the native `ProjectZomboid64` launcher. Stdout goes to
+`~/Zomboid/projectzomboid.sh.log`.
+
+## `projectzomboid.sh` (client, Build 42) — earlier public fragments (superseded)
 
 There is no full public copy of the B42 client script. The verbatim fragment (keventao/gamecheats README, quoting the
 shipped script) is:

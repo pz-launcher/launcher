@@ -2,6 +2,7 @@ using System.Text.Json.Serialization;
 using PzLauncher.Core.Common;
 using PzLauncher.Core.Installs;
 using PzLauncher.Core.Java;
+using PzLauncher.Core.Launch;
 
 namespace PzLauncher.Core.Serialization;
 
@@ -20,4 +21,8 @@ namespace PzLauncher.Core.Serialization;
 [JsonSerializable(typeof(JavaRuntime))]
 [JsonSerializable(typeof(JavaVersion))]
 [JsonSerializable(typeof(JavaScanResult))]
+[JsonSerializable(typeof(LaunchGameRequest))]
+[JsonSerializable(typeof(GameLaunchOverrides))]
+[JsonSerializable(typeof(GameLaunchDefaults))]
+[JsonSerializable(typeof(GameSession))]
 public sealed partial class CoreJsonContext : JsonSerializerContext;

@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using PzLauncher.Core.Installs;
 using PzLauncher.Core.Java;
+using PzLauncher.Core.Launch;
 using PzLauncher.Core.Platform;
 using PzLauncher.Core.Steam;
 
@@ -13,11 +14,14 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddPzLauncherCore(this IServiceCollection services)
     {
         services.TryAddSingleton<IPlatformEnvironment, PlatformEnvironment>();
+        services.TryAddSingleton<IProcessRunner, ProcessRunner>();
+        services.TryAddSingleton(TimeProvider.System);
 
         services.TryAddSingleton<SteamLocator>();
         services.TryAddSingleton<SteamLibraryReader>();
         services.TryAddSingleton<IInstallDetectionService, InstallDetectionService>();
         services.TryAddSingleton<IJavaDiscoveryService, JavaDiscoveryService>();
+        services.TryAddSingleton<IGameLaunchService, GameLaunchService>();
 
         return services;
     }

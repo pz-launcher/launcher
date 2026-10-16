@@ -49,8 +49,14 @@
   <data name="Home_Launch" xml:space="preserve">
     <value>Launch game</value>
   </data>
-  <data name="Home_SelectVersion" xml:space="preserve">
-    <value>Select version</value>
+  <data name="Home_ChooseInstall" xml:space="preserve">
+    <value>Choose install</value>
+  </data>
+  <data name="Home_GameRunning" xml:space="preserve">
+    <value>Game running</value>
+  </data>
+  <data name="Home_LaunchSettings" xml:space="preserve">
+    <value>Launch settings</value>
   </data>
   <data name="Installs_Title" xml:space="preserve">
     <value>Installs</value>
@@ -63,9 +69,6 @@
   </data>
   <data name="Installs_Empty" xml:space="preserve">
     <value>No Project Zomboid installs found. Install the game or the dedicated server through Steam, or use "Add folder…".</value>
-  </data>
-  <data name="Installs_FilterAll" xml:space="preserve">
-    <value>All</value>
   </data>
   <data name="Installs_FilterKindGroup" xml:space="preserve">
     <value>Type</value>
@@ -81,6 +84,9 @@
   </data>
   <data name="Installs_PickFolderTitle" xml:space="preserve">
     <value>Select a Project Zomboid game or server folder</value>
+  </data>
+  <data name="Installs_InUse" xml:space="preserve">
+    <value>In use</value>
   </data>
   <data name="InstallKind_Game" xml:space="preserve">
     <value>Game</value>
@@ -148,6 +154,46 @@
   <data name="Error_JavaReleaseUnreadable" xml:space="preserve">
     <value>Couldn't read the version file {0}. That Java is listed with an unknown version.</value>
   </data>
+  <data name="Error_LaunchPlatformUnsupported" xml:space="preserve">
+    <value>Launching the game isn't supported on this platform yet.</value>
+  </data>
+  <data name="Error_LaunchInvalidMemory" xml:space="preserve">
+    <value>The memory setting {0} MB isn't valid. Memory must be above 0, and the minimum can't be larger than the maximum.</value>
+  </data>
+  <data name="Error_LaunchAlreadyRunning" xml:space="preserve">
+    <value>The game is already running.</value>
+  </data>
+  <data name="Error_LaunchNotAGame" xml:space="preserve">
+    <value>{0} isn't a Project Zomboid game folder.</value>
+  </data>
+  <data name="Error_LaunchConfigMissing" xml:space="preserve">
+    <value>The launch configuration {0} doesn't exist. Try verifying the game files in Steam.</value>
+  </data>
+  <data name="Error_LaunchConfigMalformed" xml:space="preserve">
+    <value>Couldn't read the launch configuration {0}. Try verifying the game files in Steam.</value>
+  </data>
+  <data name="Error_LaunchJavaMissing" xml:space="preserve">
+    <value>The Java program {0} doesn't exist. Choose another Java for this install in Launch settings.</value>
+  </data>
+  <data name="Error_LaunchStartFailed" xml:space="preserve">
+    <value>Couldn't start the game with {0}.</value>
+  </data>
+  <data name="Error_LaunchGcIncompatible" xml:space="preserve">
+    <value>{0} has the Graal compiler, which doesn't support the Shenandoah GC. In Launch settings, change the GC to G1 or ZGC, or choose another Java.</value>
+  </data>
+  <data name="Error_LaunchGcIncompatibleViewpoint" xml:space="preserve">
+    <value>The Viewpoint mod switched the game's GC to Shenandoah to save memory, but the GraalVM you chose doesn't support it, so the game would crash at start. In Launch settings, change the GC to G1 or ZGC (Viewpoint keeps working, it just uses more memory), or switch back to the game's bundled Java.</value>
+  </data>
+  <data name="Error_LaunchGameCrashed" xml:space="preserve">
+    <value>The game's Java crashed (exit code {1}). Crash log: {0}</value>
+  </data>
+  <data name="Error_LaunchGameExitedEarly" xml:space="preserve">
+    <value>The game closed right after starting (exit code {0}). Check the extra JVM arguments, the Java and the GC in Launch settings.
+{1}</value>
+  </data>
+  <data name="Error_LaunchGcConflict" xml:space="preserve">
+    <value>More than one garbage collector is selected ({0}). Keep only one: in the GC list or in the extra JVM arguments.</value>
+  </data>
   <data name="Error_FolderNotLocal" xml:space="preserve">
     <value>{0} isn't a folder on this computer, so the launcher can't open it. Pick a local folder instead.</value>
   </data>
@@ -213,5 +259,86 @@
   </data>
   <data name="JavaSource_Manual" xml:space="preserve">
     <value>Added manually</value>
+  </data>
+  <data name="LaunchSettings_Title" xml:space="preserve">
+    <value>Launch settings</value>
+  </data>
+  <data name="LaunchSettings_Back" xml:space="preserve">
+    <value>Back</value>
+  </data>
+  <data name="LaunchSettings_Use" xml:space="preserve">
+    <value>Use this install</value>
+  </data>
+  <data name="LaunchSettings_LaunchSection" xml:space="preserve">
+    <value>Launch options</value>
+  </data>
+  <data name="LaunchSettings_Java" xml:space="preserve">
+    <value>Java</value>
+  </data>
+  <data name="LaunchSettings_JavaBundled" xml:space="preserve">
+    <value>Bundled with the game ({0})</value>
+  </data>
+  <data name="LaunchSettings_JavaVersionWarning" xml:space="preserve">
+    <value>This Java is older than the game's bundled Java {0}. The game may not start.</value>
+  </data>
+  <data name="LaunchSettings_Memory" xml:space="preserve">
+    <value>Maximum memory</value>
+  </data>
+  <data name="LaunchSettings_MinMemory" xml:space="preserve">
+    <value>Minimum memory</value>
+  </data>
+  <data name="LaunchSettings_MemoryFollowJson" xml:space="preserve">
+    <value>Follow json (currently {0} MB)</value>
+  </data>
+  <data name="LaunchSettings_MemoryNotSet" xml:space="preserve">
+    <value>Follow json (not set)</value>
+  </data>
+  <data name="LaunchSettings_MemoryCustom" xml:space="preserve">
+    <value>Custom</value>
+  </data>
+  <data name="LaunchSettings_MemoryValue" xml:space="preserve">
+    <value>{0} GB</value>
+  </data>
+  <data name="LaunchSettings_SystemMemory" xml:space="preserve">
+    <value>This computer has {0} GB of memory.</value>
+  </data>
+  <data name="LaunchSettings_JvmArgs" xml:space="preserve">
+    <value>Extra JVM arguments</value>
+  </data>
+  <data name="LaunchSettings_JsonVmArgs" xml:space="preserve">
+    <value>JVM arguments from ProjectZomboid64.json:</value>
+  </data>
+  <data name="LaunchSettings_GameArgs" xml:space="preserve">
+    <value>Extra game arguments</value>
+  </data>
+  <data name="LaunchSettings_ArgsHint" xml:space="preserve">
+    <value>Separate arguments with spaces; put a value that contains spaces in double quotes.</value>
+  </data>
+  <data name="LaunchSettings_Gc" xml:space="preserve">
+    <value>Garbage collector (GC)</value>
+  </data>
+  <data name="LaunchSettings_GcFollowJson" xml:space="preserve">
+    <value>Follow json (currently {0})</value>
+  </data>
+  <data name="LaunchSettings_GcNotSet" xml:space="preserve">
+    <value>Follow json (not set)</value>
+  </data>
+  <data name="LaunchSettings_GcSetByViewpoint" xml:space="preserve">
+    <value>Follow json (currently {0}, set by Viewpoint)</value>
+  </data>
+  <data name="GarbageCollector_G1" xml:space="preserve">
+    <value>G1</value>
+  </data>
+  <data name="GarbageCollector_Z" xml:space="preserve">
+    <value>ZGC</value>
+  </data>
+  <data name="GarbageCollector_Shenandoah" xml:space="preserve">
+    <value>Shenandoah</value>
+  </data>
+  <data name="GarbageCollector_Parallel" xml:space="preserve">
+    <value>Parallel</value>
+  </data>
+  <data name="GarbageCollector_Serial" xml:space="preserve">
+    <value>Serial</value>
   </data>
 </root>

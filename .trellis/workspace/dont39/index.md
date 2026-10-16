@@ -8,8 +8,8 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 5
-- **Last Active**: 2026-10-15
+- **Total Sessions**: 6
+- **Last Active**: 2026-10-16
 <!-- @@@/auto:current-status -->
 
 ---
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~134 | Active |
+| `journal-1.md` | ~184 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 6 | 2026-10-16 | Launch the game client, GC choice and install selection | `95bc8b0`, `5bfb616`, `caa2617`, `f076b2c`, `1bc491d`, `319b250`, `52acdf7`, `2c6deac`, `8854945`, `fc54408`, `d1c2716`, `0c051d7`, `068bdec` | `feat/launch-game-client` |
 | 5 | 2026-10-15 | Plan launch feature; implement Java runtime discovery | `cdf04c5`, `a17328c` | `feat/java-discovery` |
 | 4 | 2026-10-15 | UI animations, native window animations and remembered window placement | `18d5c36`, `d03bd35`, `a6c5f55` | `feat/ui-animation-transitions` |
 | 3 | 2026-10-15 | Launcher shell: title-bar nav, page sidebars, PZ theme; analyzer rules as config | `a8cc28f`, `542aa65`, `5d99e2a`, `aef6a68`, `e79c9fa`, `1962bf8` | `feat/home-shell` |

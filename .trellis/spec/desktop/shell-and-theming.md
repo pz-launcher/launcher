@@ -19,7 +19,9 @@ Reference: `MainViewModel.CurrentPageKind`, `ShellPage`, `PzLauncher.Desktop/Vie
 
 - Tabs, sidebar items and option radios bind `IsChecked` to an enum through `EnumMatchConverter`. Never select through a `Command`.
 - Page state lives in the page ViewModels (singletons), never in views.
-- A page asks for navigation through an event the shell handles, never by referencing `MainViewModel`. Reference: `HomeViewModel.SelectVersionRequested`.
+- A page asks for navigation through an event the shell handles, never by referencing `MainViewModel`. Reference: `HomeViewModel.ChooseInstallRequested`.
+- A sub-page keeps the tab it was opened from highlighted, and has a back button; back and clicking that tab return to the page it was opened from. Reference: `ShellPage.LaunchSettings`, `MainViewModel.CurrentTab`.
+- A list whose row click acts on the row uses `Shell.ListRow` button rows, never a selection; another action on the row is a sibling button, never nested in the row. Reference: `PzLauncher.Desktop/Views/Installs/InstallsView.axaml`.
 
 ## Page sidebars
 
@@ -28,7 +30,7 @@ Reference: `PzLauncher.Desktop/Views/Home/HomeView.axaml` (content sidebar), `Pz
 - A sidebar is page content in an `Auto` grid column: nav sidebars on the left, content sidebars on the right.
 - Build them from `Border.sidebar` (`left`/`right`), `TextBlock.sidebarHeader` and `NavItem` (`PzLauncher.Desktop/Themes/ShellStyles.axaml`).
 - The selected sidebar item is an enum on the page ViewModel.
-- A filtered list binds `SelectedItem` through a guard property that ignores `null`, never to the real selection. Reference: `InstallsViewModel.ListSelection`.
+- A selector whose items can be replaced binds `SelectedItem` through a guard property that ignores `null`, never to the real selection. Reference: `LaunchSettingsViewModel.JavaSelection`.
 - Menus that change app state use a command per row and one-way `IsChecked`. Reference: `LanguageMenuViewModel`, `LanguageOption`.
 
 ## Theming

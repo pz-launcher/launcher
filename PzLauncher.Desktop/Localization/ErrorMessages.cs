@@ -27,6 +27,19 @@ public static class ErrorMessages
             ErrorCode.JavaNot64Bit => Format(UiText.Error_JavaNot64Bit, path),
             ErrorCode.JavaSourceUnreadable => Format(UiText.Error_JavaSourceUnreadable, path),
             ErrorCode.JavaReleaseUnreadable => Format(UiText.Error_JavaReleaseUnreadable, path),
+            ErrorCode.LaunchPlatformUnsupported => UiText.Error_LaunchPlatformUnsupported,
+            ErrorCode.LaunchInvalidMemory => Format(UiText.Error_LaunchInvalidMemory, Detail(error, "value")),
+            ErrorCode.LaunchAlreadyRunning => UiText.Error_LaunchAlreadyRunning,
+            ErrorCode.LaunchNotAGame => Format(UiText.Error_LaunchNotAGame, path),
+            ErrorCode.LaunchConfigMissing => Format(UiText.Error_LaunchConfigMissing, path),
+            ErrorCode.LaunchConfigMalformed => Format(UiText.Error_LaunchConfigMalformed, path),
+            ErrorCode.LaunchJavaMissing => Format(UiText.Error_LaunchJavaMissing, path),
+            ErrorCode.LaunchStartFailed => Format(UiText.Error_LaunchStartFailed, path),
+            ErrorCode.LaunchGcIncompatible => Format(UiText.Error_LaunchGcIncompatible, path),
+            ErrorCode.LaunchGcIncompatibleViewpoint => UiText.Error_LaunchGcIncompatibleViewpoint,
+            ErrorCode.LaunchGameCrashed => Format(UiText.Error_LaunchGameCrashed, path, Detail(error, "exitCode")),
+            ErrorCode.LaunchGameExitedEarly => Format(UiText.Error_LaunchGameExitedEarly, Detail(error, "exitCode"), Detail(error, "output")),
+            ErrorCode.LaunchGcConflict => Format(UiText.Error_LaunchGcConflict, Detail(error, "value")),
             ErrorCode.ResultUninitialized => UiText.Error_ResultUninitialized,
         };
     }
@@ -35,6 +48,9 @@ public static class ErrorMessages
 
     private static string Format(string format, string value) =>
         string.Format(CultureInfo.CurrentCulture, format, value);
+
+    private static string Format(string format, string first, string second) =>
+        string.Format(CultureInfo.CurrentCulture, format, first, second);
 
     private static string Detail(Error error, string key) =>
         error.Details.TryGetValue(key, out var value) ? value : "?";

@@ -8,6 +8,10 @@ public sealed class FakePlatformEnvironment : IPlatformEnvironment
 
     public string HomeDirectory { get; set; } = "";
 
+    public Version OsVersion { get; set; } = new(10, 0, 26100, 0);
+
+    public long TotalMemoryBytes { get; set; } = 16L * 1024 * 1024 * 1024;
+
     public string? SteamRegistryPath { get; set; }
 
     public Dictionary<string, string> EnvironmentVariables { get; } = new(StringComparer.OrdinalIgnoreCase);

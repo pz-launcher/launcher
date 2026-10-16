@@ -1,6 +1,7 @@
 using System.Globalization;
 using PzLauncher.Core.Installs;
 using PzLauncher.Core.Java;
+using PzLauncher.Core.Launch;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Tests.TestSupport;
 
@@ -11,12 +12,13 @@ public class DisplayNamesTests : UiTextCultureTest
 {
     [Theory]
     [MemberData(nameof(TestLanguages.All), MemberType = typeof(TestLanguages))]
-    public void Of_EveryInstallKindAndSource_HasDistinctNonEmptyName(AppLanguage language)
+    public void Of_EveryInstallKindSourceAndGc_HasDistinctNonEmptyName(AppLanguage language)
     {
         Localization.SetLanguage(language);
 
         AssertDistinctNonEmpty([.. Enum.GetValues<PzInstallKind>().Select(DisplayNames.Of)]);
         AssertDistinctNonEmpty([.. Enum.GetValues<PzInstallSource>().Select(DisplayNames.Of)]);
+        AssertDistinctNonEmpty([.. Enum.GetValues<GarbageCollector>().Select(DisplayNames.Of)]);
     }
 
     [Theory]

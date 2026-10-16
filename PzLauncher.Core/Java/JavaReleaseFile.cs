@@ -9,9 +9,9 @@ internal enum JavaArch
     Unknown,
 }
 
-internal sealed record JavaReleaseInfo(JavaVersion? Version, string? Vendor, JavaArch Arch)
+internal sealed record JavaReleaseInfo(JavaVersion? Version, string? Vendor, JavaArch Arch, bool HasGraalCompiler)
 {
-    public static JavaReleaseInfo Empty { get; } = new(null, null, JavaArch.Unknown);
+    public static JavaReleaseInfo Empty { get; } = new(null, null, JavaArch.Unknown, false);
 }
 
 // The JDK's <home>/release file: KEY="value" lines; line endings vary within one file.
@@ -22,6 +22,8 @@ internal static class JavaReleaseFile
         string? version = null;
         string? vendor = null;
         string? arch = null;
+        string? graalVersion = null;
+        string? runtimeVersion = null;
         foreach (var rawLine in text.Split('\n'))
         {
             var line = rawLine.TrimEnd('\r');
@@ -43,13 +45,20 @@ internal static class JavaReleaseFile
                 case "OS_ARCH":
                     arch = value;
                     break;
+                case "GRAALVM_VERSION":
+                    graalVersion = value;
+                    break;
+                case "JAVA_RUNTIME_VERSION":
+                    runtimeVersion = value;
+                    break;
             }
         }
 
         return new JavaReleaseInfo(
             ParseVersion(version),
             string.IsNullOrWhiteSpace(vendor) ? null : vendor,
-            ParseArch(arch));
+            ParseArch(arch),
+            !string.IsNullOrWhiteSpace(graalVersion) || runtimeVersion?.Contains("jvmci", StringComparison.OrdinalIgnoreCase) == true);
     }
 
     // "1.8.0_392" is Java 8; from Java 9 on the first number is the major ("17", "21.0.9", "11.0.9.1").

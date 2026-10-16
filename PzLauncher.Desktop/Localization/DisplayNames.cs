@@ -1,6 +1,7 @@
 using Avalonia.Data.Converters;
 using PzLauncher.Core.Installs;
 using PzLauncher.Core.Java;
+using PzLauncher.Core.Launch;
 using PzLauncher.Desktop.Lang;
 
 namespace PzLauncher.Desktop.Localization;
@@ -33,5 +34,14 @@ public static class DisplayNames
             or JavaRuntimeSource.Registry
             or JavaRuntimeSource.KnownFolder => UiText.JavaSource_Auto,
         JavaRuntimeSource.Manual => UiText.JavaSource_Manual,
+    };
+
+    public static string Of(GarbageCollector gc) => gc switch
+    {
+        GarbageCollector.G1 => UiText.GarbageCollector_G1,
+        GarbageCollector.Z => UiText.GarbageCollector_Z,
+        GarbageCollector.Shenandoah => UiText.GarbageCollector_Shenandoah,
+        GarbageCollector.Parallel => UiText.GarbageCollector_Parallel,
+        GarbageCollector.Serial => UiText.GarbageCollector_Serial,
     };
 }
