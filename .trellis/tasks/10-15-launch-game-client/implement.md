@@ -27,14 +27,14 @@ Start only after `10-15-discover-java-runtimes` is done (uses
 6. Desktop dialog: `IDialogService` + `AvaloniaDialogService`; move the dialog
    out of `App.axaml.cs`; DI wiring.
 7. Desktop errors/text: `ErrorMessages` arms; all resx keys in 10 files.
-8. Desktop navigation + Home: `ShellPage.VersionSettings`, `MainViewModel`
+8. Desktop navigation + Home: `ShellPage.LaunchSettings`, `MainViewModel`
    mapping and events, Home tab highlight; `HomeViewModel` launch/version
    settings commands + `IsGameRunning`; `HomeView.axaml`.
-9. Desktop 版本设置: `VersionSettingsViewModel` (Java dropdown from
-   `JavaRuntimesViewModel`, D17 warning, max/min memory linkage), `VersionSettingsView.axaml`,
+9. Desktop 启动设置: `LaunchSettingsViewModel` (Java dropdown from
+   `JavaRuntimesViewModel`, D17 warning, max/min memory linkage), `LaunchSettingsView.axaml`,
    `App.axaml` DataTemplate, `DesignData`.
 10. Desktop tests: fakes in `TestSupport/Fakes.cs`; `HomeViewModelTests`,
-    `VersionSettingsViewModelTests`, `MainViewModelTests` navigation.
+    `LaunchSettingsViewModelTests`, `MainViewModelTests` navigation.
 12. GC / Graal / Viewpoint / crash (prd D19–D22, design step 7b, GC flags,
     `ValidateAsync`, `WaitForExitAsync` result): Core `GarbageCollector` +
     `GarbageCollectors`, `JavaRuntime.HasGraalCompiler` (release file),
@@ -42,9 +42,12 @@ Start only after `10-15-discover-java-runtimes` is done (uses
     GC dropdown, page validation text, Home crash dialog; D23 stderr tail +
     early-exit result, D24 extra-args GC + `launch.gc_conflict`, D22 log time
     and `-XX:ErrorFile`; tests per AC11–AC13, AC15.
-13. Install choice through 版本设置 (prd D25–D29, design "Install choice
-    through 版本设置"): filter without All, row click → 版本设置, 使用该版本
+13. Install choice through 启动设置 (prd D25–D29, design "Install choice
+    through 启动设置"): filter without All, row click → 启动设置, 使用此安装
     button, origin-aware back/tab, server view; tests per AC16–AC18.
+14. Naming (prd D30): rename `VersionSettings` → `LaunchSettings` across
+    code, XAML, resx keys and tests; new texts 选择安装 / 启动设置 / 使用此安装
+    in all 10 languages; error texts naming the page follow.
 11. Spec update (phase 3): `core/directory-structure.md` (`Launch/`),
     `core/service-api.md` test seams (`IProcessRunner`), `desktop/preferences.md`
     (`installs` row), `desktop/shell-and-theming.md` (sub-page navigation),

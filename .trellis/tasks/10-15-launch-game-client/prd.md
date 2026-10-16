@@ -8,7 +8,7 @@ Depends on `10-15-discover-java-runtimes` (Java list for the per-install pick).
 With a Game install selected, Home's 启动游戏 button starts Project Zomboid
 from that install with a java command the launcher builds itself (from the
 install's `ProjectZomboid64.json` plus per-install overrides — Java runtime,
-memory, extra args — set in a new 版本设置 page), and shows when that game is running so it can't be started
+memory, extra args — set in a new 启动设置 page), and shows when that game is running so it can't be started
 twice.
 
 ## Background
@@ -40,7 +40,7 @@ twice.
     (confirmed by the user). No Steam overlay; Steam launch options don't apply.
 - The only dialog today is the ad-hoc unexpected-error window in
   `PzLauncher.Desktop/App.axaml.cs` (`ShowUnexpectedErrorDialogAsync`).
-- Home sidebar has 启动游戏 and 版本选择; 版本设置 was out of scope in
+- Home sidebar has 启动游戏 and 选择安装; 启动设置 was out of scope in
   `10-15-home-shell-titlebar-nav`. Navigation: `ShellPage` (Home, Installs,
   Settings) in `MainViewModel`; pages request navigation through events
   (`.trellis/spec/desktop/shell-and-theming.md`).
@@ -66,7 +66,7 @@ twice.
   (after the main class).
 - D10 Overrides are per install, keyed by install root path (platform path
   comparison), persisted across restarts.
-- D11 UI: Home sidebar gets 版本设置 next to 版本选择; it opens a 版本设置
+- D11 UI: Home sidebar gets 启动设置 next to 选择安装; it opens a 启动设置
   sub-page for the selected install (back button; Home tab stays highlighted;
   not a top nav tab) with a 启动参数 section. Later per-install settings go
   on this page.
@@ -75,12 +75,12 @@ twice.
   the value and the machine's total memory displayed.
 - D13 Saving: every change applies and saves immediately (like 设置 → 外观);
   no Save button.
-- D14 / D16 Java is a per-install override: 版本设置 has a Java dropdown —
+- D14 / D16 Java is a per-install override: 启动设置 has a Java dropdown —
   first item 游戏自带（<vendor> <version>）= that install's own `jre64`
   (default), then the available runtimes from 设置 → Java
   (`10-15-discover-java-runtimes`).
 - D17 Java compatibility: the dropdown lists every 64-bit Java; when the
-  chosen Java's major version is lower than the bundled JRE's, 版本设置 shows
+  chosen Java's major version is lower than the bundled JRE's, 启动设置 shows
   a warning, launch is still allowed. Unknown version → no warning.
 - D15 Min memory (`-Xms`) is an override too, same UI as max memory: radios
   跟随 json（未设置 / 当前 N MB）and 自定义 + slider from 512 MB to the
@@ -97,20 +97,20 @@ twice.
 - D8 Platforms (revised): Windows and Linux. On macOS, launch fails with a
   "not supported on this platform yet" error (dialog); macOS is a later task
   once a real app bundle can be inspected. The user smoke-tests on Linux.
-- D19 GC is a per-install override: 版本设置 has a GC dropdown — 跟随 json
+- D19 GC is a per-install override: 启动设置 has a GC dropdown — 跟随 json
   （当前 X）(default; X = the json's effective GC, or 未设置) then ZGC, G1,
   Shenandoah. Choosing one removes every `-XX:+Use…GC` flag from the json
   part (incl. the OS-version entry) and adds the chosen one.
 - D20 GraalVM + Shenandoah crashes the JVM at start (`research/gc-graal-viewpoint.md`).
   When the chosen Java has the Graal JIT (and the args don't disable it with
   `-XX:-UseJVMCICompiler`) and the effective GC is Shenandoah, launch is
-  blocked with a dialog, and 版本设置 shows the same text under GC. The
+  blocked with a dialog, and 启动设置 shows the same text under GC. The
   launcher never changes the user's settings itself.
 - D21 Viewpoint: the Viewpoint mod offers to switch the json's ZGC to
   Shenandoah to save memory and leaves `ProjectZomboid64.json.viewpoint-backup`.
   When D20 applies, the GC comes from the json and that backup exists, the
   dialog and page text name Viewpoint: it set Shenandoah; pick G1 or ZGC in
-  版本设置 (Viewpoint keeps working, memory use is higher) or use the
+  启动设置 (Viewpoint keeps working, memory use is higher) or use the
   bundled Java. 跟随 json's label notes "由 Viewpoint 设置" in that case.
 - D22 Crash notice: when the launched game exits and that process's
   `hs_err_pid<pid>.log` exists (in the game folder, or where
@@ -126,20 +126,26 @@ twice.
   the user's GC choice: it removes the json's GC flags like D19 does, and the
   D20 check uses it. Two different GCs between the dropdown and the extra
   args, or within the extra args, block launch (`launch.gc_conflict`) and show
-  on 版本设置.
-- D25 版本选择 (Installs page) drops the 全部 filter; the sidebar keeps 游戏 and
+  on 启动设置.
+- D25 选择安装 (Installs page) drops the 全部 filter; the sidebar keeps 游戏 and
   专用服务器, 游戏 by default.
-- D26 Clicking an install in 版本选择 opens 版本设置 for that install. It does
+- D26 Clicking an install in 选择安装 opens 启动设置 for that install. It does
   not change the install in use; the list marks which install is in use.
-- D27 版本设置 has a prominent 使用该版本 button (accent, top of the page).
+- D27 启动设置 has a prominent 使用此安装 button (accent, top of the page).
   It makes the viewed install the one in use and goes to Home. When the
   viewed install is already in use it is disabled and reads 正在使用.
-- D28 版本设置 remembers where it was opened from (Home's 版本设置 button, or
-  版本选择): the back button returns there, and that page's title-bar tab
+- D28 启动设置 remembers where it was opened from (Home's 启动设置 button, or
+  选择安装): the back button returns there, and that page's title-bar tab
   stays highlighted; clicking the highlighted tab returns there too.
-- D29 A DedicatedServer install's 版本设置 shows its path and 使用该版本 only;
+- D29 A DedicatedServer install's 启动设置 shows its path and 使用此安装 only;
   the 启动参数 card is hidden (server launch settings belong to
-  `10-15-host-dedicated-server`). Home's 版本设置 button stays Game-only (R3).
+  `10-15-host-dedicated-server`). Home's 启动设置 button stays Game-only (R3).
+- D30 Naming: "version / 版本" is ambiguous (it reads as the game build), so
+  the UI never uses it for an install. Home's buttons are 选择安装 (Choose
+  install) and 启动设置 (Launch settings); the sub-page is 启动设置; its button
+  is 使用此安装 (Use this install). Code uses `LaunchSettings` for the page.
+  "Version" stays only where it means a real version (Java version, Steam
+  build).
 
 ## Requirements
 
@@ -149,9 +155,9 @@ twice.
 - R2 While the launched game runs, the button reads 游戏运行中 and is disabled
   for every Game install; when the game exits it returns to 启动游戏. Page and
   language switches keep this state.
-- R3 With a DedicatedServer install selected, or none, 启动游戏 and 版本设置
+- R3 With a DedicatedServer install selected, or none, 启动游戏 and 启动设置
   are disabled (the server child enables servers).
-- R4 版本设置 page (D11–D17) for the selected Game install shows its path and:
+- R4 启动设置 page (D11–D17) for the selected Game install shows its path and:
   - Java: dropdown per D14/D16, D17 warning under it. A saved Java that is no
     longer available shows as 找不到 (still selected, so the user sees it) and
     launch fails with `launch.java_missing`.
@@ -175,7 +181,7 @@ twice.
   show results. Per-install overrides are stored by the desktop app and passed
   to Core on launch.
 - R7 All new texts exist in all 10 `UiText*.resx` files.
-- R8 版本设置 GC dropdown per D19; changes save immediately like the other
+- R8 启动设置 GC dropdown per D19; changes save immediately like the other
   overrides.
 - R9 D20/D21: `launch.gc_incompatible` (generic) or
   `launch.gc_incompatible_viewpoint`; the page shows the same text while the
@@ -215,7 +221,7 @@ twice.
       no game running; success → running → exit → enabled; failure → dialog
       with the error's user text; stored overrides (incl. Java home) of the
       selected install are passed to Core.
-- [ ] AC6 (R4, D10, D13–D17) ViewModel/store tests: 版本设置 shows the json
+- [ ] AC6 (R4, D10, D13–D17) ViewModel/store tests: 启动设置 shows the json
       values; Java dropdown = 游戏自带 + available runtimes; lower-major warning
       shown/hidden; missing saved Java shown as 找不到; lowering max pulls min
       down; changing Java, memory mode/value or args saves for that install only; another
@@ -245,19 +251,19 @@ twice.
       different GCs in extra args → `launch.gc_conflict`; the same GC in both
       → launches with one flag.
 - [ ] AC16 (D25, D26) ViewModel tests: filters are Game and DedicatedServer,
-      Game first; clicking a row requests 版本设置 for that install and leaves
+      Game first; clicking a row requests 启动设置 for that install and leaves
       the install in use unchanged.
-- [ ] AC17 (D27, D29) ViewModel tests: 使用该版本 sets the install in use and
+- [ ] AC17 (D27, D29) ViewModel tests: 使用此安装 sets the install in use and
       requests Home; disabled for the install already in use; a server shows
       no launch settings and never calls `GetDefaultsAsync`/`ValidateAsync`.
-- [ ] AC18 (D28) MainViewModel tests: opened from 版本选择 → Installs tab
-      highlighted, back and tab click return to 版本选择; opened from Home →
+- [ ] AC18 (D28) MainViewModel tests: opened from 选择安装 → Installs tab
+      highlighted, back and tab click return to 选择安装; opened from Home →
       Home tab, back returns Home.
 - [ ] AC8 `dotnet build PzLauncher.slnx -warnaserror` and `dotnet test
       PzLauncher.slnx` pass.
 - [ ] AC9 Manual smoke (Windows, PZ via Steam): 启动游戏 starts the game with
       no console window and the json settings (incl. the zbNative agent);
-      button shows 游戏运行中 until quit; in 版本设置 choose Adoptium 25, max
+      button shows 游戏运行中 until quit; in 启动设置 choose Adoptium 25, max
       8 GB, min 4 GB, extra game arg `-debug` → next launch uses them (visible
       in the process command line); choose Adoptium 21 → warning shown;
       restart the launcher → settings kept; selecting the server

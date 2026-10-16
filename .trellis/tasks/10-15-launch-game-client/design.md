@@ -4,7 +4,7 @@
 
 ```
 HomeView ─> HomeViewModel ──────────┐
-VersionSettingsView ─> VersionSettingsViewModel ─┤
+LaunchSettingsView ─> LaunchSettingsViewModel ─┤
                                     ├─> IGameLaunchService (Core, Launch/)
                                     │      ├─> IInstallDetectionService.InspectAsync
                                     │      ├─> IJavaDiscoveryService.InspectAsync (bundled jre64 info)
@@ -17,7 +17,7 @@ VersionSettingsView ─> VersionSettingsViewModel ─┤
 - Core owns: platform check, re-inspection, reading `ProjectZomboid64.json`,
   OS-version vmArgs, applying overrides, splitting argument strings, building
   the command, process start, the single-running-game rule, exit tracking.
-- Desktop owns: storing overrides per install, the 版本设置 page, button
+- Desktop owns: storing overrides per install, the 启动设置 page, button
   state, error text (`ErrorMessages`), the dialog.
 - Overrides are stored by the host and passed in on each call: Core has no
   settings persistence yet (`.trellis/spec/core/index.md`), and a future
@@ -216,23 +216,23 @@ New field `installs`: object keyed by install root path →
 - Lookup uses the platform path comparison (`IPlatformEnvironment.PathComparison`)
   through one small desktop service, `IInstallOverridesService`
   (`Get(root)`, `Save(root, overrides)`), which owns the in-memory map so
-  Home and 版本设置 see the same values.
+  Home and 启动设置 see the same values.
 - `preferences.md` file-contract table gains the `installs` row.
 
 ### Navigation
 
-- `ShellPage` gains `VersionSettings`. `MainViewModel.CurrentPage` maps it to
-  `VersionSettingsViewModel`. Title-bar tabs bind to a derived
-  `MainViewModel.CurrentTab` (`VersionSettings` → `Home`); clicking the Home
-  tab while on 版本设置 returns to Home.
-- `HomeViewModel.VersionSettingsRequested` / `VersionSettingsViewModel.BackRequested`
+- `ShellPage` gains `LaunchSettings`. `MainViewModel.CurrentPage` maps it to
+  `LaunchSettingsViewModel`. Title-bar tabs bind to a derived
+  `MainViewModel.CurrentTab` (`LaunchSettings` → `Home`); clicking the Home
+  tab while on 启动设置 returns to Home.
+- `HomeViewModel.LaunchSettingsRequested` / `LaunchSettingsViewModel.BackRequested`
   events, handled by `MainViewModel` (spec: navigation via events).
 
 ### `HomeViewModel`
 
 - Adds `IGameLaunchService`, `IInstallOverridesService`, `IDialogService`.
 - `IsGameRunning`; `LaunchCommand` async with `CanExecute` = Game selected &&
-  !running; `VersionSettingsCommand` with `CanExecute` = Game selected; both
+  !running; `LaunchSettingsCommand` with `CanExecute` = Game selected; both
   re-evaluated in `OnInstallsPropertyChanged` and on `IsGameRunning` change.
 - Launch: request with the selected install's stored overrides; success →
   running, await `WaitForExitAsync` (a `launch.game_crashed` failure → error
@@ -241,7 +241,7 @@ New field `installs`: object keyed by install root path →
 - Button label: two `{x:Static}` TextBlocks (`Home_Launch`,
   `Home_GameRunning`) toggled by `IsGameRunning`.
 
-### `VersionSettingsViewModel` (`ViewModels/VersionSettings/`, singleton)
+### `LaunchSettingsViewModel` (`ViewModels/LaunchSettings/`, singleton)
 
 - Reloads on every view load for the current `SelectedInstall` (a newer load
   replaces one still running; loading never saves): stored overrides and
@@ -286,40 +286,40 @@ New field `installs`: object keyed by install root path →
 
 ### Resx keys (all 10 files)
 
-`Home_GameRunning`, `Home_VersionSettings`, `VersionSettings_Title`,
-`VersionSettings_Back`, `VersionSettings_LaunchSection`,
-`VersionSettings_Java`, `VersionSettings_JavaBundled` (`{0}` = vendor/version),
-`VersionSettings_JavaVersionWarning` (`{0}` = bundled major),
-`VersionSettings_Memory`, `VersionSettings_MinMemory`,
-`VersionSettings_MemoryFollowJson` (`{0}` MB),
-`VersionSettings_MemoryNotSet`, `VersionSettings_MemoryCustom`,
-`VersionSettings_MemoryValue` (`{0}`), `VersionSettings_SystemMemory` (`{0}`),
-`VersionSettings_JvmArgs`, `VersionSettings_JsonVmArgs`, `VersionSettings_GameArgs`,
-`VersionSettings_ArgsHint`, `VersionSettings_Gc`, `VersionSettings_GcFollowJson` (`{0}` = GC name),
-`VersionSettings_GcNotSet`, `VersionSettings_GcSetByViewpoint` (`{0}` = GC name), and one
+`Home_GameRunning`, `Home_LaunchSettings`, `LaunchSettings_Title`,
+`LaunchSettings_Back`, `LaunchSettings_LaunchSection`,
+`LaunchSettings_Java`, `LaunchSettings_JavaBundled` (`{0}` = vendor/version),
+`LaunchSettings_JavaVersionWarning` (`{0}` = bundled major),
+`LaunchSettings_Memory`, `LaunchSettings_MinMemory`,
+`LaunchSettings_MemoryFollowJson` (`{0}` MB),
+`LaunchSettings_MemoryNotSet`, `LaunchSettings_MemoryCustom`,
+`LaunchSettings_MemoryValue` (`{0}`), `LaunchSettings_SystemMemory` (`{0}`),
+`LaunchSettings_JvmArgs`, `LaunchSettings_JsonVmArgs`, `LaunchSettings_GameArgs`,
+`LaunchSettings_ArgsHint`, `LaunchSettings_Gc`, `LaunchSettings_GcFollowJson` (`{0}` = GC name),
+`LaunchSettings_GcNotSet`, `LaunchSettings_GcSetByViewpoint` (`{0}` = GC name), and one
 `Error_<Member>` per new code (`Error_LaunchGameCrashed`: `{0}` log path, `{1}` exit code;
 `Error_LaunchGameExitedEarly`: `{0}` exit code, `{1}` JVM output; worded so it still reads
 well when the output is empty).
 
-### Install choice through 版本设置 (D25–D29)
+### Install choice through 启动设置 (D25–D29)
 
 - `InstallsFilter` loses `All`; default `Game`; `Installs_FilterAll` resx key
   removed from all 10 files.
-- 版本选择 list: a row click (pointer or keyboard) raises an
+- 选择安装 list: a row click (pointer or keyboard) raises an
   `InstallsViewModel` event with that install; it never sets
   `SelectedInstall`. The in-use install is marked in the row (one shared
   "正在使用" text key with D27).
 - `InstallsViewModel` gains a public way to make an install the one in use
   (by root path, platform path comparison); nothing else sets
   `SelectedInstall` from outside.
-- `VersionSettingsViewModel` works on the install it was opened for (set by
-  `MainViewModel` on navigation), not on `SelectedInstall`. 使用该版本:
+- `LaunchSettingsViewModel` works on the install it was opened for (set by
+  `MainViewModel` on navigation), not on `SelectedInstall`. 使用此安装:
   command enabled when that install is not the one in use and is still in the
   installs list; on execute it makes it in use and raises an event
   `MainViewModel` answers with Home.
-- `MainViewModel` keeps the page 版本设置 was opened from; `CurrentTab` maps
-  `VersionSettings` to that page's tab, back returns to it.
-- Server installs: page shows path + 使用该版本; the 启动参数 card is hidden
+- `MainViewModel` keeps the page 启动设置 was opened from; `CurrentTab` maps
+  `LaunchSettings` to that page's tab, back returns to it.
+- Server installs: page shows path + 使用此安装; the 启动参数 card is hidden
   and no Core launch calls are made.
 
 ## Notes for later (no work in this task)
