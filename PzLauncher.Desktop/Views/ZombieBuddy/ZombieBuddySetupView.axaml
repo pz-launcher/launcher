@@ -1,0 +1,56 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:PzLauncher.Desktop.ViewModels.ZombieBuddy"
+             xmlns:design="using:PzLauncher.Desktop.ViewModels.Design"
+             xmlns:controls="using:PzLauncher.Desktop.Views.Controls"
+             xmlns:loc="using:PzLauncher.Desktop.Localization"
+             xmlns:lang="using:PzLauncher.Desktop.Lang"
+             xmlns:ic="using:FluentIcons.Avalonia"
+             mc:Ignorable="d" d:DesignWidth="480"
+             x:Class="PzLauncher.Desktop.Views.ZombieBuddy.ZombieBuddySetupView"
+             x:DataType="vm:ZombieBuddySetupViewModel">
+
+    <Design.DataContext>
+        <x:Static Member="design:DesignData.ZombieBuddySetup" />
+    </Design.DataContext>
+
+    <StackPanel Margin="16" Spacing="12">
+        <TextBlock Text="{Binding Intro}" TextWrapping="Wrap" />
+
+        <ItemsControl ItemsSource="{Binding Steps}">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:ZombieBuddyStepRow">
+                    <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,3">
+                        <Panel Width="16" Height="16" VerticalAlignment="Center">
+                            <ic:FluentIcon Icon="Circle" IconVariant="Regular" FontSize="16" Foreground="{DynamicResource Shell.TextMuted}"
+                                           IsVisible="{Binding State, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:ZombieBuddyStepState.Pending}}" />
+                            <ic:FluentIcon Icon="ArrowSyncCircle" IconVariant="Regular" FontSize="16" Foreground="{DynamicResource Shell.Accent}"
+                                           IsVisible="{Binding State, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:ZombieBuddyStepState.Running}}" />
+                            <ic:FluentIcon Icon="CheckmarkCircle" IconVariant="Filled" FontSize="16" Foreground="{DynamicResource Shell.Accent}"
+                                           IsVisible="{Binding State, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:ZombieBuddyStepState.Done}}" />
+                            <ic:FluentIcon Icon="DismissCircle" IconVariant="Filled" FontSize="16" Foreground="{DynamicResource Shell.ErrorForeground}"
+                                           IsVisible="{Binding State, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:ZombieBuddyStepState.Failed}}" />
+                        </Panel>
+                        <TextBlock Text="{Binding Step, Converter={x:Static loc:DisplayNames.ZombieBuddyStepName}}" VerticalAlignment="Center" />
+                    </StackPanel>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <ProgressBar Minimum="0" Maximum="1" Value="{Binding Progress}" />
+
+        <TextBlock Text="{Binding ErrorText}" Foreground="{DynamicResource Shell.ErrorForeground}" TextWrapping="Wrap"
+                   IsVisible="{Binding ErrorText, Converter={x:Static ObjectConverters.IsNotNull}}" />
+
+        <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+            <Button Content="{x:Static lang:UiText.ZombieBuddy_Retry}" Command="{Binding RetryCommand}" IsVisible="{Binding IsFailed}" />
+            <Button Classes="accent" Content="{x:Static lang:UiText.ZombieBuddy_Launch}" Command="{Binding LaunchCommand}"
+                    IsVisible="{Binding OffersLaunch}" />
+            <Button Classes="accent" Content="{x:Static lang:UiText.ZombieBuddy_Close}" Command="{Binding CloseCommand}"
+                    IsVisible="{Binding OffersClose}" />
+            <Button Content="{x:Static lang:UiText.ZombieBuddy_Cancel}" Command="{Binding CancelCommand}" />
+        </StackPanel>
+    </StackPanel>
+</UserControl>

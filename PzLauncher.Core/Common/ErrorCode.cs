@@ -49,6 +49,14 @@ public enum ErrorCode
     [JsonStringEnumMemberName("launch.game_crashed")] LaunchGameCrashed,
     [JsonStringEnumMemberName("launch.game_exited_early")] LaunchGameExitedEarly,
     [JsonStringEnumMemberName("launch.gc_conflict")] LaunchGcConflict,
+
+    // ── zombiebuddy ───────────────────────────────────────────
+    [JsonStringEnumMemberName("zombiebuddy.not_subscribed")] ZombieBuddyNotSubscribed,
+    [JsonStringEnumMemberName("zombiebuddy.source_file_missing")] ZombieBuddySourceFileMissing,
+    [JsonStringEnumMemberName("zombiebuddy.copy_failed")] ZombieBuddyCopyFailed,
+    [JsonStringEnumMemberName("zombiebuddy.delete_failed")] ZombieBuddyDeleteFailed,
+    [JsonStringEnumMemberName("zombiebuddy.config_write_failed")] ZombieBuddyConfigWriteFailed,
+    [JsonStringEnumMemberName("zombiebuddy.not_initialized")] ZombieBuddyNotInitialized,
 }
 
 public static class ErrorCodeExtensions

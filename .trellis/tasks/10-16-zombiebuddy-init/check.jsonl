@@ -1,0 +1,7 @@
+{"file": ".trellis/spec/common/coding-rules.md", "reason": "review comments, nullability, async, AOT rules"}
+{"file": ".trellis/spec/common/test-strategy.md", "reason": "every new error code tested by Code; Kind pinned in ErrorCodeTests"}
+{"file": ".trellis/spec/core/service-api.md", "reason": "Core API shape, progress reporting and JSON contract for new DTOs"}
+{"file": ".trellis/spec/core/error-handling.md", "reason": "error code checklist (ErrorCode, factory, resx, ErrorMessages, tests)"}
+{"file": ".trellis/spec/desktop/localization.md", "reason": "resx parity and no hard-coded user text"}
+{"file": ".trellis/spec/desktop/preferences.md", "reason": "preference file contract table updated and per-field tests"}
+{"file": ".trellis/spec/desktop/shell-and-theming.md", "reason": "no color literals, navigation and dialog rules"}

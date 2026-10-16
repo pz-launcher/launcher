@@ -10,6 +10,8 @@ internal static class JavaLocations
 {
     public const string BinFolder = "bin";
 
+    public const string LibFolder = "lib";
+
     public const string ReleaseFile = "release";
 
     // A JDK 8 home has a full JRE in <home>/jre.
@@ -21,6 +23,14 @@ internal static class JavaLocations
     {
         PlatformKind.Windows => "javaw.exe",
         PlatformKind.MacOS or PlatformKind.Linux => "java",
+    };
+
+    /// <summary>Relative to the Java home; a jlink runtime without <c>java.instrument</c> lacks it.</summary>
+    public static string InstrumentLibrary(PlatformKind os) => os switch
+    {
+        PlatformKind.Windows => Path.Combine(BinFolder, "instrument.dll"),
+        PlatformKind.Linux => Path.Combine(LibFolder, "libinstrument.so"),
+        PlatformKind.MacOS => Path.Combine(LibFolder, "libinstrument.dylib"),
     };
 
     public static char PathListSeparator(PlatformKind os) => os switch

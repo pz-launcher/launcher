@@ -194,6 +194,24 @@
   <data name="Error_LaunchGcConflict" xml:space="preserve">
     <value>More than one garbage collector is selected ({0}). Keep only one: in the GC list or in the extra JVM arguments.</value>
   </data>
+  <data name="Error_ZombieBuddyNotSubscribed" xml:space="preserve">
+    <value>The ZombieBuddy Workshop item {0} isn't in any Steam library. Check that you're subscribed in Steam and that the download has finished, then try again.</value>
+  </data>
+  <data name="Error_ZombieBuddySourceFileMissing" xml:space="preserve">
+    <value>The ZombieBuddy Workshop files are incomplete: {0} is missing. Unsubscribe and subscribe again in Steam, then try again.</value>
+  </data>
+  <data name="Error_ZombieBuddyCopyFailed" xml:space="preserve">
+    <value>Couldn't copy the ZombieBuddy file to {0}. If the game is running, close it, then try again.</value>
+  </data>
+  <data name="Error_ZombieBuddyDeleteFailed" xml:space="preserve">
+    <value>Couldn't delete {0}. If the game is running, close it, then try again.</value>
+  </data>
+  <data name="Error_ZombieBuddyConfigWriteFailed" xml:space="preserve">
+    <value>Couldn't save the launch configuration {0}. Make sure the file isn't read-only or open in another program, then try again.</value>
+  </data>
+  <data name="Error_ZombieBuddyNotInitialized" xml:space="preserve">
+    <value>ZombieBuddy isn't initialized for this install. Run Initialize in Launch settings first.</value>
+  </data>
   <data name="Error_FolderNotLocal" xml:space="preserve">
     <value>{0} isn't a folder on this computer, so the launcher can't open it. Pick a local folder instead.</value>
   </data>
@@ -340,5 +358,98 @@
   </data>
   <data name="GarbageCollector_Serial" xml:space="preserve">
     <value>Serial</value>
+  </data>
+  <data name="ZombieBuddy_Section" xml:space="preserve">
+    <value>ZombieBuddy</value>
+  </data>
+  <data name="ZombieBuddy_Status" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="ZombieBuddy_StatusNotInitialized" xml:space="preserve">
+    <value>Not initialized</value>
+  </data>
+  <data name="ZombieBuddy_StatusInitialized" xml:space="preserve">
+    <value>Initialized</value>
+  </data>
+  <data name="ZombieBuddy_StatusLeftovers" xml:space="preserve">
+    <value>Not subscribed (files left behind)</value>
+  </data>
+  <data name="ZombieBuddy_Channel" xml:space="preserve">
+    <value>Channel</value>
+  </data>
+  <data name="ZombieBuddy_ChannelHint" xml:space="preserve">
+    <value>Switching the channel takes effect after you run Reinitialize.</value>
+  </data>
+  <data name="ZombieBuddy_Source" xml:space="preserve">
+    <value>Workshop folder</value>
+  </data>
+  <data name="ZombieBuddy_Initialize" xml:space="preserve">
+    <value>Initialize</value>
+  </data>
+  <data name="ZombieBuddy_Reinitialize" xml:space="preserve">
+    <value>Reinitialize</value>
+  </data>
+  <data name="ZombieBuddy_Remove" xml:space="preserve">
+    <value>Remove</value>
+  </data>
+  <data name="ZombieBuddy_GameRunning" xml:space="preserve">
+    <value>ZombieBuddy can't be changed while the game is running.</value>
+  </data>
+  <data name="ZombieBuddy_InstrumentWarning" xml:space="preserve">
+    <value>ZombieBuddy needs the java.instrument module, which the selected Java doesn't include. ZombieBuddy may fail to load with this Java.</value>
+  </data>
+  <data name="ZombieBuddy_AllowAll" xml:space="preserve">
+    <value>Allow all Java mods without asking</value>
+  </data>
+  <data name="ZombieBuddy_AllowAllWarning" xml:space="preserve">
+    <value>Java mods load without approval prompts or signature checks. This applies to every launch that reads ProjectZomboid64.json, including from Steam.</value>
+  </data>
+  <data name="ZombieBuddy_InitializeTitle" xml:space="preserve">
+    <value>Set up ZombieBuddy</value>
+  </data>
+  <data name="ZombieBuddy_RemoveTitle" xml:space="preserve">
+    <value>Remove ZombieBuddy</value>
+  </data>
+  <data name="ZombieBuddy_InitializeIntro" xml:space="preserve">
+    <value>You're subscribed to ZombieBuddy, but it isn't set up for this install. The launcher copies its files into the game folder and adds its Java agent to ProjectZomboid64.json.</value>
+  </data>
+  <data name="ZombieBuddy_RemoveIntro" xml:space="preserve">
+    <value>You're no longer subscribed to ZombieBuddy. The launcher removes its files from the game folder and its Java agent from ProjectZomboid64.json.</value>
+  </data>
+  <data name="ZombieBuddy_Launch" xml:space="preserve">
+    <value>Launch game</value>
+  </data>
+  <data name="ZombieBuddy_Close" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="ZombieBuddy_Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="ZombieBuddy_Retry" xml:space="preserve">
+    <value>Retry</value>
+  </data>
+  <data name="ZombieBuddyChannel_Stable" xml:space="preserve">
+    <value>Stable</value>
+  </data>
+  <data name="ZombieBuddyChannel_Beta" xml:space="preserve">
+    <value>Beta</value>
+  </data>
+  <data name="ZombieBuddyStep_FindItem" xml:space="preserve">
+    <value>Find the Workshop item</value>
+  </data>
+  <data name="ZombieBuddyStep_CopyNativeLoader" xml:space="preserve">
+    <value>Copy zbNative.dll</value>
+  </data>
+  <data name="ZombieBuddyStep_CopyAgentJar" xml:space="preserve">
+    <value>Copy ZombieBuddy.jar</value>
+  </data>
+  <data name="ZombieBuddyStep_AddAgentArg" xml:space="preserve">
+    <value>Add the Java agent to ProjectZomboid64.json</value>
+  </data>
+  <data name="ZombieBuddyStep_DeleteFiles" xml:space="preserve">
+    <value>Delete the ZombieBuddy files</value>
+  </data>
+  <data name="ZombieBuddyStep_RemoveAgentArg" xml:space="preserve">
+    <value>Remove the Java agent from ProjectZomboid64.json</value>
   </data>
 </root>

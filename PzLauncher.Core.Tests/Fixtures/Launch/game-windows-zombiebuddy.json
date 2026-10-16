@@ -1,0 +1,14 @@
+{
+  "mainClass" : "zombie/gameStates/MainScreenState",
+  "classpath" : [ ".", "projectzomboid.jar" ],
+  "vmArgs" : [ "-agentlib:zbNative=policy=allow-all", "-Djava.awt.headless=true", "-Xmx3072m", "-Dzomboid.steam=1", "-Djava.library.path=win64/;.", "-XX:-OmitStackTraceInFastThrow" ],
+  "windows" : {
+    "10.0.17134" : {
+      "vmArgs" : [ "-XX:+UseZGC", "-agentlib:zbNative=verbosity=2" ]
+    },
+    "6.1" : {
+      "vmArgs" : [ "-XX:+UseG1GC" ]
+    }
+  },
+  "launcherNote" : { "author" : "Zoë", "values" : [ 1, 2.5, true, null, "<&>" ] }
+}

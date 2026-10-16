@@ -56,6 +56,22 @@ be corrupt. Corrupt input becomes an `Error` or warning, never an uncaught excep
 
 Each hazard has a test that feeds bad input and asserts the code.
 
+## Writing files we don't own
+
+Game files (`ProjectZomboid64.json`, files copied into the game folder) are the
+user's. Reference: `PzLauncher.Core/Launch/PzLaunchConfigEditor.cs`,
+`PzLauncher.Core/ZombieBuddy/ZombieBuddyService.cs`.
+
+- Change only the key the feature owns; every other byte of meaning survives
+  a rewrite (unknown fields, nested entries). A file the rewrite would lose
+  data from (duplicate keys) is `launch.config_malformed`, not "fixed".
+- Write atomically: temp file in the same folder, then `File.Move(overwrite)`;
+  delete the temp file on failure or cancellation. No write when unchanged.
+- Multi-step operations are idempotent per step, so a retry re-runs from the
+  start instead of resuming.
+- Tests prove unrelated content survives a round trip, with a fixture copied
+  from a real file.
+
 ## Partial failure
 
 If an operation can partly succeed, return success with a `Warnings` list.

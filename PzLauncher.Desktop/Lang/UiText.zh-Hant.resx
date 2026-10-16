@@ -194,6 +194,24 @@
   <data name="Error_LaunchGcConflict" xml:space="preserve">
     <value>同時選擇了多個不同的 GC（{0}）。請只保留一個：在 GC 下拉選單中選擇，或寫在額外 JVM 參數裡。</value>
   </data>
+  <data name="Error_ZombieBuddyNotSubscribed" xml:space="preserve">
+    <value>在所有 Steam 收藏庫中都找不到 ZombieBuddy 工作坊項目 {0}。請在 Steam 中確認已訂閱且下載已完成，然後重試。</value>
+  </data>
+  <data name="Error_ZombieBuddySourceFileMissing" xml:space="preserve">
+    <value>ZombieBuddy 的工作坊檔案不完整：缺少 {0}。請在 Steam 中取消訂閱後重新訂閱，然後重試。</value>
+  </data>
+  <data name="Error_ZombieBuddyCopyFailed" xml:space="preserve">
+    <value>無法將 ZombieBuddy 檔案複製到 {0}。如果遊戲正在執行，請先關閉遊戲，然後重試。</value>
+  </data>
+  <data name="Error_ZombieBuddyDeleteFailed" xml:space="preserve">
+    <value>無法刪除 {0}。如果遊戲正在執行，請先關閉遊戲，然後重試。</value>
+  </data>
+  <data name="Error_ZombieBuddyConfigWriteFailed" xml:space="preserve">
+    <value>無法儲存啟動設定檔 {0}。請確認該檔案不是唯讀的，也沒有被其他程式開啟，然後重試。</value>
+  </data>
+  <data name="Error_ZombieBuddyNotInitialized" xml:space="preserve">
+    <value>此安裝尚未初始化 ZombieBuddy。請先在「啟動設定」中執行「初始化」。</value>
+  </data>
   <data name="Error_FolderNotLocal" xml:space="preserve">
     <value>{0} 不是這台電腦上的資料夾，啟動器無法開啟它。請選擇本機資料夾。</value>
   </data>
@@ -340,5 +358,98 @@
   </data>
   <data name="GarbageCollector_Serial" xml:space="preserve">
     <value>Serial</value>
+  </data>
+  <data name="ZombieBuddy_Section" xml:space="preserve">
+    <value>ZombieBuddy</value>
+  </data>
+  <data name="ZombieBuddy_Status" xml:space="preserve">
+    <value>狀態</value>
+  </data>
+  <data name="ZombieBuddy_StatusNotInitialized" xml:space="preserve">
+    <value>未初始化</value>
+  </data>
+  <data name="ZombieBuddy_StatusInitialized" xml:space="preserve">
+    <value>已初始化</value>
+  </data>
+  <data name="ZombieBuddy_StatusLeftovers" xml:space="preserve">
+    <value>未訂閱（有殘留）</value>
+  </data>
+  <data name="ZombieBuddy_Channel" xml:space="preserve">
+    <value>頻道</value>
+  </data>
+  <data name="ZombieBuddy_ChannelHint" xml:space="preserve">
+    <value>切換頻道後，需要重新初始化才會生效。</value>
+  </data>
+  <data name="ZombieBuddy_Source" xml:space="preserve">
+    <value>工作坊資料夾</value>
+  </data>
+  <data name="ZombieBuddy_Initialize" xml:space="preserve">
+    <value>初始化</value>
+  </data>
+  <data name="ZombieBuddy_Reinitialize" xml:space="preserve">
+    <value>重新初始化</value>
+  </data>
+  <data name="ZombieBuddy_Remove" xml:space="preserve">
+    <value>移除</value>
+  </data>
+  <data name="ZombieBuddy_GameRunning" xml:space="preserve">
+    <value>遊戲執行期間無法變更 ZombieBuddy。</value>
+  </data>
+  <data name="ZombieBuddy_InstrumentWarning" xml:space="preserve">
+    <value>ZombieBuddy 需要 java.instrument 模組，而所選的 Java 不包含此模組。使用此 Java 時 ZombieBuddy 可能無法載入。</value>
+  </data>
+  <data name="ZombieBuddy_AllowAll" xml:space="preserve">
+    <value>允許所有 Java 模組，不再詢問</value>
+  </data>
+  <data name="ZombieBuddy_AllowAllWarning" xml:space="preserve">
+    <value>Java 模組將在沒有核准提示和簽章檢查的情況下載入。此設定適用於所有讀取 ProjectZomboid64.json 的啟動方式，包括從 Steam 啟動。</value>
+  </data>
+  <data name="ZombieBuddy_InitializeTitle" xml:space="preserve">
+    <value>設定 ZombieBuddy</value>
+  </data>
+  <data name="ZombieBuddy_RemoveTitle" xml:space="preserve">
+    <value>移除 ZombieBuddy</value>
+  </data>
+  <data name="ZombieBuddy_InitializeIntro" xml:space="preserve">
+    <value>你已訂閱 ZombieBuddy，但此安裝尚未設定。啟動器會將其檔案複製到遊戲資料夾，並將其 Java 代理程式加入 ProjectZomboid64.json。</value>
+  </data>
+  <data name="ZombieBuddy_RemoveIntro" xml:space="preserve">
+    <value>你已不再訂閱 ZombieBuddy。啟動器會從遊戲資料夾刪除其檔案，並從 ProjectZomboid64.json 移除其 Java 代理程式。</value>
+  </data>
+  <data name="ZombieBuddy_Launch" xml:space="preserve">
+    <value>啟動遊戲</value>
+  </data>
+  <data name="ZombieBuddy_Close" xml:space="preserve">
+    <value>關閉</value>
+  </data>
+  <data name="ZombieBuddy_Cancel" xml:space="preserve">
+    <value>取消</value>
+  </data>
+  <data name="ZombieBuddy_Retry" xml:space="preserve">
+    <value>重試</value>
+  </data>
+  <data name="ZombieBuddyChannel_Stable" xml:space="preserve">
+    <value>穩定版</value>
+  </data>
+  <data name="ZombieBuddyChannel_Beta" xml:space="preserve">
+    <value>測試版</value>
+  </data>
+  <data name="ZombieBuddyStep_FindItem" xml:space="preserve">
+    <value>尋找工作坊項目</value>
+  </data>
+  <data name="ZombieBuddyStep_CopyNativeLoader" xml:space="preserve">
+    <value>複製 zbNative.dll</value>
+  </data>
+  <data name="ZombieBuddyStep_CopyAgentJar" xml:space="preserve">
+    <value>複製 ZombieBuddy.jar</value>
+  </data>
+  <data name="ZombieBuddyStep_AddAgentArg" xml:space="preserve">
+    <value>將 Java 代理程式加入 ProjectZomboid64.json</value>
+  </data>
+  <data name="ZombieBuddyStep_DeleteFiles" xml:space="preserve">
+    <value>刪除 ZombieBuddy 檔案</value>
+  </data>
+  <data name="ZombieBuddyStep_RemoveAgentArg" xml:space="preserve">
+    <value>從 ProjectZomboid64.json 移除 Java 代理程式</value>
   </data>
 </root>

@@ -2,6 +2,7 @@ using Avalonia.Data.Converters;
 using PzLauncher.Core.Installs;
 using PzLauncher.Core.Java;
 using PzLauncher.Core.Launch;
+using PzLauncher.Core.ZombieBuddy;
 using PzLauncher.Desktop.Lang;
 
 namespace PzLauncher.Desktop.Localization;
@@ -13,6 +14,10 @@ public static class DisplayNames
     public static FuncValueConverter<PzInstallSource, string> InstallSource { get; } = new(source => Of(source));
 
     public static FuncValueConverter<JavaRuntimeSource, string> JavaSource { get; } = new(source => Of(source));
+
+    public static FuncValueConverter<ZombieBuddyChannel, string> ZombieBuddyChannelName { get; } = new(channel => Of(channel));
+
+    public static FuncValueConverter<ZombieBuddyStep, string> ZombieBuddyStepName { get; } = new(step => Of(step));
 
     public static string Of(PzInstallKind kind) => kind switch
     {
@@ -43,5 +48,21 @@ public static class DisplayNames
         GarbageCollector.Shenandoah => UiText.GarbageCollector_Shenandoah,
         GarbageCollector.Parallel => UiText.GarbageCollector_Parallel,
         GarbageCollector.Serial => UiText.GarbageCollector_Serial,
+    };
+
+    public static string Of(ZombieBuddyChannel channel) => channel switch
+    {
+        ZombieBuddyChannel.Stable => UiText.ZombieBuddyChannel_Stable,
+        ZombieBuddyChannel.Beta => UiText.ZombieBuddyChannel_Beta,
+    };
+
+    public static string Of(ZombieBuddyStep step) => step switch
+    {
+        ZombieBuddyStep.FindItem => UiText.ZombieBuddyStep_FindItem,
+        ZombieBuddyStep.CopyNativeLoader => UiText.ZombieBuddyStep_CopyNativeLoader,
+        ZombieBuddyStep.CopyAgentJar => UiText.ZombieBuddyStep_CopyAgentJar,
+        ZombieBuddyStep.AddAgentArg => UiText.ZombieBuddyStep_AddAgentArg,
+        ZombieBuddyStep.DeleteFiles => UiText.ZombieBuddyStep_DeleteFiles,
+        ZombieBuddyStep.RemoveAgentArg => UiText.ZombieBuddyStep_RemoveAgentArg,
     };
 }

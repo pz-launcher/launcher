@@ -333,7 +333,14 @@ internal sealed partial class JavaDiscoveryService(
 
         return arch switch
         {
-            JavaArch.Bits64 => new JavaRuntime(home, executable, release.Version, release.Vendor, source, release.HasGraalCompiler),
+            JavaArch.Bits64 => new JavaRuntime(
+                home,
+                executable,
+                release.Version,
+                release.Vendor,
+                source,
+                release.HasGraalCompiler,
+                File.Exists(Path.Combine(home, JavaLocations.InstrumentLibrary(platform.Os)))),
             JavaArch.Bits32 => JavaErrors.Not64Bit(home),
             JavaArch.Unknown => JavaErrors.NotAJavaHome(home),
         };

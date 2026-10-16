@@ -25,6 +25,8 @@ Reference: `PzLauncher.Desktop/ViewModels/Installs/InstallsViewModel.cs`.
 - CommunityToolkit source generators; dependencies via constructor (DI).
 - Page state is explicit (busy, loaded, empty, error). Don't infer it from item counts.
 - Bind to Core DTOs directly unless a row needs its own commands or state.
+- State several pages observe (e.g. whether a game from this session runs) is an app-lifetime `ObservableObject` service, not a property one page owns. Reference: `PzLauncher.Desktop/Services/GameRunState.cs`.
+- Core `IProgress<T>` reports are consumed in report order on the UI thread: report inline when already on the captured context, post otherwise. Not `Progress<T>`, which uses the thread pool without a context (tests) and can reorder or report after the result. Reference: `ContextProgress` in `PzLauncher.Desktop/ViewModels/ZombieBuddy/ZombieBuddySetupViewModel.cs`.
 
 ## Views
 
@@ -35,7 +37,7 @@ Reference: `PzLauncher.Desktop/Views/Installs/`.
 - VM→View mapping: explicit `DataTemplate`s in `PzLauncher.Desktop/App.axaml`, never a reflection `ViewLocator`.
 - Previewer data: `PzLauncher.Desktop/ViewModels/Design/DesignData.cs`. Fictional, portable values only, never data from a real machine.
 - Range controls (`Slider`, ...) bind `Minimum`/`Maximum` before `Value`, with a range that includes the loaded value, or the control rewrites the saved value. Reference: `PzLauncher.Desktop/Views/LaunchSettings/LaunchSettingsView.axaml`.
-- Dialogs go through `IDialogService` (`PzLauncher.Desktop/Services/IDialogService.cs`).
+- Dialogs go through `IDialogService` (`PzLauncher.Desktop/Services/IDialogService.cs`). A dialog that runs an operation takes a per-dialog ViewModel with `StartAsync` (once, on `Opened`) and `Abort` (on `Closed`, cancels the token); closing the window is cancel, and the follow-up action (e.g. launch) happens only when the dialog returns `true`. Reference: `ShowZombieBuddySetupAsync` in `PzLauncher.Desktop/Services/AvaloniaDialogService.cs`.
 - Icons: `FluentIcons.Avalonia` (`<ic:FluentIcon Icon="…" IconVariant="Regular" />`, reference `PzLauncher.Desktop/Views/MainView.axaml`), matching the Fluent theme. Never paste SVG path data into XAML. Verified AOT-clean with a Native AOT publish (0 IL warnings).
 
 ## Composition root

@@ -35,7 +35,7 @@ internal sealed partial class GameLaunchService(
             return install.Error;
         }
 
-        var game = ResolveGameFolder(install.Value.RootPath);
+        var game = PzLaunchFiles.ResolveGameFolder(install.Value.RootPath);
         var bundled = await javaDiscovery.InspectAsync(Path.Combine(game, PzLaunchFiles.BundledJreFolder), ct).ConfigureAwait(false);
         var bundledJava = bundled.IsSuccess ? bundled.Value : null;
         var systemMemoryMb = (int)Math.Min(platform.TotalMemoryBytes / BytesPerMb, int.MaxValue);
@@ -128,7 +128,7 @@ internal sealed partial class GameLaunchService(
             return install.Error;
         }
 
-        var game = ResolveGameFolder(install.Value.RootPath);
+        var game = PzLaunchFiles.ResolveGameFolder(install.Value.RootPath);
         var config = await ReadConfigAsync(game, ct).ConfigureAwait(false);
         if (!config.IsSuccess)
         {
@@ -289,18 +289,6 @@ internal sealed partial class GameLaunchService(
             PzInstallKind.Game => install.Value,
             PzInstallKind.DedicatedServer => LaunchErrors.NotAGame(install.Value.RootPath),
         };
-    }
-
-    // The Linux Steam depot nests the game one level down; when neither has the json, the root is named in the error.
-    private static string ResolveGameFolder(string root)
-    {
-        if (File.Exists(Path.Combine(root, PzLaunchFiles.ConfigFile)))
-        {
-            return root;
-        }
-
-        var nested = Path.Combine(root, PzLaunchFiles.NestedGameFolder);
-        return File.Exists(Path.Combine(nested, PzLaunchFiles.ConfigFile)) ? nested : root;
     }
 
     private static bool HasViewpointBackup(string game) => File.Exists(Path.Combine(game, PzLaunchFiles.ViewpointBackupFile));

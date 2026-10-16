@@ -194,6 +194,24 @@
   <data name="Error_LaunchGcConflict" xml:space="preserve">
     <value>Há mais de um coletor de lixo diferente selecionado ({0}). Deixe só um: na lista de GC ou nos argumentos extras da JVM.</value>
   </data>
+  <data name="Error_ZombieBuddyNotSubscribed" xml:space="preserve">
+    <value>O item da Oficina do ZombieBuddy {0} não está em nenhuma biblioteca da Steam. Confira se você está inscrito na Steam e se o download terminou, depois tente novamente.</value>
+  </data>
+  <data name="Error_ZombieBuddySourceFileMissing" xml:space="preserve">
+    <value>Os arquivos da Oficina do ZombieBuddy estão incompletos: falta {0}. Cancele a inscrição na Steam, inscreva-se de novo e tente novamente.</value>
+  </data>
+  <data name="Error_ZombieBuddyCopyFailed" xml:space="preserve">
+    <value>Não foi possível copiar o arquivo do ZombieBuddy para {0}. Se o jogo estiver aberto, feche-o e tente novamente.</value>
+  </data>
+  <data name="Error_ZombieBuddyDeleteFailed" xml:space="preserve">
+    <value>Não foi possível excluir {0}. Se o jogo estiver aberto, feche-o e tente novamente.</value>
+  </data>
+  <data name="Error_ZombieBuddyConfigWriteFailed" xml:space="preserve">
+    <value>Não foi possível salvar o arquivo de configuração de inicialização {0}. Verifique se o arquivo não é somente leitura nem está aberto em outro programa e tente novamente.</value>
+  </data>
+  <data name="Error_ZombieBuddyNotInitialized" xml:space="preserve">
+    <value>O ZombieBuddy não está inicializado nesta instalação. Primeiro execute Inicializar em Configurações de inicialização.</value>
+  </data>
   <data name="Error_FolderNotLocal" xml:space="preserve">
     <value>{0} não é uma pasta deste computador, então o launcher não pode abri-la. Escolha uma pasta local.</value>
   </data>
@@ -340,5 +358,98 @@
   </data>
   <data name="GarbageCollector_Serial" xml:space="preserve">
     <value>Serial</value>
+  </data>
+  <data name="ZombieBuddy_Section" xml:space="preserve">
+    <value>ZombieBuddy</value>
+  </data>
+  <data name="ZombieBuddy_Status" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="ZombieBuddy_StatusNotInitialized" xml:space="preserve">
+    <value>Não inicializado</value>
+  </data>
+  <data name="ZombieBuddy_StatusInitialized" xml:space="preserve">
+    <value>Inicializado</value>
+  </data>
+  <data name="ZombieBuddy_StatusLeftovers" xml:space="preserve">
+    <value>Sem inscrição (há arquivos restantes)</value>
+  </data>
+  <data name="ZombieBuddy_Channel" xml:space="preserve">
+    <value>Canal</value>
+  </data>
+  <data name="ZombieBuddy_ChannelHint" xml:space="preserve">
+    <value>A troca de canal só vale depois de executar Reinicializar.</value>
+  </data>
+  <data name="ZombieBuddy_Source" xml:space="preserve">
+    <value>Pasta da Oficina</value>
+  </data>
+  <data name="ZombieBuddy_Initialize" xml:space="preserve">
+    <value>Inicializar</value>
+  </data>
+  <data name="ZombieBuddy_Reinitialize" xml:space="preserve">
+    <value>Reinicializar</value>
+  </data>
+  <data name="ZombieBuddy_Remove" xml:space="preserve">
+    <value>Remover</value>
+  </data>
+  <data name="ZombieBuddy_GameRunning" xml:space="preserve">
+    <value>Não é possível alterar o ZombieBuddy enquanto o jogo está em execução.</value>
+  </data>
+  <data name="ZombieBuddy_InstrumentWarning" xml:space="preserve">
+    <value>O ZombieBuddy precisa do módulo java.instrument, que o Java selecionado não inclui. O ZombieBuddy pode não carregar com este Java.</value>
+  </data>
+  <data name="ZombieBuddy_AllowAll" xml:space="preserve">
+    <value>Permitir todos os mods Java sem perguntar</value>
+  </data>
+  <data name="ZombieBuddy_AllowAllWarning" xml:space="preserve">
+    <value>Os mods Java são carregados sem pedidos de aprovação nem verificação de assinatura. Vale para toda inicialização que lê o ProjectZomboid64.json, inclusive pela Steam.</value>
+  </data>
+  <data name="ZombieBuddy_InitializeTitle" xml:space="preserve">
+    <value>Configurar o ZombieBuddy</value>
+  </data>
+  <data name="ZombieBuddy_RemoveTitle" xml:space="preserve">
+    <value>Remover o ZombieBuddy</value>
+  </data>
+  <data name="ZombieBuddy_InitializeIntro" xml:space="preserve">
+    <value>Você está inscrito no ZombieBuddy, mas ele não está configurado nesta instalação. O PzLauncher copia os arquivos dele para a pasta do jogo e adiciona o agente Java dele ao ProjectZomboid64.json.</value>
+  </data>
+  <data name="ZombieBuddy_RemoveIntro" xml:space="preserve">
+    <value>Você não está mais inscrito no ZombieBuddy. O PzLauncher remove os arquivos dele da pasta do jogo e o agente Java dele do ProjectZomboid64.json.</value>
+  </data>
+  <data name="ZombieBuddy_Launch" xml:space="preserve">
+    <value>Iniciar jogo</value>
+  </data>
+  <data name="ZombieBuddy_Close" xml:space="preserve">
+    <value>Fechar</value>
+  </data>
+  <data name="ZombieBuddy_Cancel" xml:space="preserve">
+    <value>Cancelar</value>
+  </data>
+  <data name="ZombieBuddy_Retry" xml:space="preserve">
+    <value>Tentar novamente</value>
+  </data>
+  <data name="ZombieBuddyChannel_Stable" xml:space="preserve">
+    <value>Estável</value>
+  </data>
+  <data name="ZombieBuddyChannel_Beta" xml:space="preserve">
+    <value>Beta</value>
+  </data>
+  <data name="ZombieBuddyStep_FindItem" xml:space="preserve">
+    <value>Localizar o item da Oficina</value>
+  </data>
+  <data name="ZombieBuddyStep_CopyNativeLoader" xml:space="preserve">
+    <value>Copiar zbNative.dll</value>
+  </data>
+  <data name="ZombieBuddyStep_CopyAgentJar" xml:space="preserve">
+    <value>Copiar ZombieBuddy.jar</value>
+  </data>
+  <data name="ZombieBuddyStep_AddAgentArg" xml:space="preserve">
+    <value>Adicionar o agente Java ao ProjectZomboid64.json</value>
+  </data>
+  <data name="ZombieBuddyStep_DeleteFiles" xml:space="preserve">
+    <value>Excluir os arquivos do ZombieBuddy</value>
+  </data>
+  <data name="ZombieBuddyStep_RemoveAgentArg" xml:space="preserve">
+    <value>Remover o agente Java do ProjectZomboid64.json</value>
   </data>
 </root>

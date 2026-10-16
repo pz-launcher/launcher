@@ -54,12 +54,19 @@ public sealed class JavaHomeBuilder(string baseDirectory, PlatformKind os)
     public static byte[] ElfExecutable(bool is64Bit) => [0x7F, (byte)'E', (byte)'L', (byte)'F', is64Bit ? (byte)2 : (byte)1, 1, 1, 0];
 
     /// <summary>A 64-bit home whose <c>release</c> says so; returns the home path.</summary>
-    public string Create(string relativePath, string? release = null, byte[]? executable = null)
+    public string Create(string relativePath, string? release = null, byte[]? executable = null, bool withInstrument = true)
     {
         var home = Path.Combine(baseDirectory, relativePath);
         var bin = Directory.CreateDirectory(Path.Combine(home, JavaLocations.BinFolder));
         File.WriteAllBytes(Path.Combine(bin.FullName, ExecutableName), executable ?? []);
         File.WriteAllText(Path.Combine(home, JavaLocations.ReleaseFile), release ?? Release());
+        if (withInstrument)
+        {
+            var library = Path.Combine(home, JavaLocations.InstrumentLibrary(os));
+            Directory.CreateDirectory(Path.GetDirectoryName(library)!);
+            File.WriteAllBytes(library, []);
+        }
+
         return home;
     }
 

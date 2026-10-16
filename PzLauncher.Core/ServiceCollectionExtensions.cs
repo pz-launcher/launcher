@@ -5,6 +5,7 @@ using PzLauncher.Core.Java;
 using PzLauncher.Core.Launch;
 using PzLauncher.Core.Platform;
 using PzLauncher.Core.Steam;
+using PzLauncher.Core.ZombieBuddy;
 
 namespace PzLauncher.Core;
 
@@ -22,6 +23,7 @@ public static class ServiceCollectionExtensions
         services.TryAddSingleton<IInstallDetectionService, InstallDetectionService>();
         services.TryAddSingleton<IJavaDiscoveryService, JavaDiscoveryService>();
         services.TryAddSingleton<IGameLaunchService, GameLaunchService>();
+        services.TryAddSingleton<IZombieBuddyService, ZombieBuddyService>();
 
         return services;
     }

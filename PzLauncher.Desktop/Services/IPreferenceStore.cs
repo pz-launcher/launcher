@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using PzLauncher.Core.Launch;
+using PzLauncher.Core.ZombieBuddy;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Themes;
 
@@ -18,6 +19,9 @@ public sealed record UserPreferences(AppLanguage? Language, AppTheme? Theme, Win
     /// <summary>Keyed by install root as saved (ordinal); empty when none are saved.</summary>
     public IReadOnlyDictionary<string, GameLaunchOverrides> InstallOverrides { get; init; } = new Dictionary<string, GameLaunchOverrides>();
 
+    /// <summary>Keyed by install root as saved (ordinal); empty when none are saved.</summary>
+    public IReadOnlyDictionary<string, ZombieBuddyChannel> ZombieBuddyChannels { get; init; } = new Dictionary<string, ZombieBuddyChannel>();
+
     // Compares the collections by content; the generated equality would compare references.
     public bool Equals(UserPreferences? other) =>
         other is not null
@@ -26,9 +30,12 @@ public sealed record UserPreferences(AppLanguage? Language, AppTheme? Theme, Win
         && Window == other.Window
         && ManualJavaHomes.SequenceEqual(other.ManualJavaHomes, StringComparer.Ordinal)
         && InstallOverrides.Count == other.InstallOverrides.Count
-        && InstallOverrides.All(entry => other.InstallOverrides.TryGetValue(entry.Key, out var value) && entry.Value == value);
+        && InstallOverrides.All(entry => other.InstallOverrides.TryGetValue(entry.Key, out var value) && entry.Value == value)
+        && ZombieBuddyChannels.Count == other.ZombieBuddyChannels.Count
+        && ZombieBuddyChannels.All(entry => other.ZombieBuddyChannels.TryGetValue(entry.Key, out var value) && entry.Value == value);
 
-    public override int GetHashCode() => HashCode.Combine(Language, Theme, Window, ManualJavaHomes.Count, InstallOverrides.Count);
+    public override int GetHashCode() =>
+        HashCode.Combine(Language, Theme, Window, ManualJavaHomes.Count, InstallOverrides.Count, ZombieBuddyChannels.Count);
 }
 
 public interface IPreferenceStore
@@ -50,4 +57,7 @@ public interface IPreferenceStore
 
     /// <summary>Replaces this install's entry only. <inheritdoc cref="SaveLanguageAsync"/></summary>
     Task SaveInstallOverridesAsync(string installRoot, GameLaunchOverrides overrides, CancellationToken ct = default);
+
+    /// <inheritdoc cref="SaveInstallOverridesAsync"/>
+    Task SaveZombieBuddyChannelAsync(string installRoot, ZombieBuddyChannel channel, CancellationToken ct = default);
 }

@@ -6,6 +6,8 @@
              xmlns:design="using:PzLauncher.Desktop.ViewModels.Design"
              xmlns:controls="using:PzLauncher.Desktop.Views.Controls"
              xmlns:lang="using:PzLauncher.Desktop.Lang"
+             xmlns:loc="using:PzLauncher.Desktop.Localization"
+             xmlns:zb="using:PzLauncher.Core.ZombieBuddy"
              xmlns:ic="using:FluentIcons.Avalonia"
              mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="720"
              x:Class="PzLauncher.Desktop.Views.LaunchSettings.LaunchSettingsView"
@@ -165,6 +167,63 @@
                         <TextBlock Classes="sectionLabel" Text="{x:Static lang:UiText.LaunchSettings_GameArgs}" />
                         <TextBox Text="{Binding ExtraGameArgs}" AcceptsReturn="False" />
                         <TextBlock Classes="hint" Text="{x:Static lang:UiText.LaunchSettings_ArgsHint}" />
+                    </StackPanel>
+                </Border>
+
+                <Border Padding="16" CornerRadius="4" BorderThickness="1" BorderBrush="{DynamicResource Shell.Border}"
+                        IsVisible="{Binding ShowZombieBuddy}">
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="{x:Static lang:UiText.ZombieBuddy_Section}" FontSize="16" FontWeight="SemiBold" />
+                        <TextBlock Text="{Binding ZombieBuddyErrorText}" Foreground="{DynamicResource Shell.ErrorForeground}" TextWrapping="Wrap"
+                                   IsVisible="{Binding ZombieBuddyErrorText, Converter={x:Static ObjectConverters.IsNotNull}}" />
+
+                        <TextBlock Classes="sectionLabel" Text="{x:Static lang:UiText.ZombieBuddy_Status}" />
+                        <Panel>
+                            <TextBlock Text="{x:Static lang:UiText.ZombieBuddy_StatusNotInitialized}"
+                                       IsVisible="{Binding ZombieBuddyState, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:ZombieBuddyState.NotInitialized}}" />
+                            <TextBlock Text="{x:Static lang:UiText.ZombieBuddy_StatusInitialized}"
+                                       IsVisible="{Binding ZombieBuddyState, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:ZombieBuddyState.Initialized}}" />
+                            <TextBlock Text="{x:Static lang:UiText.ZombieBuddy_StatusLeftovers}"
+                                       IsVisible="{Binding ZombieBuddyState, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:ZombieBuddyState.Leftovers}}" />
+                        </Panel>
+
+                        <StackPanel Spacing="8" IsVisible="{Binding IsZombieBuddySubscribed}">
+                            <TextBlock Classes="sectionLabel" Text="{x:Static lang:UiText.ZombieBuddy_Channel}" />
+                            <TextBlock Text="{Binding ZombieBuddySource.Channel, Converter={x:Static loc:DisplayNames.ZombieBuddyChannelName}}"
+                                       IsVisible="{Binding !HasZombieBuddyChannelChoice}" />
+                            <StackPanel Orientation="Horizontal" Spacing="24" IsVisible="{Binding HasZombieBuddyChannelChoice}">
+                                <RadioButton Content="{x:Static lang:UiText.ZombieBuddyChannel_Stable}"
+                                             IsChecked="{Binding SelectedZombieBuddyChannel, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static zb:ZombieBuddyChannel.Stable}}" />
+                                <RadioButton Content="{x:Static lang:UiText.ZombieBuddyChannel_Beta}"
+                                             IsChecked="{Binding SelectedZombieBuddyChannel, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static zb:ZombieBuddyChannel.Beta}}" />
+                            </StackPanel>
+                            <TextBlock Classes="hint" Text="{x:Static lang:UiText.ZombieBuddy_ChannelHint}" IsVisible="{Binding HasZombieBuddyChannelChoice}" />
+                            <TextBlock Classes="hint" Text="{x:Static lang:UiText.ZombieBuddy_Source}" />
+                            <SelectableTextBlock Text="{Binding ZombieBuddySource.Path}" FontSize="12" TextWrapping="Wrap"
+                                                 Foreground="{DynamicResource Shell.TextMuted}" />
+                        </StackPanel>
+
+                        <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,4,0,0">
+                            <Button Command="{Binding InitializeZombieBuddyCommand}" IsVisible="{Binding IsZombieBuddySubscribed}">
+                                <Panel>
+                                    <TextBlock Text="{x:Static lang:UiText.ZombieBuddy_Initialize}" IsVisible="{Binding !IsZombieBuddyInitialized}" />
+                                    <TextBlock Text="{x:Static lang:UiText.ZombieBuddy_Reinitialize}" IsVisible="{Binding IsZombieBuddyInitialized}" />
+                                </Panel>
+                            </Button>
+                            <Button Content="{x:Static lang:UiText.ZombieBuddy_Remove}" Command="{Binding RemoveZombieBuddyCommand}"
+                                    IsVisible="{Binding CanOfferZombieBuddyRemove}" />
+                        </StackPanel>
+                        <TextBlock Classes="hint" Text="{x:Static lang:UiText.ZombieBuddy_GameRunning}" IsVisible="{Binding IsGameRunning}" />
+
+                        <TextBlock Text="{x:Static lang:UiText.ZombieBuddy_InstrumentWarning}" Foreground="{DynamicResource Shell.WarningForeground}"
+                                   TextWrapping="Wrap" IsVisible="{Binding ShowZombieBuddyInstrumentWarning}" />
+
+                        <StackPanel Spacing="4" IsVisible="{Binding IsZombieBuddyInitialized}">
+                            <ToggleSwitch Content="{x:Static lang:UiText.ZombieBuddy_AllowAll}" OnContent="{x:Null}" OffContent="{x:Null}"
+                                          IsChecked="{Binding IsZombieBuddyAllowAll}" IsEnabled="{Binding CanEditZombieBuddy}" />
+                            <TextBlock Text="{x:Static lang:UiText.ZombieBuddy_AllowAllWarning}" Foreground="{DynamicResource Shell.WarningForeground}"
+                                       TextWrapping="Wrap" IsVisible="{Binding IsZombieBuddyAllowAll}" />
+                        </StackPanel>
                     </StackPanel>
                 </Border>
             </StackPanel>
