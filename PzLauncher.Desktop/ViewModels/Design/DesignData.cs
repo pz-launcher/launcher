@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using PzLauncher.Core.Common;
 using PzLauncher.Core.Installs;
 using PzLauncher.Core.Java;
+using PzLauncher.Core.Launch;
 using PzLauncher.Core.Platform;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Services;
@@ -14,6 +15,7 @@ using PzLauncher.Desktop.ViewModels.Home;
 using PzLauncher.Desktop.ViewModels.Installs;
 using PzLauncher.Desktop.ViewModels.Java;
 using PzLauncher.Desktop.ViewModels.Settings;
+using PzLauncher.Desktop.ViewModels.VersionSettings;
 
 namespace PzLauncher.Desktop.ViewModels.Design;
 
@@ -40,13 +42,19 @@ public static class DesignData
 
     public static InstallsViewModel Installs { get; } = CreateInstalls();
 
-    public static HomeViewModel Home { get; } = new(Installs);
+    private static readonly SampleGameLaunch GameLaunch = new();
+
+    private static readonly SampleInstallOverrides InstallOverrides = new();
+
+    public static HomeViewModel Home { get; } = new(Installs, GameLaunch, InstallOverrides, new NoDialogs());
 
     public static JavaRuntimesViewModel Java { get; } = CreateJava();
 
     public static SettingsViewModel Settings { get; } = new(new LightThemeService(), Preferences, new NoWindowPlacement(), Java);
 
-    public static MainViewModel Main { get; } = new(Home, Installs, Settings, new LanguageMenuViewModel(Localization, Preferences));
+    public static VersionSettingsViewModel VersionSettings { get; } = CreateVersionSettings();
+
+    public static MainViewModel Main { get; } = new(Home, Installs, Settings, VersionSettings, new LanguageMenuViewModel(Localization, Preferences));
 
     private static string SampleAppPath(string installDir) =>
         Path.Combine(SampleSteamRoot, "steamapps", "common", installDir);
@@ -66,6 +74,52 @@ public static class DesignData
         var vm = new JavaRuntimesViewModel(new SampleJavaDiscovery(), new NoFolderPicker(), Preferences, saved, new SamplePlatform(), Localization);
         vm.ScanCommand.Execute(null);
         return vm;
+    }
+
+    private static VersionSettingsViewModel CreateVersionSettings()
+    {
+        var vm = new VersionSettingsViewModel(Installs, GameLaunch, InstallOverrides, Java, new SamplePlatform(), Localization);
+        vm.ActivateCommand.Execute(null);
+        return vm;
+    }
+
+    private sealed class SampleGameLaunch : IGameLaunchService
+    {
+        public Task<Result<GameLaunchDefaults>> GetDefaultsAsync(string installRoot, CancellationToken ct = default) =>
+            Task.FromResult<Result<GameLaunchDefaults>>(new GameLaunchDefaults(
+                MaxMemoryMb: 3072,
+                MinMemoryMb: null,
+                VmArgs: ["-Djava.awt.headless=true", "-Xmx3072m", "-XX:+UseZGC"],
+                BundledJava: new JavaRuntime(
+                    Path.Combine(installRoot, "jre64"),
+                    Path.Combine(installRoot, "jre64", "bin", OperatingSystem.IsWindows() ? "javaw.exe" : "java"),
+                    new JavaVersion(25, "25.0.1"),
+                    "Azul Systems, Inc.",
+                    JavaRuntimeSource.Manual),
+                SystemMemoryMb: 16 * 1024,
+                Warnings: []));
+
+        public Task<Result<GameSession>> LaunchAsync(LaunchGameRequest request, CancellationToken ct = default) =>
+            Task.FromResult<Result<GameSession>>(new Error(ErrorCode.LaunchPlatformUnsupported, "sample", ErrorKind.Validation));
+
+        public Task WaitForExitAsync(CancellationToken ct = default) => Task.CompletedTask;
+    }
+
+    private sealed class SampleInstallOverrides : IInstallOverridesService
+    {
+        public GameLaunchOverrides Get(string installRoot) =>
+            new(SampleJavaHome("zulu-21"), MaxMemoryMb: 8192, MinMemoryMb: null, ExtraJvmArgs: "", ExtraGameArgs: "-debug");
+
+        public void Save(string installRoot, GameLaunchOverrides overrides)
+        {
+        }
+
+        public Task FlushAsync(CancellationToken ct = default) => Task.CompletedTask;
+    }
+
+    private sealed class NoDialogs : IDialogService
+    {
+        public Task ShowErrorAsync(string message) => Task.CompletedTask;
     }
 
     private sealed class SampleJavaDiscovery : IJavaDiscoveryService
@@ -117,6 +171,8 @@ public static class DesignData
         public Task SaveWindowPlacementAsync(WindowPlacement placement, CancellationToken ct = default) => Task.CompletedTask;
 
         public Task SaveManualJavaHomesAsync(IReadOnlyList<string> homes, CancellationToken ct = default) => Task.CompletedTask;
+
+        public Task SaveInstallOverridesAsync(string installRoot, GameLaunchOverrides overrides, CancellationToken ct = default) => Task.CompletedTask;
     }
 
     private sealed class NoWindowPlacement : IWindowPlacementService
@@ -143,6 +199,10 @@ public static class DesignData
             : PlatformKind.Linux;
 
         public string HomeDirectory => SampleHome;
+
+        public Version OsVersion { get; } = new(10, 0, 26100, 0);
+
+        public long TotalMemoryBytes => 16L * 1024 * 1024 * 1024;
 
         public StringComparison PathComparison =>
             OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;

@@ -29,13 +29,16 @@
                 <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6">
                     <controls:NavItem Theme="{StaticResource Shell.TitleBarTab}" chrome:WindowDecorationProperties.ElementRole="User"
                                       Icon="Home" Content="{x:Static lang:UiText.Shell_NavHome}"
-                                      IsChecked="{Binding CurrentPageKind, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:ShellPage.Home}}" />
+                                      IsChecked="{Binding CurrentTab, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:ShellPage.Home}}"
+                                      Click="OnTabClick" />
                     <controls:NavItem Theme="{StaticResource Shell.TitleBarTab}" chrome:WindowDecorationProperties.ElementRole="User"
                                       Icon="Box" Content="{x:Static lang:UiText.Shell_NavInstalls}"
-                                      IsChecked="{Binding CurrentPageKind, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:ShellPage.Installs}}" />
+                                      IsChecked="{Binding CurrentTab, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:ShellPage.Installs}}"
+                                      Click="OnTabClick" />
                     <controls:NavItem Theme="{StaticResource Shell.TitleBarTab}" chrome:WindowDecorationProperties.ElementRole="User"
                                       Icon="Settings" Content="{x:Static lang:UiText.Shell_NavSettings}"
-                                      IsChecked="{Binding CurrentPageKind, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:ShellPage.Settings}}" />
+                                      IsChecked="{Binding CurrentTab, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:ShellPage.Settings}}"
+                                      Click="OnTabClick" />
                 </StackPanel>
 
                 <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right">

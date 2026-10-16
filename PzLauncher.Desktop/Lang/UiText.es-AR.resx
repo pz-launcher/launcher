@@ -52,6 +52,12 @@
   <data name="Home_SelectVersion" xml:space="preserve">
     <value>Elegir versión</value>
   </data>
+  <data name="Home_GameRunning" xml:space="preserve">
+    <value>Juego en ejecución</value>
+  </data>
+  <data name="Home_VersionSettings" xml:space="preserve">
+    <value>Configuración de la versión</value>
+  </data>
   <data name="Installs_Title" xml:space="preserve">
     <value>Instalaciones</value>
   </data>
@@ -148,6 +154,30 @@
   <data name="Error_JavaReleaseUnreadable" xml:space="preserve">
     <value>No se pudo leer el archivo de versión {0}. Ese Java aparece con una versión desconocida.</value>
   </data>
+  <data name="Error_LaunchPlatformUnsupported" xml:space="preserve">
+    <value>Todavía no se puede iniciar el juego en esta plataforma.</value>
+  </data>
+  <data name="Error_LaunchInvalidMemory" xml:space="preserve">
+    <value>El valor de memoria {0} MB no es válido. La memoria tiene que ser mayor que 0 y la mínima no puede superar a la máxima.</value>
+  </data>
+  <data name="Error_LaunchAlreadyRunning" xml:space="preserve">
+    <value>El juego ya se está ejecutando.</value>
+  </data>
+  <data name="Error_LaunchNotAGame" xml:space="preserve">
+    <value>{0} no es una carpeta del juego Project Zomboid.</value>
+  </data>
+  <data name="Error_LaunchConfigMissing" xml:space="preserve">
+    <value>La configuración de inicio {0} no existe. Probá verificar la integridad de los archivos del juego en Steam.</value>
+  </data>
+  <data name="Error_LaunchConfigMalformed" xml:space="preserve">
+    <value>No se pudo leer la configuración de inicio {0}. Probá verificar la integridad de los archivos del juego en Steam.</value>
+  </data>
+  <data name="Error_LaunchJavaMissing" xml:space="preserve">
+    <value>El programa de Java {0} no existe. Elegí otro Java para esta instalación en Configuración de la versión.</value>
+  </data>
+  <data name="Error_LaunchStartFailed" xml:space="preserve">
+    <value>No se pudo iniciar el juego con {0}.</value>
+  </data>
   <data name="Error_FolderNotLocal" xml:space="preserve">
     <value>{0} no es una carpeta de esta computadora, así que el launcher no puede abrirla. Elegí una carpeta local.</value>
   </data>
@@ -213,5 +243,56 @@
   </data>
   <data name="JavaSource_Manual" xml:space="preserve">
     <value>Agregado manualmente</value>
+  </data>
+  <data name="VersionSettings_Title" xml:space="preserve">
+    <value>Configuración de la versión</value>
+  </data>
+  <data name="VersionSettings_Back" xml:space="preserve">
+    <value>Volver</value>
+  </data>
+  <data name="VersionSettings_LaunchSection" xml:space="preserve">
+    <value>Opciones de inicio</value>
+  </data>
+  <data name="VersionSettings_Java" xml:space="preserve">
+    <value>Java</value>
+  </data>
+  <data name="VersionSettings_JavaBundled" xml:space="preserve">
+    <value>Incluido con el juego ({0})</value>
+  </data>
+  <data name="VersionSettings_JavaVersionWarning" xml:space="preserve">
+    <value>Este Java es más antiguo que el Java {0} incluido con el juego. Es posible que el juego no inicie.</value>
+  </data>
+  <data name="VersionSettings_Memory" xml:space="preserve">
+    <value>Memoria máxima</value>
+  </data>
+  <data name="VersionSettings_MinMemory" xml:space="preserve">
+    <value>Memoria mínima</value>
+  </data>
+  <data name="VersionSettings_MemoryFollowJson" xml:space="preserve">
+    <value>Según el json (actual: {0} MB)</value>
+  </data>
+  <data name="VersionSettings_MemoryNotSet" xml:space="preserve">
+    <value>Según el json (sin definir)</value>
+  </data>
+  <data name="VersionSettings_MemoryCustom" xml:space="preserve">
+    <value>Personalizado</value>
+  </data>
+  <data name="VersionSettings_MemoryValue" xml:space="preserve">
+    <value>{0} GB</value>
+  </data>
+  <data name="VersionSettings_SystemMemory" xml:space="preserve">
+    <value>Esta computadora tiene {0} GB de memoria.</value>
+  </data>
+  <data name="VersionSettings_JvmArgs" xml:space="preserve">
+    <value>Argumentos adicionales de JVM</value>
+  </data>
+  <data name="VersionSettings_JsonVmArgs" xml:space="preserve">
+    <value>Argumentos de JVM de ProjectZomboid64.json:</value>
+  </data>
+  <data name="VersionSettings_GameArgs" xml:space="preserve">
+    <value>Argumentos adicionales del juego</value>
+  </data>
+  <data name="VersionSettings_ArgsHint" xml:space="preserve">
+    <value>Separá los argumentos con espacios; poné entre comillas dobles un valor que tenga espacios.</value>
   </data>
 </root>

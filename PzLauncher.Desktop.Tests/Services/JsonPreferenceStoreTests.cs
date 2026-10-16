@@ -1,4 +1,6 @@
+using System.Text.Json;
 using Microsoft.Extensions.Logging.Abstractions;
+using PzLauncher.Core.Launch;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Services;
 using PzLauncher.Desktop.Tests.TestSupport;
@@ -16,7 +18,17 @@ public sealed class JsonPreferenceStoreTests : IDisposable
 
     private static readonly string JavaB = OperatingSystem.IsWindows() ? @"D:\Tools\jre 17" : "/home/player/jre 17";
 
+    private static readonly string GameRoot =
+        OperatingSystem.IsWindows() ? @"E:\SteamLibrary\steamapps\common\ProjectZomboid" : "/home/player/.local/share/Steam/steamapps/common/ProjectZomboid";
+
+    private static readonly string OtherRoot = OperatingSystem.IsWindows() ? @"D:\Games\Project Zomboid" : "/opt/games/Project Zomboid";
+
+    private static readonly GameLaunchOverrides Overrides = new(JavaA, 8192, 2048, "-Dzomboid.steam=1", "-debug");
+
     private static UserPreferences WithJava(params string[] homes) => new(null, null, null) { ManualJavaHomes = homes };
+
+    private static UserPreferences WithInstalls(params (string Root, GameLaunchOverrides Overrides)[] installs) =>
+        new(null, null, null) { InstallOverrides = installs.ToDictionary(install => install.Root, install => install.Overrides) };
 
     public static TheoryData<AppTheme> Themes => [.. Enum.GetValues<AppTheme>()];
 
@@ -87,6 +99,43 @@ public sealed class JsonPreferenceStoreTests : IDisposable
     }
 
     [Fact]
+    public async Task SaveInstallOverridesAsync_ThenLoad_RoundTrips()
+    {
+        var store = CreateStore();
+
+        await store.SaveInstallOverridesAsync(GameRoot, Overrides, TestContext.Current.CancellationToken);
+        await store.SaveInstallOverridesAsync(OtherRoot, GameLaunchOverrides.Empty, TestContext.Current.CancellationToken);
+
+        Assert.Equal(WithInstalls((GameRoot, Overrides), (OtherRoot, GameLaunchOverrides.Empty)), CreateStore().Load());
+    }
+
+    [Fact]
+    public async Task SaveInstallOverridesAsync_SameInstallAgain_ReplacesOnlyItsEntry()
+    {
+        var changed = Overrides with { JavaHome = null, MaxMemoryMb = null };
+        await CreateStore().SaveInstallOverridesAsync(GameRoot, Overrides, TestContext.Current.CancellationToken);
+        await CreateStore().SaveInstallOverridesAsync(OtherRoot, Overrides, TestContext.Current.CancellationToken);
+
+        await CreateStore().SaveInstallOverridesAsync(GameRoot, changed, TestContext.Current.CancellationToken);
+
+        Assert.Equal(WithInstalls((GameRoot, changed), (OtherRoot, Overrides)), CreateStore().Load());
+    }
+
+    [Fact]
+    public async Task SaveInstallOverridesAsync_WritesInstallsObjectKeyedByRoot()
+    {
+        var store = CreateStore();
+        await store.SaveInstallOverridesAsync(GameRoot, Overrides, TestContext.Current.CancellationToken);
+        await store.SaveInstallOverridesAsync(OtherRoot, GameLaunchOverrides.Empty, TestContext.Current.CancellationToken);
+
+        var game = $$"""{{JsonSerializer.Serialize(GameRoot)}}:{"javaHome":{{JsonSerializer.Serialize(JavaA)}},"maxMemoryMb":8192,"minMemoryMb":2048,"jvmArgs":"-Dzomboid.steam=1","gameArgs":"-debug"}""";
+        var other = $$"""{{JsonSerializer.Serialize(OtherRoot)}}:{"jvmArgs":"","gameArgs":""}""";
+        Assert.Equal(
+            """{"installs":{""" + game + "," + other + "}}",
+            await File.ReadAllTextAsync(FilePath, TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
     public async Task SaveLanguageAsync_WritesCultureName()
     {
         await CreateStore().SaveLanguageAsync(AppLanguage.SimplifiedChinese, TestContext.Current.CancellationToken);
@@ -130,6 +179,7 @@ public sealed class JsonPreferenceStoreTests : IDisposable
     [InlineData(1)]
     [InlineData(2)]
     [InlineData(3)]
+    [InlineData(4)]
     public async Task SaveOneField_FileHoldsTheOthers_KeepsAll(int savedLast)
     {
         var ct = TestContext.Current.CancellationToken;
@@ -139,6 +189,7 @@ public sealed class JsonPreferenceStoreTests : IDisposable
             () => CreateStore().SaveThemeAsync(AppTheme.Dark, ct),
             () => CreateStore().SaveWindowPlacementAsync(Placement, ct),
             () => CreateStore().SaveManualJavaHomesAsync([JavaA], ct),
+            () => CreateStore().SaveInstallOverridesAsync(GameRoot, Overrides, ct),
         ];
 
         // Separate stores, as across app runs.
@@ -147,7 +198,9 @@ public sealed class JsonPreferenceStoreTests : IDisposable
             await save();
         }
 
-        Assert.Equal(new UserPreferences(AppLanguage.Russian, AppTheme.Dark, Placement) { ManualJavaHomes = [JavaA] }, CreateStore().Load());
+        Assert.Equal(
+            new UserPreferences(AppLanguage.Russian, AppTheme.Dark, Placement) { ManualJavaHomes = [JavaA], InstallOverrides = WithInstalls((GameRoot, Overrides)).InstallOverrides },
+            CreateStore().Load());
     }
 
     [Fact]
@@ -160,10 +213,16 @@ public sealed class JsonPreferenceStoreTests : IDisposable
             store.SaveThemeAsync(AppTheme.Dark, TestContext.Current.CancellationToken),
             store.SaveLanguageAsync(AppLanguage.PortugueseBrazil, TestContext.Current.CancellationToken),
             store.SaveWindowPlacementAsync(Placement, TestContext.Current.CancellationToken),
-            store.SaveManualJavaHomesAsync([JavaA, JavaB], TestContext.Current.CancellationToken));
+            store.SaveManualJavaHomesAsync([JavaA, JavaB], TestContext.Current.CancellationToken),
+            store.SaveInstallOverridesAsync(GameRoot, Overrides, TestContext.Current.CancellationToken),
+            store.SaveInstallOverridesAsync(OtherRoot, GameLaunchOverrides.Empty, TestContext.Current.CancellationToken));
 
         Assert.Equal(
-            new UserPreferences(AppLanguage.PortugueseBrazil, AppTheme.Dark, Placement) { ManualJavaHomes = [JavaA, JavaB] },
+            new UserPreferences(AppLanguage.PortugueseBrazil, AppTheme.Dark, Placement)
+            {
+                ManualJavaHomes = [JavaA, JavaB],
+                InstallOverrides = WithInstalls((GameRoot, Overrides), (OtherRoot, GameLaunchOverrides.Empty)).InstallOverrides,
+            },
             CreateStore().Load());
     }
 
@@ -176,6 +235,7 @@ public sealed class JsonPreferenceStoreTests : IDisposable
         await CreateStore().SaveThemeAsync(AppTheme.Dark, TestContext.Current.CancellationToken);
         await CreateStore().SaveWindowPlacementAsync(Placement, TestContext.Current.CancellationToken);
         await CreateStore().SaveManualJavaHomesAsync([JavaA], TestContext.Current.CancellationToken);
+        await CreateStore().SaveInstallOverridesAsync(GameRoot, Overrides, TestContext.Current.CancellationToken);
 
         Assert.Equal(new UserPreferences(null, null, null), CreateStore().Load());
     }
@@ -232,6 +292,8 @@ public sealed class JsonPreferenceStoreTests : IDisposable
     [InlineData("""{"window":{"x":10,"y":30,"width":NaN,"height":640,"maximized":false}}""")]
     [InlineData("""{"javaRuntimes":5}""")]
     [InlineData("""{"javaRuntimes":"/opt/jdk"}""")]
+    [InlineData("""{"installs":5}""")]
+    [InlineData("""{"installs":[]}""")]
     public void Load_CorruptOrUnknownContent_ReturnsNoChoices(string content)
     {
         WriteFile(content);
@@ -246,5 +308,37 @@ public sealed class JsonPreferenceStoreTests : IDisposable
         WriteFile($$"""{"theme":"dark","javaRuntimes":[{{valid}},5,null,"relative/jdk","",{"path":"x"},{{valid}}]}""");
 
         Assert.Equal(new UserPreferences(null, AppTheme.Dark, null) { ManualJavaHomes = [JavaA, JavaA] }, CreateStore().Load());
+    }
+
+    [Fact]
+    public void Load_InstallsWithInvalidEntries_KeepsTheValidOnesAndOtherFields()
+    {
+        string Key(string root) => JsonSerializer.Serialize(root);
+        var java = JsonSerializer.Serialize(JavaA);
+        var relativeRoot = JsonSerializer.Serialize("relative/ProjectZomboid");
+        string Child(string name) => Key(Path.Combine(GameRoot, name));
+        WriteFile($$"""
+            {"theme":"dark","installs":{
+              {{Key(GameRoot)}}:{"javaHome":{{java}},"maxMemoryMb":8192,"minMemoryMb":2048,"jvmArgs":"-Dzomboid.steam=1","gameArgs":"-debug"},
+              {{Key(OtherRoot)}}:{},
+              {{relativeRoot}}:{"gameArgs":"-debug"},
+              {{Child("zero")}}:{"maxMemoryMb":0},
+              {{Child("negative")}}:{"minMemoryMb":-512},
+              {{Child("min-above-max")}}:{"maxMemoryMb":2048,"minMemoryMb":4096},
+              {{Child("relative-java")}}:{"javaHome":"jdk-21"},
+              {{Child("text-memory")}}:{"maxMemoryMb":"8g"},
+              {{Child("fraction")}}:{"maxMemoryMb":1.5},
+              {{Child("number")}}:5,
+              {{Child("null")}}:null
+            }
+            }
+            """);
+
+        Assert.Equal(
+            new UserPreferences(null, AppTheme.Dark, null)
+            {
+                InstallOverrides = WithInstalls((GameRoot, Overrides), (OtherRoot, GameLaunchOverrides.Empty)).InstallOverrides,
+            },
+            CreateStore().Load());
     }
 }

@@ -15,6 +15,10 @@ internal sealed partial class PlatformEnvironment(ILogger<PlatformEnvironment> l
     public string HomeDirectory { get; } =
         Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
 
+    public Version OsVersion { get; } = Environment.OSVersion.Version;
+
+    public long TotalMemoryBytes { get; } = GC.GetGCMemoryInfo().TotalAvailableMemoryBytes;
+
     public StringComparison PathComparison =>
         Os == PlatformKind.Windows ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
 

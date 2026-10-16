@@ -52,6 +52,12 @@
   <data name="Home_SelectVersion" xml:space="preserve">
     <value>版本选择</value>
   </data>
+  <data name="Home_GameRunning" xml:space="preserve">
+    <value>游戏运行中</value>
+  </data>
+  <data name="Home_VersionSettings" xml:space="preserve">
+    <value>版本设置</value>
+  </data>
   <data name="Installs_Title" xml:space="preserve">
     <value>已安装</value>
   </data>
@@ -148,6 +154,30 @@
   <data name="Error_JavaReleaseUnreadable" xml:space="preserve">
     <value>无法读取版本文件 {0}。该 Java 将以未知版本列出。</value>
   </data>
+  <data name="Error_LaunchPlatformUnsupported" xml:space="preserve">
+    <value>此平台暂不支持启动游戏。</value>
+  </data>
+  <data name="Error_LaunchInvalidMemory" xml:space="preserve">
+    <value>内存设置 {0} MB 无效。内存必须大于 0，且最小内存不能大于最大内存。</value>
+  </data>
+  <data name="Error_LaunchAlreadyRunning" xml:space="preserve">
+    <value>游戏已在运行。</value>
+  </data>
+  <data name="Error_LaunchNotAGame" xml:space="preserve">
+    <value>{0} 不是 Project Zomboid 游戏文件夹。</value>
+  </data>
+  <data name="Error_LaunchConfigMissing" xml:space="preserve">
+    <value>启动配置 {0} 不存在。请尝试在 Steam 中验证游戏文件的完整性。</value>
+  </data>
+  <data name="Error_LaunchConfigMalformed" xml:space="preserve">
+    <value>无法读取启动配置 {0}。请尝试在 Steam 中验证游戏文件的完整性。</value>
+  </data>
+  <data name="Error_LaunchJavaMissing" xml:space="preserve">
+    <value>Java 程序 {0} 不存在。请在“版本设置”中为此版本选择其他 Java。</value>
+  </data>
+  <data name="Error_LaunchStartFailed" xml:space="preserve">
+    <value>无法使用 {0} 启动游戏。</value>
+  </data>
   <data name="Error_FolderNotLocal" xml:space="preserve">
     <value>{0} 不是这台电脑上的文件夹，启动器无法打开它。请选择本地文件夹。</value>
   </data>
@@ -213,5 +243,56 @@
   </data>
   <data name="JavaSource_Manual" xml:space="preserve">
     <value>手动</value>
+  </data>
+  <data name="VersionSettings_Title" xml:space="preserve">
+    <value>版本设置</value>
+  </data>
+  <data name="VersionSettings_Back" xml:space="preserve">
+    <value>返回</value>
+  </data>
+  <data name="VersionSettings_LaunchSection" xml:space="preserve">
+    <value>启动参数</value>
+  </data>
+  <data name="VersionSettings_Java" xml:space="preserve">
+    <value>Java</value>
+  </data>
+  <data name="VersionSettings_JavaBundled" xml:space="preserve">
+    <value>游戏自带（{0}）</value>
+  </data>
+  <data name="VersionSettings_JavaVersionWarning" xml:space="preserve">
+    <value>此 Java 比游戏自带的 Java {0} 旧，游戏可能无法启动。</value>
+  </data>
+  <data name="VersionSettings_Memory" xml:space="preserve">
+    <value>最大内存</value>
+  </data>
+  <data name="VersionSettings_MinMemory" xml:space="preserve">
+    <value>最小内存</value>
+  </data>
+  <data name="VersionSettings_MemoryFollowJson" xml:space="preserve">
+    <value>跟随 json（当前 {0} MB）</value>
+  </data>
+  <data name="VersionSettings_MemoryNotSet" xml:space="preserve">
+    <value>跟随 json（未设置）</value>
+  </data>
+  <data name="VersionSettings_MemoryCustom" xml:space="preserve">
+    <value>自定义</value>
+  </data>
+  <data name="VersionSettings_MemoryValue" xml:space="preserve">
+    <value>{0} GB</value>
+  </data>
+  <data name="VersionSettings_SystemMemory" xml:space="preserve">
+    <value>本机内存：{0} GB</value>
+  </data>
+  <data name="VersionSettings_JvmArgs" xml:space="preserve">
+    <value>额外 JVM 参数</value>
+  </data>
+  <data name="VersionSettings_JsonVmArgs" xml:space="preserve">
+    <value>ProjectZomboid64.json 中的 JVM 参数：</value>
+  </data>
+  <data name="VersionSettings_GameArgs" xml:space="preserve">
+    <value>额外游戏参数</value>
+  </data>
+  <data name="VersionSettings_ArgsHint" xml:space="preserve">
+    <value>参数之间用空格分隔；包含空格的值请用英文双引号括起来。</value>
   </data>
 </root>

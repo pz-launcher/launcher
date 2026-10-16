@@ -52,6 +52,12 @@
   <data name="Home_SelectVersion" xml:space="preserve">
     <value>Выбрать версию</value>
   </data>
+  <data name="Home_GameRunning" xml:space="preserve">
+    <value>Игра запущена</value>
+  </data>
+  <data name="Home_VersionSettings" xml:space="preserve">
+    <value>Настройки версии</value>
+  </data>
   <data name="Installs_Title" xml:space="preserve">
     <value>Установки</value>
   </data>
@@ -148,6 +154,30 @@
   <data name="Error_JavaReleaseUnreadable" xml:space="preserve">
     <value>Не удалось прочитать файл версии {0}. Эта Java показана с неизвестной версией.</value>
   </data>
+  <data name="Error_LaunchPlatformUnsupported" xml:space="preserve">
+    <value>Запуск игры на этой платформе пока не поддерживается.</value>
+  </data>
+  <data name="Error_LaunchInvalidMemory" xml:space="preserve">
+    <value>Недопустимое значение памяти: {0} МБ. Память должна быть больше 0, а минимум не может превышать максимум.</value>
+  </data>
+  <data name="Error_LaunchAlreadyRunning" xml:space="preserve">
+    <value>Игра уже запущена.</value>
+  </data>
+  <data name="Error_LaunchNotAGame" xml:space="preserve">
+    <value>{0} — не папка игры Project Zomboid.</value>
+  </data>
+  <data name="Error_LaunchConfigMissing" xml:space="preserve">
+    <value>Файл настроек запуска {0} не существует. Попробуйте проверить целостность файлов игры в Steam.</value>
+  </data>
+  <data name="Error_LaunchConfigMalformed" xml:space="preserve">
+    <value>Не удалось прочитать файл настроек запуска {0}. Попробуйте проверить целостность файлов игры в Steam.</value>
+  </data>
+  <data name="Error_LaunchJavaMissing" xml:space="preserve">
+    <value>Программа Java {0} не существует. Выберите для этой установки другую Java в «Настройках версии».</value>
+  </data>
+  <data name="Error_LaunchStartFailed" xml:space="preserve">
+    <value>Не удалось запустить игру с помощью {0}.</value>
+  </data>
   <data name="Error_FolderNotLocal" xml:space="preserve">
     <value>{0} — не папка на этом компьютере, поэтому лаунчер не может её открыть. Выберите локальную папку.</value>
   </data>
@@ -213,5 +243,56 @@
   </data>
   <data name="JavaSource_Manual" xml:space="preserve">
     <value>Добавлена вручную</value>
+  </data>
+  <data name="VersionSettings_Title" xml:space="preserve">
+    <value>Настройки версии</value>
+  </data>
+  <data name="VersionSettings_Back" xml:space="preserve">
+    <value>Назад</value>
+  </data>
+  <data name="VersionSettings_LaunchSection" xml:space="preserve">
+    <value>Параметры запуска</value>
+  </data>
+  <data name="VersionSettings_Java" xml:space="preserve">
+    <value>Java</value>
+  </data>
+  <data name="VersionSettings_JavaBundled" xml:space="preserve">
+    <value>Встроенная в игру ({0})</value>
+  </data>
+  <data name="VersionSettings_JavaVersionWarning" xml:space="preserve">
+    <value>Эта Java старее встроенной в игру Java {0}. Игра может не запуститься.</value>
+  </data>
+  <data name="VersionSettings_Memory" xml:space="preserve">
+    <value>Максимальная память</value>
+  </data>
+  <data name="VersionSettings_MinMemory" xml:space="preserve">
+    <value>Минимальная память</value>
+  </data>
+  <data name="VersionSettings_MemoryFollowJson" xml:space="preserve">
+    <value>Как в json (сейчас {0} МБ)</value>
+  </data>
+  <data name="VersionSettings_MemoryNotSet" xml:space="preserve">
+    <value>Как в json (не задано)</value>
+  </data>
+  <data name="VersionSettings_MemoryCustom" xml:space="preserve">
+    <value>Своё значение</value>
+  </data>
+  <data name="VersionSettings_MemoryValue" xml:space="preserve">
+    <value>{0} ГБ</value>
+  </data>
+  <data name="VersionSettings_SystemMemory" xml:space="preserve">
+    <value>Память этого компьютера: {0} ГБ.</value>
+  </data>
+  <data name="VersionSettings_JvmArgs" xml:space="preserve">
+    <value>Дополнительные аргументы JVM</value>
+  </data>
+  <data name="VersionSettings_JsonVmArgs" xml:space="preserve">
+    <value>Аргументы JVM из ProjectZomboid64.json:</value>
+  </data>
+  <data name="VersionSettings_GameArgs" xml:space="preserve">
+    <value>Дополнительные аргументы игры</value>
+  </data>
+  <data name="VersionSettings_ArgsHint" xml:space="preserve">
+    <value>Разделяйте аргументы пробелами; значение с пробелами заключите в двойные кавычки.</value>
   </data>
 </root>

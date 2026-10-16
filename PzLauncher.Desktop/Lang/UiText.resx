@@ -52,6 +52,12 @@
   <data name="Home_SelectVersion" xml:space="preserve">
     <value>Select version</value>
   </data>
+  <data name="Home_GameRunning" xml:space="preserve">
+    <value>Game running</value>
+  </data>
+  <data name="Home_VersionSettings" xml:space="preserve">
+    <value>Version settings</value>
+  </data>
   <data name="Installs_Title" xml:space="preserve">
     <value>Installs</value>
   </data>
@@ -148,6 +154,30 @@
   <data name="Error_JavaReleaseUnreadable" xml:space="preserve">
     <value>Couldn't read the version file {0}. That Java is listed with an unknown version.</value>
   </data>
+  <data name="Error_LaunchPlatformUnsupported" xml:space="preserve">
+    <value>Launching the game isn't supported on this platform yet.</value>
+  </data>
+  <data name="Error_LaunchInvalidMemory" xml:space="preserve">
+    <value>The memory setting {0} MB isn't valid. Memory must be above 0, and the minimum can't be larger than the maximum.</value>
+  </data>
+  <data name="Error_LaunchAlreadyRunning" xml:space="preserve">
+    <value>The game is already running.</value>
+  </data>
+  <data name="Error_LaunchNotAGame" xml:space="preserve">
+    <value>{0} isn't a Project Zomboid game folder.</value>
+  </data>
+  <data name="Error_LaunchConfigMissing" xml:space="preserve">
+    <value>The launch configuration {0} doesn't exist. Try verifying the game files in Steam.</value>
+  </data>
+  <data name="Error_LaunchConfigMalformed" xml:space="preserve">
+    <value>Couldn't read the launch configuration {0}. Try verifying the game files in Steam.</value>
+  </data>
+  <data name="Error_LaunchJavaMissing" xml:space="preserve">
+    <value>The Java program {0} doesn't exist. Choose another Java for this install in Version settings.</value>
+  </data>
+  <data name="Error_LaunchStartFailed" xml:space="preserve">
+    <value>Couldn't start the game with {0}.</value>
+  </data>
   <data name="Error_FolderNotLocal" xml:space="preserve">
     <value>{0} isn't a folder on this computer, so the launcher can't open it. Pick a local folder instead.</value>
   </data>
@@ -213,5 +243,56 @@
   </data>
   <data name="JavaSource_Manual" xml:space="preserve">
     <value>Added manually</value>
+  </data>
+  <data name="VersionSettings_Title" xml:space="preserve">
+    <value>Version settings</value>
+  </data>
+  <data name="VersionSettings_Back" xml:space="preserve">
+    <value>Back</value>
+  </data>
+  <data name="VersionSettings_LaunchSection" xml:space="preserve">
+    <value>Launch options</value>
+  </data>
+  <data name="VersionSettings_Java" xml:space="preserve">
+    <value>Java</value>
+  </data>
+  <data name="VersionSettings_JavaBundled" xml:space="preserve">
+    <value>Bundled with the game ({0})</value>
+  </data>
+  <data name="VersionSettings_JavaVersionWarning" xml:space="preserve">
+    <value>This Java is older than the game's bundled Java {0}. The game may not start.</value>
+  </data>
+  <data name="VersionSettings_Memory" xml:space="preserve">
+    <value>Maximum memory</value>
+  </data>
+  <data name="VersionSettings_MinMemory" xml:space="preserve">
+    <value>Minimum memory</value>
+  </data>
+  <data name="VersionSettings_MemoryFollowJson" xml:space="preserve">
+    <value>Follow json (currently {0} MB)</value>
+  </data>
+  <data name="VersionSettings_MemoryNotSet" xml:space="preserve">
+    <value>Follow json (not set)</value>
+  </data>
+  <data name="VersionSettings_MemoryCustom" xml:space="preserve">
+    <value>Custom</value>
+  </data>
+  <data name="VersionSettings_MemoryValue" xml:space="preserve">
+    <value>{0} GB</value>
+  </data>
+  <data name="VersionSettings_SystemMemory" xml:space="preserve">
+    <value>This computer has {0} GB of memory.</value>
+  </data>
+  <data name="VersionSettings_JvmArgs" xml:space="preserve">
+    <value>Extra JVM arguments</value>
+  </data>
+  <data name="VersionSettings_JsonVmArgs" xml:space="preserve">
+    <value>JVM arguments from ProjectZomboid64.json:</value>
+  </data>
+  <data name="VersionSettings_GameArgs" xml:space="preserve">
+    <value>Extra game arguments</value>
+  </data>
+  <data name="VersionSettings_ArgsHint" xml:space="preserve">
+    <value>Separate arguments with spaces; put a value that contains spaces in double quotes.</value>
   </data>
 </root>

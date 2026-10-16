@@ -3,6 +3,8 @@ using System.Text.RegularExpressions;
 using PzLauncher.Core.Common;
 using PzLauncher.Core.Installs;
 using PzLauncher.Core.Java;
+using PzLauncher.Core.Launch;
+using PzLauncher.Core.Platform;
 using PzLauncher.Core.Serialization;
 using PzLauncher.Core.Steam;
 
@@ -30,6 +32,14 @@ public partial class ErrorCodeTests
         [ErrorCode.JavaNot64Bit] = (JavaErrors.Not64Bit("p"), ErrorKind.Validation),
         [ErrorCode.JavaSourceUnreadable] = (JavaErrors.SourceUnreadable("p", "r"), ErrorKind.External),
         [ErrorCode.JavaReleaseUnreadable] = (JavaErrors.ReleaseUnreadable("p", "r"), ErrorKind.External),
+        [ErrorCode.LaunchPlatformUnsupported] = (LaunchErrors.PlatformUnsupported(PlatformKind.MacOS), ErrorKind.Validation),
+        [ErrorCode.LaunchInvalidMemory] = (LaunchErrors.InvalidMemory(0), ErrorKind.Validation),
+        [ErrorCode.LaunchAlreadyRunning] = (LaunchErrors.AlreadyRunning(), ErrorKind.Conflict),
+        [ErrorCode.LaunchNotAGame] = (LaunchErrors.NotAGame("p"), ErrorKind.Validation),
+        [ErrorCode.LaunchConfigMissing] = (LaunchErrors.ConfigMissing("p"), ErrorKind.NotFound),
+        [ErrorCode.LaunchConfigMalformed] = (LaunchErrors.ConfigMalformed("p", "r"), ErrorKind.External),
+        [ErrorCode.LaunchJavaMissing] = (LaunchErrors.JavaMissing("p"), ErrorKind.NotFound),
+        [ErrorCode.LaunchStartFailed] = (LaunchErrors.StartFailed("p", "r"), ErrorKind.External),
     };
 
     [GeneratedRegex(@"^[a-z]+\.[a-z0-9]+(_[a-z0-9]+)*$")]
@@ -76,6 +86,14 @@ public partial class ErrorCodeTests
     [InlineData(ErrorCode.JavaNot64Bit, "java.not_64_bit")]
     [InlineData(ErrorCode.JavaSourceUnreadable, "java.source_unreadable")]
     [InlineData(ErrorCode.JavaReleaseUnreadable, "java.release_unreadable")]
+    [InlineData(ErrorCode.LaunchPlatformUnsupported, "launch.platform_unsupported")]
+    [InlineData(ErrorCode.LaunchInvalidMemory, "launch.invalid_memory")]
+    [InlineData(ErrorCode.LaunchAlreadyRunning, "launch.already_running")]
+    [InlineData(ErrorCode.LaunchNotAGame, "launch.not_a_game")]
+    [InlineData(ErrorCode.LaunchConfigMissing, "launch.config_missing")]
+    [InlineData(ErrorCode.LaunchConfigMalformed, "launch.config_malformed")]
+    [InlineData(ErrorCode.LaunchJavaMissing, "launch.java_missing")]
+    [InlineData(ErrorCode.LaunchStartFailed, "launch.start_failed")]
     public void ToWireName_ExistingCodes_AreStable(ErrorCode code, string wireName) =>
         Assert.Equal(wireName, code.ToWireName());
 

@@ -3,9 +3,7 @@ using System.Globalization;
 using System.IO;
 using System.Threading.Tasks;
 using Avalonia;
-using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
-using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
 using Microsoft.Extensions.DependencyInjection;
@@ -20,6 +18,7 @@ using PzLauncher.Desktop.ViewModels.Home;
 using PzLauncher.Desktop.ViewModels.Installs;
 using PzLauncher.Desktop.ViewModels.Java;
 using PzLauncher.Desktop.ViewModels.Settings;
+using PzLauncher.Desktop.ViewModels.VersionSettings;
 using PzLauncher.Desktop.Views;
 
 namespace PzLauncher.Desktop;
@@ -44,12 +43,15 @@ public partial class App : Application
             var services = new ServiceCollection();
             services.AddLogging(logging => logging.AddDebug());
             services.AddPzLauncherCore();
+            services.AddSingleton(TimeProvider.System);
             services.AddSingleton<IFolderPicker>(new AvaloniaFolderPicker(() => desktop.MainWindow));
+            services.AddSingleton<IDialogService>(new AvaloniaDialogService(() => desktop.MainWindow));
             WindowPlacementPersistence? windowPlacement = null;
             services.AddSingleton<IWindowPlacementService>(new WindowPlacementService(() => windowPlacement));
             services.AddSingleton<IPreferenceStore>(sp =>
                 new JsonPreferenceStore(preferencesPath, sp.GetRequiredService<ILogger<JsonPreferenceStore>>()));
             services.AddSingleton(sp => sp.GetRequiredService<IPreferenceStore>().Load());
+            services.AddSingleton<IInstallOverridesService, InstallOverridesService>();
             services.AddSingleton<ILocalizationService>(sp => new LocalizationService(
                 sp.GetRequiredService<UserPreferences>().Language ?? AppLanguages.FromCulture(CultureInfo.CurrentUICulture)));
             services.AddSingleton<IThemeService>(sp =>
@@ -58,12 +60,13 @@ public partial class App : Application
             services.AddSingleton<InstallsViewModel>();
             services.AddSingleton<JavaRuntimesViewModel>();
             services.AddSingleton<HomeViewModel>();
+            services.AddSingleton<VersionSettingsViewModel>();
             services.AddSingleton<SettingsViewModel>();
             services.AddSingleton<LanguageMenuViewModel>();
             services.AddSingleton<MainViewModel>();
             var provider = services.BuildServiceProvider();
 
-            InstallGlobalExceptionHandlers(provider.GetRequiredService<ILogger<App>>());
+            InstallGlobalExceptionHandlers(provider.GetRequiredService<ILogger<App>>(), provider.GetRequiredService<IDialogService>());
 
             // Resolved before the first window exists, so views read UiText in the startup language and theme.
             var localization = provider.GetRequiredService<ILocalizationService>();
@@ -80,6 +83,7 @@ public partial class App : Application
                 mainWindow,
                 provider.GetRequiredService<IPreferenceStore>(),
                 provider.GetRequiredService<UserPreferences>().Window,
+                provider.GetRequiredService<IInstallOverridesService>().FlushAsync,
                 provider.GetRequiredService<ILogger<WindowPlacementPersistence>>());
             desktop.MainWindow = mainWindow;
             desktop.Exit += (_, _) => provider.Dispose();
@@ -98,7 +102,7 @@ public partial class App : Application
     }
 
     // The only place that catches Exception.
-    private void InstallGlobalExceptionHandlers(ILogger logger)
+    private void InstallGlobalExceptionHandlers(ILogger logger, IDialogService dialogs)
     {
         AppDomain.CurrentDomain.UnhandledException += (_, e) =>
             logger.LogCritical(e.ExceptionObject as Exception, "Unhandled exception (terminating: {IsTerminating})", e.IsTerminating);
@@ -115,13 +119,13 @@ public partial class App : Application
             e.Handled = true;
 
             // Fire and forget: a failing dialog becomes a logged unobserved task exception instead of re-entering this handler.
-            _ = ShowUnexpectedErrorDialogAsync();
+            _ = ShowUnexpectedErrorDialogAsync(dialogs);
         };
     }
 
-    private async Task ShowUnexpectedErrorDialogAsync()
+    private async Task ShowUnexpectedErrorDialogAsync(IDialogService dialogs)
     {
-        if (_showingErrorDialog || ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime { MainWindow: { } owner })
+        if (_showingErrorDialog)
         {
             return;
         }
@@ -129,32 +133,7 @@ public partial class App : Application
         _showingErrorDialog = true;
         try
         {
-            var ok = new Button { Content = UiText.Dialog_Ok, HorizontalAlignment = HorizontalAlignment.Right };
-            var dialog = new Window
-            {
-                Title = "PzLauncher",
-                FontFamily = Avalonia.Media.FontFamily.Parse(UiText.Main_FontFamily),
-                Width = 420,
-                SizeToContent = SizeToContent.Height,
-                CanResize = false,
-                WindowStartupLocation = WindowStartupLocation.CenterOwner,
-                Content = new StackPanel
-                {
-                    Margin = new Thickness(16),
-                    Spacing = 12,
-                    Children =
-                    {
-                        new TextBlock
-                        {
-                            Text = UiText.Dialog_UnexpectedError,
-                            TextWrapping = Avalonia.Media.TextWrapping.Wrap,
-                        },
-                        ok,
-                    },
-                },
-            };
-            ok.Click += (_, _) => dialog.Close();
-            await dialog.ShowDialog(owner);
+            await dialogs.ShowErrorAsync(UiText.Dialog_UnexpectedError);
         }
         finally
         {

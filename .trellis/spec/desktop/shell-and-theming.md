@@ -20,6 +20,7 @@ Reference: `MainViewModel.CurrentPageKind`, `ShellPage`, `PzLauncher.Desktop/Vie
 - Tabs, sidebar items and option radios bind `IsChecked` to an enum through `EnumMatchConverter`. Never select through a `Command`.
 - Page state lives in the page ViewModels (singletons), never in views.
 - A page asks for navigation through an event the shell handles, never by referencing `MainViewModel`. Reference: `HomeViewModel.SelectVersionRequested`.
+- A sub-page is a `ShellPage` without its own tab: tabs bind to `MainViewModel.CurrentTab`, which maps the sub-page to its parent tab; a tab's `Click` calls `ShowTabPage` so clicking the highlighted tab returns to its page; the sub-page has a back button raising an event. Reference: `ShellPage.VersionSettings`, `VersionSettingsViewModel.BackRequested`.
 
 ## Page sidebars
 
