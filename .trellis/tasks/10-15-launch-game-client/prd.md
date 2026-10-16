@@ -127,6 +127,19 @@ twice.
   D20 check uses it. Two different GCs between the dropdown and the extra
   args, or within the extra args, block launch (`launch.gc_conflict`) and show
   on 版本设置.
+- D25 版本选择 (Installs page) drops the 全部 filter; the sidebar keeps 游戏 and
+  专用服务器, 游戏 by default.
+- D26 Clicking an install in 版本选择 opens 版本设置 for that install. It does
+  not change the install in use; the list marks which install is in use.
+- D27 版本设置 has a prominent 使用该版本 button (accent, top of the page).
+  It makes the viewed install the one in use and goes to Home. When the
+  viewed install is already in use it is disabled and reads 正在使用.
+- D28 版本设置 remembers where it was opened from (Home's 版本设置 button, or
+  版本选择): the back button returns there, and that page's title-bar tab
+  stays highlighted; clicking the highlighted tab returns there too.
+- D29 A DedicatedServer install's 版本设置 shows its path and 使用该版本 only;
+  the 启动参数 card is hidden (server launch settings belong to
+  `10-15-host-dedicated-server`). Home's 版本设置 button stays Game-only (R3).
 
 ## Requirements
 
@@ -173,6 +186,7 @@ twice.
   exit; Home shows it in the error dialog. Any other exit shows nothing.
 - R11 D24: `launch.gc_conflict` (details `value` = the conflicting flags) from
   validation and launch.
+- R12 D25–D29; the selected install stays session-only as before.
 
 ## Acceptance Criteria
 
@@ -230,6 +244,15 @@ twice.
       GC flags and feeds the D20 check; dropdown ≠ extra-args GC, or two
       different GCs in extra args → `launch.gc_conflict`; the same GC in both
       → launches with one flag.
+- [ ] AC16 (D25, D26) ViewModel tests: filters are Game and DedicatedServer,
+      Game first; clicking a row requests 版本设置 for that install and leaves
+      the install in use unchanged.
+- [ ] AC17 (D27, D29) ViewModel tests: 使用该版本 sets the install in use and
+      requests Home; disabled for the install already in use; a server shows
+      no launch settings and never calls `GetDefaultsAsync`/`ValidateAsync`.
+- [ ] AC18 (D28) MainViewModel tests: opened from 版本选择 → Installs tab
+      highlighted, back and tab click return to 版本选择; opened from Home →
+      Home tab, back returns Home.
 - [ ] AC8 `dotnet build PzLauncher.slnx -warnaserror` and `dotnet test
       PzLauncher.slnx` pass.
 - [ ] AC9 Manual smoke (Windows, PZ via Steam): 启动游戏 starts the game with

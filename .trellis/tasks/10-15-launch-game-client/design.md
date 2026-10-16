@@ -301,6 +301,27 @@ New field `installs`: object keyed by install root path →
 `Error_LaunchGameExitedEarly`: `{0}` exit code, `{1}` JVM output; worded so it still reads
 well when the output is empty).
 
+### Install choice through 版本设置 (D25–D29)
+
+- `InstallsFilter` loses `All`; default `Game`; `Installs_FilterAll` resx key
+  removed from all 10 files.
+- 版本选择 list: a row click (pointer or keyboard) raises an
+  `InstallsViewModel` event with that install; it never sets
+  `SelectedInstall`. The in-use install is marked in the row (one shared
+  "正在使用" text key with D27).
+- `InstallsViewModel` gains a public way to make an install the one in use
+  (by root path, platform path comparison); nothing else sets
+  `SelectedInstall` from outside.
+- `VersionSettingsViewModel` works on the install it was opened for (set by
+  `MainViewModel` on navigation), not on `SelectedInstall`. 使用该版本:
+  command enabled when that install is not the one in use and is still in the
+  installs list; on execute it makes it in use and raises an event
+  `MainViewModel` answers with Home.
+- `MainViewModel` keeps the page 版本设置 was opened from; `CurrentTab` maps
+  `VersionSettings` to that page's tab, back returns to it.
+- Server installs: page shows path + 使用该版本; the 启动参数 card is hidden
+  and no Core launch calls are made.
+
 ## Notes for later (no work in this task)
 
 - Viewpoint after a launcher GC override: the game then runs a GC that isn't

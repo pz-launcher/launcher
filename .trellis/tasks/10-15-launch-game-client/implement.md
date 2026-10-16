@@ -42,6 +42,9 @@ Start only after `10-15-discover-java-runtimes` is done (uses
     GC dropdown, page validation text, Home crash dialog; D23 stderr tail +
     early-exit result, D24 extra-args GC + `launch.gc_conflict`, D22 log time
     and `-XX:ErrorFile`; tests per AC11–AC13, AC15.
+13. Install choice through 版本设置 (prd D25–D29, design "Install choice
+    through 版本设置"): filter without All, row click → 版本设置, 使用该版本
+    button, origin-aware back/tab, server view; tests per AC16–AC18.
 11. Spec update (phase 3): `core/directory-structure.md` (`Launch/`),
     `core/service-api.md` test seams (`IProcessRunner`), `desktop/preferences.md`
     (`installs` row), `desktop/shell-and-theming.md` (sub-page navigation),
