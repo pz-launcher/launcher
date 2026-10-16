@@ -1,0 +1,5 @@
+{"file": ".trellis/spec/common/coding-rules.md", "reason": "review comments, nullability, async, AOT rules"}
+{"file": ".trellis/spec/common/test-strategy.md", "reason": "every new error code tested by Code; Kind pinned in ErrorCodeTests"}
+{"file": ".trellis/spec/core/error-handling.md", "reason": "error code checklist and atomic, lossless config rewrite"}
+{"file": ".trellis/spec/core/service-api.md", "reason": "Core API shape and JSON contract for the new enum"}
+{"file": ".trellis/spec/desktop/localization.md", "reason": "resx parity and no hard-coded user text"}

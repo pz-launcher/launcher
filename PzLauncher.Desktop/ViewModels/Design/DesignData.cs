@@ -186,6 +186,9 @@ public static class DesignData
             new TaskCompletionSource<Result>().Task;
 
         public Task<Result> SetAllowAllAsync(string installRoot, bool allowAll, CancellationToken ct = default) => Task.FromResult(Result.Ok());
+
+        public Task<Result<ZabricPreload>> EnsureZabricPreloadAsync(string installRoot, string extraGameArgs, CancellationToken ct = default) =>
+            Task.FromResult<Result<ZabricPreload>>(ZabricPreload.Current);
     }
 
     private sealed class SampleZombieBuddyChannels : IZombieBuddyChannelService

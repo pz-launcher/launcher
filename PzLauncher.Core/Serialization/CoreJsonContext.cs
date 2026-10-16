@@ -29,4 +29,5 @@ namespace PzLauncher.Core.Serialization;
 [JsonSerializable(typeof(ZombieBuddyChannel))]
 [JsonSerializable(typeof(ZombieBuddyStatus))]
 [JsonSerializable(typeof(ZombieBuddyProgress))]
+[JsonSerializable(typeof(ZabricPreload))]
 public sealed partial class CoreJsonContext : JsonSerializerContext;

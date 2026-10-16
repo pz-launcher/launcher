@@ -32,6 +32,19 @@ internal static class PathNormalizer
         return true;
     }
 
+    /// <summary>Like <see cref="TryNormalizeAbsolute"/>, but a relative path resolves against <paramref name="basePath"/>, which must be absolute.</summary>
+    public static bool TryNormalizeAgainst(string? path, string basePath, [NotNullWhen(true)] out string? normalized)
+    {
+        normalized = null;
+        if (string.IsNullOrWhiteSpace(path) || HasInvalidPathChars(path))
+        {
+            return false;
+        }
+
+        normalized = Normalize(Path.GetFullPath(path, basePath));
+        return true;
+    }
+
     public static bool HasInvalidPathChars(string path) =>
         path.AsSpan().IndexOfAny(Path.GetInvalidPathChars()) >= 0;
 }

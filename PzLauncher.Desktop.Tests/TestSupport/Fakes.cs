@@ -302,6 +302,8 @@ public sealed class FakeZombieBuddyService : IZombieBuddyService
 
     public Func<bool, Task<Result>> SetAllowAll { get; set; } = _ => Task.FromResult(Result.Ok());
 
+    public Result<ZabricPreload> ZabricPreloadResult { get; set; } = ZabricPreload.NotApplicable;
+
     public List<string> StatusRequests { get; } = [];
 
     public List<(string Root, ZombieBuddyChannel Channel)> Initializations { get; } = [];
@@ -309,6 +311,8 @@ public sealed class FakeZombieBuddyService : IZombieBuddyService
     public List<string> Removals { get; } = [];
 
     public List<(string Root, bool AllowAll)> AllowAllChanges { get; } = [];
+
+    public List<(string Root, string ExtraGameArgs)> ZabricPreloads { get; } = [];
 
     public Task<Result<ZombieBuddyStatus>> GetStatusAsync(string installRoot, CancellationToken ct = default)
     {
@@ -333,6 +337,12 @@ public sealed class FakeZombieBuddyService : IZombieBuddyService
     {
         AllowAllChanges.Add((installRoot, allowAll));
         return SetAllowAll(allowAll);
+    }
+
+    public Task<Result<ZabricPreload>> EnsureZabricPreloadAsync(string installRoot, string extraGameArgs, CancellationToken ct = default)
+    {
+        ZabricPreloads.Add((installRoot, extraGameArgs));
+        return Task.FromResult(ZabricPreloadResult);
     }
 }
 

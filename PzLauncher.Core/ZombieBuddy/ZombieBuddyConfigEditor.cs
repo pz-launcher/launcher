@@ -1,0 +1,141 @@
+using System.Security.Cryptography;
+using System.Text.Json;
+using System.Text.Json.Nodes;
+using PzLauncher.Core.Common;
+
+namespace PzLauncher.Core.ZombieBuddy;
+
+/// <summary>Edits only <c>preload_mods.Zabric</c> of ZombieBuddy's <c>config.json</c>, by Zabric's own rules (its PreloadConfig).</summary>
+internal static class ZombieBuddyConfigEditor
+{
+    // A duplicate key would otherwise lose one of its values on write.
+    private static readonly JsonDocumentOptions ReadOptions = new() { AllowDuplicateProperties = false };
+
+    /// <summary>Writes nothing when the stored entry is current and first.</summary>
+    public static async Task<Result<ZabricPreload>> EnsureZabricAsync(
+        string configFolder, ZabricPreloadEntry entry, StringComparison pathComparison, CancellationToken ct)
+    {
+        var path = Path.Combine(configFolder, ZabricFiles.ConfigFile);
+        string json;
+        try
+        {
+            json = await File.ReadAllTextAsync(path, ct).ConfigureAwait(false);
+        }
+        catch (Exception ex) when (ex is FileNotFoundException or DirectoryNotFoundException)
+        {
+            json = "";
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            return ZombieBuddyErrors.PreloadConfigIoFailed(path, ex.Message);
+        }
+
+        var root = Parse(json, path);
+        if (!root.IsSuccess)
+        {
+            return root.Error;
+        }
+
+        if (root.Value.TryGetPropertyValue(ZabricFiles.PreloadModsKey, out var mods) && mods is not (null or JsonObject))
+        {
+            return ZombieBuddyErrors.PreloadConfigInvalid(path, "preload_mods is not a JSON object.");
+        }
+
+        if (mods is not JsonObject preload)
+        {
+            preload = [];
+            root.Value[ZabricFiles.PreloadModsKey] = preload;
+        }
+
+        var stored = preload[ZabricFiles.ModId];
+        var current = stored is not null && await IsCurrentAsync(stored, entry, pathComparison, ct).ConfigureAwait(false);
+        if (current && preload.IndexOf(ZabricFiles.ModId) == 0)
+        {
+            return ZabricPreload.Current;
+        }
+
+        // ZombieBuddy preloads in this order; Zabric must come first so its transformer is in place for the others.
+        preload.Remove(ZabricFiles.ModId);
+        preload.Insert(
+            0,
+            ZabricFiles.ModId,
+            current ? stored : new JsonObject { [ZabricFiles.InfPathKey] = entry.InfPath, [ZabricFiles.JarPathKey] = entry.JarPath });
+        try
+        {
+            Directory.CreateDirectory(configFolder);
+            await AtomicJsonFile.WriteAsync(path, root.Value, ct).ConfigureAwait(false);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            return ZombieBuddyErrors.PreloadConfigIoFailed(path, ex.Message);
+        }
+
+        return ZabricPreload.Written;
+    }
+
+    // ZombieBuddy reads a blank file as the default config.
+    private static Result<JsonObject> Parse(string json, string path)
+    {
+        if (string.IsNullOrWhiteSpace(json))
+        {
+            return new JsonObject();
+        }
+
+        JsonNode? node;
+        try
+        {
+            node = JsonNode.Parse(json, documentOptions: ReadOptions);
+        }
+        catch (JsonException ex)
+        {
+            return ZombieBuddyErrors.PreloadConfigInvalid(path, ex.Message);
+        }
+
+        return node is JsonObject root ? root : ZombieBuddyErrors.PreloadConfigInvalid(path, "The file holds no JSON object.");
+    }
+
+    // The same files, or files ZombieBuddy would load the same jar bytes from: a client and a dedicated server on one
+    // machine share config.json and would otherwise overwrite each other's entry at every start.
+    private static async Task<bool> IsCurrentAsync(JsonNode stored, ZabricPreloadEntry entry, StringComparison pathComparison, CancellationToken ct)
+    {
+        if (stored is not JsonObject value
+            || !PathNormalizer.TryNormalizeAbsolute(Text(value[ZabricFiles.InfPathKey]), out var inf)
+            || !PathNormalizer.TryNormalizeAbsolute(Text(value[ZabricFiles.JarPathKey]), out var jar))
+        {
+            return false;
+        }
+
+        if (string.Equals(inf, entry.InfPath, pathComparison) && string.Equals(jar, entry.JarPath, pathComparison))
+        {
+            return true;
+        }
+
+        if (!File.Exists(inf) || !File.Exists(jar))
+        {
+            return false;
+        }
+
+        try
+        {
+            var storedHash = await HashAsync(jar, ct).ConfigureAwait(false);
+            var hash = await HashAsync(entry.JarPath, ct).ConfigureAwait(false);
+            return storedHash.AsSpan().SequenceEqual(hash);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            return false;
+        }
+    }
+
+    private static string? Text(JsonNode? node) =>
+        node is JsonValue value && value.TryGetValue<string>(out var text) ? text : null;
+
+    private static async Task<byte[]> HashAsync(string path, CancellationToken ct)
+    {
+        var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, bufferSize: 81920, useAsync: true);
+        await using (stream.ConfigureAwait(false))
+        {
+            return await SHA256.HashDataAsync(stream, ct).ConfigureAwait(false);
+        }
+    }
+}

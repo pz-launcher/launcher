@@ -17,4 +17,7 @@ public interface IZombieBuddyService
 
     /// <summary>Rewrites only the <c>policy</c> option of the json's agent arg.</summary>
     Task<Result> SetAllowAllAsync(string installRoot, bool allowAll, CancellationToken ct = default);
+
+    /// <summary>Registers the installed Zabric in ZombieBuddy's preload list when the json's agent arg is allow-all.</summary>
+    Task<Result<ZabricPreload>> EnsureZabricPreloadAsync(string installRoot, string extraGameArgs, CancellationToken ct = default);
 }

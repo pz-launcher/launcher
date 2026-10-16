@@ -139,6 +139,61 @@ internal sealed partial class ZombieBuddyService(
         }
     }
 
+    public async Task<Result<ZabricPreload>> EnsureZabricPreloadAsync(string installRoot, string extraGameArgs, CancellationToken ct = default)
+    {
+        ct.ThrowIfCancellationRequested();
+
+        // The launch that follows reports a bad install or json itself.
+        var target = await ResolveAsync(installRoot, ct).ConfigureAwait(false);
+        if (!target.IsSuccess)
+        {
+            return ZabricPreload.NotApplicable;
+        }
+
+        var (root, game) = target.Value;
+        var os = platform.Os;
+        await _gate.WaitAsync(ct).ConfigureAwait(false);
+        try
+        {
+            var config = await PzLaunchConfigEditor.LoadAsync(Path.Combine(game, PzLaunchFiles.ConfigFile), ct).ConfigureAwait(false);
+            if (!config.IsSuccess || !ZombieBuddyAgentArgs.IsAllowAll(config.Value.VmArgs, os))
+            {
+                return ZabricPreload.NotApplicable;
+            }
+
+            var libraries = await CandidateLibrariesAsync(root, ct).ConfigureAwait(false);
+            var cache = ZabricLocator.CacheFolder(extraGameArgs, game, platform.HomeDirectory);
+            if (await ZabricLocator.FindAsync(cache, libraries, logger, ct).ConfigureAwait(false) is not { } zabric
+                || ConfigFolder(config.Value.VmArgs, game) is not { } configFolder)
+            {
+                return ZabricPreload.NotApplicable;
+            }
+
+            var entry = await zabric.CheckPreloadableAsync(ct).ConfigureAwait(false);
+            if (!entry.IsSuccess)
+            {
+                return Logged(entry.Error);
+            }
+
+            var result = await ZombieBuddyConfigEditor.EnsureZabricAsync(configFolder, entry.Value, platform.PathComparison, ct).ConfigureAwait(false);
+            if (!result.IsSuccess)
+            {
+                return Logged(result.Error);
+            }
+
+            if (result.Value == ZabricPreload.Written)
+            {
+                LogZabricWritten(logger, Path.Combine(configFolder, ZabricFiles.ConfigFile), entry.Value.JarPath);
+            }
+
+            return result;
+        }
+        finally
+        {
+            _gate.Release();
+        }
+    }
+
     private static ZombieBuddyStep CopyStep(string file) => file switch
     {
         ZombieBuddyFiles.NativeLoader => ZombieBuddyStep.CopyNativeLoader,
@@ -158,6 +213,17 @@ internal sealed partial class ZombieBuddyService(
             PzInstallKind.Game => Result.Ok(),
             PzInstallKind.DedicatedServer => LaunchErrors.NotAGame(install.RootPath),
         };
+    }
+
+    // ZombieBuddy's Agent.configDir; a relative config_dir resolves against the game's working folder.
+    private string? ConfigFolder(IReadOnlyList<string> vmArgs, string game)
+    {
+        if (ZombieBuddyAgentArgs.Option(vmArgs, platform.Os, ZabricFiles.ConfigDirOption) is { Length: > 0 } configured)
+        {
+            return PathNormalizer.TryNormalizeAgainst(configured, game, out var folder) ? folder : null;
+        }
+
+        return PathNormalizer.TryNormalizeAbsolute(platform.HomeDirectory, out var home) ? Path.Combine(home, ZabricFiles.DefaultConfigFolder) : null;
     }
 
     private async Task<Result<Target>> ResolveAsync(string installRoot, CancellationToken ct)
@@ -322,6 +388,9 @@ internal sealed partial class ZombieBuddyService(
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "ZombieBuddy: {Code}: {Detail}")]
     private static partial void LogWarning(ILogger logger, string code, string detail);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "ZombieBuddy: Zabric preload written to {ConfigPath}: {JarPath}")]
+    private static partial void LogZabricWritten(ILogger logger, string configPath, string jarPath);
 
     [LoggerMessage(Level = LogLevel.Debug, Message = "ZombieBuddy: Steam library list ignored: {Code}: {Detail}")]
     private static partial void LogIgnored(ILogger logger, string code, string detail);

@@ -211,4 +211,16 @@ public class CoreJsonContextTests
         Assert.Equal(original.Steps, copy.Steps);
         Assert.Equal((3, true), (copy.Current, copy.IsComplete));
     }
+
+    [Fact]
+    public void ZabricPreload_EveryValue_RoundTripsAsItsName()
+    {
+        foreach (var value in Enum.GetValues<ZabricPreload>())
+        {
+            var json = JsonSerializer.Serialize(value, CoreJsonContext.Default.ZabricPreload);
+
+            Assert.Equal($"\"{value}\"", json);
+            Assert.Equal(value, JsonSerializer.Deserialize(json, CoreJsonContext.Default.ZabricPreload));
+        }
+    }
 }

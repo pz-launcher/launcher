@@ -93,7 +93,16 @@ public partial class HomeViewModel : ViewModelBase
             return;
         }
 
-        var result = await _launcher.LaunchAsync(new LaunchGameRequest(install.RootPath, _overrides.Get(install.RootPath)));
+        var overrides = _overrides.Get(install.RootPath);
+
+        // A failed preload is reported, then the game starts as it would without the launcher.
+        var preload = await _zombieBuddy.EnsureZabricPreloadAsync(install.RootPath, overrides.ExtraGameArgs);
+        if (!preload.IsSuccess)
+        {
+            await _dialogs.ShowErrorAsync(ErrorMessages.ToUserText(preload.Error));
+        }
+
+        var result = await _launcher.LaunchAsync(new LaunchGameRequest(install.RootPath, overrides));
         if (!result.IsSuccess)
         {
             await _dialogs.ShowErrorAsync(ErrorMessages.ToUserText(result.Error));

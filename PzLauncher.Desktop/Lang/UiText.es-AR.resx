@@ -212,6 +212,15 @@
   <data name="Error_ZombieBuddyNotInitialized" xml:space="preserve">
     <value>ZombieBuddy no está inicializado en esta instalación. Primero ejecutá Inicializar en Configuración de inicio.</value>
   </data>
+  <data name="Error_ZombieBuddyZabricNotPreloadable" xml:space="preserve">
+    <value>No se puede precargar Zabric: {0} no cumple los requisitos de precarga de ZombieBuddy ({1}). Actualizá Zabric o volvé a suscribirte en Steam. El juego se va a iniciar sin la precarga.</value>
+  </data>
+  <data name="Error_ZombieBuddyPreloadConfigInvalid" xml:space="preserve">
+    <value>La configuración de ZombieBuddy {0} no es válida, así que Zabric no se agregó a su lista de precarga. Corregí o borrá el archivo. El juego se va a iniciar sin la precarga.</value>
+  </data>
+  <data name="Error_ZombieBuddyPreloadConfigIoFailed" xml:space="preserve">
+    <value>No se pudo leer ni escribir la configuración de ZombieBuddy {0} ({1}), así que Zabric no se agregó a su lista de precarga. El juego se va a iniciar sin la precarga.</value>
+  </data>
   <data name="Error_FolderNotLocal" xml:space="preserve">
     <value>{0} no es una carpeta de esta computadora, así que el launcher no puede abrirla. Elegí una carpeta local.</value>
   </data>

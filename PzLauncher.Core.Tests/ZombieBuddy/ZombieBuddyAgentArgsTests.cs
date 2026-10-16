@@ -61,6 +61,20 @@ public class ZombieBuddyAgentArgsTests
     public void IsAllowAll_AgentOptions_ReadsEffectivePolicy(string options, bool expected) =>
         Assert.Equal(expected, ZombieBuddyAgentArgs.IsAllowAll(["-Xmx3072m", Native + options], PlatformKind.Windows));
 
+    [Theory]
+    [InlineData("", null)]
+    [InlineData("=policy=allow-all", null)]
+    [InlineData(@"=config_dir=D:\zb", @"D:\zb")]
+    [InlineData(@"=CONFIG_DIR= D:\zb ,policy=allow-all", @"D:\zb")]
+    [InlineData(@"=config_dir=D:\a,config_dir=D:\b", @"D:\b")]
+    [InlineData("=config_dir", "")]
+    public void Option_AgentOptions_ReadsTheLastTrimmedValue(string options, string? expected) =>
+        Assert.Equal(expected, ZombieBuddyAgentArgs.Option(["-Xmx3072m", Native + options], PlatformKind.Windows, "config_dir"));
+
+    [Fact]
+    public void Option_OnlyLaterAgentArgHasIt_IsNull() =>
+        Assert.Null(ZombieBuddyAgentArgs.Option([Native, Native + @"=config_dir=D:\zb"], PlatformKind.Windows, "config_dir"));
+
     [Fact]
     public void IsAllowAll_OnlyLaterAgentArgAllowsAll_IsFalse() =>
         Assert.False(ZombieBuddyAgentArgs.IsAllowAll([Native, Native + "=policy=allow-all"], PlatformKind.Windows));

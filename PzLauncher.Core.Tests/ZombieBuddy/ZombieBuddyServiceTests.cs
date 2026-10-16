@@ -54,12 +54,7 @@ public sealed class ZombieBuddyServiceTests : IDisposable
     private string CreateGame(string? json = null) =>
         InstallsIn(_library).CreateFlat("ProjectZomboid", json ?? GameInstallBuilder.WindowsGameJson, withJre: false);
 
-    // The shipped json with these args first in its top-level vmArgs.
-    private static string JsonWith(params string[] args) =>
-        GameInstallBuilder.WindowsGameJson.Replace(
-            "\"vmArgs\" : [ \"-Djava.awt",
-            $"\"vmArgs\" : [ {string.Concat(args.Select(arg => $"\"{arg}\", "))}\"-Djava.awt",
-            StringComparison.Ordinal);
+    private static string JsonWith(params string[] args) => GameInstallBuilder.WindowsGameJsonWith(args);
 
     private string Subscribe(ZombieBuddyChannel channel, string? library = null)
     {

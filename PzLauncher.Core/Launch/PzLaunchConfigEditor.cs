@@ -1,4 +1,3 @@
-using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using PzLauncher.Core.Common;
@@ -17,13 +16,6 @@ internal sealed class PzLaunchConfigEditor
         CommentHandling = JsonCommentHandling.Skip,
         AllowTrailingCommas = true,
         AllowDuplicateProperties = false,
-    };
-
-    // The default encoder would write '+' in "-XX:+UseZGC" as +.
-    private static readonly JsonWriterOptions WriteOptions = new()
-    {
-        Indented = true,
-        Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
     };
 
     private readonly JsonObject _root;
@@ -110,50 +102,16 @@ internal sealed class PzLaunchConfigEditor
         }
 
         _root[_vmArgsKey] = new JsonArray([.. vmArgs.Select(arg => (JsonNode)JsonValue.Create(arg))]);
-        var bytes = Serialize(_root);
-
-        // Same folder, so the move is a rename: the game never sees a half-written file.
-        var temp = $"{FilePath}.{Guid.NewGuid():N}.tmp";
         try
         {
-            await File.WriteAllBytesAsync(temp, bytes, ct).ConfigureAwait(false);
-            File.Move(temp, FilePath, overwrite: true);
+            await AtomicJsonFile.WriteAsync(FilePath, _root, ct).ConfigureAwait(false);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            TryDelete(temp);
             return ZombieBuddyErrors.ConfigWriteFailed(FilePath, ex.Message);
-        }
-        catch (OperationCanceledException)
-        {
-            TryDelete(temp);
-            throw;
         }
 
         VmArgs = vmArgs;
         return Result.Ok();
-    }
-
-    private static byte[] Serialize(JsonObject root)
-    {
-        using var stream = new MemoryStream();
-        using (var writer = new Utf8JsonWriter(stream, WriteOptions))
-        {
-            root.WriteTo(writer);
-        }
-
-        return stream.ToArray();
-    }
-
-    private static void TryDelete(string path)
-    {
-        try
-        {
-            File.Delete(path);
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-        {
-            // Best effort: a stray temp file is harmless.
-        }
     }
 }

@@ -35,9 +35,10 @@ internal static class ZombieBuddyFiles
         ZombieBuddyChannel.Beta => BetaItemId,
     };
 
-    public static string ItemFolder(string library, ZombieBuddyChannel channel) =>
-        Path.Combine(
-            library, "steamapps", "workshop", "content", PzSteamApps.Game.ToString(CultureInfo.InvariantCulture), ItemId(channel));
+    public static string ItemFolder(string library, ZombieBuddyChannel channel) => Path.Combine(WorkshopContentFolder(library), ItemId(channel));
+
+    public static string WorkshopContentFolder(string library) =>
+        Path.Combine(library, "steamapps", "workshop", "content", PzSteamApps.Game.ToString(CultureInfo.InvariantCulture));
 
     public static string LibsFolder(string item) => Path.Combine(item, "mods", "ZombieBuddy", "libs");
 

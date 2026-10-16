@@ -26,17 +26,22 @@ internal static class ZombieBuddyAgentArgs
     public static IReadOnlyList<string> Remove(IReadOnlyList<string> vmArgs) =>
         HasAny(vmArgs) ? [.. vmArgs.Where(arg => !IsAnyAgentArg(arg))] : vmArgs;
 
-    // ZombieBuddy lower-cases keys and trims and lower-cases the policy; a repeated key's last value wins.
-    public static bool IsAllowAll(IReadOnlyList<string> vmArgs, PlatformKind os)
+    // ZombieBuddy trims and lower-cases the policy.
+    public static bool IsAllowAll(IReadOnlyList<string> vmArgs, PlatformKind os) =>
+        string.Equals(Option(vmArgs, os, PolicyKey), AllowAllPolicy, StringComparison.OrdinalIgnoreCase);
+
+    // ZombieBuddy lower-cases keys; a repeated key's last value wins.
+    /// <summary>The trimmed value of <paramref name="key"/> on the first agent arg; empty for a bare key, <c>null</c> when absent.</summary>
+    public static string? Option(IReadOnlyList<string> vmArgs, PlatformKind os, string key)
     {
-        if (vmArgs.FirstOrDefault(arg => IsAgentArg(arg, os)) is not { } agent)
+        if (vmArgs.FirstOrDefault(arg => IsAgentArg(arg, os)) is not { } agent
+            || Options(agent, os).LastOrDefault(option => IsKey(option, key)) is not { } option)
         {
-            return false;
+            return null;
         }
 
-        var policy = Options(agent, os).LastOrDefault(IsPolicy);
-        return policy is not null
-            && string.Equals(policy[(policy.IndexOf('=', StringComparison.Ordinal) + 1)..].Trim(), AllowAllPolicy, StringComparison.OrdinalIgnoreCase);
+        var separator = option.IndexOf('=', StringComparison.Ordinal);
+        return separator < 0 ? "" : option[(separator + 1)..].Trim();
     }
 
     /// <summary>Rewrites only the <c>policy</c> option of the first agent arg; the other options keep their order.</summary>
@@ -53,7 +58,7 @@ internal static class ZombieBuddyAgentArgs
         var placed = false;
         foreach (var option in options)
         {
-            if (!IsPolicy(option))
+            if (!IsKey(option, PolicyKey))
             {
                 kept.Add(option);
             }
@@ -105,10 +110,9 @@ internal static class ZombieBuddyAgentArgs
             : [.. agentArg[(agent.Length + 1)..].Split(OptionSeparator, StringSplitOptions.RemoveEmptyEntries)];
     }
 
-    private static bool IsPolicy(string option)
+    private static bool IsKey(string option, string key)
     {
         var separator = option.IndexOf('=', StringComparison.Ordinal);
-        var key = separator < 0 ? option : option[..separator];
-        return string.Equals(key, PolicyKey, StringComparison.OrdinalIgnoreCase);
+        return string.Equals(separator < 0 ? option : option[..separator], key, StringComparison.OrdinalIgnoreCase);
     }
 }
