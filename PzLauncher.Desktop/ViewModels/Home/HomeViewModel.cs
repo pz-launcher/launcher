@@ -28,6 +28,7 @@ public partial class HomeViewModel : ViewModelBase
     private readonly IZabricService _zabric;
     private readonly IModCollectionDefaultsService _defaultCollections;
     private readonly ModCollectionApplier _applier;
+    private readonly IModCollectionOrderWriter _orderWriter;
     private readonly GameRunState _runState;
 
     public HomeViewModel(
@@ -40,6 +41,7 @@ public partial class HomeViewModel : ViewModelBase
         IZabricService zabric,
         IModCollectionDefaultsService defaultCollections,
         ModCollectionApplier applier,
+        IModCollectionOrderWriter orderWriter,
         GameRunState runState)
     {
         _installs = installs;
@@ -51,6 +53,7 @@ public partial class HomeViewModel : ViewModelBase
         _zabric = zabric;
         _defaultCollections = defaultCollections;
         _applier = applier;
+        _orderWriter = orderWriter;
         _runState = runState;
 
         // Never unsubscribed: all of these are app-lifetime singletons.
@@ -98,6 +101,13 @@ public partial class HomeViewModel : ViewModelBase
         if (SelectedInstall is not { Kind: PzInstallKind.Game } install)
         {
             return;
+        }
+
+        // A reorder still waiting for its delay must be on disk before the default collection is applied.
+        var flushed = await _orderWriter.FlushAsync();
+        if (!flushed.IsSuccess)
+        {
+            await _dialogs.ShowErrorAsync(ErrorMessages.ToUserText(flushed.Error));
         }
 
         var overrides = _overrides.Get(install.RootPath);

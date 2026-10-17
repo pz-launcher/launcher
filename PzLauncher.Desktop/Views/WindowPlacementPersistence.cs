@@ -11,7 +11,7 @@ using PzLauncher.Desktop.Services;
 
 namespace PzLauncher.Desktop.Views;
 
-/// <summary>Restores the window's saved placement before it is shown; when it closes, saves it and flushes the other pending preference writes.</summary>
+/// <summary>Restores the window's saved placement before it is shown; when it closes, saves it and flushes the other pending writes.</summary>
 public sealed partial class WindowPlacementPersistence
 {
     private static readonly TimeSpan SaveTimeout = TimeSpan.FromSeconds(2);
@@ -196,6 +196,6 @@ public sealed partial class WindowPlacementPersistence
         }
     }
 
-    [LoggerMessage(Level = LogLevel.Warning, Message = "Saving the window placement or pending preferences timed out; closing without them")]
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Saving the window placement or other pending writes timed out; closing without them")]
     private static partial void LogSaveTimedOut(ILogger logger);
 }

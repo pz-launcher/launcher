@@ -27,16 +27,18 @@ public class HomeViewModelTests : UiTextCultureTest
     private readonly FakeModCollectionDefaultsService _defaultCollections = new();
     private readonly FakeModCollectionService _collections = new();
     private readonly GameRunState _runState = new();
+    private readonly ModCollectionOrderWriter _orderWriter;
 
     public HomeViewModelTests()
     {
+        _orderWriter = new ModCollectionOrderWriter(_collections, _runState, new FakePlatformEnvironment(), new ManualTimeProvider());
         Installs = new(_service, new FakeFolderPicker(), new FakePlatformEnvironment(), Localization);
     }
 
     private InstallsViewModel Installs { get; }
 
     private HomeViewModel CreateViewModel() =>
-        new(Installs, _launcher, _overrides, _dialogs, _zombieBuddy, _channels, _zabric, _defaultCollections, new ModCollectionApplier(_collections, _dialogs), _runState);
+        new(Installs, _launcher, _overrides, _dialogs, _zombieBuddy, _channels, _zabric, _defaultCollections, new ModCollectionApplier(_collections, _dialogs), _orderWriter, _runState);
 
     private async Task<HomeViewModel> CreateActivatedViewModelAsync(params PzInstall[] installs)
     {
@@ -480,6 +482,42 @@ public class HomeViewModelTests : UiTextCultureTest
         await LaunchAndExitAsync(vm);
 
         Assert.Single(_dialogs.Errors);
+        Assert.Single(_launcher.Launches);
+    }
+
+    [Fact]
+    public async Task Launch_RightAfterAReorder_WritesItThenAppliesTheNewOrder()
+    {
+        ArrangeDefaultCollection("ModA", "ModB");
+        var savesWhenApplied = new List<int>();
+        _collections.ApplyError = _ =>
+        {
+            savesWhenApplied.Add(_collections.Saves.Count);
+            return null;
+        };
+        var vm = await CreateActivatedViewModelAsync(SteamGame);
+        _orderWriter.Queue(SteamGame.RootPath, "", "Pack", ["ModB", "ModA"]);
+
+        await LaunchAndExitAsync(vm);
+
+        Assert.Equal([1], savesWhenApplied);
+        Assert.Equal(["ModB", "ModA"], _collections.ActiveIds);
+        Assert.Single(_launcher.Launches);
+    }
+
+    [Fact]
+    public async Task Launch_ReorderWriteFails_ShowsTheErrorThenAppliesAndLaunches()
+    {
+        ArrangeDefaultCollection("ModA", "ModB");
+        var error = TestErrors.Create(ErrorCode.ModCollectionFileWriteFailed, @"C:\Users\Test\Zomboid\Lua\pz_modlist_settings.cfg");
+        _collections.SaveError = _ => error;
+        var vm = await CreateActivatedViewModelAsync(SteamGame);
+        _orderWriter.Queue(SteamGame.RootPath, "", "Pack", ["ModB", "ModA"]);
+
+        await LaunchAndExitAsync(vm);
+
+        Assert.Equal([ErrorMessages.ToUserText(error)], _dialogs.Errors);
+        Assert.Equal(["ModA", "ModB"], _collections.ActiveIds);
         Assert.Single(_launcher.Launches);
     }
 

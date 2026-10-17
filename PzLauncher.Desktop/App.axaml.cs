@@ -56,6 +56,7 @@ public partial class App : Application
             services.AddSingleton<IZombieBuddyChannelService, ZombieBuddyChannelService>();
             services.AddSingleton<IModCollectionDefaultsService, ModCollectionDefaultsService>();
             services.AddSingleton<ModCollectionApplier>();
+            services.AddSingleton<IModCollectionOrderWriter, ModCollectionOrderWriter>();
             services.AddSingleton<GameRunState>();
             services.AddSingleton<ILocalizationService>(sp => new LocalizationService(
                 sp.GetRequiredService<UserPreferences>().Language ?? AppLanguages.FromCulture(CultureInfo.CurrentUICulture)));
@@ -85,11 +86,14 @@ public partial class App : Application
             {
                 DataContext = provider.GetRequiredService<MainViewModel>(),
             };
+            var installOverrides = provider.GetRequiredService<IInstallOverridesService>();
+            var orderWriter = provider.GetRequiredService<IModCollectionOrderWriter>();
             windowPlacement = WindowPlacementPersistence.Attach(
                 mainWindow,
                 provider.GetRequiredService<IPreferenceStore>(),
                 provider.GetRequiredService<UserPreferences>().Window,
-                provider.GetRequiredService<IInstallOverridesService>().FlushAsync,
+                // A failed order write is already logged by Core; closing goes on without it.
+                ct => Task.WhenAll(installOverrides.FlushAsync(ct), orderWriter.FlushAsync(ct)),
                 provider.GetRequiredService<ILogger<WindowPlacementPersistence>>());
             desktop.MainWindow = mainWindow;
             desktop.Exit += (_, _) => provider.Dispose();

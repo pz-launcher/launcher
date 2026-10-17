@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Threading;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -17,23 +16,17 @@ namespace PzLauncher.Desktop.ViewModels.Mods;
 /// <summary>The mods page of the game install in use: both sections show one loaded state, and every write re-reads it.</summary>
 public partial class ModsViewModel : ViewModelBase
 {
-    private static readonly TimeSpan OrderSaveDelay = TimeSpan.FromMilliseconds(300);
-
     private readonly InstallsViewModel _installs;
     private readonly IInstallOverridesService _overrides;
     private readonly IDialogService _dialogs;
     private readonly GameRunState _runState;
-    private readonly TimeProvider _time;
+    private readonly IModCollectionOrderWriter _orderWriter;
 
     private Func<string>? _errorSource;
     private bool _activated;
 
     // A newer load supersedes one still in flight.
     private int _loadVersion;
-
-    // A reorder waits so a drag writes once; it carries its install so a later install switch can't redirect it.
-    private PendingOrder? _pendingOrder;
-    private CancellationTokenSource? _pendingOrderDelay;
 
     public ModsViewModel(
         InstallsViewModel installs,
@@ -44,15 +37,15 @@ public partial class ModsViewModel : ViewModelBase
         IDialogService dialogs,
         IClipboardService clipboard,
         GameRunState runState,
-        ILocalizationService localization,
-        TimeProvider time)
+        IModCollectionOrderWriter orderWriter,
+        ILocalizationService localization)
     {
         _installs = installs;
         Service = service;
         _overrides = overrides;
         _dialogs = dialogs;
         _runState = runState;
-        _time = time;
+        _orderWriter = orderWriter;
         Mods = new InstalledModsViewModel(this);
         Collections = new ModCollectionsViewModel(this, defaults, applier, dialogs, clipboard);
 
@@ -60,6 +53,7 @@ public partial class ModsViewModel : ViewModelBase
         localization.LanguageChanged += (_, _) => RenderTexts();
         installs.PropertyChanged += OnInstallsPropertyChanged;
         runState.PropertyChanged += OnRunStatePropertyChanged;
+        orderWriter.Written += (_, result) => _ = ReportOrderWrittenAsync(result);
     }
 
     public InstalledModsViewModel Mods { get; }
@@ -112,34 +106,6 @@ public partial class ModsViewModel : ViewModelBase
     [RelayCommand(CanExecute = nameof(CanRefresh))]
     private Task RefreshAsync() => ReloadAsync();
 
-    /// <summary>Writes a reorder still waiting for its delay now; a running game keeps it until it exits.</summary>
-    public async Task FlushOrderAsync()
-    {
-        // A write in flight saves it before its own change.
-        if (_pendingOrder is null || IsBusy || IsGameRunning)
-        {
-            return;
-        }
-
-        IsBusy = true;
-        Result result;
-        try
-        {
-            result = await SavePendingOrderAsync();
-        }
-        finally
-        {
-            IsBusy = false;
-        }
-
-        if (!result.IsSuccess)
-        {
-            await _dialogs.ShowErrorAsync(ErrorMessages.ToUserText(result.Error));
-        }
-
-        await ReloadAsync();
-    }
-
     internal async Task ReloadAsync()
     {
         var version = ++_loadVersion;
@@ -191,7 +157,7 @@ public partial class ModsViewModel : ViewModelBase
         IsBusy = true;
         try
         {
-            var flushed = await SavePendingOrderAsync();
+            var flushed = await _orderWriter.FlushAsync();
             if (!flushed.IsSuccess)
             {
                 await _dialogs.ShowErrorAsync(ErrorMessages.ToUserText(flushed.Error));
@@ -231,51 +197,22 @@ public partial class ModsViewModel : ViewModelBase
             return;
         }
 
-        _pendingOrder = new PendingOrder(install.RootPath, ExtraGameArgs(install), name, modIds);
-        CancelOrderDelay();
-        var delay = new CancellationTokenSource();
-        _pendingOrderDelay = delay;
-        _ = SaveOrderLaterAsync(delay.Token);
+        // The queued write keeps its install, so a later install switch can't redirect it.
+        _orderWriter.Queue(install.RootPath, ExtraGameArgs(install), name, modIds);
     }
 
     /// <summary>The queued order of this collection of the shown install, which a reload must not undo.</summary>
     internal IReadOnlyList<string>? PendingOrderOf(string name) =>
-        _pendingOrder is { } pending && pending.Name == name && Install?.RootPath == pending.InstallRoot
-            ? pending.ModIds
-            : null;
+        Install is { } install ? _orderWriter.PendingOrder(install.RootPath, name) : null;
 
-    private async Task SaveOrderLaterAsync(CancellationToken ct)
+    private async Task ReportOrderWrittenAsync(Result result)
     {
-        try
+        if (!result.IsSuccess)
         {
-            await Task.Delay(OrderSaveDelay, _time, ct);
-        }
-        catch (OperationCanceledException)
-        {
-            return;
+            await _dialogs.ShowErrorAsync(ErrorMessages.ToUserText(result.Error));
         }
 
-        await FlushOrderAsync();
-    }
-
-    private async Task<Result> SavePendingOrderAsync()
-    {
-        if (_pendingOrder is not { } pending)
-        {
-            return Result.Ok();
-        }
-
-        _pendingOrder = null;
-        CancelOrderDelay();
-        return await Service.SaveAsync(
-            new SaveModCollectionRequest(pending.InstallRoot, pending.ExtraGameArgs, pending.Name, pending.Name, pending.ModIds));
-    }
-
-    private void CancelOrderDelay()
-    {
-        _pendingOrderDelay?.Cancel();
-        _pendingOrderDelay?.Dispose();
-        _pendingOrderDelay = null;
+        await ReloadAsync();
     }
 
     private string ExtraGameArgs(PzInstall install) => _overrides.Get(install.RootPath).ExtraGameArgs;
@@ -323,10 +260,8 @@ public partial class ModsViewModel : ViewModelBase
         OnPropertyChanged(nameof(CanWrite));
         if (!IsGameRunning && _activated)
         {
-            // The game may have rewritten the files; a reorder queued before it started is written now.
-            _ = _pendingOrder is null ? ReloadAsync() : FlushOrderAsync();
+            // The game may have rewritten the files.
+            _ = ReloadAsync();
         }
     }
-
-    private sealed record PendingOrder(string InstallRoot, string ExtraGameArgs, string Name, IReadOnlyList<string> ModIds);
 }

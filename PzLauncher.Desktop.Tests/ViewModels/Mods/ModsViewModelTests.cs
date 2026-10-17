@@ -17,6 +17,8 @@ namespace PzLauncher.Desktop.Tests.ViewModels.Mods;
 [Collection(UiTextCultureCollection.Name)]
 public class ModsViewModelTests : UiTextCultureTest
 {
+    private static readonly TimeSpan OrderSaveDelay = TimeSpan.FromMilliseconds(300);
+
     private readonly FakeInstallDetectionService _detection = new();
     private readonly FakeModCollectionService _service = new();
     private readonly FakeInstallOverridesService _overrides = new();
@@ -24,9 +26,12 @@ public class ModsViewModelTests : UiTextCultureTest
     private readonly FakeDialogService _dialogs = new();
     private readonly FakeClipboardService _clipboard = new();
     private readonly GameRunState _runState = new();
+    private readonly ManualTimeProvider _time = new();
+    private readonly ModCollectionOrderWriter _orderWriter;
 
     public ModsViewModelTests()
     {
+        _orderWriter = new ModCollectionOrderWriter(_service, _runState, new FakePlatformEnvironment(), _time);
         Installs = new(_detection, new FakeFolderPicker(), new FakePlatformEnvironment(), Localization);
         _service
             .WithMods(
@@ -46,7 +51,7 @@ public class ModsViewModelTests : UiTextCultureTest
         _detection.ScanResults.Enqueue(FakeInstallDetectionService.Found(installs.Length == 0 ? [SteamGame] : installs));
         await Installs.ActivateCommand.ExecuteAsync(null);
         var vm = new ModsViewModel(
-            Installs, _service, _overrides, _defaults, new ModCollectionApplier(_service, _dialogs), _dialogs, _clipboard, _runState, Localization, new ManualTimeProvider());
+            Installs, _service, _overrides, _defaults, new ModCollectionApplier(_service, _dialogs), _dialogs, _clipboard, _runState, _orderWriter, Localization);
         await vm.ActivateCommand.ExecuteAsync(null);
         return vm;
     }
@@ -417,11 +422,46 @@ public class ModsViewModelTests : UiTextCultureTest
         Assert.Equal(["Core", "Maps", "Gone"], vm.Collections.Entries.Select(entry => entry.Id));
         Assert.Equal([1, 2, 3], vm.Collections.Entries.Select(entry => entry.Number));
 
-        await vm.FlushOrderAsync();
+        _time.Advance(OrderSaveDelay);
 
         var save = Assert.Single(_service.Saves);
         Assert.Equal(("Survival", "Survival"), (save.OriginalName, save.Name));
         Assert.Equal(["Core", "Maps", "Gone"], save.ModIds);
+        Assert.Equal(2, _service.GetRequests.Count);
+        Assert.Equal(["Core", "Maps", "Gone"], vm.Collections.Entries.Select(entry => entry.Id));
+    }
+
+    [Fact]
+    public async Task Move_DelayedWriteFails_ShowsTheErrorAndRereads()
+    {
+        var vm = await CreateActivatedAsync();
+        var error = TestErrors.Create(ErrorCode.ModCollectionFileWriteFailed, @"C:\Users\Test\Zomboid\Lua\pz_modlist_settings.cfg");
+        _service.SaveError = _ => error;
+        vm.Collections.Move(0, 1);
+
+        _time.Advance(OrderSaveDelay);
+
+        Assert.Equal([ErrorMessages.ToUserText(error)], _dialogs.Errors);
+        Assert.Equal(2, _service.GetRequests.Count);
+        Assert.Equal(["Maps", "Core", "Gone"], vm.Collections.Entries.Select(entry => entry.Id));
+    }
+
+    [Fact]
+    public async Task Move_GameStartsBeforeTheWrite_WritesItWhenTheGameExits()
+    {
+        var vm = await CreateActivatedAsync();
+        vm.Collections.Move(0, 1);
+        _runState.IsGameRunning = true;
+
+        _time.Advance(OrderSaveDelay);
+
+        Assert.Empty(_service.Saves);
+        Assert.Equal(["Core", "Maps", "Gone"], vm.Collections.Entries.Select(entry => entry.Id));
+
+        _runState.IsGameRunning = false;
+
+        Assert.Equal(["Core", "Maps", "Gone"], _service.IdsOf("Survival"));
+        Assert.Equal(["Core", "Maps", "Gone"], vm.Collections.Entries.Select(entry => entry.Id));
     }
 
     [Fact]
@@ -561,7 +601,7 @@ public class ModsViewModelTests : UiTextCultureTest
         Assert.True(collections.ToggleDefaultCommand.CanExecute(null));
 
         collections.Move(0, 1);
-        await vm.FlushOrderAsync();
+        _time.Advance(OrderSaveDelay);
 
         Assert.Equal(["Maps", "Core", "Gone"], collections.Entries.Select(entry => entry.Id));
         Assert.Empty(_service.Saves);

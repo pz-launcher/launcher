@@ -67,8 +67,10 @@ public static class DesignData
 
     private static readonly ModCollectionApplier Applier = new(ModCollectionsSample, new NoDialogs());
 
+    private static readonly ModCollectionOrderWriter OrderWriter = new(ModCollectionsSample, RunState, new SamplePlatform(), TimeProvider.System);
+
     public static HomeViewModel Home { get; } =
-        new(Installs, GameLaunch, InstallOverrides, new NoDialogs(), ZombieBuddySample, ZombieBuddyChannels, new SampleZabric(), ModCollectionDefaults, Applier, RunState);
+        new(Installs, GameLaunch, InstallOverrides, new NoDialogs(), ZombieBuddySample, ZombieBuddyChannels, new SampleZabric(), ModCollectionDefaults, Applier, OrderWriter, RunState);
 
     public static ModsViewModel Mods { get; } = CreateMods();
 
@@ -99,7 +101,7 @@ public static class DesignData
     private static ModsViewModel CreateMods()
     {
         var vm = new ModsViewModel(
-            Installs, ModCollectionsSample, InstallOverrides, ModCollectionDefaults, Applier, new NoDialogs(), new NoClipboard(), RunState, Localization, TimeProvider.System);
+            Installs, ModCollectionsSample, InstallOverrides, ModCollectionDefaults, Applier, new NoDialogs(), new NoClipboard(), RunState, OrderWriter, Localization);
         vm.ActivateCommand.Execute(null);
         return vm;
     }

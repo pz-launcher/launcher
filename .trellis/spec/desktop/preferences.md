@@ -9,7 +9,7 @@
 - `<ApplicationData>/PzLauncher/preferences.json` is read and written only through `IPreferenceStore`.
 - A missing or unknown value loads as `null`; the caller picks the fallback (`App.axaml.cs`).
 - Callers fire and forget saves; a failed save never undoes the applied choice.
-- Exception: the window placement is saved when the main window closes, so the close waits for that save and for pending install-override writes (bounded, never during OS shutdown). Reference: `PzLauncher.Desktop/Views/WindowPlacementPersistence.cs`.
+- Exception: the window placement is saved when the main window closes, so the close waits for that save and for pending install-override and collection-order writes (bounded, never during OS shutdown). Reference: `PzLauncher.Desktop/Views/WindowPlacementPersistence.cs`, `PzLauncher.Desktop/Services/ModCollectionOrderWriter.cs`.
 - A value that changes per slider step or keystroke debounces its file write. Reference: `PzLauncher.Desktop/Services/InstallOverridesService.cs`.
 - Restoring a saved placement goes through `WindowPlacementRules` (`PzLauncher.Desktop/Views/WindowPlacementRules.cs`): off-screen bounds open centered on the primary screen, the size is clamped to the minimum and the screen.
 

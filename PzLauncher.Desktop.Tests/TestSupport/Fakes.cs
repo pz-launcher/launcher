@@ -371,6 +371,9 @@ public sealed class FakeModCollectionService : IModCollectionService
 
     public Func<SaveModCollectionRequest, Error?> SaveError { get; set; } = _ => null;
 
+    /// <summary>Holds every save open, after recording it, until set.</summary>
+    public TaskCompletionSource? SaveGate { get; set; }
+
     public Func<string, Error?> ApplyError { get; set; } = _ => null;
 
     public List<(string Root, string ExtraGameArgs)> GetRequests { get; } = [];
@@ -415,17 +418,22 @@ public sealed class FakeModCollectionService : IModCollectionService
             @"C:\Users\Test\Zomboid", collections, [.. InstalledMods], [.. ActiveIds], active.Count == 0 || collections.Any(collection => collection.IsActive)));
     }
 
-    public Task<Result> SaveAsync(SaveModCollectionRequest request, CancellationToken ct = default)
+    public async Task<Result> SaveAsync(SaveModCollectionRequest request, CancellationToken ct = default)
     {
         Saves.Add(request);
+        if (SaveGate is { } gate)
+        {
+            await gate.Task.WaitAsync(ct);
+        }
+
         if (SaveError(request) is { } error)
         {
-            return Task.FromResult<Result>(error);
+            return error;
         }
 
         if (request.OriginalName is { } original && IdsOf(original) is null)
         {
-            return Task.FromResult<Result>(TestErrors.Create(ErrorCode.ModCollectionNotFound));
+            return TestErrors.Create(ErrorCode.ModCollectionNotFound);
         }
 
         var target = request.OriginalName ?? request.Name;
@@ -440,7 +448,7 @@ public sealed class FakeModCollectionService : IModCollectionService
             Collections.Add((request.Name, request.ModIds));
         }
 
-        return Task.FromResult(Result.Ok());
+        return Result.Ok();
     }
 
     public Task<Result> DeleteAsync(string installRoot, string extraGameArgs, string name, CancellationToken ct = default)
