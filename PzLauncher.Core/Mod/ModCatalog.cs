@@ -15,7 +15,7 @@ internal static class ModCatalog
             foreach (var modFolder in ModLocator.Subfolders(root.ModsFolder, logger))
             {
                 ct.ThrowIfCancellationRequested();
-                if (await ModLocator.ReadAsync(modFolder, logger, ct).ConfigureAwait(false) is not { } info
+                if (await ModLocator.ReadGameModInfoAsync(modFolder, logger, ct).ConfigureAwait(false) is not { } info
                     || info.Value(ModFolders.IdKey) is not { } id
                     || !seen.Add(id))
                 {

@@ -47,7 +47,8 @@ A `SemaphoreSlim` gate serialises the service's writes (same reason as `ZabricSe
 
 - Roots and order exactly as `ModLocator.Candidates` (staged Workshop items → Steam Workshop library items → `<cache>/mods`);
   first copy of an id wins. Refactor `ModLocator` so the candidate roots and the version-folder pick
-  (`ReadAsync`: highest numeric version folder with a `mod.info`) are shared, not copied.
+  are shared, not copied. The catalog reads the game's B42 layout (`ReadGameModInfoAsync`): the highest numeric
+  version folder's `mod.info`, else `common/mod.info`; neither means not a B42 mod. Zabric/ZombieBuddy keep `ReadAsync`.
 - The Workshop id is the item folder name for Workshop roots, `null` for `<cache>/mods`.
 - Id lists: split on `,`, trim, take the part after the last `\` (`\damnlib` → `damnlib`), drop empties.
 - An unreadable folder is skipped and logged at debug, like `ModLocator.LogSkipped`.

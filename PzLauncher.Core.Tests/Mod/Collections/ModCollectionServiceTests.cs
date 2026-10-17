@@ -253,6 +253,18 @@ public sealed class ModCollectionServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task ApplyAsync_ModWithOnlyACommonModInfo_IsEnabledNotMissing()
+    {
+        ModBuilder.Create(_mods.SteamModFolder("2000", "Ladders"), ModBuilder.ModInfo("Ladders42204"), "common");
+        WriteSettings("pack:Ladders42204;");
+
+        var result = ResultAssert.Ok(await _service.ApplyAsync(_root, "", "pack", Ct));
+
+        Assert.Equal(["Ladders42204"], result.EnabledIds);
+        Assert.Empty(result.MissingIds);
+    }
+
+    [Fact]
     public async Task ApplyAsync_SecondApply_LeavesTheOriginalCopyUnchanged()
     {
         _mods.Local("A");

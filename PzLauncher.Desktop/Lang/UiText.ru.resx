@@ -579,7 +579,7 @@
     <value>Модов: {0}</value>
   </data>
   <data name="ModCollections_MissingCountFormat" xml:space="preserve">
-    <value>Не хватает: {0}</value>
+    <value>Не установлено: {0}</value>
   </data>
   <data name="ModCollections_DefaultBadge" xml:space="preserve">
     <value>По умолчанию</value>
@@ -628,6 +628,9 @@
   </data>
   <data name="ModCollections_Missing" xml:space="preserve">
     <value>Не установлен</value>
+  </data>
+  <data name="ModCollections_MissingTip" xml:space="preserve">
+    <value>Этих модов нет на этом компьютере (нет подписки или удалены); при применении сборки они пропускаются.</value>
   </data>
   <data name="ModCollections_MoveUp" xml:space="preserve">
     <value>Выше</value>

@@ -62,7 +62,8 @@
                             <TextBlock Text="{Binding Id}" Foreground="{DynamicResource Shell.TextMuted}" IsVisible="{Binding !IsMissing}"
                                        TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Id}" />
                         </DockPanel>
-                        <Border Grid.Column="3" Classes="badge" IsVisible="{Binding IsMissing}" Margin="8,0">
+                        <Border Grid.Column="3" Classes="badge" IsVisible="{Binding IsMissing}" Margin="8,0"
+                                ToolTip.Tip="{x:Static lang:UiText.ModCollections_MissingTip}">
                             <TextBlock Text="{x:Static lang:UiText.ModCollections_Missing}" Foreground="{DynamicResource Shell.WarningForeground}" />
                         </Border>
                         <StackPanel Grid.Column="4" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
@@ -136,7 +137,8 @@
                                                 <TextBlock Text="{Binding ModCount, StringFormat={x:Static lang:UiText.ModCollections_CountFormat}}" FontSize="12"
                                                            Foreground="{DynamicResource Shell.TextMuted}" />
                                                 <TextBlock Text="{Binding MissingCount, StringFormat={x:Static lang:UiText.ModCollections_MissingCountFormat}}" FontSize="12"
-                                                           Foreground="{DynamicResource Shell.WarningForeground}" IsVisible="{Binding HasMissing}" />
+                                                           Foreground="{DynamicResource Shell.WarningForeground}" IsVisible="{Binding HasMissing}"
+                                                           ToolTip.Tip="{x:Static lang:UiText.ModCollections_MissingTip}" />
                                             </StackPanel>
                                         </StackPanel>
                                         <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center" Margin="8,0,0,0">

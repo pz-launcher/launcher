@@ -579,7 +579,7 @@
     <value>{0} mods</value>
   </data>
   <data name="ModCollections_MissingCountFormat" xml:space="preserve">
-    <value>{0} em falta</value>
+    <value>Não instalados: {0}</value>
   </data>
   <data name="ModCollections_DefaultBadge" xml:space="preserve">
     <value>Predefinida</value>
@@ -628,6 +628,9 @@
   </data>
   <data name="ModCollections_Missing" xml:space="preserve">
     <value>Não instalado</value>
+  </data>
+  <data name="ModCollections_MissingTip" xml:space="preserve">
+    <value>Estes mods não estão neste computador (sem subscrição ou eliminados); ao aplicar a coleção, são ignorados.</value>
   </data>
   <data name="ModCollections_MoveUp" xml:space="preserve">
     <value>Mover para cima</value>

@@ -15,23 +15,25 @@ internal sealed class ModInfo(string infPath, string versionFolder, IReadOnlyLis
     /// <summary><c>null</c> when the version folder has no <c>mod.info</c>; throws on an unreadable one.</summary>
     public static async Task<ModInfo?> ReadAsync(string versionFolder, CancellationToken ct)
     {
-        var inf = Path.Combine(versionFolder, ModFolders.ModInfoFile);
-        if (await ReadLinesAsync(inf, ct).ConfigureAwait(false) is not { } lines)
+        if (await ReadFileAsync(versionFolder, versionFolder, ct).ConfigureAwait(false) is not { } own)
         {
             return null;
         }
 
-        var own = new ModInfo(inf, versionFolder, lines);
         if (own.Value(ModFolders.JarFileKey) is not null || Path.GetDirectoryName(versionFolder) is not { } modFolder)
         {
             return own;
         }
 
-        var commonInf = Path.Combine(modFolder, ModFolders.CommonFolder, ModFolders.ModInfoFile);
-        var common = await ReadLinesAsync(commonInf, ct).ConfigureAwait(false) is { } commonLines
-            ? new ModInfo(commonInf, versionFolder, commonLines)
-            : null;
+        var common = await ReadFileAsync(Path.Combine(modFolder, ModFolders.CommonFolder), versionFolder, ct).ConfigureAwait(false);
         return common?.Value(ModFolders.JarFileKey) is not null ? common : own;
+    }
+
+    /// <summary>The <c>mod.info</c> in <paramref name="folder"/> with no fallback; <c>null</c> when missing, throws on an unreadable one.</summary>
+    public static async Task<ModInfo?> ReadFileAsync(string folder, string versionFolder, CancellationToken ct)
+    {
+        var inf = Path.Combine(folder, ModFolders.ModInfoFile);
+        return await ReadLinesAsync(inf, ct).ConfigureAwait(false) is { } lines ? new ModInfo(inf, versionFolder, lines) : null;
     }
 
     // As ZombieBuddy reads mod.info: the first line with this key, in any case, and a non-empty value.

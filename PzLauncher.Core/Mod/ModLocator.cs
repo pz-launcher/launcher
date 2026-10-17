@@ -85,17 +85,7 @@ internal static partial class ModLocator
     // The highest version folder that holds a mod.info is the one read, whatever its id.
     public static async Task<ModInfo?> ReadAsync(string modFolder, ILogger logger, CancellationToken ct)
     {
-        var versions = new List<(string Folder, int[] Version)>();
-        foreach (var folder in Subfolders(modFolder, logger))
-        {
-            if (ParseVersion(Path.GetFileName(folder)) is { } version)
-            {
-                versions.Add((folder, version));
-            }
-        }
-
-        versions.Sort((x, y) => CompareVersions(y.Version, x.Version));
-        foreach (var (folder, _) in versions)
+        foreach (var folder in VersionFolders(modFolder, logger))
         {
             try
             {
@@ -112,6 +102,40 @@ internal static partial class ModLocator
         }
 
         return null;
+    }
+
+    // As the game loads a B42 mod: only the highest version folder is used, so its mod.info or else common's;
+    // a lower version folder's or a legacy root mod.info doesn't count.
+    public static async Task<ModInfo?> ReadGameModInfoAsync(string modFolder, ILogger logger, CancellationToken ct)
+    {
+        var version = VersionFolders(modFolder, logger).FirstOrDefault();
+        var common = Path.Combine(modFolder, ModFolders.CommonFolder);
+        try
+        {
+            return (version is null ? null : await ModInfo.ReadFileAsync(version, version, ct).ConfigureAwait(false))
+                ?? await ModInfo.ReadFileAsync(common, version ?? common, ct).ConfigureAwait(false);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            LogSkipped(logger, modFolder, ex.Message);
+            return null;
+        }
+    }
+
+    // Highest version first.
+    private static List<string> VersionFolders(string modFolder, ILogger logger)
+    {
+        var versions = new List<(string Folder, int[] Version)>();
+        foreach (var folder in Subfolders(modFolder, logger))
+        {
+            if (ParseVersion(Path.GetFileName(folder)) is { } version)
+            {
+                versions.Add((folder, version));
+            }
+        }
+
+        versions.Sort((x, y) => CompareVersions(y.Version, x.Version));
+        return versions.ConvertAll(entry => entry.Folder);
     }
 
     // Ordinal order; empty when the folder is missing or unreadable.

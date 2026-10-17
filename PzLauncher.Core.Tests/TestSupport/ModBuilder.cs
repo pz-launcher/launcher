@@ -32,10 +32,15 @@ public sealed class ModBuilder(string cache, string library)
         Create(Path.Combine(Cache, "Workshop", item, "Contents", "mods", id), modInfo ?? ModInfo(id));
 
     public string Steam(string itemId, string id, string? modInfo = null) =>
-        Create(Path.Combine(Library, "steamapps", "workshop", "content", "108600", itemId, "mods", id), modInfo ?? ModInfo(id));
+        Create(SteamModFolder(itemId, id), modInfo ?? ModInfo(id));
 
     public string Local(string id, string? modInfo = null) =>
-        Create(Path.Combine(Cache, "mods", id), modInfo ?? ModInfo(id));
+        Create(LocalModFolder(id), modInfo ?? ModInfo(id));
+
+    public string SteamModFolder(string itemId, string folder) =>
+        Path.Combine(Library, "steamapps", "workshop", "content", "108600", itemId, "mods", folder);
+
+    public string LocalModFolder(string folder) => Path.Combine(Cache, "mods", folder);
 
     private static void Append(StringBuilder text, string key, string? value)
     {

@@ -579,7 +579,7 @@
     <value>{0} 個模組</value>
   </data>
   <data name="ModCollections_MissingCountFormat" xml:space="preserve">
-    <value>缺少 {0} 個</value>
+    <value>未安裝 {0} 個</value>
   </data>
   <data name="ModCollections_DefaultBadge" xml:space="preserve">
     <value>預設</value>
@@ -628,6 +628,9 @@
   </data>
   <data name="ModCollections_Missing" xml:space="preserve">
     <value>未安裝</value>
+  </data>
+  <data name="ModCollections_MissingTip" xml:space="preserve">
+    <value>這些模組在本機找不到（未訂閱或已刪除），套用合集時會略過</value>
   </data>
   <data name="ModCollections_MoveUp" xml:space="preserve">
     <value>上移</value>

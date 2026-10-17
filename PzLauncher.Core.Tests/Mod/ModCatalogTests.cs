@@ -80,6 +80,77 @@ public sealed class ModCatalogTests : IDisposable
     }
 
     [Fact]
+    public async Task ReadAsync_CommonModInfoOnly_IsListedUnderItsOwnId()
+    {
+        ModBuilder.Create(_mods.LocalModFolder("Ladders"), ModBuilder.ModInfo("Ladders42204"), "common");
+
+        Assert.Equal(["Ladders42204"], (await ReadAsync()).Select(mod => mod.Id));
+    }
+
+    [Fact]
+    public async Task ReadAsync_VersionFolderWithoutModInfo_ReadsCommonModInfo()
+    {
+        var folder = _mods.LocalModFolder("Viewpoint");
+        _temp.CreateDirectory("Zomboid", "mods", "Viewpoint", "42", "media");
+        ModBuilder.Create(folder, ModBuilder.ModInfo("Viewpoint", name: "Common copy"), "common");
+
+        Assert.Equal("Common copy", Assert.Single(await ReadAsync()).Name);
+    }
+
+    [Fact]
+    public async Task ReadAsync_VersionAndCommonModInfo_TheVersionFoldersWins()
+    {
+        var folder = _mods.LocalModFolder("Both");
+        ModBuilder.Create(folder, ModBuilder.ModInfo("Both", name: "Version copy"));
+        ModBuilder.Create(folder, ModBuilder.ModInfo("Both", name: "Common copy"), "common");
+
+        Assert.Equal("Version copy", Assert.Single(await ReadAsync()).Name);
+    }
+
+    [Fact]
+    public async Task ReadAsync_LowerVersionModInfoAndCommon_CommonWinsOverTheLowerVersion()
+    {
+        var folder = _mods.LocalModFolder("Lib");
+        ModBuilder.Create(folder, ModBuilder.ModInfo("Lib", name: "Old copy"));
+        _temp.CreateDirectory("Zomboid", "mods", "Lib", "42.15", "media");
+        ModBuilder.Create(folder, ModBuilder.ModInfo("Lib", name: "Common copy"), "common");
+
+        Assert.Equal("Common copy", Assert.Single(await ReadAsync()).Name);
+    }
+
+    [Fact]
+    public async Task ReadAsync_LegacyRootModInfoOnly_IsNotListed()
+    {
+        var folder = _mods.LocalModFolder("Legacy");
+        _temp.CreateDirectory("Zomboid", "mods", "Legacy", "media");
+        await File.WriteAllTextAsync(Path.Combine(folder, "mod.info"), ModBuilder.ModInfo("Legacy"), Ct);
+
+        Assert.Empty(await ReadAsync());
+    }
+
+    [Fact]
+    public async Task ReadAsync_RootModInfoVersionWithoutModInfoAndCommon_ReadsCommonModInfo()
+    {
+        var folder = _mods.LocalModFolder("Progress");
+        _temp.CreateDirectory("Zomboid", "mods", "Progress", "42");
+        await File.WriteAllTextAsync(Path.Combine(folder, "mod.info"), ModBuilder.ModInfo("Progress", name: "Root copy"), Ct);
+        ModBuilder.Create(folder, ModBuilder.ModInfo("Progress", name: "Common copy"), "common");
+
+        Assert.Equal("Common copy", Assert.Single(await ReadAsync()).Name);
+    }
+
+    [Fact]
+    public async Task ReadAsync_SameIdCommonOnlyInSeveralRoots_FirstCopyWins()
+    {
+        ModBuilder.Create(_mods.SteamModFolder("2000", "Ladders"), ModBuilder.ModInfo("Ladders42204", name: "Steam copy"), "common");
+        ModBuilder.Create(_mods.LocalModFolder("Ladders"), ModBuilder.ModInfo("Ladders42204", name: "Local copy"), "common");
+
+        var mod = Assert.Single(await ReadAsync());
+
+        Assert.Equal(("Steam copy", "2000"), (mod.Name, mod.WorkshopId));
+    }
+
+    [Fact]
     public async Task ReadAsync_NoCache_ListsSteamModsOnly()
     {
         _mods.Local("LocalMod");
