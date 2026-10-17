@@ -1,0 +1,5 @@
+{"file": ".trellis/spec/common/coding-rules.md", "reason": "comment density, naming, async and nullability rules"}
+{"file": ".trellis/spec/common/test-strategy.md", "reason": "every old service-test scenario still covered after the move"}
+{"file": ".trellis/spec/core/directory-structure.md", "reason": "no specific mod referenced from Mod/ZombieBuddy; spec lines updated"}
+{"file": ".trellis/spec/core/service-api.md", "reason": "public/internal surface and DI"}
+{"file": ".trellis/spec/guides/code-reuse-thinking-guide.md", "reason": "no duplicated status/cache/find code left"}

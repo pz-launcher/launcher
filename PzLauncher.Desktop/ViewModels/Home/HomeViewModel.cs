@@ -9,7 +9,6 @@ using PzLauncher.Core.Common;
 using PzLauncher.Core.Installs;
 using PzLauncher.Core.Launch;
 using PzLauncher.Core.Mod.Collections;
-using PzLauncher.Core.Mod.Zabric;
 using PzLauncher.Core.Mod.ZombieBuddy;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Services;
@@ -27,7 +26,7 @@ public partial class HomeViewModel : ViewModelBase
     private readonly IDialogService _dialogs;
     private readonly IZombieBuddyService _zombieBuddy;
     private readonly IZombieBuddyChannelService _channels;
-    private readonly IZabricService _zabric;
+    private readonly IZombieBuddyModsService _zombieBuddyMods;
     private readonly IModCollectionService _collections;
     private readonly IModCollectionDefaultsService _defaultCollections;
     private readonly ModCollectionApplier _applier;
@@ -47,7 +46,7 @@ public partial class HomeViewModel : ViewModelBase
         IDialogService dialogs,
         IZombieBuddyService zombieBuddy,
         IZombieBuddyChannelService channels,
-        IZabricService zabric,
+        IZombieBuddyModsService zombieBuddyMods,
         IModCollectionService collections,
         IModCollectionDefaultsService defaultCollections,
         ModCollectionApplier applier,
@@ -60,7 +59,7 @@ public partial class HomeViewModel : ViewModelBase
         _dialogs = dialogs;
         _zombieBuddy = zombieBuddy;
         _channels = channels;
-        _zabric = zabric;
+        _zombieBuddyMods = zombieBuddyMods;
         _collections = collections;
         _defaultCollections = defaultCollections;
         _applier = applier;
@@ -185,13 +184,12 @@ public partial class HomeViewModel : ViewModelBase
             return;
         }
 
-        // A failed preload is reported, then the game starts as it would without the launcher.
+        // A failed mod setup is reported, then the game starts as it would without the launcher.
         if (!removeZombieBuddy)
         {
-            var preload = await _zabric.EnsurePreloadAsync(install.RootPath, overrides.ExtraGameArgs);
-            if (!preload.IsSuccess)
+            foreach (var error in await _zombieBuddyMods.PrepareLaunchAsync(install.RootPath, overrides.ExtraGameArgs))
             {
-                await _dialogs.ShowErrorAsync(ErrorMessages.ToUserText(preload.Error));
+                await _dialogs.ShowErrorAsync(ErrorMessages.ToUserText(error));
             }
         }
 

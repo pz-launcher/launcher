@@ -1,0 +1,5 @@
+{"file": ".trellis/spec/common/coding-rules.md", "reason": "comment density, naming, async and nullability rules"}
+{"file": ".trellis/spec/common/test-strategy.md", "reason": "coverage of preload and patches_jar write/remove/no-op paths and Home wiring"}
+{"file": ".trellis/spec/core/directory-structure.md", "reason": "feature folder placement and constants list updated"}
+{"file": ".trellis/spec/core/error-handling.md", "reason": "Result errors, config left unchanged on failure"}
+{"file": ".trellis/spec/guides/code-reuse-thinking-guide.md", "reason": "duplication between ZabricService and the new service"}

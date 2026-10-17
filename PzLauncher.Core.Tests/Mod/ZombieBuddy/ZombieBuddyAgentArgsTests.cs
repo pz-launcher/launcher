@@ -7,6 +7,8 @@ public class ZombieBuddyAgentArgsTests
 {
     private const string Native = "-agentlib:zbNative";
     private const string Java = "-javaagent:ZombieBuddy.jar";
+    private const string Package = "com.example.skip";
+    private const string Entry = "Skip.jar:" + Package;
 
     [Theory]
     [InlineData(Native, PlatformKind.Windows, true)]
@@ -111,5 +113,66 @@ public class ZombieBuddyAgentArgsTests
         string[] vmArgs = ["-Xmx3072m", Java];
 
         Assert.Equal(vmArgs, ZombieBuddyAgentArgs.WithPolicy(vmArgs, PlatformKind.Windows, allowAll: true));
+    }
+
+    [Theory]
+    [InlineData("", "=patches_jar=" + Entry)]
+    [InlineData("=policy=allow-all", "=policy=allow-all,patches_jar=" + Entry)]
+    [InlineData("=patches_jar=other.jar:x.y,policy=allow-all", "=patches_jar=other.jar:x.y;" + Entry + ",policy=allow-all")]
+    [InlineData("=patches_jar=Old.jar:" + Package + ";other.jar:x.y", "=patches_jar=" + Entry + ";other.jar:x.y")]
+    [InlineData(@"=patches_jar=other.jar:x.y;E:\mods\Skip.jar:" + Package, "=patches_jar=other.jar:x.y;" + Entry)]
+    [InlineData("=patches_jar=a.jar:" + Package + ";other.jar:x.y;b.jar: " + Package + " ", "=patches_jar=" + Entry + ";other.jar:x.y")]
+    [InlineData("=patches_jar=", "=patches_jar=" + Entry)]
+    [InlineData("=PATCHES_JAR=other.jar:x.y", "=PATCHES_JAR=other.jar:x.y;" + Entry)]
+    [InlineData("=patches_jar=a.jar:x.y,patches_jar=b.jar:z", "=patches_jar=a.jar:x.y,patches_jar=b.jar:z;" + Entry)]
+    public void WithPatchesJar_AgentOptions_HoldsOneEntryForThePackage(string before, string after) =>
+        Assert.Equal(["-Xmx3072m", Native + after], ZombieBuddyAgentArgs.WithPatchesJar(["-Xmx3072m", Native + before], PlatformKind.Windows, "Skip.jar", Package));
+
+    [Theory]
+    [InlineData("=policy=allow-all,patches_jar=" + Entry)]
+    [InlineData("=patches_jar=other.jar:x.y;" + Entry + ",verbosity=1")]
+    public void WithPatchesJar_AlreadyThere_ReturnsTheSameInstance(string options)
+    {
+        string[] vmArgs = ["-Xmx3072m", Native + options];
+
+        Assert.Same(vmArgs, ZombieBuddyAgentArgs.WithPatchesJar(vmArgs, PlatformKind.Windows, "Skip.jar", Package));
+    }
+
+    [Theory]
+    [InlineData("=policy=allow-all,patches_jar=" + Entry, "=policy=allow-all")]
+    [InlineData("=patches_jar=" + Entry, "")]
+    [InlineData("=patches_jar=other.jar:x.y;" + Entry + ";last.jar:z,verbosity=1", "=patches_jar=other.jar:x.y;last.jar:z,verbosity=1")]
+    [InlineData(@"=patches_jar=E:\mods\Skip.jar:" + Package + ";Old.jar:" + Package + ",policy=prompt", "=policy=prompt")]
+    [InlineData("=patches_jar=" + Entry + ",patches_jar=other.jar:x.y;" + Entry, "=patches_jar=" + Entry + ",patches_jar=other.jar:x.y")]
+    [InlineData("=patches_jar=other.jar:x.y,patches_jar=" + Entry + ",policy=prompt", "=patches_jar=other.jar:x.y,patches_jar=,policy=prompt")]
+    public void WithoutPatchesJar_AgentOptions_DropsThePackagesEntries(string before, string after) =>
+        Assert.Equal([Native + after, "-Xmx3072m"], ZombieBuddyAgentArgs.WithoutPatchesJar([Native + before, "-Xmx3072m"], PlatformKind.Windows, Package));
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("=policy=allow-all")]
+    [InlineData("=patches_jar=other.jar:x.y;Skip.jar:com.example.skip.other")]
+    [InlineData("=patches_jar=,,policy=prompt")]
+    [InlineData("=patches_jar=other.jar:x.y;;last.jar:z")]
+    public void WithoutPatchesJar_NoEntryForThePackage_ReturnsTheSameInstance(string options)
+    {
+        string[] vmArgs = [Native + options];
+
+        Assert.Same(vmArgs, ZombieBuddyAgentArgs.WithoutPatchesJar(vmArgs, PlatformKind.Windows, Package));
+    }
+
+    [Fact]
+    public void PatchesJar_LinuxAgentArg_EditsTheJavaAgent() =>
+        Assert.Equal(
+            [Java + "=patches_jar=" + Entry],
+            ZombieBuddyAgentArgs.WithPatchesJar([Java], PlatformKind.Linux, "Skip.jar", Package));
+
+    [Fact]
+    public void PatchesJar_NoAgentArg_ReturnsTheSameInstance()
+    {
+        string[] vmArgs = ["-Xmx3072m", Java];
+
+        Assert.Same(vmArgs, ZombieBuddyAgentArgs.WithPatchesJar(vmArgs, PlatformKind.Windows, "Skip.jar", Package));
+        Assert.Same(vmArgs, ZombieBuddyAgentArgs.WithoutPatchesJar(vmArgs, PlatformKind.Windows, Package));
     }
 }

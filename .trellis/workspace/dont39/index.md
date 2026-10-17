@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 9
+- **Total Sessions**: 11
 - **Last Active**: 2026-10-17
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~257 | Active |
+| `journal-1.md` | ~301 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,8 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 11 | 2026-10-17 | Unify ZombieBuddy Java mod launch setup | `651578e` | `zb-skip-online-checks` |
+| 10 | 2026-10-17 | ZB Skip Online Checks setup at launch | `dd48a76` | `main` |
 | 9 | 2026-10-17 | Mod collection management in the launcher | `678629a`, `5ec5e37`, `7d23758`, `ac82efb`, `1a6598e`, `9591de1`, `234e8d9`, `13057a6` | `feat/mod-collections` |
 | 8 | 2026-10-17 | Preload Zabric in allow-all mode | `ad346b8` | `main` |
 | 7 | 2026-10-16 | Initialize ZombieBuddy for subscribed installs | `c60f2ac` | `feat/zombiebuddy-init` |

@@ -4,7 +4,6 @@ using PzLauncher.Core.Java;
 using PzLauncher.Core.Launch;
 using PzLauncher.Core.Mod;
 using PzLauncher.Core.Mod.Collections;
-using PzLauncher.Core.Mod.Zabric;
 using PzLauncher.Core.Mod.ZombieBuddy;
 using PzLauncher.Core.Platform;
 using PzLauncher.Desktop.Localization;
@@ -527,18 +526,24 @@ public sealed class FakeZombieBuddyService : IZombieBuddyService
         AllowAllChanges.Add((installRoot, allowAll));
         return SetAllowAll(allowAll);
     }
+
+    public Task<Result> EnsurePatchesJarAsync(
+        string installRoot, string sourceJar, string jarFile, string packageName, CancellationToken ct = default) => Task.FromResult(Result.Ok());
+
+    public Task<Result> RemovePatchesJarAsync(string installRoot, string jarFile, string packageName, CancellationToken ct = default) =>
+        Task.FromResult(Result.Ok());
 }
 
-public sealed class FakeZabricService : IZabricService
+public sealed class FakeZombieBuddyModsService : IZombieBuddyModsService
 {
-    public Result<ZombieBuddyPreload> PreloadResult { get; set; } = ZombieBuddyPreload.NotApplicable;
+    public Func<IReadOnlyList<Error>> Prepare { get; set; } = () => [];
 
-    public List<(string Root, string ExtraGameArgs)> Preloads { get; } = [];
+    public List<(string Root, string ExtraGameArgs)> Prepares { get; } = [];
 
-    public Task<Result<ZombieBuddyPreload>> EnsurePreloadAsync(string installRoot, string extraGameArgs, CancellationToken ct = default)
+    public Task<IReadOnlyList<Error>> PrepareLaunchAsync(string installRoot, string extraGameArgs, CancellationToken ct = default)
     {
-        Preloads.Add((installRoot, extraGameArgs));
-        return Task.FromResult(PreloadResult);
+        Prepares.Add((installRoot, extraGameArgs));
+        return Task.FromResult(Prepare());
     }
 }
 

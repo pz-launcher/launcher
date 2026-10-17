@@ -15,6 +15,9 @@ public sealed class ZombieBuddyServiceTests : IDisposable
 {
     private const string Native = "-agentlib:zbNative";
     private const string Java = "-javaagent:ZombieBuddy.jar";
+    private const string PatchJar = "Skip.jar";
+    private const string PatchPackage = "com.example.skip";
+    private const string PatchEntry = PatchJar + ":" + PatchPackage;
 
     private readonly TempDirectory _temp = new();
     private readonly SteamLayoutBuilder _steam;
@@ -82,7 +85,7 @@ public sealed class ZombieBuddyServiceTests : IDisposable
 
     private static string ConfigOf(string game) => Path.Combine(game, "ProjectZomboid64.json");
 
-    private static List<string> VmArgsOf(string game) =>
+    internal static List<string> VmArgsOf(string game) =>
         [.. JsonNode.Parse(File.ReadAllText(ConfigOf(game)))!["vmArgs"]!.AsArray().Select(arg => arg!.GetValue<string>())];
 
     private static List<string> ShippedVmArgs => [.. JsonNode.Parse(GameInstallBuilder.WindowsGameJson)!["vmArgs"]!.AsArray().Select(arg => arg!.GetValue<string>())];
@@ -435,6 +438,8 @@ public sealed class ZombieBuddyServiceTests : IDisposable
         ResultAssert.Failed(await _service.InitializeAsync(root, Stable, ct: Ct), code);
         ResultAssert.Failed(await _service.RemoveAsync(root, ct: Ct), code);
         ResultAssert.Failed(await _service.SetAllowAllAsync(root, true, Ct), code);
+        ResultAssert.Failed(await _service.EnsurePatchesJarAsync(root, SourceJar("v1"), PatchJar, PatchPackage, Ct), code);
+        ResultAssert.Failed(await _service.RemovePatchesJarAsync(root, PatchJar, PatchPackage, Ct), code);
     }
 
     [Fact]
@@ -510,5 +515,126 @@ public sealed class ZombieBuddyServiceTests : IDisposable
         var root = CreateGame();
 
         ResultAssert.Failed(await _service.SetAllowAllAsync(root, true, Ct), ErrorCode.ZombieBuddyNotInitialized);
+    }
+
+    private string SourceJar(string content)
+    {
+        var path = Path.Combine(_temp.CreateDirectory("mod"), PatchJar);
+        File.WriteAllText(path, content);
+        return path;
+    }
+
+    private Task<Result> EnsurePatchesJarAsync(string root, string source) => _service.EnsurePatchesJarAsync(root, source, PatchJar, PatchPackage, Ct);
+
+    private Task<Result> RemovePatchesJarAsync(string root) => _service.RemovePatchesJarAsync(root, PatchJar, PatchPackage, Ct);
+
+    [Theory]
+    [InlineData(Native + "=policy=allow-all", Native + "=policy=allow-all,patches_jar=" + PatchEntry)]
+    [InlineData(Native + "=patches_jar=other.jar:x.y,policy=allow-all", Native + "=patches_jar=other.jar:x.y;" + PatchEntry + ",policy=allow-all")]
+    [InlineData(Native + @"=patches_jar=E:\mods\Skip.jar:" + PatchPackage, Native + "=patches_jar=" + PatchEntry)]
+    public async Task EnsurePatchesJarAsync_NoCopy_CopiesTheJarThenAddsTheEntry(string agentArg, string expected)
+    {
+        var root = CreateGame(JsonWith(agentArg));
+
+        ResultAssert.Ok(await EnsurePatchesJarAsync(root, SourceJar("v1")));
+
+        Assert.Equal("v1", await File.ReadAllTextAsync(Path.Combine(root, PatchJar), Ct));
+        Assert.Equal([expected, .. ShippedVmArgs], VmArgsOf(root));
+    }
+
+    [Fact]
+    public async Task EnsurePatchesJarAsync_StaleCopy_ReplacesIt()
+    {
+        var root = CreateGame(JsonWith(Native + "=patches_jar=" + PatchEntry));
+        await File.WriteAllTextAsync(Path.Combine(root, PatchJar), "old", Ct);
+
+        ResultAssert.Ok(await EnsurePatchesJarAsync(root, SourceJar("v2")));
+
+        Assert.Equal("v2", await File.ReadAllTextAsync(Path.Combine(root, PatchJar), Ct));
+    }
+
+    [Fact]
+    public async Task EnsurePatchesJarAsync_AlreadySetUp_WritesNeitherFile()
+    {
+        Assert.SkipUnless(OperatingSystem.IsWindows(), "Only Windows refuses to overwrite an open file.");
+        var json = JsonWith(Native + "=policy=allow-all,patches_jar=" + PatchEntry);
+        var root = CreateGame(json);
+        var source = SourceJar("v1");
+        File.Copy(source, Path.Combine(root, PatchJar));
+
+        // Still readable for the compare, but a copy over it would fail.
+        using (File.Open(Path.Combine(root, PatchJar), FileMode.Open, FileAccess.Read, FileShare.Read))
+        {
+            ResultAssert.Ok(await EnsurePatchesJarAsync(root, source));
+        }
+
+        Assert.Equal(json, await File.ReadAllTextAsync(ConfigOf(root), Ct));
+    }
+
+    [Fact]
+    public async Task EnsurePatchesJarAsync_NoAgentArg_DoesNothing()
+    {
+        var root = CreateGame();
+
+        ResultAssert.Ok(await EnsurePatchesJarAsync(root, SourceJar("v1")));
+
+        Assert.False(File.Exists(Path.Combine(root, PatchJar)));
+        Assert.Equal(GameInstallBuilder.WindowsGameJson, await File.ReadAllTextAsync(ConfigOf(root), Ct));
+    }
+
+    [Fact]
+    public async Task EnsurePatchesJarAsync_CopyLocked_ReturnsCopyFailedAndLeavesTheJson()
+    {
+        Assert.SkipUnless(OperatingSystem.IsWindows(), "Only Windows refuses to overwrite an open file.");
+        var json = JsonWith(Native + "=policy=allow-all");
+        var root = CreateGame(json);
+        var jar = Path.Combine(root, PatchJar);
+        await File.WriteAllTextAsync(jar, "old", Ct);
+
+        using var locked = File.Open(jar, FileMode.Open, FileAccess.Read, FileShare.None);
+        var error = ResultAssert.Failed(await EnsurePatchesJarAsync(root, SourceJar("v1")), ErrorCode.ZombieBuddyCopyFailed);
+
+        Assert.Equal(jar, error.Details["path"]);
+        Assert.Equal(json, await File.ReadAllTextAsync(ConfigOf(root), Ct));
+    }
+
+    [Theory]
+    [InlineData(Native + "=policy=allow-all,patches_jar=" + PatchEntry, Native + "=policy=allow-all")]
+    [InlineData(Native + "=patches_jar=other.jar:x.y;" + PatchEntry + ",policy=prompt", Native + "=patches_jar=other.jar:x.y,policy=prompt")]
+    public async Task RemovePatchesJarAsync_SetUp_RemovesTheEntryAndTheJar(string agentArg, string expected)
+    {
+        var root = CreateGame(JsonWith(agentArg));
+        await File.WriteAllTextAsync(Path.Combine(root, PatchJar), "v1", Ct);
+
+        ResultAssert.Ok(await RemovePatchesJarAsync(root));
+
+        Assert.False(File.Exists(Path.Combine(root, PatchJar)));
+        Assert.Equal([expected, .. ShippedVmArgs], VmArgsOf(root));
+    }
+
+    [Fact]
+    public async Task RemovePatchesJarAsync_NothingThere_WritesNothing()
+    {
+        var json = JsonWith(Native + "=policy=allow-all,patches_jar=other.jar:x.y");
+        var root = CreateGame(json);
+
+        ResultAssert.Ok(await RemovePatchesJarAsync(root));
+
+        Assert.Equal(json, await File.ReadAllTextAsync(ConfigOf(root), Ct));
+    }
+
+    [Fact]
+    public async Task RemovePatchesJarAsync_JarLocked_ReturnsDeleteFailedAfterRemovingTheEntry()
+    {
+        Assert.SkipUnless(OperatingSystem.IsWindows(), "Only Windows refuses to delete an open file.");
+        var root = CreateGame(JsonWith(Native + "=policy=allow-all,patches_jar=" + PatchEntry));
+        var jar = Path.Combine(root, PatchJar);
+        await File.WriteAllTextAsync(jar, "v1", Ct);
+
+        using var locked = File.Open(jar, FileMode.Open, FileAccess.Read, FileShare.Read);
+        var error = ResultAssert.Failed(await RemovePatchesJarAsync(root), ErrorCode.ZombieBuddyDeleteFailed);
+
+        Assert.Equal(jar, error.Details["path"]);
+        Assert.Equal(Native + "=policy=allow-all", VmArgsOf(root)[0]);
     }
 }
