@@ -204,3 +204,25 @@ Planned and implemented ZombieBuddy setup modelled on its CLI installer: Core IZ
 ### Status
 
 [OK] **Completed**
+
+
+## Session 8: Preload Zabric in allow-all mode
+<!-- trellis-session: v=2 fp=e313d06d0835d646 -->
+
+**Date**: 2026-10-17
+**Task**: Preload Zabric in allow-all mode
+**Branch**: `main`
+
+### Summary
+
+Under ZombieBuddy policy=allow-all the approval dialog never runs, so Zabric was never added to ZombieBuddy's preload_mods. Home Launch now registers the installed Zabric (game mod order, -cachedir, Zabric first, Zabric's own current-entry rules) in config.json; failures show the reason and still launch. Restructured Core into PzLauncher.Core.Mod (shared ModInfo/ModLocator; ZombieBuddy Java-mod preload check and preload_mods editor; Zabric service only holds its ids), preload errors as zombiebuddy.* with modId. Launch-settings ZombieBuddy dialog shows a single Confirm after success. PR #8 merged; real game launch not manually verified.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `ad346b8` | Preload Zabric when ZombieBuddy runs with allow-all (#8) |
+
+### Status
+
+[OK] **Completed**

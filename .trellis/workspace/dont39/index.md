@@ -8,8 +8,8 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 7
-- **Last Active**: 2026-10-16
+- **Total Sessions**: 8
+- **Last Active**: 2026-10-17
 <!-- @@@/auto:current-status -->
 
 ---
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~206 | Active |
+| `journal-1.md` | ~228 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 8 | 2026-10-17 | Preload Zabric in allow-all mode | `ad346b8` | `main` |
 | 7 | 2026-10-16 | Initialize ZombieBuddy for subscribed installs | `c60f2ac` | `feat/zombiebuddy-init` |
 | 6 | 2026-10-16 | Launch the game client, GC choice and install selection | `95bc8b0`, `5bfb616`, `caa2617`, `f076b2c`, `1bc491d`, `319b250`, `52acdf7`, `2c6deac`, `8854945`, `fc54408`, `d1c2716`, `0c051d7`, `068bdec` | `feat/launch-game-client` |
 | 5 | 2026-10-15 | Plan launch feature; implement Java runtime discovery | `cdf04c5`, `a17328c` | `feat/java-discovery` |
