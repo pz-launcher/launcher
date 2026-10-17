@@ -735,7 +735,7 @@ public class LaunchSettingsViewModelTests : UiTextCultureTest
         await _vm.InitializeZombieBuddyCommand.ExecuteAsync(null);
 
         var setup = Assert.Single(_dialogs.Setups);
-        Assert.Equal((ZombieBuddySetupMode.Initialize, false, true), (setup.Mode, setup.OffersLaunch, setup.OffersClose));
+        Assert.Equal((ZombieBuddySetupMode.Initialize, false), (setup.Mode, setup.OffersLaunch));
         Assert.Equal([(SteamGame.RootPath, ZombieBuddyChannel.Beta)], _zombieBuddy.Initializations);
         Assert.Equal(ZombieBuddyState.Initialized, _vm.ZombieBuddyState);
     }

@@ -428,8 +428,8 @@
   <data name="ZombieBuddy_Launch" xml:space="preserve">
     <value>啟動遊戲</value>
   </data>
-  <data name="ZombieBuddy_Close" xml:space="preserve">
-    <value>關閉</value>
+  <data name="ZombieBuddy_Confirm" xml:space="preserve">
+    <value>確認</value>
   </data>
   <data name="ZombieBuddy_Cancel" xml:space="preserve">
     <value>取消</value>

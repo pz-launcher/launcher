@@ -202,21 +202,34 @@ public class ZombieBuddySetupViewModelTests : UiTextCultureTest
         vm.LaunchCommand.Execute(null);
 
         Assert.True(vm.OffersLaunch);
-        Assert.False(vm.OffersClose);
+        Assert.Equal((false, true), (vm.OffersConfirm, vm.OffersCancel));
         Assert.Equal([true], _closeRequests);
     }
 
     [Fact]
-    public async Task Close_CloseOnlyDialogAfterSuccess_RequestsCloseWithoutLaunch()
+    public async Task Confirm_CloseOnlyDialogAfterSuccess_ReplacesCancelAndRequestsCloseWithoutLaunch()
     {
         var vm = Create(offersLaunch: false);
-        Assert.False(vm.CloseCommand.CanExecute(null));
+        Assert.False(vm.ConfirmCommand.CanExecute(null));
+        Assert.Equal((false, true), (vm.OffersConfirm, vm.OffersCancel));
         await vm.StartAsync();
 
-        vm.CloseCommand.Execute(null);
+        Assert.Equal((true, false), (vm.OffersConfirm, vm.OffersCancel));
+        vm.ConfirmCommand.Execute(null);
 
         Assert.False(vm.OffersLaunch);
-        Assert.True(vm.OffersClose);
         Assert.Equal([false], _closeRequests);
+    }
+
+    [Fact]
+    public async Task Start_CloseOnlyDialogStepFails_KeepsCancel()
+    {
+        var error = TestErrors.Create(ErrorCode.ZombieBuddyCopyFailed);
+        _service.Operation = (progress, _) => Task.FromResult(Run(InitializeSteps, progress, failAt: 1, error));
+        var vm = Create(offersLaunch: false);
+
+        await vm.StartAsync();
+
+        Assert.Equal((false, true), (vm.OffersConfirm, vm.OffersCancel));
     }
 }

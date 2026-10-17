@@ -428,8 +428,8 @@
   <data name="ZombieBuddy_Launch" xml:space="preserve">
     <value>Launch game</value>
   </data>
-  <data name="ZombieBuddy_Close" xml:space="preserve">
-    <value>Close</value>
+  <data name="ZombieBuddy_Confirm" xml:space="preserve">
+    <value>OK</value>
   </data>
   <data name="ZombieBuddy_Cancel" xml:space="preserve">
     <value>Cancel</value>
