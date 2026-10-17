@@ -4,6 +4,7 @@ using PzLauncher.Core.Java;
 using PzLauncher.Core.Launch;
 using PzLauncher.Core.Mod;
 using PzLauncher.Core.Mod.ZombieBuddy;
+using PzLauncher.Core.Update;
 using PzLauncher.Desktop.Lang;
 
 namespace PzLauncher.Desktop.Localization;
@@ -64,6 +65,13 @@ public static class DisplayNames
     {
         ZombieBuddyChannel.Stable => UiText.ZombieBuddyChannel_Stable,
         ZombieBuddyChannel.Beta => UiText.ZombieBuddyChannel_Beta,
+    };
+
+    public static string Of(UpdateSource source) => source switch
+    {
+        UpdateSource.Auto => UiText.UpdateSource_Auto,
+        UpdateSource.GitHub => UiText.UpdateSource_GitHub,
+        UpdateSource.Gitee => UiText.UpdateSource_Gitee,
     };
 
     public static string Of(ZombieBuddyStep step) => step switch

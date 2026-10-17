@@ -2,6 +2,7 @@ using System.Text.Json;
 using Microsoft.Extensions.Logging.Abstractions;
 using PzLauncher.Core.Launch;
 using PzLauncher.Core.Mod.ZombieBuddy;
+using PzLauncher.Core.Update;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Services;
 using PzLauncher.Desktop.Tests.TestSupport;
@@ -189,6 +190,8 @@ public sealed class JsonPreferenceStoreTests : IDisposable
     [InlineData(4)]
     [InlineData(5)]
     [InlineData(6)]
+    [InlineData(7)]
+    [InlineData(8)]
     public async Task SaveOneField_FileHoldsTheOthers_KeepsAll(int savedLast)
     {
         var ct = TestContext.Current.CancellationToken;
@@ -201,6 +204,8 @@ public sealed class JsonPreferenceStoreTests : IDisposable
             () => CreateStore().SaveInstallOverridesAsync(GameRoot, Overrides, ct),
             () => CreateStore().SaveZombieBuddyChannelAsync(GameRoot, ZombieBuddyChannel.Beta, ct),
             () => CreateStore().SaveDefaultModCollectionAsync(GameRoot, "B42 pack", ct),
+            () => CreateStore().SaveUpdateSourceAsync(UpdateSource.Gitee, ct),
+            () => CreateStore().SaveAutoCheckUpdatesAsync(false, ct),
         ];
 
         // Separate stores, as across app runs.
@@ -216,6 +221,8 @@ public sealed class JsonPreferenceStoreTests : IDisposable
                 InstallOverrides = WithInstalls((GameRoot, Overrides)).InstallOverrides,
                 ZombieBuddyChannels = WithChannels((GameRoot, ZombieBuddyChannel.Beta)).ZombieBuddyChannels,
                 DefaultModCollections = WithDefaultCollections((GameRoot, "B42 pack")).DefaultModCollections,
+                UpdateSource = UpdateSource.Gitee,
+                AutoCheckUpdates = false,
             },
             CreateStore().Load());
     }
@@ -236,7 +243,9 @@ public sealed class JsonPreferenceStoreTests : IDisposable
             store.SaveZombieBuddyChannelAsync(GameRoot, ZombieBuddyChannel.Beta, TestContext.Current.CancellationToken),
             store.SaveZombieBuddyChannelAsync(OtherRoot, ZombieBuddyChannel.Stable, TestContext.Current.CancellationToken),
             store.SaveDefaultModCollectionAsync(GameRoot, "B42 pack", TestContext.Current.CancellationToken),
-            store.SaveDefaultModCollectionAsync(OtherRoot, "my collection", TestContext.Current.CancellationToken));
+            store.SaveDefaultModCollectionAsync(OtherRoot, "my collection", TestContext.Current.CancellationToken),
+            store.SaveUpdateSourceAsync(UpdateSource.GitHub, TestContext.Current.CancellationToken),
+            store.SaveAutoCheckUpdatesAsync(false, TestContext.Current.CancellationToken));
 
         Assert.Equal(
             new UserPreferences(AppLanguage.PortugueseBrazil, AppTheme.Dark, Placement)
@@ -245,6 +254,8 @@ public sealed class JsonPreferenceStoreTests : IDisposable
                 InstallOverrides = WithInstalls((GameRoot, Overrides), (OtherRoot, GameLaunchOverrides.Empty)).InstallOverrides,
                 ZombieBuddyChannels = WithChannels((GameRoot, ZombieBuddyChannel.Beta), (OtherRoot, ZombieBuddyChannel.Stable)).ZombieBuddyChannels,
                 DefaultModCollections = WithDefaultCollections((GameRoot, "B42 pack"), (OtherRoot, "my collection")).DefaultModCollections,
+                UpdateSource = UpdateSource.GitHub,
+                AutoCheckUpdates = false,
             },
             CreateStore().Load());
     }
@@ -261,6 +272,8 @@ public sealed class JsonPreferenceStoreTests : IDisposable
         await CreateStore().SaveInstallOverridesAsync(GameRoot, Overrides, TestContext.Current.CancellationToken);
         await CreateStore().SaveZombieBuddyChannelAsync(GameRoot, ZombieBuddyChannel.Beta, TestContext.Current.CancellationToken);
         await CreateStore().SaveDefaultModCollectionAsync(GameRoot, "B42 pack", TestContext.Current.CancellationToken);
+        await CreateStore().SaveUpdateSourceAsync(UpdateSource.Gitee, TestContext.Current.CancellationToken);
+        await CreateStore().SaveAutoCheckUpdatesAsync(false, TestContext.Current.CancellationToken);
 
         Assert.Equal(new UserPreferences(null, null, null), CreateStore().Load());
     }
@@ -511,5 +524,82 @@ public sealed class JsonPreferenceStoreTests : IDisposable
                 DefaultModCollections = WithDefaultCollections((GameRoot, "B42 pack"), (OtherRoot, "my collection")).DefaultModCollections,
             },
             CreateStore().Load());
+    }
+
+    public static TheoryData<UpdateSource> UpdateSources => [.. Enum.GetValues<UpdateSource>()];
+
+    [Theory]
+    [MemberData(nameof(UpdateSources))]
+    public async Task SaveUpdateSourceAsync_ThenLoad_RoundTrips(UpdateSource source)
+    {
+        await CreateStore().SaveUpdateSourceAsync(source, TestContext.Current.CancellationToken);
+
+        Assert.Equal(new UserPreferences(null, null, null) { UpdateSource = source }, CreateStore().Load());
+    }
+
+    [Theory]
+    [InlineData(UpdateSource.Auto, "auto")]
+    [InlineData(UpdateSource.GitHub, "github")]
+    [InlineData(UpdateSource.Gitee, "gitee")]
+    public async Task SaveUpdateSourceAsync_WritesStableName(UpdateSource source, string expected)
+    {
+        await CreateStore().SaveUpdateSourceAsync(source, TestContext.Current.CancellationToken);
+
+        Assert.Equal($$"""{"updateSource":"{{expected}}"}""", await File.ReadAllTextAsync(FilePath, TestContext.Current.CancellationToken));
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task SaveAutoCheckUpdatesAsync_ThenLoad_RoundTrips(bool enabled)
+    {
+        await CreateStore().SaveAutoCheckUpdatesAsync(enabled, TestContext.Current.CancellationToken);
+
+        Assert.Equal(new UserPreferences(null, null, null) { AutoCheckUpdates = enabled }, CreateStore().Load());
+    }
+
+    [Fact]
+    public async Task SaveAutoCheckUpdatesAsync_WritesBool()
+    {
+        await CreateStore().SaveAutoCheckUpdatesAsync(false, TestContext.Current.CancellationToken);
+
+        Assert.Equal("""{"autoCheckUpdates":false}""", await File.ReadAllTextAsync(FilePath, TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
+    public void Load_NoUpdateFields_LoadsNullForBoth()
+    {
+        WriteFile("""{"theme":"dark"}""");
+
+        var loaded = CreateStore().Load();
+
+        Assert.Null(loaded.UpdateSource);
+        Assert.Null(loaded.AutoCheckUpdates);
+    }
+
+    [Theory]
+    [InlineData("\"bitbucket\"")]
+    [InlineData("\"\"")]
+    [InlineData("1")]
+    [InlineData("null")]
+    [InlineData("[\"gitee\"]")]
+    public void Load_UnknownUpdateSource_KeepsOtherFieldsAndReturnsNoSource(string value)
+    {
+        WriteFile($$"""{"theme":"dark","updateSource":{{value}},"autoCheckUpdates":false}""");
+
+        Assert.Equal(new UserPreferences(null, AppTheme.Dark, null) { AutoCheckUpdates = false }, CreateStore().Load());
+    }
+
+    [Theory]
+    [InlineData("\"yes\"")]
+    [InlineData("\"false\"")]
+    [InlineData("0")]
+    [InlineData("null")]
+    [InlineData("{}")]
+    public void Load_NonBoolAutoCheckUpdates_KeepsOtherFieldsAndReturnsNoChoice(string value)
+    {
+        WriteFile($$"""{"theme":"dark","updateSource":"gitee","autoCheckUpdates":{{value}}}""");
+
+        Assert.Equal(new UserPreferences(null, AppTheme.Dark, null) { UpdateSource = UpdateSource.Gitee }, CreateStore().Load());
     }
 }

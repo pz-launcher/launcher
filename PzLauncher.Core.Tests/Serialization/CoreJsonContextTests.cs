@@ -7,6 +7,7 @@ using PzLauncher.Core.Mod;
 using PzLauncher.Core.Mod.Collections;
 using PzLauncher.Core.Mod.ZombieBuddy;
 using PzLauncher.Core.Serialization;
+using PzLauncher.Core.Update;
 
 namespace PzLauncher.Core.Tests.Serialization;
 
@@ -328,5 +329,74 @@ public class CoreJsonContextTests
         Assert.NotNull(copy);
         Assert.Equal("pack", copy.Name);
         Assert.Equal(["A"], copy.ModIds);
+    }
+    [Fact]
+    public void UpdateCheck_RoundTrips_WithVersionStringsAndStringEnums()
+    {
+        var original = new UpdateCheck(
+            new SemVersion(0, 2, 0, ""),
+            new ReleaseInfo(
+                new SemVersion(0, 3, 0, ""),
+                UpdateSource.Gitee,
+                "PzLauncher-0.3.0-win-x64.zip",
+                new Uri("https://gitee.com/dontcampy/pzl/releases/download/v0.3.0/PzLauncher-0.3.0-win-x64.zip"),
+                Size: null,
+                Sha256: null,
+                new Uri("https://gitee.com/dontcampy/pzl/releases/tag/v0.3.0")));
+
+        var json = JsonSerializer.Serialize(original, CoreJsonContext.Default.UpdateCheck);
+
+        Assert.Contains("\"current\":\"0.2.0\"", json, StringComparison.Ordinal);
+        Assert.Contains("\"source\":\"Gitee\"", json, StringComparison.Ordinal);
+        Assert.Equal(original, JsonSerializer.Deserialize(json, CoreJsonContext.Default.UpdateCheck));
+    }
+
+    [Fact]
+    public void UpdateCheck_UpToDate_RoundTrips() =>
+        Assert.Equal(
+            new UpdateCheck(new SemVersion(1, 0, 0, "rc.1"), null),
+            JsonSerializer.Deserialize(
+                JsonSerializer.Serialize(new UpdateCheck(new SemVersion(1, 0, 0, "rc.1"), null), CoreJsonContext.Default.UpdateCheck),
+                CoreJsonContext.Default.UpdateCheck));
+
+    [Theory]
+    [InlineData("""{"current":null,"available":null}""")]
+    [InlineData("""{"available":null}""")]
+    [InlineData("""{"current":"0.2.0","available":{"version":"0.3.0","source":"GitHub","packageName":null,"packageUrl":"https://x.test/p","size":null,"sha256":null,"releasePageUrl":"https://x.test/"}}""")]
+    public void UpdateCheck_NonNullMemberNullOrMissingInJson_Throws(string json) =>
+        Assert.Throws<JsonException>(() => JsonSerializer.Deserialize(json, CoreJsonContext.Default.UpdateCheck));
+
+    [Fact]
+    public void StagedUpdate_RoundTrips()
+    {
+        var original = new StagedUpdate(new SemVersion(0, 3, 0, ""), "/opt/pzlauncher/.update/staged/0.3.0", new Uri("https://github.com/pz-launcher/launcher/releases/tag/v0.3.0"));
+
+        var json = JsonSerializer.Serialize(original, CoreJsonContext.Default.StagedUpdate);
+
+        Assert.Contains("\"version\":\"0.3.0\"", json, StringComparison.Ordinal);
+        Assert.Equal(original, JsonSerializer.Deserialize(json, CoreJsonContext.Default.StagedUpdate));
+    }
+
+    [Fact]
+    public void DownloadProgress_RoundTrips()
+    {
+        var original = new DownloadProgress(1024, null);
+
+        var json = JsonSerializer.Serialize(original, CoreJsonContext.Default.DownloadProgress);
+
+        Assert.Equal("""{"received":1024,"total":null}""", json);
+        Assert.Equal(original, JsonSerializer.Deserialize(json, CoreJsonContext.Default.DownloadProgress));
+    }
+
+    [Fact]
+    public void UpdateSource_EveryValue_RoundTripsAsItsName()
+    {
+        foreach (var value in Enum.GetValues<UpdateSource>())
+        {
+            var json = JsonSerializer.Serialize(value, CoreJsonContext.Default.UpdateSource);
+
+            Assert.Equal($"\"{value}\"", json);
+            Assert.Equal(value, JsonSerializer.Deserialize(json, CoreJsonContext.Default.UpdateSource));
+        }
     }
 }

@@ -24,6 +24,8 @@
             <SolidColorBrush x:Key="Shell.Border" Color="#CFC6BA" />
             <SolidColorBrush x:Key="Shell.ErrorForeground" Color="#B3261E" />
             <SolidColorBrush x:Key="Shell.WarningForeground" Color="#8A5300" />
+            <SolidColorBrush x:Key="Shell.BannerBackground" Color="#F3E4E0" />
+            <SolidColorBrush x:Key="Shell.BannerIcon" Color="#9B2226" />
             <BoxShadows x:Key="Shell.LiftedShadow">0 4 14 0 #38000000</BoxShadows>
         </ResourceDictionary>
         <ResourceDictionary x:Key="Dark">
@@ -48,6 +50,9 @@
             <SolidColorBrush x:Key="Shell.Border" Color="#4A443D" />
             <SolidColorBrush x:Key="Shell.ErrorForeground" Color="#F28B82" />
             <SolidColorBrush x:Key="Shell.WarningForeground" Color="#E0B060" />
+            <SolidColorBrush x:Key="Shell.BannerBackground" Color="#3A2624" />
+            <!-- Lighter than Accent, as for the selected sidebar item. -->
+            <SolidColorBrush x:Key="Shell.BannerIcon" Color="#E3817A" />
             <BoxShadows x:Key="Shell.LiftedShadow">0 4 16 0 #8C000000</BoxShadows>
         </ResourceDictionary>
     </ResourceDictionary.ThemeDictionaries>

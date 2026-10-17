@@ -7,6 +7,7 @@ using PzLauncher.Desktop.ViewModels.Installs;
 using PzLauncher.Desktop.ViewModels.Mods;
 using PzLauncher.Desktop.ViewModels.Settings;
 using PzLauncher.Desktop.ViewModels.LaunchSettings;
+using PzLauncher.Desktop.ViewModels.Update;
 using static PzLauncher.Desktop.Tests.TestSupport.TestInstalls;
 
 namespace PzLauncher.Desktop.Tests.ViewModels;
@@ -31,15 +32,18 @@ public class MainViewModelTests : UiTextCultureTest
         var defaults = new FakeModCollectionDefaultsService();
         var applier = new ModCollectionApplier(collections, dialogs);
         var orderWriter = new ModCollectionOrderWriter(collections, runState, new FakePlatformEnvironment(), new ManualTimeProvider());
+        var updates = TestUpdates.Coordinator(new FakeUpdateService(), store, runState: runState);
         return new(
             new HomeViewModel(installs, launcher, overrides, dialogs, zombieBuddy, channels, new FakeZabricService(), collections, defaults, applier, orderWriter, runState),
             installs,
             new ModsViewModel(
                 installs, collections, overrides, defaults, applier, dialogs, new FakeClipboardService(), runState, orderWriter, Localization),
-            new SettingsViewModel(new FakeThemeService(AppTheme.Light), store, new FakeWindowPlacementService(), java),
+            new SettingsViewModel(
+                new FakeThemeService(AppTheme.Light), store, new FakeWindowPlacementService(), java, new UpdateSettingsViewModel(updates, Localization)),
             new LaunchSettingsViewModel(
                 installs, launcher, overrides, java, zombieBuddy, channels, runState, dialogs, new FakePlatformEnvironment(), Localization),
-            new LanguageMenuViewModel(Localization, store));
+            new LanguageMenuViewModel(Localization, store),
+            new UpdateBannerViewModel(updates, runState, new FakeUrlLauncher(), Localization));
     }
 
     private async Task<MainViewModel> CreateScannedViewModelAsync()

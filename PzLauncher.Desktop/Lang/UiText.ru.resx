@@ -254,6 +254,27 @@
   <data name="Error_ModCollectionFileWriteFailed" xml:space="preserve">
     <value>Не удалось сохранить файл списка модов {0}. Если игра запущена, закройте её и попробуйте снова.</value>
   </data>
+  <data name="Error_UpdateNetworkFailed" xml:space="preserve">
+    <value>Не удалось подключиться к серверу обновлений ({0}). Проверьте подключение к интернету или выберите другой источник обновлений и попробуйте снова.</value>
+  </data>
+  <data name="Error_UpdateReleaseInfoInvalid" xml:space="preserve">
+    <value>Сервер обновлений ({0}) прислал сведения о версии, которые лаунчер не может прочитать. Попробуйте позже или выберите другой источник обновлений.</value>
+  </data>
+  <data name="Error_UpdatePackageInvalid" xml:space="preserve">
+    <value>Загруженное обновление {0} повреждено или неполное, поэтому оно удалено. Попробуйте позже.</value>
+  </data>
+  <data name="Error_UpdateInstallFolderNotWritable" xml:space="preserve">
+    <value>Лаунчер не может записывать в свою папку {0}, поэтому не может обновиться сам. Скачайте новую версию со страницы выпуска.</value>
+  </data>
+  <data name="Error_UpdateInstallFailed" xml:space="preserve">
+    <value>Не удалось установить обновление в {0}, поэтому оставлена текущая версия. Закройте программы, использующие файлы лаунчера, и попробуйте снова.</value>
+  </data>
+  <data name="Error_UpdateDevelopmentBuild" xml:space="preserve">
+    <value>Обновления недоступны для сборок разработки.</value>
+  </data>
+  <data name="Error_UpdateRestartFailed" xml:space="preserve">
+    <value>Обновление установлено, но не удалось запустить {0}. Запустите PzLauncher снова вручную.</value>
+  </data>
   <data name="Error_FolderNotLocal" xml:space="preserve">
     <value>{0} — не папка на этом компьютере, поэтому лаунчер не может её открыть. Выберите локальную папку.</value>
   </data>
@@ -277,6 +298,24 @@
   </data>
   <data name="Settings_ResetWindowSize" xml:space="preserve">
     <value>Сбросить размер окна</value>
+  </data>
+  <data name="Settings_Updates" xml:space="preserve">
+    <value>Обновления</value>
+  </data>
+  <data name="Settings_UpdatesCurrentVersion" xml:space="preserve">
+    <value>Текущая версия: {0}</value>
+  </data>
+  <data name="Settings_UpdateSource" xml:space="preserve">
+    <value>Источник обновлений</value>
+  </data>
+  <data name="Settings_UpdateSourceHint" xml:space="preserve">
+    <value>«Автоматически» — используется тот из GitHub и Gitee, который ответит первым. В материковом Китае Gitee обычно быстрее.</value>
+  </data>
+  <data name="Settings_AutoCheckUpdates" xml:space="preserve">
+    <value>Проверять обновления при запуске PzLauncher</value>
+  </data>
+  <data name="Settings_CheckNow" xml:space="preserve">
+    <value>Проверить сейчас</value>
   </data>
   <data name="Settings_GameGroup" xml:space="preserve">
     <value>Игра</value>
@@ -736,5 +775,56 @@
   </data>
   <data name="ModApply_DropIncompatible" xml:space="preserve">
     <value>{0}: несовместим с {1}</value>
+  </data>
+  <data name="Update_BannerReady" xml:space="preserve">
+    <value>Версия {0} загружена.</value>
+  </data>
+  <data name="Update_BannerAvailable" xml:space="preserve">
+    <value>Доступна версия {0}.</value>
+  </data>
+  <data name="Update_Restart" xml:space="preserve">
+    <value>Перезапустить и обновить</value>
+  </data>
+  <data name="Update_RestartBlocked" xml:space="preserve">
+    <value>Сначала закройте игру: после перезапуска лаунчер перестанет её отслеживать. Если выбрать «Позже», обновление всё равно установится при закрытии PzLauncher.</value>
+  </data>
+  <data name="Update_Later" xml:space="preserve">
+    <value>Позже</value>
+  </data>
+  <data name="Update_OpenDownloadPage" xml:space="preserve">
+    <value>Открыть страницу загрузки</value>
+  </data>
+  <data name="Update_Dismiss" xml:space="preserve">
+    <value>Скрыть</value>
+  </data>
+  <data name="Update_StatusChecking" xml:space="preserve">
+    <value>Проверка обновлений…</value>
+  </data>
+  <data name="Update_StatusUpToDate" xml:space="preserve">
+    <value>У вас последняя версия PzLauncher.</value>
+  </data>
+  <data name="Update_StatusDownloading" xml:space="preserve">
+    <value>Загрузка версии {0} с {1}…</value>
+  </data>
+  <data name="Update_StatusDownloadingPercent" xml:space="preserve">
+    <value>Загрузка версии {0} с {1}… {2}%</value>
+  </data>
+  <data name="Update_StatusReady" xml:space="preserve">
+    <value>Версия {0} загружена. Она установится при перезапуске или закрытии PzLauncher.</value>
+  </data>
+  <data name="Update_StatusAvailable" xml:space="preserve">
+    <value>Доступна версия {0}. Лаунчер не может записывать в свою папку, поэтому скачайте её со страницы выпуска.</value>
+  </data>
+  <data name="Update_StatusInstalled" xml:space="preserve">
+    <value>Версия {0} установлена. Запустите PzLauncher снова, чтобы начать её использовать.</value>
+  </data>
+  <data name="UpdateSource_Auto" xml:space="preserve">
+    <value>Автоматически</value>
+  </data>
+  <data name="UpdateSource_GitHub" xml:space="preserve">
+    <value>GitHub</value>
+  </data>
+  <data name="UpdateSource_Gitee" xml:space="preserve">
+    <value>Gitee</value>
   </data>
 </root>

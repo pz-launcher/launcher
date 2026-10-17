@@ -6,6 +6,7 @@ using PzLauncher.Core.Launch;
 using PzLauncher.Core.Mod;
 using PzLauncher.Core.Mod.Collections;
 using PzLauncher.Core.Mod.ZombieBuddy;
+using PzLauncher.Core.Update;
 
 namespace PzLauncher.Core.Serialization;
 
@@ -40,4 +41,10 @@ namespace PzLauncher.Core.Serialization;
 [JsonSerializable(typeof(ApplyModCollectionResult))]
 [JsonSerializable(typeof(ModConflict))]
 [JsonSerializable(typeof(SharedModCollection))]
+[JsonSerializable(typeof(SemVersion))]
+[JsonSerializable(typeof(UpdateSource))]
+[JsonSerializable(typeof(ReleaseInfo))]
+[JsonSerializable(typeof(UpdateCheck))]
+[JsonSerializable(typeof(StagedUpdate))]
+[JsonSerializable(typeof(DownloadProgress))]
 public sealed partial class CoreJsonContext : JsonSerializerContext;

@@ -5,6 +5,7 @@ using PzLauncher.Desktop.ViewModels.Installs;
 using PzLauncher.Desktop.ViewModels.Mods;
 using PzLauncher.Desktop.ViewModels.Settings;
 using PzLauncher.Desktop.ViewModels.LaunchSettings;
+using PzLauncher.Desktop.ViewModels.Update;
 
 namespace PzLauncher.Desktop.ViewModels;
 
@@ -19,7 +20,8 @@ public partial class MainViewModel : ViewModelBase
         ModsViewModel mods,
         SettingsViewModel settings,
         LaunchSettingsViewModel launchSettings,
-        LanguageMenuViewModel languageMenu)
+        LanguageMenuViewModel languageMenu,
+        UpdateBannerViewModel updateBanner)
     {
         Home = home;
         Installs = installs;
@@ -27,6 +29,7 @@ public partial class MainViewModel : ViewModelBase
         Settings = settings;
         LaunchSettings = launchSettings;
         LanguageMenu = languageMenu;
+        UpdateBanner = updateBanner;
 
         // Never unsubscribed: these view models are app-lifetime singletons.
         home.ChooseInstallRequested += (_, _) => CurrentPageKind = ShellPage.Installs;
@@ -48,6 +51,8 @@ public partial class MainViewModel : ViewModelBase
     public LaunchSettingsViewModel LaunchSettings { get; }
 
     public LanguageMenuViewModel LanguageMenu { get; }
+
+    public UpdateBannerViewModel UpdateBanner { get; }
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CurrentPage), nameof(CurrentTab))]

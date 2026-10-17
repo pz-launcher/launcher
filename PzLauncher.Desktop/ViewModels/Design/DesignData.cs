@@ -12,6 +12,7 @@ using PzLauncher.Core.Mod.Collections;
 using PzLauncher.Core.Mod.Zabric;
 using PzLauncher.Core.Mod.ZombieBuddy;
 using PzLauncher.Core.Platform;
+using PzLauncher.Core.Update;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Services;
 using PzLauncher.Desktop.Themes;
@@ -21,6 +22,7 @@ using PzLauncher.Desktop.ViewModels.Java;
 using PzLauncher.Desktop.ViewModels.Mods;
 using PzLauncher.Desktop.ViewModels.Settings;
 using PzLauncher.Desktop.ViewModels.LaunchSettings;
+using PzLauncher.Desktop.ViewModels.Update;
 using PzLauncher.Desktop.ViewModels.ZombieBuddy;
 
 namespace PzLauncher.Desktop.ViewModels.Design;
@@ -79,13 +81,29 @@ public static class DesignData
 
     public static JavaRuntimesViewModel Java { get; } = CreateJava();
 
-    public static SettingsViewModel Settings { get; } = new(new LightThemeService(), Preferences, new NoWindowPlacement(), Java);
+    private static readonly UpdateCoordinator Updates = CreateUpdates();
+
+    public static UpdateSettingsViewModel UpdateSettings { get; } = new(Updates, Localization);
+
+    public static UpdateBannerViewModel UpdateBanner { get; } = new(Updates, RunState, new NoUrlLauncher(), Localization);
+
+    public static SettingsViewModel Settings { get; } = new(new LightThemeService(), Preferences, new NoWindowPlacement(), Java, UpdateSettings);
 
     public static LaunchSettingsViewModel LaunchSettings { get; } = CreateLaunchSettings();
 
     public static ZombieBuddySetupViewModel ZombieBuddySetup { get; } = CreateZombieBuddySetup();
 
-    public static MainViewModel Main { get; } = new(Home, Installs, Mods, Settings, LaunchSettings, new LanguageMenuViewModel(Localization, Preferences));
+    public static MainViewModel Main { get; } =
+        new(Home, Installs, Mods, Settings, LaunchSettings, new LanguageMenuViewModel(Localization, Preferences), UpdateBanner);
+
+    private static UpdateCoordinator CreateUpdates()
+    {
+        var coordinator = new UpdateCoordinator(new SampleUpdates(), Preferences, new UserPreferences(null, null, null), RunState, new NoAppLifetime());
+
+        // Completes synchronously: the sample has a staged package, so the banner and the Ready status show.
+        _ = coordinator.StartAsync();
+        return coordinator;
+    }
 
     private static string SampleAppPath(string installDir) =>
         Path.Combine(SampleSteamRoot, "steamapps", "common", installDir);
@@ -355,6 +373,51 @@ public static class DesignData
         public Task SaveZombieBuddyChannelAsync(string installRoot, ZombieBuddyChannel channel, CancellationToken ct = default) => Task.CompletedTask;
 
         public Task SaveDefaultModCollectionAsync(string installRoot, string? name, CancellationToken ct = default) => Task.CompletedTask;
+
+        public Task SaveUpdateSourceAsync(UpdateSource source, CancellationToken ct = default) => Task.CompletedTask;
+
+        public Task SaveAutoCheckUpdatesAsync(bool enabled, CancellationToken ct = default) => Task.CompletedTask;
+    }
+
+    private sealed class SampleUpdates : IUpdateService
+    {
+        private static readonly SemVersion Next = new(0, 3, 0, "");
+
+        private static readonly Uri ReleasePage = new("https://example.com/releases/v0.3.0");
+
+        public SemVersion CurrentVersion { get; } = new(0, 2, 0, "");
+
+        public bool IsDevelopmentBuild => false;
+
+        public bool CanInstallInPlace => true;
+
+        public Task<Result<UpdateCheck>> CheckAsync(UpdateSource source, CancellationToken ct = default) =>
+            Task.FromResult<Result<UpdateCheck>>(new UpdateCheck(CurrentVersion, null));
+
+        public Task<Result<StagedUpdate>> DownloadAsync(ReleaseInfo release, IProgress<DownloadProgress>? progress = null, CancellationToken ct = default) =>
+            Task.FromResult<Result<StagedUpdate>>(Staged);
+
+        public Task<StagedUpdate?> GetStagedAsync(CancellationToken ct = default) => Task.FromResult<StagedUpdate?>(Staged);
+
+        public Task<Result> InstallAsync(StagedUpdate staged, CancellationToken ct = default) => Task.FromResult(Result.Ok());
+
+        public Task<Result> StartInstalledAsync(CancellationToken ct = default) => Task.FromResult(Result.Ok());
+
+        public Task CleanUpLeftoversAsync(CancellationToken ct = default) => Task.CompletedTask;
+
+        private static StagedUpdate Staged => new(Next, Path.Combine(SampleHome, "PzLauncher", ".update", "staged", "0.3.0"), ReleasePage);
+    }
+
+    private sealed class NoUrlLauncher : IUrlLauncher
+    {
+        public Task<bool> OpenAsync(Uri url) => Task.FromResult(false);
+    }
+
+    private sealed class NoAppLifetime : IAppLifetime
+    {
+        public void Close()
+        {
+        }
     }
 
     private sealed class NoWindowPlacement : IWindowPlacementService

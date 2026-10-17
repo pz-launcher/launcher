@@ -1,6 +1,7 @@
 using System;
 using System.Globalization;
 using System.IO;
+using System.Reflection;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -20,6 +21,7 @@ using PzLauncher.Desktop.ViewModels.Java;
 using PzLauncher.Desktop.ViewModels.Mods;
 using PzLauncher.Desktop.ViewModels.Settings;
 using PzLauncher.Desktop.ViewModels.LaunchSettings;
+using PzLauncher.Desktop.ViewModels.Update;
 using PzLauncher.Desktop.Views;
 
 namespace PzLauncher.Desktop;
@@ -43,10 +45,12 @@ public partial class App : Application
             // Composition root: the only place that builds the container.
             var services = new ServiceCollection();
             services.AddLogging(logging => logging.AddDebug());
-            services.AddPzLauncherCore();
+            services.AddPzLauncherCore(typeof(App).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion);
             services.AddSingleton<IFolderPicker>(new AvaloniaFolderPicker(() => desktop.MainWindow));
             services.AddSingleton<IDialogService>(new AvaloniaDialogService(() => desktop.MainWindow));
             services.AddSingleton<IClipboardService>(new AvaloniaClipboardService(() => desktop.MainWindow));
+            services.AddSingleton<IUrlLauncher>(new AvaloniaUrlLauncher(() => desktop.MainWindow));
+            services.AddSingleton<IAppLifetime>(new AvaloniaAppLifetime(() => desktop.MainWindow));
             WindowPlacementPersistence? windowPlacement = null;
             services.AddSingleton<IWindowPlacementService>(new WindowPlacementService(() => windowPlacement));
             services.AddSingleton<IPreferenceStore>(sp =>
@@ -58,6 +62,7 @@ public partial class App : Application
             services.AddSingleton<ModCollectionApplier>();
             services.AddSingleton<IModCollectionOrderWriter, ModCollectionOrderWriter>();
             services.AddSingleton<GameRunState>();
+            services.AddSingleton<UpdateCoordinator>();
             services.AddSingleton<ILocalizationService>(sp => new LocalizationService(
                 sp.GetRequiredService<UserPreferences>().Language ?? AppLanguages.FromCulture(CultureInfo.CurrentUICulture)));
             services.AddSingleton<IThemeService>(sp =>
@@ -68,6 +73,8 @@ public partial class App : Application
             services.AddSingleton<HomeViewModel>();
             services.AddSingleton<LaunchSettingsViewModel>();
             services.AddSingleton<ModsViewModel>();
+            services.AddSingleton<UpdateSettingsViewModel>();
+            services.AddSingleton<UpdateBannerViewModel>();
             services.AddSingleton<SettingsViewModel>();
             services.AddSingleton<LanguageMenuViewModel>();
             services.AddSingleton<MainViewModel>();
@@ -88,14 +95,20 @@ public partial class App : Application
             };
             var installOverrides = provider.GetRequiredService<IInstallOverridesService>();
             var orderWriter = provider.GetRequiredService<IModCollectionOrderWriter>();
+            var updates = provider.GetRequiredService<UpdateCoordinator>();
             windowPlacement = WindowPlacementPersistence.Attach(
                 mainWindow,
                 provider.GetRequiredService<IPreferenceStore>(),
                 provider.GetRequiredService<UserPreferences>().Window,
                 // A failed order write is already logged by Core; closing goes on without it.
                 ct => Task.WhenAll(installOverrides.FlushAsync(ct), orderWriter.FlushAsync(ct)),
+                // A staged update installs whether or not "Later" was clicked; a failure is logged and offered again next start.
+                updates.InstallPendingOnCloseAsync,
                 provider.GetRequiredService<ILogger<WindowPlacementPersistence>>());
             desktop.MainWindow = mainWindow;
+
+            // Once the window shows, so the check never delays the first frame; failures are only logged.
+            mainWindow.Opened += (_, _) => _ = updates.StartAsync();
             desktop.Exit += (_, _) => provider.Dispose();
         }
 

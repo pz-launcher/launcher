@@ -1,0 +1,48 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:PzLauncher.Desktop.ViewModels.Update"
+             xmlns:update="using:PzLauncher.Core.Update"
+             xmlns:design="using:PzLauncher.Desktop.ViewModels.Design"
+             xmlns:controls="using:PzLauncher.Desktop.Views.Controls"
+             xmlns:lang="using:PzLauncher.Desktop.Lang"
+             mc:Ignorable="d" d:DesignWidth="700" d:DesignHeight="560"
+             x:Class="PzLauncher.Desktop.Views.Settings.UpdateSettingsView"
+             x:DataType="vm:UpdateSettingsViewModel">
+
+    <Design.DataContext>
+        <x:Static Member="design:DesignData.UpdateSettings" />
+    </Design.DataContext>
+
+    <UserControl.Styles>
+        <Style Selector="TextBlock.error">
+            <Setter Property="Foreground" Value="{DynamicResource Shell.ErrorForeground}" />
+        </Style>
+    </UserControl.Styles>
+
+    <StackPanel Margin="24,16" Spacing="12">
+        <TextBlock Text="{x:Static lang:UiText.Settings_Updates}" FontSize="22" FontWeight="SemiBold" />
+        <TextBlock Text="{Binding CurrentVersionText}" />
+
+        <TextBlock Text="{x:Static lang:UiText.Settings_UpdateSource}" FontSize="16" FontWeight="SemiBold" />
+        <StackPanel Orientation="Horizontal" Spacing="24">
+            <RadioButton Content="{x:Static lang:UiText.UpdateSource_Auto}"
+                         IsChecked="{Binding Source, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static update:UpdateSource.Auto}}" />
+            <RadioButton Content="{x:Static lang:UiText.UpdateSource_GitHub}"
+                         IsChecked="{Binding Source, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static update:UpdateSource.GitHub}}" />
+            <RadioButton Content="{x:Static lang:UiText.UpdateSource_Gitee}"
+                         IsChecked="{Binding Source, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static update:UpdateSource.Gitee}}" />
+        </StackPanel>
+        <TextBlock Text="{x:Static lang:UiText.Settings_UpdateSourceHint}" Foreground="{DynamicResource Shell.TextMuted}" TextWrapping="Wrap" />
+
+        <ToggleSwitch Content="{x:Static lang:UiText.Settings_AutoCheckUpdates}" OnContent="{x:Null}" OffContent="{x:Null}"
+                      IsChecked="{Binding AutoCheck}" />
+
+        <Button Content="{x:Static lang:UiText.Settings_CheckNow}" Command="{Binding CheckNowCommand}" />
+        <ProgressBar Minimum="0" Maximum="100" Width="480" HorizontalAlignment="Left"
+                     IsIndeterminate="{Binding IsProgressIndeterminate}" Value="{Binding ProgressPercent}" IsVisible="{Binding IsBusy}" />
+        <TextBlock Text="{Binding StatusText}" TextWrapping="Wrap" Classes.error="{Binding IsStatusError}"
+                   IsVisible="{Binding StatusText, Converter={x:Static ObjectConverters.IsNotNull}}" />
+    </StackPanel>
+</UserControl>

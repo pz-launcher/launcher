@@ -8,6 +8,7 @@ using PzLauncher.Core.Common;
 using PzLauncher.Core.Mod.ZombieBuddy;
 using PzLauncher.Desktop.Lang;
 using PzLauncher.Desktop.Localization;
+using PzLauncher.Desktop.Services;
 
 namespace PzLauncher.Desktop.ViewModels.ZombieBuddy;
 
@@ -108,7 +109,7 @@ public sealed partial class ZombieBuddySetupViewModel(
 
         // Reports posted before the result arrives are applied before it; anything later is ignored.
         var finished = false;
-        var progress = new ContextProgress(report =>
+        var progress = new ContextProgress<ZombieBuddyProgress>(report =>
         {
             if (!finished)
             {
@@ -180,24 +181,5 @@ public sealed partial class ZombieBuddySetupViewModel(
         }
 
         Progress = Steps.Count == 0 ? 0 : Math.Min(1, (double)report.Current / Steps.Count);
-    }
-
-    // Unlike Progress<T>, reports made on the creating context run inline, and without a context they never go to the thread
-    // pool, so they apply in order and before the result.
-    private sealed class ContextProgress(Action<ZombieBuddyProgress> report) : IProgress<ZombieBuddyProgress>
-    {
-        private readonly SynchronizationContext? _context = SynchronizationContext.Current;
-
-        public void Report(ZombieBuddyProgress value)
-        {
-            if (_context is null || SynchronizationContext.Current == _context)
-            {
-                report(value);
-            }
-            else
-            {
-                _context.Post(_ => report(value), null);
-            }
-        }
     }
 }
