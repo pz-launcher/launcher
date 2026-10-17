@@ -37,7 +37,7 @@ Reference: `PzLauncher.Desktop/Views/Home/HomeView.axaml` (content sidebar), `Pz
 
 Reference: `PzLauncher.Desktop/Themes/ShellTheme.axaml`, `PzLauncher.Desktop/App.axaml`.
 
-- Shell colors are `Shell.*` brushes with a `Light` and a `Dark` value each. Views use `{DynamicResource}`; no color literals in views.
+- Shell colors are `Shell.*` brushes with a `Light` and a `Dark` value each (shadows: `Shell.*` `BoxShadows`, e.g. `Shell.LiftedShadow`). Views use `{DynamicResource}`; no color literals in views.
 - The Fluent accent in `App.axaml` equals `Shell.Accent`.
 - ViewModels change the theme only through `IThemeService`.
 
@@ -49,3 +49,4 @@ Reference: `PzLauncher.Desktop/Themes/ShellStyles.axaml` (timing resources, cont
 - Pages switch through the `TransitioningContentControl` in `MainView` with `FadeRiseTransition`. The first content after `MainView` loads (launch, language rebuild) is not animated.
 - Shell control themes animate brushes with `PremultipliedBrushTransition`, never `BrushTransition`: the built-in one blends straight alpha, so a fade from `Transparent` (`#00FFFFFF`) flashes light in dark theme.
 - In-page `IsVisible` toggles are not animated.
+- A drag reorder lifts a copy of the row into an overlay and slides the other rows with render-transform transitions; the list itself changes once, after the drop settles. Reference: `PzLauncher.Desktop/Views/Mods/ModCollectionsView.axaml.cs`, geometry in `ListReorderLayout.cs`.

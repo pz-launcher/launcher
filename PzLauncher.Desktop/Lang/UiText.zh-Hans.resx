@@ -635,6 +635,12 @@
   <data name="ModCollections_MoveDown" xml:space="preserve">
     <value>下移</value>
   </data>
+  <data name="ModCollections_MoveToTop" xml:space="preserve">
+    <value>置顶</value>
+  </data>
+  <data name="ModCollections_MoveToBottom" xml:space="preserve">
+    <value>置底</value>
+  </data>
   <data name="ModCollections_RemoveMod" xml:space="preserve">
     <value>从合集中移除</value>
   </data>

@@ -59,7 +59,10 @@ Collections are those of the install selected in the launcher (game installs onl
 - **R3 Edit (D4)** — create (empty), create from the current `default.txt` list, rename, delete, remove mods, add
   installed mods found by name/id search. Names follow the game's rules (non-empty, no `:`, no invalid filename
   characters); a name clash asks before overwriting.
-- **R4 Order (D3)** — drag reorder inside a collection, and an auto sort that matches the game's algorithm. The order is
+- **R4 Order (D3)** — drag reorder inside a collection, and an auto sort that matches the game's algorithm. The drag
+  feels like lifting the row out (D10): the dragged row floats above the list and follows the pointer, a gap shows
+  where it will land, the other rows slide aside, and it settles into the gap on release. Each row also has move up /
+  move down and move to top / move to bottom. The order is
   written to the cfg line and the share text, and remembered by the launcher so that an in-game rewrite of the cfg
   restores the launcher order for ids still present (new ids keep their cfg order, at the end).
 - **R5 Share / import** — share copies the game's exact share text to the clipboard. Import accepts pasted text of one
@@ -142,6 +145,8 @@ Collections are those of the install selected in the launcher (game installs onl
   backup (user, 2026-10-17).
 - D9: dropped (missing) and skipped (incompatible) mods are announced in one dialog before every apply, launch
   included, with the choice to cancel (user, 2026-10-17).
+- D10: drag reorder lifts the row out (floating row, landing gap, rows slide aside), plus move to top / bottom
+  buttons (user, 2026-10-17).
 - D7: navigation is a "模组" tab with "模组管理" and "合集管理" sections (user, 2026-10-17).
 - D8: 模组管理 is a read-only browser of installed mods plus "添加到合集"; the enabled list changes only through
   collections, so it never fights the default collection (user, 2026-10-17).

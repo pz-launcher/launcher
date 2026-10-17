@@ -635,6 +635,12 @@
   <data name="ModCollections_MoveDown" xml:space="preserve">
     <value>Move down</value>
   </data>
+  <data name="ModCollections_MoveToTop" xml:space="preserve">
+    <value>Move to top</value>
+  </data>
+  <data name="ModCollections_MoveToBottom" xml:space="preserve">
+    <value>Move to bottom</value>
+  </data>
   <data name="ModCollections_RemoveMod" xml:space="preserve">
     <value>Remove from collection</value>
   </data>

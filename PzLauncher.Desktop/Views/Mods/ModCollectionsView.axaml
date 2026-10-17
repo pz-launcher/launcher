@@ -31,7 +31,62 @@
             <Setter Property="Cursor" Value="SizeNorthSouth" />
             <Setter Property="Padding" Value="4,0" />
         </Style>
+        <Style Selector="Border.dragHandle:disabled">
+            <Setter Property="Cursor" Value="Arrow" />
+            <Setter Property="Opacity" Value="0.4" />
+        </Style>
+        <Style Selector="ContentControl.lifted Border.entryRow">
+            <Setter Property="Background" Value="{DynamicResource Shell.ListRowHoverBackground}" />
+            <Setter Property="BoxShadow" Value="{DynamicResource Shell.LiftedShadow}" />
+        </Style>
     </UserControl.Styles>
+
+    <UserControl.Resources>
+        <!-- Shared by the list and the lifted copy of a dragged row, so commands bind through the view, not the ItemsControl. -->
+        <DataTemplate x:Key="EntryRowTemplate" x:DataType="vm:ModCollectionEntryRow">
+            <Border Classes="entryRow" Padding="4,4,8,4" Margin="0,0,0,4" CornerRadius="4" BorderThickness="1" BorderBrush="{DynamicResource Shell.Border}">
+                <Grid ColumnDefinitions="Auto,40,*,Auto,Auto">
+                    <Border Grid.Column="0" Classes="dragHandle" ToolTip.Tip="{x:Static lang:UiText.ModCollections_DragHint}"
+                            IsEnabled="{Binding $parent[UserControl].((vm:ModCollectionsViewModel)DataContext).CanReorder}">
+                        <ic:FluentIcon Icon="ReOrderDotsVertical" IconVariant="Regular" FontSize="16" VerticalAlignment="Center"
+                                       Foreground="{DynamicResource Shell.TextMuted}" />
+                    </Border>
+                    <TextBlock Grid.Column="1" Text="{Binding Number}" Foreground="{DynamicResource Shell.TextMuted}"
+                               VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,0,10,0" />
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                        <TextBlock Text="{Binding Id}" Foreground="{DynamicResource Shell.TextMuted}" IsVisible="{Binding !IsMissing}"
+                                   TextTrimming="CharacterEllipsis" />
+                    </StackPanel>
+                    <Border Grid.Column="3" Classes="badge" IsVisible="{Binding IsMissing}" Margin="8,0">
+                        <TextBlock Text="{x:Static lang:UiText.ModCollections_Missing}" Foreground="{DynamicResource Shell.WarningForeground}" />
+                    </Border>
+                    <StackPanel Grid.Column="4" Orientation="Horizontal" Spacing="4">
+                        <Button Command="{Binding $parent[UserControl].((vm:ModCollectionsViewModel)DataContext).MoveToTopCommand}" CommandParameter="{Binding}"
+                                ToolTip.Tip="{x:Static lang:UiText.ModCollections_MoveToTop}" AutomationProperties.Name="{x:Static lang:UiText.ModCollections_MoveToTop}">
+                            <ic:FluentIcon Icon="ChevronDoubleUp" IconVariant="Regular" FontSize="14" />
+                        </Button>
+                        <Button Command="{Binding $parent[UserControl].((vm:ModCollectionsViewModel)DataContext).MoveUpCommand}" CommandParameter="{Binding}"
+                                ToolTip.Tip="{x:Static lang:UiText.ModCollections_MoveUp}" AutomationProperties.Name="{x:Static lang:UiText.ModCollections_MoveUp}">
+                            <ic:FluentIcon Icon="ArrowUp" IconVariant="Regular" FontSize="14" />
+                        </Button>
+                        <Button Command="{Binding $parent[UserControl].((vm:ModCollectionsViewModel)DataContext).MoveDownCommand}" CommandParameter="{Binding}"
+                                ToolTip.Tip="{x:Static lang:UiText.ModCollections_MoveDown}" AutomationProperties.Name="{x:Static lang:UiText.ModCollections_MoveDown}">
+                            <ic:FluentIcon Icon="ArrowDown" IconVariant="Regular" FontSize="14" />
+                        </Button>
+                        <Button Command="{Binding $parent[UserControl].((vm:ModCollectionsViewModel)DataContext).MoveToBottomCommand}" CommandParameter="{Binding}"
+                                ToolTip.Tip="{x:Static lang:UiText.ModCollections_MoveToBottom}" AutomationProperties.Name="{x:Static lang:UiText.ModCollections_MoveToBottom}">
+                            <ic:FluentIcon Icon="ChevronDoubleDown" IconVariant="Regular" FontSize="14" />
+                        </Button>
+                        <Button Command="{Binding $parent[UserControl].((vm:ModCollectionsViewModel)DataContext).RemoveModCommand}" CommandParameter="{Binding}"
+                                ToolTip.Tip="{x:Static lang:UiText.ModCollections_RemoveMod}" AutomationProperties.Name="{x:Static lang:UiText.ModCollections_RemoveMod}">
+                            <ic:FluentIcon Icon="Dismiss" IconVariant="Regular" FontSize="14" />
+                        </Button>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </DataTemplate>
+    </UserControl.Resources>
 
     <Grid ColumnDefinitions="280,16,*">
         <!-- Collections of the cache folder. -->
@@ -176,47 +231,15 @@
                     </ScrollViewer>
                 </StackPanel>
 
-                <!-- Drag a row by its handle (handled in code-behind) or use the arrow buttons; the order is the load order. -->
-                <ScrollViewer>
-                    <ItemsControl x:Name="EntriesList" ItemsSource="{Binding Entries}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate x:DataType="vm:ModCollectionEntryRow">
-                                <Border Padding="4,4,8,4" Margin="0,0,0,4" CornerRadius="4" BorderThickness="1" BorderBrush="{DynamicResource Shell.Border}">
-                                    <Grid ColumnDefinitions="Auto,40,*,Auto,Auto">
-                                        <Border Grid.Column="0" Classes="dragHandle" ToolTip.Tip="{x:Static lang:UiText.ModCollections_DragHint}">
-                                            <ic:FluentIcon Icon="ReOrderDotsVertical" IconVariant="Regular" FontSize="16" VerticalAlignment="Center"
-                                                           Foreground="{DynamicResource Shell.TextMuted}" />
-                                        </Border>
-                                        <TextBlock Grid.Column="1" Text="{Binding Number}" Foreground="{DynamicResource Shell.TextMuted}"
-                                                   VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,0,10,0" />
-                                        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
-                                            <TextBlock Text="{Binding Id}" Foreground="{DynamicResource Shell.TextMuted}" IsVisible="{Binding !IsMissing}"
-                                                       TextTrimming="CharacterEllipsis" />
-                                        </StackPanel>
-                                        <Border Grid.Column="3" Classes="badge" IsVisible="{Binding IsMissing}" Margin="8,0">
-                                            <TextBlock Text="{x:Static lang:UiText.ModCollections_Missing}" Foreground="{DynamicResource Shell.WarningForeground}" />
-                                        </Border>
-                                        <StackPanel Grid.Column="4" Orientation="Horizontal" Spacing="4">
-                                            <Button Command="{Binding $parent[ItemsControl].((vm:ModCollectionsViewModel)DataContext).MoveUpCommand}" CommandParameter="{Binding}"
-                                                    ToolTip.Tip="{x:Static lang:UiText.ModCollections_MoveUp}" AutomationProperties.Name="{x:Static lang:UiText.ModCollections_MoveUp}">
-                                                <ic:FluentIcon Icon="ArrowUp" IconVariant="Regular" FontSize="14" />
-                                            </Button>
-                                            <Button Command="{Binding $parent[ItemsControl].((vm:ModCollectionsViewModel)DataContext).MoveDownCommand}" CommandParameter="{Binding}"
-                                                    ToolTip.Tip="{x:Static lang:UiText.ModCollections_MoveDown}" AutomationProperties.Name="{x:Static lang:UiText.ModCollections_MoveDown}">
-                                                <ic:FluentIcon Icon="ArrowDown" IconVariant="Regular" FontSize="14" />
-                                            </Button>
-                                            <Button Command="{Binding $parent[ItemsControl].((vm:ModCollectionsViewModel)DataContext).RemoveModCommand}" CommandParameter="{Binding}"
-                                                    ToolTip.Tip="{x:Static lang:UiText.ModCollections_RemoveMod}" AutomationProperties.Name="{x:Static lang:UiText.ModCollections_RemoveMod}">
-                                                <ic:FluentIcon Icon="Dismiss" IconVariant="Regular" FontSize="14" />
-                                            </Button>
-                                        </StackPanel>
-                                    </Grid>
-                                </Border>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </ScrollViewer>
+                <!-- Drag a row by its handle (code-behind lifts it into DragLayer) or use the arrow buttons; the order is the load order. -->
+                <Panel>
+                    <ScrollViewer x:Name="EntriesScroller">
+                        <ItemsControl x:Name="EntriesList" ItemsSource="{Binding Entries}" ItemTemplate="{StaticResource EntryRowTemplate}" />
+                    </ScrollViewer>
+                    <Canvas x:Name="DragLayer" IsHitTestVisible="False">
+                        <ContentControl x:Name="DragFloat" Classes="lifted" IsVisible="False" ContentTemplate="{StaticResource EntryRowTemplate}" />
+                    </Canvas>
+                </Panel>
             </DockPanel>
         </Panel>
     </Grid>

@@ -635,6 +635,12 @@
   <data name="ModCollections_MoveDown" xml:space="preserve">
     <value>Ниже</value>
   </data>
+  <data name="ModCollections_MoveToTop" xml:space="preserve">
+    <value>В начало</value>
+  </data>
+  <data name="ModCollections_MoveToBottom" xml:space="preserve">
+    <value>В конец</value>
+  </data>
   <data name="ModCollections_RemoveMod" xml:space="preserve">
     <value>Убрать из сборки</value>
   </data>

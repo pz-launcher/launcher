@@ -311,13 +311,27 @@ public partial class ModCollectionsViewModel : ViewModelBase
     private Task RemoveModAsync(ModCollectionEntryRow entry) =>
         SaveIdsAsync([.. _ids.Where(id => id != entry.Id)]);
 
-    [RelayCommand(CanExecute = nameof(CanWrite))]
+    /// <summary>Rows may be dragged to a new place.</summary>
+    public bool CanReorder => _page.CanWrite;
+
+    // The parameter is null while a row's bindings are still being set up.
+    private bool CanMoveEarlier(ModCollectionEntryRow entry) => _page.CanWrite && entry is not null && entry.Number > 1;
+
+    private bool CanMoveLater(ModCollectionEntryRow entry) => _page.CanWrite && entry is not null && entry.Number < Entries.Count;
+
+    [RelayCommand(CanExecute = nameof(CanMoveEarlier))]
     private void MoveUp(ModCollectionEntryRow entry) => Move(Entries.IndexOf(entry), Entries.IndexOf(entry) - 1);
 
-    [RelayCommand(CanExecute = nameof(CanWrite))]
+    [RelayCommand(CanExecute = nameof(CanMoveLater))]
     private void MoveDown(ModCollectionEntryRow entry) => Move(Entries.IndexOf(entry), Entries.IndexOf(entry) + 1);
 
-    /// <summary>Moves one mod of the selected collection; the new order is written after a short pause, so a drag writes once.</summary>
+    [RelayCommand(CanExecute = nameof(CanMoveEarlier))]
+    private void MoveToTop(ModCollectionEntryRow entry) => Move(Entries.IndexOf(entry), 0);
+
+    [RelayCommand(CanExecute = nameof(CanMoveLater))]
+    private void MoveToBottom(ModCollectionEntryRow entry) => Move(Entries.IndexOf(entry), Entries.Count - 1);
+
+    /// <summary>Moves one mod of the selected collection; the new order is written after a short pause, so quick moves write once.</summary>
     public void Move(int from, int to)
     {
         if (!_page.CanEdit || Selected is not { } row || from == to || from < 0 || to < 0 || from >= _ids.Count || to >= _ids.Count)
@@ -334,6 +348,7 @@ public partial class ModCollectionsViewModel : ViewModelBase
             Entries[i].Number = i + 1;
         }
 
+        NotifyMoveCommands();
         _page.ScheduleOrderSave(row.Name, [.. _ids]);
     }
 
@@ -401,6 +416,7 @@ public partial class ModCollectionsViewModel : ViewModelBase
                 break;
             case nameof(ModsViewModel.CanWrite):
                 NotifyWriteCommands();
+                OnPropertyChanged(nameof(CanReorder));
                 break;
             case nameof(ModsViewModel.Install):
                 ShowStatus(null);
@@ -420,8 +436,15 @@ public partial class ModCollectionsViewModel : ViewModelBase
         AutoSortCommand.NotifyCanExecuteChanged();
         AddModCommand.NotifyCanExecuteChanged();
         RemoveModCommand.NotifyCanExecuteChanged();
+        NotifyMoveCommands();
+    }
+
+    private void NotifyMoveCommands()
+    {
         MoveUpCommand.NotifyCanExecuteChanged();
         MoveDownCommand.NotifyCanExecuteChanged();
+        MoveToTopCommand.NotifyCanExecuteChanged();
+        MoveToBottomCommand.NotifyCanExecuteChanged();
     }
 
     private void Rebuild(ModCollectionState? state)

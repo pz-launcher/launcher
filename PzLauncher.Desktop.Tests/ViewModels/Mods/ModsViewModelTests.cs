@@ -501,6 +501,60 @@ public class ModsViewModelTests : UiTextCultureTest
     }
 
     [Fact]
+    public async Task MoveToTopAndBottom_MoveToTheEnds_AndWriteOnce()
+    {
+        var vm = await CreateActivatedAsync();
+        var collections = vm.Collections;
+
+        collections.MoveToBottomCommand.Execute(collections.Entries[0]);
+        collections.MoveToTopCommand.Execute(collections.Entries[1]);
+
+        Assert.Equal(["Gone", "Core", "Maps"], collections.Entries.Select(entry => entry.Id));
+        Assert.Equal([1, 2, 3], collections.Entries.Select(entry => entry.Number));
+        Assert.Empty(_service.Saves);
+
+        _time.Advance(OrderSaveDelay);
+
+        var save = Assert.Single(_service.Saves);
+        Assert.Equal(["Gone", "Core", "Maps"], save.ModIds);
+    }
+
+    [Fact]
+    public async Task MoveCommands_AreDisabledAtTheEnds()
+    {
+        var vm = await CreateActivatedAsync();
+        var collections = vm.Collections;
+        var (first, middle, last) = (collections.Entries[0], collections.Entries[1], collections.Entries[2]);
+
+        Assert.False(collections.MoveToTopCommand.CanExecute(first));
+        Assert.False(collections.MoveUpCommand.CanExecute(first));
+        Assert.True(collections.MoveDownCommand.CanExecute(first));
+        Assert.True(collections.MoveToBottomCommand.CanExecute(first));
+        Assert.True(collections.MoveToTopCommand.CanExecute(middle));
+        Assert.True(collections.MoveToBottomCommand.CanExecute(middle));
+        Assert.True(collections.MoveToTopCommand.CanExecute(last));
+        Assert.False(collections.MoveDownCommand.CanExecute(last));
+        Assert.False(collections.MoveToBottomCommand.CanExecute(last));
+    }
+
+    [Fact]
+    public async Task MoveToTop_ReevaluatesWhichRowsAreAtTheEnds()
+    {
+        var vm = await CreateActivatedAsync();
+        var collections = vm.Collections;
+        var (first, last) = (collections.Entries[0], collections.Entries[2]);
+        var changes = 0;
+        collections.MoveToBottomCommand.CanExecuteChanged += (_, _) => changes++;
+
+        collections.MoveToTopCommand.Execute(last);
+
+        Assert.True(changes > 0);
+        Assert.False(collections.MoveToTopCommand.CanExecute(last));
+        Assert.True(collections.MoveToTopCommand.CanExecute(first));
+        Assert.False(collections.MoveToBottomCommand.CanExecute(collections.Entries[2]));
+    }
+
+    [Fact]
     public async Task AutoSort_SavesTheGamesOrder()
     {
         var vm = await CreateActivatedAsync();
@@ -597,6 +651,10 @@ public class ModsViewModelTests : UiTextCultureTest
         Assert.False(collections.AddModCommand.CanExecute(_service.InstalledMods[0]));
         Assert.False(collections.RemoveModCommand.CanExecute(collections.Entries[0]));
         Assert.False(collections.MoveUpCommand.CanExecute(collections.Entries[1]));
+        Assert.False(collections.MoveDownCommand.CanExecute(collections.Entries[1]));
+        Assert.False(collections.MoveToTopCommand.CanExecute(collections.Entries[1]));
+        Assert.False(collections.MoveToBottomCommand.CanExecute(collections.Entries[1]));
+        Assert.False(collections.CanReorder);
         Assert.True(collections.ShareCommand.CanExecute(null));
         Assert.True(collections.ToggleDefaultCommand.CanExecute(null));
 
