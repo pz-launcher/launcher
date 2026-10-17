@@ -22,6 +22,9 @@
   <data name="Shell_NavInstalls" xml:space="preserve">
     <value>安装</value>
   </data>
+  <data name="Shell_NavMods" xml:space="preserve">
+    <value>模组</value>
+  </data>
   <data name="Shell_NavSettings" xml:space="preserve">
     <value>设置</value>
   </data>
@@ -57,6 +60,12 @@
   </data>
   <data name="Home_LaunchSettings" xml:space="preserve">
     <value>启动设置</value>
+  </data>
+  <data name="Home_Collection" xml:space="preserve">
+    <value>合集</value>
+  </data>
+  <data name="Home_NoCollection" xml:space="preserve">
+    <value>不使用合集（保持游戏内设置）</value>
   </data>
   <data name="Installs_Title" xml:space="preserve">
     <value>已安装</value>
@@ -105,6 +114,9 @@
   </data>
   <data name="Dialog_Ok" xml:space="preserve">
     <value>确定</value>
+  </data>
+  <data name="Dialog_Cancel" xml:space="preserve">
+    <value>取消</value>
   </data>
   <data name="Error_ResultUninitialized" xml:space="preserve">
     <value>启动器内部出现错误。请将此问题作为 bug 报告。</value>
@@ -220,6 +232,27 @@
   </data>
   <data name="Error_ZombieBuddyPreloadConfigIoFailed" xml:space="preserve">
     <value>无法读取或写入 ZombieBuddy 配置 {0}（{1}），因此未将 {2} 加入其预加载列表。游戏将在不预加载的情况下启动。</value>
+  </data>
+  <data name="Error_ModCollectionCacheFolderUnresolved" xml:space="preserve">
+    <value>找不到 {0} 的游戏缓存文件夹。请检查“启动设置”中的 -cachedir= 游戏参数。</value>
+  </data>
+  <data name="Error_ModCollectionNameInvalid" xml:space="preserve">
+    <value>“{0}”不是有效的合集名称。名称不能为空，也不能包含 \ / : * ? " &lt; &gt; |。</value>
+  </data>
+  <data name="Error_ModCollectionModIdInvalid" xml:space="preserve">
+    <value>“{0}”不是有效的合集 mod id。</value>
+  </data>
+  <data name="Error_ModCollectionNotFound" xml:space="preserve">
+    <value>名为“{0}”的合集已不存在。请刷新列表后重试。</value>
+  </data>
+  <data name="Error_ModCollectionFileUnreadable" xml:space="preserve">
+    <value>无法读取模组列表文件 {0}。请确认它没有被其他程序打开，然后重试。</value>
+  </data>
+  <data name="Error_ModCollectionFileMalformed" xml:space="preserve">
+    <value>模组列表文件 {0} 的格式与游戏写入的不同，启动器未修改它。</value>
+  </data>
+  <data name="Error_ModCollectionFileWriteFailed" xml:space="preserve">
+    <value>无法保存模组列表文件 {0}。如果游戏正在运行，请先关闭游戏，然后重试。</value>
   </data>
   <data name="Error_FolderNotLocal" xml:space="preserve">
     <value>{0} 不是这台电脑上的文件夹，启动器无法打开它。请选择本地文件夹。</value>
@@ -460,5 +493,248 @@
   </data>
   <data name="ZombieBuddyStep_RemoveAgentArg" xml:space="preserve">
     <value>从 ProjectZomboid64.json 中移除 Java 代理</value>
+  </data>
+  <data name="Mods_SectionMods" xml:space="preserve">
+    <value>模组管理</value>
+  </data>
+  <data name="Mods_SectionCollections" xml:space="preserve">
+    <value>合集管理</value>
+  </data>
+  <data name="Mods_Refresh" xml:space="preserve">
+    <value>刷新</value>
+  </data>
+  <data name="Mods_GameRunning" xml:space="preserve">
+    <value>游戏正在运行。退出游戏前无法修改。</value>
+  </data>
+  <data name="Mods_NoGameInstall" xml:space="preserve">
+    <value>请先在“安装”页选择一个游戏安装，再管理它的模组。</value>
+  </data>
+  <data name="Mods_SearchPlaceholder" xml:space="preserve">
+    <value>按名称、ID 或创意工坊 ID 搜索</value>
+  </data>
+  <data name="Mods_FilterAll" xml:space="preserve">
+    <value>全部</value>
+  </data>
+  <data name="Mods_FilterEnabled" xml:space="preserve">
+    <value>已启用</value>
+  </data>
+  <data name="Mods_FilterNotEnabled" xml:space="preserve">
+    <value>未启用</value>
+  </data>
+  <data name="Mods_SelectedFormat" xml:space="preserve">
+    <value>已选 {0} 个</value>
+  </data>
+  <data name="Mods_AddToCollection" xml:space="preserve">
+    <value>添加到合集…</value>
+  </data>
+  <data name="Mods_ClearSelection" xml:space="preserve">
+    <value>取消选择</value>
+  </data>
+  <data name="Mods_ColumnName" xml:space="preserve">
+    <value>名称</value>
+  </data>
+  <data name="Mods_ColumnId" xml:space="preserve">
+    <value>ID</value>
+  </data>
+  <data name="Mods_ColumnWorkshopId" xml:space="preserve">
+    <value>创意工坊 ID</value>
+  </data>
+  <data name="Mods_ColumnSource" xml:space="preserve">
+    <value>来源</value>
+  </data>
+  <data name="Mods_ColumnEnabled" xml:space="preserve">
+    <value>启用</value>
+  </data>
+  <data name="Mods_ColumnCollections" xml:space="preserve">
+    <value>所在合集</value>
+  </data>
+  <data name="Mods_SortColumnTip" xml:space="preserve">
+    <value>按此列排序，再次点击反向</value>
+  </data>
+  <data name="Mods_Empty" xml:space="preserve">
+    <value>没有找到已安装的模组。</value>
+  </data>
+  <data name="Mods_FilterEmpty" xml:space="preserve">
+    <value>没有符合搜索或筛选条件的模组。</value>
+  </data>
+  <data name="Mods_Enabled" xml:space="preserve">
+    <value>已启用</value>
+  </data>
+  <data name="Mods_NameWithId" xml:space="preserve">
+    <value>{0}（{1}）</value>
+  </data>
+  <data name="ModSource_SteamWorkshop" xml:space="preserve">
+    <value>Steam 创意工坊</value>
+  </data>
+  <data name="ModSource_StagedWorkshop" xml:space="preserve">
+    <value>创意工坊上传（本地）</value>
+  </data>
+  <data name="ModSource_Local" xml:space="preserve">
+    <value>本地 mods 文件夹</value>
+  </data>
+  <data name="ModCollections_New" xml:space="preserve">
+    <value>新建</value>
+  </data>
+  <data name="ModCollections_NewFromEnabled" xml:space="preserve">
+    <value>从当前启用新建</value>
+  </data>
+  <data name="ModCollections_Import" xml:space="preserve">
+    <value>导入</value>
+  </data>
+  <data name="ModCollections_Empty" xml:space="preserve">
+    <value>还没有合集。新建一个，或导入从游戏复制的分享文本。</value>
+  </data>
+  <data name="ModCollections_CountFormat" xml:space="preserve">
+    <value>{0} 个模组</value>
+  </data>
+  <data name="ModCollections_MissingCountFormat" xml:space="preserve">
+    <value>未安装 {0} 个</value>
+  </data>
+  <data name="ModCollections_NoSelection" xml:space="preserve">
+    <value>请选择一个合集。</value>
+  </data>
+  <data name="ModCollections_CurrentBadge" xml:space="preserve">
+    <value>当前</value>
+  </data>
+  <data name="ModCollections_Use" xml:space="preserve">
+    <value>使用此合集</value>
+  </data>
+  <data name="ModCollections_UseHint" xml:space="preserve">
+    <value>立即将此合集应用为游戏的启用列表，之后每次从启动器启动都会自动应用。</value>
+  </data>
+  <data name="ModCollections_InUse" xml:space="preserve">
+    <value>当前使用</value>
+  </data>
+  <data name="ModCollections_InUseHint" xml:space="preserve">
+    <value>这是当前合集，启用列表已是最新</value>
+  </data>
+  <data name="ModCollections_ApplyAgain" xml:space="preserve">
+    <value>重新应用</value>
+  </data>
+  <data name="ModCollections_ApplyAgainHint" xml:space="preserve">
+    <value>合集或游戏内的启用列表有改动，点此立即应用（启动时也会自动应用）</value>
+  </data>
+  <data name="ModCollections_Share" xml:space="preserve">
+    <value>分享</value>
+  </data>
+  <data name="ModCollections_AutoSort" xml:space="preserve">
+    <value>自动排序</value>
+  </data>
+  <data name="ModCollections_AutoSortHint" xml:space="preserve">
+    <value>与游戏的自动排序一致：先按 ID 排序，再把每个模组排在它要求之后加载或依赖的模组后面。</value>
+  </data>
+  <data name="ModCollections_Rename" xml:space="preserve">
+    <value>重命名</value>
+  </data>
+  <data name="ModCollections_Delete" xml:space="preserve">
+    <value>删除</value>
+  </data>
+  <data name="ModCollections_AddPlaceholder" xml:space="preserve">
+    <value>添加模组：按名称、ID 或创意工坊 ID 搜索已安装的模组</value>
+  </data>
+  <data name="ModCollections_DragHint" xml:space="preserve">
+    <value>拖动以调整顺序</value>
+  </data>
+  <data name="ModCollections_Missing" xml:space="preserve">
+    <value>未安装</value>
+  </data>
+  <data name="ModCollections_MissingTip" xml:space="preserve">
+    <value>这些模组在本机找不到（未订阅或已删除），应用合集时会跳过</value>
+  </data>
+  <data name="ModCollections_MoveUp" xml:space="preserve">
+    <value>上移</value>
+  </data>
+  <data name="ModCollections_MoveDown" xml:space="preserve">
+    <value>下移</value>
+  </data>
+  <data name="ModCollections_MoveToTop" xml:space="preserve">
+    <value>置顶</value>
+  </data>
+  <data name="ModCollections_MoveToBottom" xml:space="preserve">
+    <value>置底</value>
+  </data>
+  <data name="ModCollections_RemoveMod" xml:space="preserve">
+    <value>从合集中移除</value>
+  </data>
+  <data name="ModCollections_NameInvalid" xml:space="preserve">
+    <value>请输入名称，且不能包含以下字符：\ / : * ? " &lt; &gt; |</value>
+  </data>
+  <data name="ModCollections_OverwriteTitle" xml:space="preserve">
+    <value>覆盖合集？</value>
+  </data>
+  <data name="ModCollections_OverwriteMessage" xml:space="preserve">
+    <value>已存在名为“{0}”的合集。要覆盖它吗？</value>
+  </data>
+  <data name="ModCollections_Overwrite" xml:space="preserve">
+    <value>覆盖</value>
+  </data>
+  <data name="ModCollections_NewTitle" xml:space="preserve">
+    <value>新建合集</value>
+  </data>
+  <data name="ModCollections_Create" xml:space="preserve">
+    <value>创建</value>
+  </data>
+  <data name="ModCollections_NewFromEnabledTitle" xml:space="preserve">
+    <value>从当前启用列表新建合集</value>
+  </data>
+  <data name="ModCollections_ImportTitle" xml:space="preserve">
+    <value>导入合集</value>
+  </data>
+  <data name="ModCollections_ImportMessage" xml:space="preserve">
+    <value>粘贴从游戏或启动器复制的分享文本，每行一个合集（名称:id1;id2;…;）。</value>
+  </data>
+  <data name="ModCollections_RenameTitle" xml:space="preserve">
+    <value>重命名合集</value>
+  </data>
+  <data name="ModCollections_DeleteTitle" xml:space="preserve">
+    <value>删除合集？</value>
+  </data>
+  <data name="ModCollections_DeleteMessage" xml:space="preserve">
+    <value>要删除合集“{0}”吗？删除前会先备份游戏的模组列表文件。</value>
+  </data>
+  <data name="ModCollections_Applied" xml:space="preserve">
+    <value>已应用“{0}”：启用了 {1} 个模组。</value>
+  </data>
+  <data name="ModCollections_Shared" xml:space="preserve">
+    <value>已将“{0}”的分享文本复制到剪贴板。</value>
+  </data>
+  <data name="ModCollections_NameMessage" xml:space="preserve">
+    <value>合集名称：</value>
+  </data>
+  <data name="ModCollections_ImportNothing" xml:space="preserve">
+    <value>没有找到合集。每行需要名称、冒号和模组 ID。</value>
+  </data>
+  <data name="ModCollections_ImportNameInvalid" xml:space="preserve">
+    <value>“{0}”不能用作合集名称。</value>
+  </data>
+  <data name="ModApply_KeepTitle" xml:space="preserve">
+    <value>保留当前启用列表？</value>
+  </data>
+  <data name="ModApply_KeepMessage" xml:space="preserve">
+    <value>游戏当前的启用列表（{0} 个模组）与所有合集都不一致，应用“{1}”会替换它。要先把它保存为合集吗？</value>
+  </data>
+  <data name="ModApply_KeepDefaultName" xml:space="preserve">
+    <value>原启用列表</value>
+  </data>
+  <data name="ModApply_KeepSave" xml:space="preserve">
+    <value>保存并应用</value>
+  </data>
+  <data name="ModApply_KeepSkip" xml:space="preserve">
+    <value>不保存，直接应用</value>
+  </data>
+  <data name="ModApply_DropTitle" xml:space="preserve">
+    <value>部分模组不会启用</value>
+  </data>
+  <data name="ModApply_DropMessage" xml:space="preserve">
+    <value>应用“{0}”时将略过以下模组：</value>
+  </data>
+  <data name="ModApply_DropContinue" xml:space="preserve">
+    <value>继续</value>
+  </data>
+  <data name="ModApply_DropMissing" xml:space="preserve">
+    <value>{0}：未安装</value>
+  </data>
+  <data name="ModApply_DropIncompatible" xml:space="preserve">
+    <value>{0}：与 {1} 不兼容</value>
   </data>
 </root>

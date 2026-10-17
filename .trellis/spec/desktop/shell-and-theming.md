@@ -22,6 +22,7 @@ Reference: `MainViewModel.CurrentPageKind`, `ShellPage`, `PzLauncher.Desktop/Vie
 - A page asks for navigation through an event the shell handles, never by referencing `MainViewModel`. Reference: `HomeViewModel.ChooseInstallRequested`.
 - A sub-page keeps the tab it was opened from highlighted, and has a back button; back and clicking that tab return to the page it was opened from. Reference: `ShellPage.LaunchSettings`, `MainViewModel.CurrentTab`.
 - A list whose row click acts on the row uses `Shell.ListRow` button rows, never a selection; another action on the row is a sibling button, never nested in the row. Reference: `PzLauncher.Desktop/Views/Installs/InstallsView.axaml`.
+- A sortable column header is a `Shell.ColumnHeader` button whose command sets the sort on the page ViewModel (column enum + direction); the arrow shows only on the sorted column. Reference: `PzLauncher.Desktop/Views/Mods/InstalledModsView.axaml`, `InstalledModsViewModel.SortByCommand`.
 
 ## Page sidebars
 
@@ -37,7 +38,7 @@ Reference: `PzLauncher.Desktop/Views/Home/HomeView.axaml` (content sidebar), `Pz
 
 Reference: `PzLauncher.Desktop/Themes/ShellTheme.axaml`, `PzLauncher.Desktop/App.axaml`.
 
-- Shell colors are `Shell.*` brushes with a `Light` and a `Dark` value each. Views use `{DynamicResource}`; no color literals in views.
+- Shell colors are `Shell.*` brushes with a `Light` and a `Dark` value each (shadows: `Shell.*` `BoxShadows`, e.g. `Shell.LiftedShadow`). Views use `{DynamicResource}`; no color literals in views.
 - The Fluent accent in `App.axaml` equals `Shell.Accent`.
 - ViewModels change the theme only through `IThemeService`.
 
@@ -49,3 +50,5 @@ Reference: `PzLauncher.Desktop/Themes/ShellStyles.axaml` (timing resources, cont
 - Pages switch through the `TransitioningContentControl` in `MainView` with `FadeRiseTransition`. The first content after `MainView` loads (launch, language rebuild) is not animated.
 - Shell control themes animate brushes with `PremultipliedBrushTransition`, never `BrushTransition`: the built-in one blends straight alpha, so a fade from `Transparent` (`#00FFFFFF`) flashes light in dark theme.
 - In-page `IsVisible` toggles are not animated.
+- A drag reorder lifts a copy of the row into an overlay and slides the other rows with render-transform transitions; the list itself changes once, after the drop settles. Reference: `PzLauncher.Desktop/Views/Mods/ModCollectionsView.axaml.cs`, geometry in `ListReorderLayout.cs`.
+- A reorderable list is virtualized with a fixed row height: the drag geometry comes from index × row height and the scroll offset, never from containers. Only realized containers get offsets: set on `ContainerPrepared` without a transition, reset on `ContainerClearing` and when the drag ends.

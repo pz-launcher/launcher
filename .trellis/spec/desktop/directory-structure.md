@@ -16,7 +16,7 @@ PzLauncher.Desktop/
 └── Assets/
 ```
 
-`<Feature>` matches the Core feature folder (`Installs`, ...), or names a desktop-only page (`Home`, `Settings`).
+`<Feature>` matches the Core feature folder (`Installs`, ...), or names a desktop-only page (`Home`, `Settings`, `Mods`, which spans Core's `Mod/` and `Mod/Collections/`).
 
 ## ViewModels
 

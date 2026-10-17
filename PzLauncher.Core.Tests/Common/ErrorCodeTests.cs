@@ -4,6 +4,7 @@ using PzLauncher.Core.Common;
 using PzLauncher.Core.Installs;
 using PzLauncher.Core.Java;
 using PzLauncher.Core.Launch;
+using PzLauncher.Core.Mod.Collections;
 using PzLauncher.Core.Mod.ZombieBuddy;
 using PzLauncher.Core.Platform;
 using PzLauncher.Core.Serialization;
@@ -55,6 +56,13 @@ public partial class ErrorCodeTests
         [ErrorCode.ZombieBuddyModNotPreloadable] = (ZombieBuddyErrors.ModNotPreloadable("m", "p", "r"), ErrorKind.Validation),
         [ErrorCode.ZombieBuddyPreloadConfigInvalid] = (ZombieBuddyErrors.PreloadConfigInvalid("m", "p", "r"), ErrorKind.Validation),
         [ErrorCode.ZombieBuddyPreloadConfigIoFailed] = (ZombieBuddyErrors.PreloadConfigIoFailed("m", "p", "r"), ErrorKind.External),
+        [ErrorCode.ModCollectionCacheFolderUnresolved] = (ModCollectionErrors.CacheFolderUnresolved("p"), ErrorKind.Validation),
+        [ErrorCode.ModCollectionNameInvalid] = (ModCollectionErrors.NameInvalid("n"), ErrorKind.Validation),
+        [ErrorCode.ModCollectionModIdInvalid] = (ModCollectionErrors.ModIdInvalid("m"), ErrorKind.Validation),
+        [ErrorCode.ModCollectionNotFound] = (ModCollectionErrors.NotFound("n"), ErrorKind.NotFound),
+        [ErrorCode.ModCollectionFileUnreadable] = (ModCollectionErrors.FileUnreadable("p", "r"), ErrorKind.External),
+        [ErrorCode.ModCollectionFileMalformed] = (ModCollectionErrors.FileMalformed("p", "r"), ErrorKind.External),
+        [ErrorCode.ModCollectionFileWriteFailed] = (ModCollectionErrors.FileWriteFailed("p", "r"), ErrorKind.External),
     };
 
     [GeneratedRegex(@"^[a-z]+\.[a-z0-9]+(_[a-z0-9]+)*$")]
@@ -123,6 +131,13 @@ public partial class ErrorCodeTests
     [InlineData(ErrorCode.ZombieBuddyModNotPreloadable, "zombiebuddy.mod_not_preloadable")]
     [InlineData(ErrorCode.ZombieBuddyPreloadConfigInvalid, "zombiebuddy.preload_config_invalid")]
     [InlineData(ErrorCode.ZombieBuddyPreloadConfigIoFailed, "zombiebuddy.preload_config_io_failed")]
+    [InlineData(ErrorCode.ModCollectionCacheFolderUnresolved, "modcollection.cache_folder_unresolved")]
+    [InlineData(ErrorCode.ModCollectionNameInvalid, "modcollection.name_invalid")]
+    [InlineData(ErrorCode.ModCollectionModIdInvalid, "modcollection.mod_id_invalid")]
+    [InlineData(ErrorCode.ModCollectionNotFound, "modcollection.not_found")]
+    [InlineData(ErrorCode.ModCollectionFileUnreadable, "modcollection.file_unreadable")]
+    [InlineData(ErrorCode.ModCollectionFileMalformed, "modcollection.file_malformed")]
+    [InlineData(ErrorCode.ModCollectionFileWriteFailed, "modcollection.file_write_failed")]
     public void ToWireName_ExistingCodes_AreStable(ErrorCode code, string wireName) =>
         Assert.Equal(wireName, code.ToWireName());
 

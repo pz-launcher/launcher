@@ -1,0 +1,247 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:PzLauncher.Desktop.ViewModels.Mods"
+             xmlns:local="using:PzLauncher.Desktop.Views.Mods"
+             xmlns:mod="using:PzLauncher.Core.Mod"
+             xmlns:design="using:PzLauncher.Desktop.ViewModels.Design"
+             xmlns:lang="using:PzLauncher.Desktop.Lang"
+             xmlns:ic="using:FluentIcons.Avalonia"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="560"
+             x:Class="PzLauncher.Desktop.Views.Mods.ModCollectionsView"
+             x:DataType="vm:ModCollectionsViewModel">
+
+    <Design.DataContext>
+        <x:Static Member="design:DesignData.ModCollections" />
+    </Design.DataContext>
+
+    <UserControl.Styles>
+        <Style Selector="Border.badge">
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Shell.Border}" />
+            <Setter Property="CornerRadius" Value="3" />
+            <Setter Property="Padding" Value="6,0" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Border.badge > TextBlock">
+            <Setter Property="FontSize" Value="12" />
+        </Style>
+        <Style Selector="Border.dragHandle">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Cursor" Value="SizeNorthSouth" />
+            <Setter Property="Padding" Value="4,0" />
+        </Style>
+        <Style Selector="Border.dragHandle:disabled">
+            <Setter Property="Cursor" Value="Arrow" />
+            <Setter Property="Opacity" Value="0.4" />
+        </Style>
+        <Style Selector="ContentControl.lifted Border.entryRow">
+            <Setter Property="Background" Value="{DynamicResource Shell.ListRowHoverBackground}" />
+            <Setter Property="BoxShadow" Value="{DynamicResource Shell.LiftedShadow}" />
+        </Style>
+    </UserControl.Styles>
+
+    <UserControl.Resources>
+        <!-- Shared by the list and the lifted copy of a dragged row, so commands bind through the view, not the ItemsControl. -->
+        <DataTemplate x:Key="EntryRowTemplate" x:DataType="vm:ModCollectionEntryRow">
+            <Panel Height="{x:Static local:ModCollectionsView.EntryRowHeight}">
+                <Border Classes="entryRow" Padding="4,4,8,4" Margin="0,0,0,4" CornerRadius="4" BorderThickness="1" BorderBrush="{DynamicResource Shell.Border}">
+                    <Grid ColumnDefinitions="Auto,40,*,Auto,Auto">
+                        <Border Grid.Column="0" Classes="dragHandle" ToolTip.Tip="{x:Static lang:UiText.ModCollections_DragHint}"
+                                IsEnabled="{Binding $parent[UserControl].((vm:ModCollectionsViewModel)DataContext).CanReorder}">
+                            <ic:FluentIcon Icon="ReOrderDotsVertical" IconVariant="Regular" FontSize="16" VerticalAlignment="Center"
+                                           Foreground="{DynamicResource Shell.TextMuted}" />
+                        </Border>
+                        <TextBlock Grid.Column="1" Text="{Binding Number}" Foreground="{DynamicResource Shell.TextMuted}"
+                                   VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,0,10,0" />
+                        <!-- DockPanel, not StackPanel: it gives the texts a finite width, so a long name or id trims instead of overflowing. -->
+                        <DockPanel Grid.Column="2" VerticalAlignment="Center">
+                            <TextBlock DockPanel.Dock="Left" Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" Margin="0,0,8,0"
+                                       ToolTip.Tip="{Binding Name}" />
+                            <TextBlock Text="{Binding Id}" Foreground="{DynamicResource Shell.TextMuted}" IsVisible="{Binding !IsMissing}"
+                                       TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Id}" />
+                        </DockPanel>
+                        <Border Grid.Column="3" Classes="badge" IsVisible="{Binding IsMissing}" Margin="8,0"
+                                ToolTip.Tip="{x:Static lang:UiText.ModCollections_MissingTip}">
+                            <TextBlock Text="{x:Static lang:UiText.ModCollections_Missing}" Foreground="{DynamicResource Shell.WarningForeground}" />
+                        </Border>
+                        <StackPanel Grid.Column="4" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                            <Button Command="{Binding $parent[UserControl].((vm:ModCollectionsViewModel)DataContext).MoveToTopCommand}" CommandParameter="{Binding}"
+                                    ToolTip.Tip="{x:Static lang:UiText.ModCollections_MoveToTop}" AutomationProperties.Name="{x:Static lang:UiText.ModCollections_MoveToTop}">
+                                <ic:FluentIcon Icon="ChevronDoubleUp" IconVariant="Regular" FontSize="14" />
+                            </Button>
+                            <Button Command="{Binding $parent[UserControl].((vm:ModCollectionsViewModel)DataContext).MoveUpCommand}" CommandParameter="{Binding}"
+                                    ToolTip.Tip="{x:Static lang:UiText.ModCollections_MoveUp}" AutomationProperties.Name="{x:Static lang:UiText.ModCollections_MoveUp}">
+                                <ic:FluentIcon Icon="ArrowUp" IconVariant="Regular" FontSize="14" />
+                            </Button>
+                            <Button Command="{Binding $parent[UserControl].((vm:ModCollectionsViewModel)DataContext).MoveDownCommand}" CommandParameter="{Binding}"
+                                    ToolTip.Tip="{x:Static lang:UiText.ModCollections_MoveDown}" AutomationProperties.Name="{x:Static lang:UiText.ModCollections_MoveDown}">
+                                <ic:FluentIcon Icon="ArrowDown" IconVariant="Regular" FontSize="14" />
+                            </Button>
+                            <Button Command="{Binding $parent[UserControl].((vm:ModCollectionsViewModel)DataContext).MoveToBottomCommand}" CommandParameter="{Binding}"
+                                    ToolTip.Tip="{x:Static lang:UiText.ModCollections_MoveToBottom}" AutomationProperties.Name="{x:Static lang:UiText.ModCollections_MoveToBottom}">
+                                <ic:FluentIcon Icon="ChevronDoubleDown" IconVariant="Regular" FontSize="14" />
+                            </Button>
+                            <Button Command="{Binding $parent[UserControl].((vm:ModCollectionsViewModel)DataContext).RemoveModCommand}" CommandParameter="{Binding}"
+                                    ToolTip.Tip="{x:Static lang:UiText.ModCollections_RemoveMod}" AutomationProperties.Name="{x:Static lang:UiText.ModCollections_RemoveMod}">
+                                <ic:FluentIcon Icon="Dismiss" IconVariant="Regular" FontSize="14" />
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+            </Panel>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <Grid ColumnDefinitions="280,16,*">
+        <!-- Collections of the cache folder. -->
+        <DockPanel Grid.Column="0">
+            <WrapPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,8">
+                <Button Command="{Binding NewCommand}" Margin="0,0,6,6">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <ic:FluentIcon Icon="Add" IconVariant="Regular" FontSize="16" VerticalAlignment="Center" />
+                        <TextBlock Text="{x:Static lang:UiText.ModCollections_New}" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+                <Button Content="{x:Static lang:UiText.ModCollections_NewFromEnabled}" Command="{Binding NewFromEnabledCommand}" Margin="0,0,6,6" />
+                <Button Command="{Binding ImportCommand}" Margin="0,0,6,6">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <ic:FluentIcon Icon="ClipboardPaste" IconVariant="Regular" FontSize="16" VerticalAlignment="Center" />
+                        <TextBlock Text="{x:Static lang:UiText.ModCollections_Import}" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+            </WrapPanel>
+
+            <Panel>
+                <TextBlock Text="{x:Static lang:UiText.ModCollections_Empty}" IsVisible="{Binding IsEmpty}" TextWrapping="Wrap"
+                           Foreground="{DynamicResource Shell.TextMuted}" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" />
+
+                <!-- Rows are buttons, not ListBox items: a click shows the collection. -->
+                <ScrollViewer>
+                    <ItemsControl ItemsSource="{Binding Rows}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Spacing="4" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:ModCollectionRow">
+                                <Button Theme="{StaticResource Shell.ListRow}" Classes.inUse="{Binding IsSelected}"
+                                        Command="{Binding $parent[ItemsControl].((vm:ModCollectionsViewModel)DataContext).SelectCommand}"
+                                        CommandParameter="{Binding}">
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <StackPanel Grid.Column="0" Spacing="2">
+                                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                                <TextBlock Text="{Binding ModCount, StringFormat={x:Static lang:UiText.ModCollections_CountFormat}}" FontSize="12"
+                                                           Foreground="{DynamicResource Shell.TextMuted}" />
+                                                <TextBlock Text="{Binding MissingCount, StringFormat={x:Static lang:UiText.ModCollections_MissingCountFormat}}" FontSize="12"
+                                                           Foreground="{DynamicResource Shell.WarningForeground}" IsVisible="{Binding HasMissing}"
+                                                           ToolTip.Tip="{x:Static lang:UiText.ModCollections_MissingTip}" />
+                                            </StackPanel>
+                                        </StackPanel>
+                                        <Border Grid.Column="1" Classes="badge" Margin="8,0,0,0" IsVisible="{Binding IsCurrent}">
+                                            <TextBlock Text="{x:Static lang:UiText.ModCollections_CurrentBadge}" Foreground="{DynamicResource Shell.SidebarItemSelectedForeground}" />
+                                        </Border>
+                                    </Grid>
+                                </Button>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Panel>
+        </DockPanel>
+
+        <!-- The selected collection. -->
+        <Panel Grid.Column="2">
+            <TextBlock Text="{x:Static lang:UiText.ModCollections_NoSelection}" IsVisible="{Binding !HasSelection}" TextWrapping="Wrap"
+                       Foreground="{DynamicResource Shell.TextMuted}" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" />
+
+            <DockPanel IsVisible="{Binding HasSelection}">
+                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="8" Margin="0,0,0,8">
+                    <TextBlock Text="{Binding Selected.Name}" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                    <Border Classes="badge" IsVisible="{Binding Selected.IsCurrent}">
+                        <TextBlock Text="{x:Static lang:UiText.ModCollections_CurrentBadge}" Foreground="{DynamicResource Shell.SidebarItemSelectedForeground}" />
+                    </Border>
+                </StackPanel>
+
+                <WrapPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,4">
+                    <Button Classes="accent" Command="{Binding UseCommand}" Margin="0,0,6,6"
+                            ToolTip.Tip="{Binding UseHint}" ToolTip.ShowOnDisabled="True">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <ic:FluentIcon Icon="CheckmarkCircle" IconVariant="Regular" FontSize="16" VerticalAlignment="Center" />
+                            <TextBlock Text="{Binding UseText}" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <Button Command="{Binding ShareCommand}" Margin="0,0,6,6">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <ic:FluentIcon Icon="Share" IconVariant="Regular" FontSize="16" VerticalAlignment="Center" />
+                            <TextBlock Text="{x:Static lang:UiText.ModCollections_Share}" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <Button Command="{Binding AutoSortCommand}" Margin="0,0,6,6" ToolTip.Tip="{x:Static lang:UiText.ModCollections_AutoSortHint}">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <ic:FluentIcon Icon="ArrowSortDown" IconVariant="Regular" FontSize="16" VerticalAlignment="Center" />
+                            <TextBlock Text="{x:Static lang:UiText.ModCollections_AutoSort}" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <Button Command="{Binding RenameCommand}" Margin="0,0,6,6">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <ic:FluentIcon Icon="Rename" IconVariant="Regular" FontSize="16" VerticalAlignment="Center" />
+                            <TextBlock Text="{x:Static lang:UiText.ModCollections_Rename}" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <Button Command="{Binding DeleteCommand}" Margin="0,0,6,6">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <ic:FluentIcon Icon="Delete" IconVariant="Regular" FontSize="16" VerticalAlignment="Center" />
+                            <TextBlock Text="{x:Static lang:UiText.ModCollections_Delete}" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                </WrapPanel>
+
+                <TextBlock DockPanel.Dock="Top" Text="{Binding StatusText}" Foreground="{DynamicResource Shell.TextMuted}" TextWrapping="Wrap"
+                           IsVisible="{Binding StatusText, Converter={x:Static ObjectConverters.IsNotNull}}" Margin="0,0,0,8" />
+
+                <!-- Search over installed mods not yet in the collection; a row click adds the mod at the end. -->
+                <StackPanel DockPanel.Dock="Top" Spacing="4" Margin="0,0,0,12">
+                    <TextBox Text="{Binding AddSearchText}" PlaceholderText="{x:Static lang:UiText.ModCollections_AddPlaceholder}" />
+                    <ScrollViewer MaxHeight="180" IsVisible="{Binding HasAddCandidates}">
+                        <ItemsControl ItemsSource="{Binding AddCandidates}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="mod:InstalledMod">
+                                    <Button Theme="{StaticResource Shell.ListRow}" Padding="10,4"
+                                            Command="{Binding $parent[ItemsControl].((vm:ModCollectionsViewModel)DataContext).AddModCommand}"
+                                            CommandParameter="{Binding}">
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <ic:FluentIcon Icon="Add" IconVariant="Regular" FontSize="14" VerticalAlignment="Center" />
+                                            <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
+                                            <TextBlock Text="{Binding Id}" Foreground="{DynamicResource Shell.TextMuted}" VerticalAlignment="Center" />
+                                        </StackPanel>
+                                    </Button>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </StackPanel>
+
+                <!-- Drag a row by its handle (code-behind lifts it into DragLayer) or use the arrow buttons; the order is the load order. -->
+                <Panel>
+                    <ScrollViewer x:Name="EntriesScroller">
+                        <ItemsControl x:Name="EntriesList" ItemsSource="{Binding Entries}" ItemTemplate="{StaticResource EntryRowTemplate}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <!-- The cache realizes rows past the viewport's edges, so a row sliding in during a drag is there to show. -->
+                                    <VirtualizingStackPanel CacheLength="1" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                        </ItemsControl>
+                    </ScrollViewer>
+                    <Canvas x:Name="DragLayer" IsHitTestVisible="False">
+                        <ContentControl x:Name="DragFloat" Classes="lifted" IsVisible="False" ContentTemplate="{StaticResource EntryRowTemplate}" />
+                    </Canvas>
+                </Panel>
+            </DockPanel>
+        </Panel>
+    </Grid>
+</UserControl>

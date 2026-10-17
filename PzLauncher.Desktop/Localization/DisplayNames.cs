@@ -2,6 +2,7 @@ using Avalonia.Data.Converters;
 using PzLauncher.Core.Installs;
 using PzLauncher.Core.Java;
 using PzLauncher.Core.Launch;
+using PzLauncher.Core.Mod;
 using PzLauncher.Core.Mod.ZombieBuddy;
 using PzLauncher.Desktop.Lang;
 
@@ -14,6 +15,8 @@ public static class DisplayNames
     public static FuncValueConverter<PzInstallSource, string> InstallSource { get; } = new(source => Of(source));
 
     public static FuncValueConverter<JavaRuntimeSource, string> JavaSource { get; } = new(source => Of(source));
+
+    public static FuncValueConverter<InstalledModSource, string> ModSource { get; } = new(source => Of(source));
 
     public static FuncValueConverter<ZombieBuddyChannel, string> ZombieBuddyChannelName { get; } = new(channel => Of(channel));
 
@@ -48,6 +51,13 @@ public static class DisplayNames
         GarbageCollector.Shenandoah => UiText.GarbageCollector_Shenandoah,
         GarbageCollector.Parallel => UiText.GarbageCollector_Parallel,
         GarbageCollector.Serial => UiText.GarbageCollector_Serial,
+    };
+
+    public static string Of(InstalledModSource source) => source switch
+    {
+        InstalledModSource.SteamWorkshop => UiText.ModSource_SteamWorkshop,
+        InstalledModSource.StagedWorkshop => UiText.ModSource_StagedWorkshop,
+        InstalledModSource.Local => UiText.ModSource_Local,
     };
 
     public static string Of(ZombieBuddyChannel channel) => channel switch

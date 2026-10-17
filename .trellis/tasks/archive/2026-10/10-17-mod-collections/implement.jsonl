@@ -1,0 +1,10 @@
+{"file": ".trellis/spec/common/architecture.md", "reason": "Core owns formats, catalog, apply; Desktop owns page, prefs, launch orchestration"}
+{"file": ".trellis/spec/common/coding-rules.md", "reason": "comments, nullability, async, AOT (source-generated JSON for the sidecar)"}
+{"file": ".trellis/spec/core/directory-structure.md", "reason": "new Mod/Collections feature folder, PZ constants in one place"}
+{"file": ".trellis/spec/core/service-api.md", "reason": "IModCollectionService shape, request records, DTOs in CoreJsonContext"}
+{"file": ".trellis/spec/core/error-handling.md", "reason": "new error codes; untrusted game files; writing files the game owns"}
+{"file": ".trellis/spec/desktop/directory-structure.md", "reason": "new page VM/view, services, composition root"}
+{"file": ".trellis/spec/desktop/shell-and-theming.md", "reason": "new tab, nav sidebar, list rows with sibling buttons, Shell brushes"}
+{"file": ".trellis/spec/desktop/preferences.md", "reason": "new defaultModCollections field and its contract rules"}
+{"file": ".trellis/spec/desktop/localization.md", "reason": "new UI and error texts in all 10 resx files"}
+{"file": ".trellis/spec/guides/code-reuse-thinking-guide.md", "reason": "share ModLocator roots/version pick instead of copying"}

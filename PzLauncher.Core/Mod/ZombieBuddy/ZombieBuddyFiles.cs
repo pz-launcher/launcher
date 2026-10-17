@@ -6,6 +6,9 @@ namespace PzLauncher.Core.Mod.ZombieBuddy;
 // Mirrors ZombieBuddy's own installer (installer/installer.go, v4.3) and doc/Installation.md.
 internal static class ZombieBuddyFiles
 {
+    // The Workshop mod's mod.info id.
+    public const string ModId = "ZombieBuddy";
+
     public const string StableItemId = "3619862853";
 
     public const string BetaItemId = "3812624292";
@@ -58,7 +61,7 @@ internal static class ZombieBuddyFiles
 
     public static string ItemFolder(string library, ZombieBuddyChannel channel) => WorkshopLibraries.ItemFolder(library, ItemId(channel));
 
-    public static string LibsFolder(string item) => Path.Combine(item, "mods", "ZombieBuddy", "libs");
+    public static string LibsFolder(string item) => Path.Combine(ModFolders.WorkshopModsFolder(item), ModId, "libs");
 
     // Windows loads the jar through zbNative.dll, which also applies a pending jar update; elsewhere -javaagent loads it.
     public static IReadOnlyList<string> RequiredFiles(PlatformKind os) => os switch

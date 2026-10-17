@@ -22,6 +22,9 @@
   <data name="Shell_NavInstalls" xml:space="preserve">
     <value>Installs</value>
   </data>
+  <data name="Shell_NavMods" xml:space="preserve">
+    <value>Mods</value>
+  </data>
   <data name="Shell_NavSettings" xml:space="preserve">
     <value>Settings</value>
   </data>
@@ -57,6 +60,12 @@
   </data>
   <data name="Home_LaunchSettings" xml:space="preserve">
     <value>Launch settings</value>
+  </data>
+  <data name="Home_Collection" xml:space="preserve">
+    <value>Collection</value>
+  </data>
+  <data name="Home_NoCollection" xml:space="preserve">
+    <value>No collection (keep in-game settings)</value>
   </data>
   <data name="Installs_Title" xml:space="preserve">
     <value>Installs</value>
@@ -105,6 +114,9 @@
   </data>
   <data name="Dialog_Ok" xml:space="preserve">
     <value>OK</value>
+  </data>
+  <data name="Dialog_Cancel" xml:space="preserve">
+    <value>Cancel</value>
   </data>
   <data name="Error_ResultUninitialized" xml:space="preserve">
     <value>Something went wrong inside the launcher. Please report this as a bug.</value>
@@ -220,6 +232,27 @@
   </data>
   <data name="Error_ZombieBuddyPreloadConfigIoFailed" xml:space="preserve">
     <value>Couldn't read or write ZombieBuddy's config {0} ({1}), so {2} wasn't added to its preload list. The game starts without the preload.</value>
+  </data>
+  <data name="Error_ModCollectionCacheFolderUnresolved" xml:space="preserve">
+    <value>Couldn't find the game's cache folder for {0}. Check the -cachedir= game argument in Launch settings.</value>
+  </data>
+  <data name="Error_ModCollectionNameInvalid" xml:space="preserve">
+    <value>"{0}" isn't a valid collection name. A name can't be empty or contain \ / : * ? " &lt; &gt; |.</value>
+  </data>
+  <data name="Error_ModCollectionModIdInvalid" xml:space="preserve">
+    <value>"{0}" isn't a valid mod id for a collection.</value>
+  </data>
+  <data name="Error_ModCollectionNotFound" xml:space="preserve">
+    <value>There's no collection named "{0}" any more. Refresh the list and try again.</value>
+  </data>
+  <data name="Error_ModCollectionFileUnreadable" xml:space="preserve">
+    <value>Couldn't read the mod list file {0}. Make sure it isn't open in another program, then try again.</value>
+  </data>
+  <data name="Error_ModCollectionFileMalformed" xml:space="preserve">
+    <value>The mod list file {0} isn't in the format the game writes, so the launcher left it untouched.</value>
+  </data>
+  <data name="Error_ModCollectionFileWriteFailed" xml:space="preserve">
+    <value>Couldn't save the mod list file {0}. If the game is running, close it, then try again.</value>
   </data>
   <data name="Error_FolderNotLocal" xml:space="preserve">
     <value>{0} isn't a folder on this computer, so the launcher can't open it. Pick a local folder instead.</value>
@@ -460,5 +493,248 @@
   </data>
   <data name="ZombieBuddyStep_RemoveAgentArg" xml:space="preserve">
     <value>Remove the Java agent from ProjectZomboid64.json</value>
+  </data>
+  <data name="Mods_SectionMods" xml:space="preserve">
+    <value>Installed mods</value>
+  </data>
+  <data name="Mods_SectionCollections" xml:space="preserve">
+    <value>Collections</value>
+  </data>
+  <data name="Mods_Refresh" xml:space="preserve">
+    <value>Refresh</value>
+  </data>
+  <data name="Mods_GameRunning" xml:space="preserve">
+    <value>The game is running. Changes are disabled until it exits.</value>
+  </data>
+  <data name="Mods_NoGameInstall" xml:space="preserve">
+    <value>Choose a game install on the Installs page to manage its mods.</value>
+  </data>
+  <data name="Mods_SearchPlaceholder" xml:space="preserve">
+    <value>Search by name, ID or Workshop ID</value>
+  </data>
+  <data name="Mods_FilterAll" xml:space="preserve">
+    <value>All</value>
+  </data>
+  <data name="Mods_FilterEnabled" xml:space="preserve">
+    <value>Enabled</value>
+  </data>
+  <data name="Mods_FilterNotEnabled" xml:space="preserve">
+    <value>Not enabled</value>
+  </data>
+  <data name="Mods_SelectedFormat" xml:space="preserve">
+    <value>{0} selected</value>
+  </data>
+  <data name="Mods_AddToCollection" xml:space="preserve">
+    <value>Add to collection…</value>
+  </data>
+  <data name="Mods_ClearSelection" xml:space="preserve">
+    <value>Clear selection</value>
+  </data>
+  <data name="Mods_ColumnName" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="Mods_ColumnId" xml:space="preserve">
+    <value>ID</value>
+  </data>
+  <data name="Mods_ColumnWorkshopId" xml:space="preserve">
+    <value>Workshop ID</value>
+  </data>
+  <data name="Mods_ColumnSource" xml:space="preserve">
+    <value>Source</value>
+  </data>
+  <data name="Mods_ColumnEnabled" xml:space="preserve">
+    <value>Enabled</value>
+  </data>
+  <data name="Mods_ColumnCollections" xml:space="preserve">
+    <value>Collections</value>
+  </data>
+  <data name="Mods_SortColumnTip" xml:space="preserve">
+    <value>Sort by this column; click again to reverse</value>
+  </data>
+  <data name="Mods_Empty" xml:space="preserve">
+    <value>No installed mods were found.</value>
+  </data>
+  <data name="Mods_FilterEmpty" xml:space="preserve">
+    <value>No mods match the search or filter.</value>
+  </data>
+  <data name="Mods_Enabled" xml:space="preserve">
+    <value>Enabled</value>
+  </data>
+  <data name="Mods_NameWithId" xml:space="preserve">
+    <value>{0} ({1})</value>
+  </data>
+  <data name="ModSource_SteamWorkshop" xml:space="preserve">
+    <value>Steam Workshop</value>
+  </data>
+  <data name="ModSource_StagedWorkshop" xml:space="preserve">
+    <value>Workshop upload (local)</value>
+  </data>
+  <data name="ModSource_Local" xml:space="preserve">
+    <value>Local mods folder</value>
+  </data>
+  <data name="ModCollections_New" xml:space="preserve">
+    <value>New</value>
+  </data>
+  <data name="ModCollections_NewFromEnabled" xml:space="preserve">
+    <value>From enabled list</value>
+  </data>
+  <data name="ModCollections_Import" xml:space="preserve">
+    <value>Import</value>
+  </data>
+  <data name="ModCollections_Empty" xml:space="preserve">
+    <value>No collections yet. Create one, or import share text copied from the game.</value>
+  </data>
+  <data name="ModCollections_CountFormat" xml:space="preserve">
+    <value>{0} mods</value>
+  </data>
+  <data name="ModCollections_MissingCountFormat" xml:space="preserve">
+    <value>Not installed: {0}</value>
+  </data>
+  <data name="ModCollections_NoSelection" xml:space="preserve">
+    <value>Select a collection.</value>
+  </data>
+  <data name="ModCollections_CurrentBadge" xml:space="preserve">
+    <value>Current</value>
+  </data>
+  <data name="ModCollections_Use" xml:space="preserve">
+    <value>Use this collection</value>
+  </data>
+  <data name="ModCollections_UseHint" xml:space="preserve">
+    <value>Apply this collection as the game's enabled list now; every launch from the launcher applies it again.</value>
+  </data>
+  <data name="ModCollections_InUse" xml:space="preserve">
+    <value>In use</value>
+  </data>
+  <data name="ModCollections_InUseHint" xml:space="preserve">
+    <value>This is the current collection and the enabled list is up to date</value>
+  </data>
+  <data name="ModCollections_ApplyAgain" xml:space="preserve">
+    <value>Apply again</value>
+  </data>
+  <data name="ModCollections_ApplyAgainHint" xml:space="preserve">
+    <value>The collection or the in-game enabled list changed; apply now (launching also applies it)</value>
+  </data>
+  <data name="ModCollections_Share" xml:space="preserve">
+    <value>Share</value>
+  </data>
+  <data name="ModCollections_AutoSort" xml:space="preserve">
+    <value>Auto sort</value>
+  </data>
+  <data name="ModCollections_AutoSortHint" xml:space="preserve">
+    <value>Sort like the game's auto sort: by ID, then each mod after the mods it loads after or requires.</value>
+  </data>
+  <data name="ModCollections_Rename" xml:space="preserve">
+    <value>Rename</value>
+  </data>
+  <data name="ModCollections_Delete" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="ModCollections_AddPlaceholder" xml:space="preserve">
+    <value>Add a mod: search installed mods by name, ID or Workshop ID</value>
+  </data>
+  <data name="ModCollections_DragHint" xml:space="preserve">
+    <value>Drag to reorder</value>
+  </data>
+  <data name="ModCollections_Missing" xml:space="preserve">
+    <value>Not installed</value>
+  </data>
+  <data name="ModCollections_MissingTip" xml:space="preserve">
+    <value>These mods aren't on this computer (not subscribed or deleted); applying the collection skips them.</value>
+  </data>
+  <data name="ModCollections_MoveUp" xml:space="preserve">
+    <value>Move up</value>
+  </data>
+  <data name="ModCollections_MoveDown" xml:space="preserve">
+    <value>Move down</value>
+  </data>
+  <data name="ModCollections_MoveToTop" xml:space="preserve">
+    <value>Move to top</value>
+  </data>
+  <data name="ModCollections_MoveToBottom" xml:space="preserve">
+    <value>Move to bottom</value>
+  </data>
+  <data name="ModCollections_RemoveMod" xml:space="preserve">
+    <value>Remove from collection</value>
+  </data>
+  <data name="ModCollections_NameInvalid" xml:space="preserve">
+    <value>Enter a name without any of these characters: \ / : * ? " &lt; &gt; |</value>
+  </data>
+  <data name="ModCollections_OverwriteTitle" xml:space="preserve">
+    <value>Overwrite collection?</value>
+  </data>
+  <data name="ModCollections_OverwriteMessage" xml:space="preserve">
+    <value>A collection named "{0}" already exists. Overwrite it?</value>
+  </data>
+  <data name="ModCollections_Overwrite" xml:space="preserve">
+    <value>Overwrite</value>
+  </data>
+  <data name="ModCollections_NewTitle" xml:space="preserve">
+    <value>New collection</value>
+  </data>
+  <data name="ModCollections_Create" xml:space="preserve">
+    <value>Create</value>
+  </data>
+  <data name="ModCollections_NewFromEnabledTitle" xml:space="preserve">
+    <value>New collection from the enabled list</value>
+  </data>
+  <data name="ModCollections_ImportTitle" xml:space="preserve">
+    <value>Import collections</value>
+  </data>
+  <data name="ModCollections_ImportMessage" xml:space="preserve">
+    <value>Paste share text from the game or the launcher, one collection per line (name:id1;id2;…;).</value>
+  </data>
+  <data name="ModCollections_RenameTitle" xml:space="preserve">
+    <value>Rename collection</value>
+  </data>
+  <data name="ModCollections_DeleteTitle" xml:space="preserve">
+    <value>Delete collection?</value>
+  </data>
+  <data name="ModCollections_DeleteMessage" xml:space="preserve">
+    <value>Delete the collection "{0}"? The game's mod list file is backed up first.</value>
+  </data>
+  <data name="ModCollections_Applied" xml:space="preserve">
+    <value>Applied "{0}": {1} mods enabled.</value>
+  </data>
+  <data name="ModCollections_Shared" xml:space="preserve">
+    <value>Share text for "{0}" copied to the clipboard.</value>
+  </data>
+  <data name="ModCollections_NameMessage" xml:space="preserve">
+    <value>Collection name:</value>
+  </data>
+  <data name="ModCollections_ImportNothing" xml:space="preserve">
+    <value>No collection found. Each line needs a name, a colon and the mod IDs.</value>
+  </data>
+  <data name="ModCollections_ImportNameInvalid" xml:space="preserve">
+    <value>"{0}" can't be used as a collection name.</value>
+  </data>
+  <data name="ModApply_KeepTitle" xml:space="preserve">
+    <value>Keep the current enabled list?</value>
+  </data>
+  <data name="ModApply_KeepMessage" xml:space="preserve">
+    <value>The game's enabled list ({0} mods) doesn't match any collection, and applying "{1}" replaces it. Save it as a collection first?</value>
+  </data>
+  <data name="ModApply_KeepDefaultName" xml:space="preserve">
+    <value>Original enabled list</value>
+  </data>
+  <data name="ModApply_KeepSave" xml:space="preserve">
+    <value>Save and apply</value>
+  </data>
+  <data name="ModApply_KeepSkip" xml:space="preserve">
+    <value>Apply without saving</value>
+  </data>
+  <data name="ModApply_DropTitle" xml:space="preserve">
+    <value>Some mods won't be enabled</value>
+  </data>
+  <data name="ModApply_DropMessage" xml:space="preserve">
+    <value>Applying "{0}" leaves out these mods:</value>
+  </data>
+  <data name="ModApply_DropContinue" xml:space="preserve">
+    <value>Continue</value>
+  </data>
+  <data name="ModApply_DropMissing" xml:space="preserve">
+    <value>{0}: not installed</value>
+  </data>
+  <data name="ModApply_DropIncompatible" xml:space="preserve">
+    <value>{0}: incompatible with {1}</value>
   </data>
 </root>

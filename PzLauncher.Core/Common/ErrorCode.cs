@@ -60,6 +60,15 @@ public enum ErrorCode
     [JsonStringEnumMemberName("zombiebuddy.mod_not_preloadable")] ZombieBuddyModNotPreloadable,
     [JsonStringEnumMemberName("zombiebuddy.preload_config_invalid")] ZombieBuddyPreloadConfigInvalid,
     [JsonStringEnumMemberName("zombiebuddy.preload_config_io_failed")] ZombieBuddyPreloadConfigIoFailed,
+
+    // ── modcollection ─────────────────────────────────────────
+    [JsonStringEnumMemberName("modcollection.cache_folder_unresolved")] ModCollectionCacheFolderUnresolved,
+    [JsonStringEnumMemberName("modcollection.name_invalid")] ModCollectionNameInvalid,
+    [JsonStringEnumMemberName("modcollection.mod_id_invalid")] ModCollectionModIdInvalid,
+    [JsonStringEnumMemberName("modcollection.not_found")] ModCollectionNotFound,
+    [JsonStringEnumMemberName("modcollection.file_unreadable")] ModCollectionFileUnreadable,
+    [JsonStringEnumMemberName("modcollection.file_malformed")] ModCollectionFileMalformed,
+    [JsonStringEnumMemberName("modcollection.file_write_failed")] ModCollectionFileWriteFailed,
 }
 
 public static class ErrorCodeExtensions

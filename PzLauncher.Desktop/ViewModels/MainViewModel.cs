@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using PzLauncher.Core.Installs;
 using PzLauncher.Desktop.ViewModels.Home;
 using PzLauncher.Desktop.ViewModels.Installs;
+using PzLauncher.Desktop.ViewModels.Mods;
 using PzLauncher.Desktop.ViewModels.Settings;
 using PzLauncher.Desktop.ViewModels.LaunchSettings;
 
@@ -15,12 +16,14 @@ public partial class MainViewModel : ViewModelBase
     public MainViewModel(
         HomeViewModel home,
         InstallsViewModel installs,
+        ModsViewModel mods,
         SettingsViewModel settings,
         LaunchSettingsViewModel launchSettings,
         LanguageMenuViewModel languageMenu)
     {
         Home = home;
         Installs = installs;
+        Mods = mods;
         Settings = settings;
         LaunchSettings = launchSettings;
         LanguageMenu = languageMenu;
@@ -37,6 +40,8 @@ public partial class MainViewModel : ViewModelBase
     public HomeViewModel Home { get; }
 
     public InstallsViewModel Installs { get; }
+
+    public ModsViewModel Mods { get; }
 
     public SettingsViewModel Settings { get; }
 
@@ -55,6 +60,7 @@ public partial class MainViewModel : ViewModelBase
         {
             ShellPage.Home => ShellPage.Home,
             ShellPage.Installs => ShellPage.Installs,
+            ShellPage.Mods => ShellPage.Mods,
             ShellPage.Settings => ShellPage.Settings,
             ShellPage.LaunchSettings => _launchSettingsOrigin,
         };
@@ -68,6 +74,7 @@ public partial class MainViewModel : ViewModelBase
     {
         ShellPage.Home => Home,
         ShellPage.Installs => Installs,
+        ShellPage.Mods => Mods,
         ShellPage.Settings => Settings,
         ShellPage.LaunchSettings => LaunchSettings,
     };

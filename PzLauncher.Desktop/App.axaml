@@ -4,6 +4,8 @@
              xmlns:homeView="using:PzLauncher.Desktop.Views.Home"
              xmlns:installsVm="using:PzLauncher.Desktop.ViewModels.Installs"
              xmlns:installsView="using:PzLauncher.Desktop.Views.Installs"
+             xmlns:modsVm="using:PzLauncher.Desktop.ViewModels.Mods"
+             xmlns:modsView="using:PzLauncher.Desktop.Views.Mods"
              xmlns:settingsVm="using:PzLauncher.Desktop.ViewModels.Settings"
              xmlns:settingsView="using:PzLauncher.Desktop.Views.Settings"
              xmlns:launchSettingsVm="using:PzLauncher.Desktop.ViewModels.LaunchSettings"
@@ -18,6 +20,9 @@
         </DataTemplate>
         <DataTemplate DataType="installsVm:InstallsViewModel">
             <installsView:InstallsView />
+        </DataTemplate>
+        <DataTemplate DataType="modsVm:ModsViewModel">
+            <modsView:ModsView />
         </DataTemplate>
         <DataTemplate DataType="settingsVm:SettingsViewModel">
             <settingsView:SettingsView />

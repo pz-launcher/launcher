@@ -1,0 +1,170 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:PzLauncher.Desktop.ViewModels.Mods"
+             xmlns:design="using:PzLauncher.Desktop.ViewModels.Design"
+             xmlns:controls="using:PzLauncher.Desktop.Views.Controls"
+             xmlns:loc="using:PzLauncher.Desktop.Localization"
+             xmlns:lang="using:PzLauncher.Desktop.Lang"
+             xmlns:ic="using:FluentIcons.Avalonia"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="520"
+             x:Class="PzLauncher.Desktop.Views.Mods.InstalledModsView"
+             x:DataType="vm:InstalledModsViewModel">
+
+    <Design.DataContext>
+        <x:Static Member="design:DesignData.InstalledMods" />
+    </Design.DataContext>
+
+    <UserControl.Styles>
+        <!-- Border and padding hang outside the column so the label lines up with the cells below. -->
+        <Style Selector="Button.columnHeader">
+            <Setter Property="Theme" Value="{StaticResource Shell.ColumnHeader}" />
+            <Setter Property="Margin" Value="-7,0,1,0" />
+            <Setter Property="ToolTip.Tip" Value="{x:Static lang:UiText.Mods_SortColumnTip}" />
+        </Style>
+        <Style Selector="ic|FluentIcon.sortArrow">
+            <Setter Property="Icon" Value="ArrowSortUp" />
+            <Setter Property="IconVariant" Value="Regular" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Grid.sortDescending ic|FluentIcon.sortArrow">
+            <Setter Property="Icon" Value="ArrowSortDown" />
+        </Style>
+        <Style Selector="TextBlock.cell">
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+            <Setter Property="Margin" Value="0,0,8,0" />
+        </Style>
+    </UserControl.Styles>
+
+    <DockPanel>
+        <WrapPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,12">
+            <TextBox Width="280" Text="{Binding SearchText}" PlaceholderText="{x:Static lang:UiText.Mods_SearchPlaceholder}"
+                     VerticalAlignment="Center" Margin="0,0,16,4" />
+            <StackPanel Orientation="Horizontal" Spacing="16" VerticalAlignment="Center" Margin="0,0,16,4">
+                <RadioButton Content="{x:Static lang:UiText.Mods_FilterAll}"
+                             IsChecked="{Binding Filter, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:InstalledModsFilter.All}}" />
+                <RadioButton Content="{x:Static lang:UiText.Mods_FilterEnabled}"
+                             IsChecked="{Binding Filter, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:InstalledModsFilter.Enabled}}" />
+                <RadioButton Content="{x:Static lang:UiText.Mods_FilterNotEnabled}"
+                             IsChecked="{Binding Filter, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:InstalledModsFilter.NotEnabled}}" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" Margin="0,0,0,4">
+                <TextBlock Text="{Binding SelectedCount, StringFormat={x:Static lang:UiText.Mods_SelectedFormat}}" VerticalAlignment="Center"
+                           Foreground="{DynamicResource Shell.TextMuted}" />
+                <Button IsEnabled="{Binding CanAddToCollection}">
+                    <Button.Flyout>
+                        <MenuFlyout Placement="BottomEdgeAlignedLeft" ItemsSource="{Binding AddTargets}">
+                            <MenuFlyout.ItemContainerTheme>
+                                <ControlTheme TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}" x:DataType="vm:ModCollectionTarget">
+                                    <Setter Property="Header" Value="{Binding Name}" />
+                                    <Setter Property="Command" Value="{Binding AddCommand}" />
+                                </ControlTheme>
+                            </MenuFlyout.ItemContainerTheme>
+                        </MenuFlyout>
+                    </Button.Flyout>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <ic:FluentIcon Icon="CollectionsAdd" IconVariant="Regular" FontSize="16" VerticalAlignment="Center" />
+                        <TextBlock Text="{x:Static lang:UiText.Mods_AddToCollection}" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+                <Button Content="{x:Static lang:UiText.Mods_ClearSelection}" Command="{Binding ClearSelectionCommand}" />
+            </StackPanel>
+        </WrapPanel>
+
+        <Grid DockPanel.Dock="Top" ColumnDefinitions="36,2*,1.5*,110,130,80,2*" Margin="13,0,13,4"
+              Classes.sortDescending="{Binding SortDescending}">
+            <Button Grid.Column="1" Classes="columnHeader" Command="{Binding SortByCommand}"
+                    CommandParameter="{x:Static vm:InstalledModsSortColumn.Name}"
+                    AutomationProperties.Name="{x:Static lang:UiText.Mods_ColumnName}">
+                <StackPanel Orientation="Horizontal" Spacing="4">
+                    <TextBlock Text="{x:Static lang:UiText.Mods_ColumnName}" />
+                    <ic:FluentIcon Classes="sortArrow"
+                                   IsVisible="{Binding SortColumn, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:InstalledModsSortColumn.Name}}" />
+                </StackPanel>
+            </Button>
+            <Button Grid.Column="2" Classes="columnHeader" Command="{Binding SortByCommand}"
+                    CommandParameter="{x:Static vm:InstalledModsSortColumn.Id}"
+                    AutomationProperties.Name="{x:Static lang:UiText.Mods_ColumnId}">
+                <StackPanel Orientation="Horizontal" Spacing="4">
+                    <TextBlock Text="{x:Static lang:UiText.Mods_ColumnId}" />
+                    <ic:FluentIcon Classes="sortArrow"
+                                   IsVisible="{Binding SortColumn, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:InstalledModsSortColumn.Id}}" />
+                </StackPanel>
+            </Button>
+            <Button Grid.Column="3" Classes="columnHeader" Command="{Binding SortByCommand}"
+                    CommandParameter="{x:Static vm:InstalledModsSortColumn.WorkshopId}"
+                    AutomationProperties.Name="{x:Static lang:UiText.Mods_ColumnWorkshopId}">
+                <StackPanel Orientation="Horizontal" Spacing="4">
+                    <TextBlock Text="{x:Static lang:UiText.Mods_ColumnWorkshopId}" />
+                    <ic:FluentIcon Classes="sortArrow"
+                                   IsVisible="{Binding SortColumn, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:InstalledModsSortColumn.WorkshopId}}" />
+                </StackPanel>
+            </Button>
+            <Button Grid.Column="4" Classes="columnHeader" Command="{Binding SortByCommand}"
+                    CommandParameter="{x:Static vm:InstalledModsSortColumn.Source}"
+                    AutomationProperties.Name="{x:Static lang:UiText.Mods_ColumnSource}">
+                <StackPanel Orientation="Horizontal" Spacing="4">
+                    <TextBlock Text="{x:Static lang:UiText.Mods_ColumnSource}" />
+                    <ic:FluentIcon Classes="sortArrow"
+                                   IsVisible="{Binding SortColumn, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:InstalledModsSortColumn.Source}}" />
+                </StackPanel>
+            </Button>
+            <Button Grid.Column="5" Classes="columnHeader" Command="{Binding SortByCommand}"
+                    CommandParameter="{x:Static vm:InstalledModsSortColumn.Enabled}"
+                    AutomationProperties.Name="{x:Static lang:UiText.Mods_ColumnEnabled}">
+                <StackPanel Orientation="Horizontal" Spacing="4">
+                    <TextBlock Text="{x:Static lang:UiText.Mods_ColumnEnabled}" />
+                    <ic:FluentIcon Classes="sortArrow"
+                                   IsVisible="{Binding SortColumn, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:InstalledModsSortColumn.Enabled}}" />
+                </StackPanel>
+            </Button>
+            <Button Grid.Column="6" Classes="columnHeader" Command="{Binding SortByCommand}"
+                    CommandParameter="{x:Static vm:InstalledModsSortColumn.Collections}"
+                    AutomationProperties.Name="{x:Static lang:UiText.Mods_ColumnCollections}">
+                <StackPanel Orientation="Horizontal" Spacing="4">
+                    <TextBlock Text="{x:Static lang:UiText.Mods_ColumnCollections}" />
+                    <ic:FluentIcon Classes="sortArrow"
+                                   IsVisible="{Binding SortColumn, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:InstalledModsSortColumn.Collections}}" />
+                </StackPanel>
+            </Button>
+        </Grid>
+
+        <Panel>
+            <TextBlock Text="{x:Static lang:UiText.Mods_Empty}" IsVisible="{Binding IsEmpty}" TextWrapping="Wrap"
+                       Foreground="{DynamicResource Shell.TextMuted}" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" />
+            <TextBlock Text="{x:Static lang:UiText.Mods_FilterEmpty}" IsVisible="{Binding IsFilterEmpty}" TextWrapping="Wrap"
+                       Foreground="{DynamicResource Shell.TextMuted}" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" />
+
+            <ScrollViewer>
+                <ItemsControl ItemsSource="{Binding VisibleRows}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <VirtualizingStackPanel />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:InstalledModRow">
+                            <Border Padding="12,6" Margin="0,0,0,4" CornerRadius="4" BorderThickness="1" BorderBrush="{DynamicResource Shell.Border}">
+                                <Grid ColumnDefinitions="36,2*,1.5*,110,130,80,2*">
+                                    <CheckBox Grid.Column="0" IsChecked="{Binding IsSelected}" VerticalAlignment="Center" MinWidth="0"
+                                              AutomationProperties.Name="{Binding Mod.Name}" />
+                                    <TextBlock Grid.Column="1" Classes="cell" Text="{Binding Mod.Name}" FontWeight="SemiBold" ToolTip.Tip="{Binding Mod.Name}" />
+                                    <TextBlock Grid.Column="2" Classes="cell" Text="{Binding Mod.Id}" ToolTip.Tip="{Binding Mod.Id}" />
+                                    <TextBlock Grid.Column="3" Classes="cell" Text="{Binding Mod.WorkshopId}" Foreground="{DynamicResource Shell.TextMuted}" />
+                                    <TextBlock Grid.Column="4" Classes="cell" Text="{Binding Mod.Source, Converter={x:Static loc:DisplayNames.ModSource}}"
+                                               Foreground="{DynamicResource Shell.TextMuted}" />
+                                    <TextBlock Grid.Column="5" Classes="cell" Text="{x:Static lang:UiText.Mods_Enabled}" FontWeight="SemiBold"
+                                               Foreground="{DynamicResource Shell.SidebarItemSelectedForeground}" IsVisible="{Binding IsEnabled}" />
+                                    <TextBlock Grid.Column="6" Classes="cell" Text="{Binding CollectionNames}" ToolTip.Tip="{Binding CollectionNames}" />
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </Panel>
+    </DockPanel>
+</UserControl>

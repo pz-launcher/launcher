@@ -7,6 +7,7 @@ using PzLauncher.Desktop.Services;
 using PzLauncher.Desktop.Tests.TestSupport;
 using PzLauncher.Desktop.ViewModels.Home;
 using PzLauncher.Desktop.ViewModels.Installs;
+using PzLauncher.Desktop.ViewModels.Mods;
 using PzLauncher.Desktop.ViewModels.ZombieBuddy;
 using static PzLauncher.Desktop.Tests.TestSupport.TestInstalls;
 using static PzLauncher.Desktop.Tests.TestSupport.TestZombieBuddy;
@@ -23,16 +24,21 @@ public class HomeViewModelTests : UiTextCultureTest
     private readonly FakeZombieBuddyService _zombieBuddy = new();
     private readonly FakeZombieBuddyChannelService _channels = new();
     private readonly FakeZabricService _zabric = new();
+    private readonly FakeModCollectionDefaultsService _defaultCollections = new();
+    private readonly FakeModCollectionService _collections = new();
     private readonly GameRunState _runState = new();
+    private readonly ModCollectionOrderWriter _orderWriter;
 
     public HomeViewModelTests()
     {
+        _orderWriter = new ModCollectionOrderWriter(_collections, _runState, new FakePlatformEnvironment(), new ManualTimeProvider());
         Installs = new(_service, new FakeFolderPicker(), new FakePlatformEnvironment(), Localization);
     }
 
     private InstallsViewModel Installs { get; }
 
-    private HomeViewModel CreateViewModel() => new(Installs, _launcher, _overrides, _dialogs, _zombieBuddy, _channels, _zabric, _runState);
+    private HomeViewModel CreateViewModel() =>
+        new(Installs, _launcher, _overrides, _dialogs, _zombieBuddy, _channels, _zabric, _collections, _defaultCollections, new ModCollectionApplier(_collections, _dialogs), _orderWriter, _runState);
 
     private async Task<HomeViewModel> CreateActivatedViewModelAsync(params PzInstall[] installs)
     {
@@ -321,6 +327,382 @@ public class HomeViewModelTests : UiTextCultureTest
         Assert.Equal([ErrorMessages.ToUserText(crash)], _dialogs.Errors);
         Assert.Equal([false], runningWhenShown);
         Assert.True(vm.LaunchCommand.CanExecute(null));
+    }
+
+    private void ArrangeDefaultCollection(params string[] ids)
+    {
+        _collections.WithMods(TestMods.Mod(ZombieBuddyMod.Id), TestMods.Mod("ModA"), TestMods.Mod("ModB")).WithCollection("Pack", ids);
+        _defaultCollections.Save(SteamGame.RootPath, "Pack");
+    }
+
+    [Fact]
+    public async Task Launch_NoDefaultCollection_LeavesTheEnabledListAlone()
+    {
+        _collections.WithMods(TestMods.Mod("ModA")).WithCollection("Pack", "ModA");
+        var vm = await CreateActivatedViewModelAsync(SteamGame);
+
+        await LaunchAndExitAsync(vm);
+
+        Assert.Empty(_collections.Applies);
+        Assert.Empty(_dialogs.Prompts);
+        Assert.Single(_launcher.Launches);
+    }
+
+    [Fact]
+    public async Task Launch_DefaultCollection_AppliesItWithTheInstallsGameArgsBeforeZombieBuddyAndTheLaunch()
+    {
+        ArrangeDefaultCollection(ZombieBuddyMod.Id, "ModA");
+        _overrides.Set(SteamGame.RootPath, GameLaunchOverrides.Empty with { ExtraGameArgs = @"-cachedir=D:\pz" });
+        var vm = await CreateActivatedViewModelAsync(SteamGame);
+
+        await LaunchAndExitAsync(vm);
+
+        Assert.Equal([(SteamGame.RootPath, @"-cachedir=D:\pz", "Pack")], _collections.Applies);
+        Assert.Equal([ZombieBuddyMod.Id, "ModA"], _collections.ActiveIds);
+        Assert.Single(_launcher.Launches);
+    }
+
+    [Fact]
+    public async Task Launch_DefaultCollectionWithZombieBuddy_KeepsTodaysSetupAndPreload()
+    {
+        ArrangeDefaultCollection(ZombieBuddyMod.Id, "ModA");
+        _zombieBuddy.Status = _ => NotInitialized();
+        var vm = await CreateActivatedViewModelAsync(SteamGame);
+
+        await LaunchAndExitAsync(vm);
+
+        Assert.Equal(ZombieBuddySetupMode.Initialize, Assert.Single(_dialogs.Setups).Mode);
+        Assert.Single(_zabric.Preloads);
+        Assert.Single(_launcher.Launches);
+    }
+
+    [Fact]
+    public async Task Launch_DefaultCollectionWithoutZombieBuddy_LeftoversOpenTheRemoveDialogAndSkipThePreload()
+    {
+        ArrangeDefaultCollection("ModA");
+        _zombieBuddy.Status = _ => Initialized();
+        _dialogs.SetupResult = FakeDialogService.RunsSetup();
+        var vm = await CreateActivatedViewModelAsync(SteamGame);
+
+        await LaunchAndExitAsync(vm);
+
+        var setup = Assert.Single(_dialogs.Setups);
+        Assert.Equal((ZombieBuddySetupMode.Remove, true), (setup.Mode, setup.OffersLaunch));
+        Assert.Equal([SteamGame.RootPath], _zombieBuddy.Removals);
+        Assert.Empty(_zombieBuddy.Initializations);
+        Assert.Empty(_zabric.Preloads);
+        Assert.Single(_launcher.Launches);
+    }
+
+    [Fact]
+    public async Task Launch_DefaultCollectionWithoutZombieBuddy_RemoveDialogCancelled_DoesNotLaunch()
+    {
+        ArrangeDefaultCollection("ModA");
+        _zombieBuddy.Status = _ => Initialized();
+        _dialogs.SetupResult = _ => Task.FromResult(false);
+        var vm = await CreateActivatedViewModelAsync(SteamGame);
+
+        await vm.LaunchCommand.ExecuteAsync(null);
+
+        Assert.Single(_dialogs.Setups);
+        Assert.Empty(_launcher.Launches);
+    }
+
+    [Fact]
+    public async Task Launch_DefaultCollectionWithoutZombieBuddy_NoLeftovers_NeitherInitializesNorPreloads()
+    {
+        ArrangeDefaultCollection("ModA");
+        _zombieBuddy.Status = _ => NotInitialized();
+        var vm = await CreateActivatedViewModelAsync(SteamGame);
+
+        await LaunchAndExitAsync(vm);
+
+        Assert.Empty(_dialogs.Setups);
+        Assert.Empty(_zabric.Preloads);
+        Assert.Single(_launcher.Launches);
+    }
+
+    [Fact]
+    public async Task Launch_DefaultCollectionApplyCancelled_DoesNotLaunch()
+    {
+        ArrangeDefaultCollection("ModA");
+        _collections.ActiveIds = ["ModB"];
+        var vm = await CreateActivatedViewModelAsync(SteamGame);
+
+        await vm.LaunchCommand.ExecuteAsync(null);
+
+        Assert.Single(_dialogs.Prompts);
+        Assert.Empty(_collections.Applies);
+        Assert.Equal(["ModB"], _collections.ActiveIds);
+        Assert.Empty(_zombieBuddy.StatusRequests);
+        Assert.Empty(_launcher.Launches);
+        Assert.True(vm.LaunchCommand.CanExecute(null));
+    }
+
+    [Fact]
+    public async Task Launch_DefaultCollectionDropsMods_CancelOnTheNotice_DoesNotLaunch()
+    {
+        ArrangeDefaultCollection("ModA", "NotInstalled");
+        var vm = await CreateActivatedViewModelAsync(SteamGame);
+
+        await vm.LaunchCommand.ExecuteAsync(null);
+
+        Assert.Single(_dialogs.Confirms);
+        Assert.Empty(_collections.Applies);
+        Assert.Empty(_launcher.Launches);
+    }
+
+    [Fact]
+    public async Task Launch_DefaultCollectionApplyFails_ShowsTheErrorThenLaunchesAsToday()
+    {
+        ArrangeDefaultCollection("ModA");
+        var error = TestErrors.Create(ErrorCode.ModCollectionFileWriteFailed, @"C:\Users\Test\Zomboid\mods\default.txt");
+        _collections.ApplyError = _ => error;
+        _zombieBuddy.Status = _ => NotInitialized();
+        var launchesWhenShown = new List<int>();
+        _dialogs.Shown += () => launchesWhenShown.Add(_launcher.Launches.Count);
+        var vm = await CreateActivatedViewModelAsync(SteamGame);
+
+        await LaunchAndExitAsync(vm);
+
+        Assert.Equal([ErrorMessages.ToUserText(error)], _dialogs.Errors);
+        Assert.Equal([0], launchesWhenShown);
+        Assert.Equal(ZombieBuddySetupMode.Initialize, Assert.Single(_dialogs.Setups).Mode);
+        Assert.Single(_zabric.Preloads);
+        Assert.Single(_launcher.Launches);
+    }
+
+    [Fact]
+    public async Task Launch_DefaultCollectionDeletedAfterTheListWasRead_ShowsNotFoundThenLaunches()
+    {
+        ArrangeDefaultCollection("ModA");
+        var vm = await CreateActivatedViewModelAsync(SteamGame);
+        Assert.True((await _collections.DeleteAsync(SteamGame.RootPath, "", "Pack", TestContext.Current.CancellationToken)).IsSuccess);
+
+        await LaunchAndExitAsync(vm);
+
+        Assert.Single(_dialogs.Errors);
+        Assert.Single(_launcher.Launches);
+    }
+
+    [Fact]
+    public async Task Launch_RightAfterAReorder_WritesItThenAppliesTheNewOrder()
+    {
+        ArrangeDefaultCollection("ModA", "ModB");
+        var savesWhenApplied = new List<int>();
+        _collections.ApplyError = _ =>
+        {
+            savesWhenApplied.Add(_collections.Saves.Count);
+            return null;
+        };
+        var vm = await CreateActivatedViewModelAsync(SteamGame);
+        _orderWriter.Queue(SteamGame.RootPath, "", "Pack", ["ModB", "ModA"]);
+
+        await LaunchAndExitAsync(vm);
+
+        Assert.Equal([1], savesWhenApplied);
+        Assert.Equal(["ModB", "ModA"], _collections.ActiveIds);
+        Assert.Single(_launcher.Launches);
+    }
+
+    [Fact]
+    public async Task Launch_ReorderWriteFails_ShowsTheErrorThenAppliesAndLaunches()
+    {
+        ArrangeDefaultCollection("ModA", "ModB");
+        var error = TestErrors.Create(ErrorCode.ModCollectionFileWriteFailed, @"C:\Users\Test\Zomboid\Lua\pz_modlist_settings.cfg");
+        _collections.SaveError = _ => error;
+        var vm = await CreateActivatedViewModelAsync(SteamGame);
+        _orderWriter.Queue(SteamGame.RootPath, "", "Pack", ["ModB", "ModA"]);
+
+        await LaunchAndExitAsync(vm);
+
+        Assert.Equal([ErrorMessages.ToUserText(error)], _dialogs.Errors);
+        Assert.Equal(["ModA", "ModB"], _collections.ActiveIds);
+        Assert.Single(_launcher.Launches);
+    }
+
+    // Collection picker
+
+    private static IEnumerable<string?> ChoiceNames(HomeViewModel vm) => vm.CollectionChoices.Select(choice => choice.Name);
+
+    [Fact]
+    public async Task Collections_ListTheInstallsCollectionsThenNone_WithTheCurrentOneSelected()
+    {
+        _collections.WithCollection("Pack", "ModA").WithCollection("Other", "ModB");
+        _defaultCollections.Save(SteamGame.RootPath, "Other");
+        _overrides.Set(SteamGame.RootPath, GameLaunchOverrides.Empty with { ExtraGameArgs = @"-cachedir=D:\pz" });
+
+        var vm = await CreateActivatedViewModelAsync(SteamGame);
+
+        Assert.Equal(["Pack", "Other", null], ChoiceNames(vm));
+        Assert.Equal(new CollectionChoice("Other"), vm.CollectionSelection);
+        Assert.Equal([(SteamGame.RootPath, @"-cachedir=D:\pz")], _collections.GetRequests);
+        Assert.True(vm.IsGameSelected);
+        Assert.True(vm.CanChooseCollection);
+    }
+
+    [Fact]
+    public async Task Collections_NoCurrentCollection_SelectsNone()
+    {
+        _collections.WithCollection("Pack", "ModA");
+
+        var vm = await CreateActivatedViewModelAsync(SteamGame);
+
+        Assert.Equal(CollectionChoice.None, vm.CollectionSelection);
+        Assert.True(vm.CollectionSelection?.IsNone);
+    }
+
+    [Fact]
+    public async Task CollectionSelection_SetsAndClearsTheCurrentCollection_WithoutWritingFiles()
+    {
+        _collections.WithMods(TestMods.Mod("ModA")).WithCollection("Pack", "ModA");
+        var vm = await CreateActivatedViewModelAsync(SteamGame);
+
+        vm.CollectionSelection = vm.CollectionChoices[0];
+
+        Assert.Equal("Pack", _defaultCollections.Get(SteamGame.RootPath));
+
+        vm.CollectionSelection = null;
+
+        Assert.Equal(new CollectionChoice("Pack"), vm.CollectionSelection);
+
+        vm.CollectionSelection = CollectionChoice.None;
+
+        Assert.Null(_defaultCollections.Get(SteamGame.RootPath));
+        Assert.Empty(_collections.Saves);
+        Assert.Empty(_collections.Applies);
+        Assert.Empty(_collections.Deletes);
+    }
+
+    [Fact]
+    public async Task Launch_NoneChosen_LeavesTheEnabledListAlone()
+    {
+        ArrangeDefaultCollection("ModA");
+        var vm = await CreateActivatedViewModelAsync(SteamGame);
+
+        vm.CollectionSelection = CollectionChoice.None;
+        await LaunchAndExitAsync(vm);
+
+        Assert.Empty(_collections.Applies);
+        Assert.Single(_launcher.Launches);
+    }
+
+    [Fact]
+    public async Task Launch_CollectionChosen_AppliesIt()
+    {
+        _collections.WithMods(TestMods.Mod("ModA")).WithCollection("Pack", "ModA");
+        var vm = await CreateActivatedViewModelAsync(SteamGame);
+
+        vm.CollectionSelection = new CollectionChoice("Pack");
+        await LaunchAndExitAsync(vm);
+
+        Assert.Equal([(SteamGame.RootPath, "", "Pack")], _collections.Applies);
+    }
+
+    [Fact]
+    public async Task Collections_SavedNameGone_ShowsNoneAndForgetsIt_SoTheLaunchDoesntApply()
+    {
+        _collections.WithCollection("Pack", "ModA");
+        _defaultCollections.Save(SteamGame.RootPath, "Deleted in-game");
+
+        var vm = await CreateActivatedViewModelAsync(SteamGame);
+
+        Assert.Equal(CollectionChoice.None, vm.CollectionSelection);
+        Assert.Null(_defaultCollections.Get(SteamGame.RootPath));
+
+        await LaunchAndExitAsync(vm);
+
+        Assert.Empty(_collections.Applies);
+        Assert.Empty(_dialogs.Errors);
+        Assert.Single(_launcher.Launches);
+    }
+
+    [Fact]
+    public async Task Collections_ReadFails_OffersOnlyNone_WithoutAnError()
+    {
+        _collections.WithCollection("Pack", "ModA");
+        _defaultCollections.Save(SteamGame.RootPath, "Pack");
+        _collections.GetError = () => TestErrors.Create(ErrorCode.ModCollectionCacheFolderUnresolved, SteamGame.RootPath);
+
+        var vm = await CreateActivatedViewModelAsync(SteamGame);
+
+        Assert.Equal([null], ChoiceNames(vm));
+        Assert.Equal(CollectionChoice.None, vm.CollectionSelection);
+        Assert.Empty(_dialogs.Errors);
+        Assert.Equal("Pack", _defaultCollections.Get(SteamGame.RootPath));
+    }
+
+    [Fact]
+    public async Task Collections_DedicatedServer_HiddenAndNotRead()
+    {
+        _collections.WithCollection("Pack", "ModA");
+
+        var vm = await CreateActivatedViewModelAsync(SteamServer);
+
+        Assert.False(vm.IsGameSelected);
+        Assert.False(vm.CanChooseCollection);
+        Assert.Equal([null], ChoiceNames(vm));
+        Assert.Empty(_collections.GetRequests);
+    }
+
+    [Fact]
+    public async Task Collections_GameRunning_DisablesTheChoice_AndTheExitRereadsThem()
+    {
+        _collections.WithCollection("Pack", "ModA");
+        var vm = await CreateActivatedViewModelAsync(SteamGame);
+        var changed = new List<string?>();
+        vm.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
+
+        _runState.IsGameRunning = true;
+
+        Assert.False(vm.CanChooseCollection);
+        Assert.Contains(nameof(HomeViewModel.CanChooseCollection), changed);
+
+        _collections.WithCollection("Added in-game", "ModB");
+        _runState.IsGameRunning = false;
+
+        Assert.True(vm.CanChooseCollection);
+        Assert.Equal(["Pack", "Added in-game", null], ChoiceNames(vm));
+    }
+
+    [Fact]
+    public async Task Collections_InstallChanges_ShowsTheNewInstallsCurrentCollection()
+    {
+        _collections.WithCollection("Pack", "ModA").WithCollection("Other", "ModB");
+        _defaultCollections.Save(ManualGame.RootPath, "Other");
+        var vm = await CreateActivatedViewModelAsync(SteamGame, ManualGame);
+
+        Installs.Use(ManualGame.RootPath);
+
+        Assert.Equal(ManualGame.RootPath, _collections.GetRequests[^1].Root);
+        Assert.Equal(new CollectionChoice("Other"), vm.CollectionSelection);
+    }
+
+    [Fact]
+    public async Task Collections_ActivateAgain_ShowsAChangeMadeOnTheModsPage()
+    {
+        _collections.WithCollection("Pack", "ModA");
+        var vm = await CreateActivatedViewModelAsync(SteamGame);
+
+        _collections.WithCollection("Other", "ModB");
+        _defaultCollections.Save(SteamGame.RootPath, "Other");
+        await vm.ActivateCommand.ExecuteAsync(null);
+
+        Assert.Equal(["Pack", "Other", null], ChoiceNames(vm));
+        Assert.Equal(new CollectionChoice("Other"), vm.CollectionSelection);
+    }
+
+    [Fact]
+    public async Task RefreshCollections_RereadsTheFiles()
+    {
+        _collections.WithCollection("Pack", "ModA");
+        var vm = await CreateActivatedViewModelAsync(SteamGame);
+
+        _collections.WithCollection("Added in-game", "ModB");
+        await vm.RefreshCollectionsCommand.ExecuteAsync(null);
+
+        Assert.Equal(2, _collections.GetRequests.Count);
+        Assert.Equal(["Pack", "Added in-game", null], ChoiceNames(vm));
     }
 
     private async Task LaunchAndExitAsync(HomeViewModel vm)

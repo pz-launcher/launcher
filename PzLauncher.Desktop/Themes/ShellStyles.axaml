@@ -158,6 +158,45 @@
                 <Setter Property="BorderBrush" Value="{DynamicResource Shell.Accent}" />
             </Style>
         </ControlTheme>
+
+        <!-- A list column header that sorts by its column. -->
+        <ControlTheme x:Key="Shell.ColumnHeader" TargetType="Button">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{DynamicResource Shell.TextMuted}" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Padding" Value="6,2" />
+            <Setter Property="CornerRadius" Value="4" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="HorizontalContentAlignment" Value="Left" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Transitions">
+                <Transitions>
+                    <controls:PremultipliedBrushTransition Property="Background" Duration="{StaticResource Shell.StateTransitionDuration}" Easing="{StaticResource Shell.MotionEasing}" />
+                    <controls:PremultipliedBrushTransition Property="Foreground" Duration="{StaticResource Shell.StateTransitionDuration}" Easing="{StaticResource Shell.MotionEasing}" />
+                </Transitions>
+            </Setter>
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="{TemplateBinding CornerRadius}"
+                            Padding="{TemplateBinding Padding}">
+                        <ContentPresenter Name="PART_ContentPresenter" Content="{TemplateBinding Content}"
+                                          ContentTemplate="{TemplateBinding ContentTemplate}"
+                                          HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                          VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}" />
+                    </Border>
+                </ControlTemplate>
+            </Setter>
+            <Style Selector="^:pointerover">
+                <Setter Property="Background" Value="{DynamicResource Shell.ListRowHoverBackground}" />
+                <Setter Property="Foreground" Value="{DynamicResource Shell.TextPrimary}" />
+            </Style>
+            <Style Selector="^:focus-visible">
+                <Setter Property="BorderBrush" Value="{DynamicResource Shell.Accent}" />
+            </Style>
+        </ControlTheme>
     </Styles.Resources>
 
     <!-- Page sidebar: width comes from its content; the divider sits on the edge facing the content. -->

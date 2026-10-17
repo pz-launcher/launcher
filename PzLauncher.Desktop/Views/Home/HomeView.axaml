@@ -22,6 +22,22 @@
         <Border Grid.Column="1" Classes="sidebar right" MinWidth="280" MaxWidth="360">
             <DockPanel Margin="20,24">
                 <StackPanel DockPanel.Dock="Bottom" Spacing="10">
+                    <Grid ColumnDefinitions="Auto,10,*" IsVisible="{Binding IsGameSelected}">
+                        <TextBlock Grid.Column="0" Text="{x:Static lang:UiText.Home_Collection}" VerticalAlignment="Center"
+                                   Foreground="{DynamicResource Shell.TextMuted}" />
+                        <ComboBox Grid.Column="2" ItemsSource="{Binding CollectionChoices}" SelectedItem="{Binding CollectionSelection}"
+                                  IsEnabled="{Binding CanChooseCollection}" HorizontalAlignment="Stretch"
+                                  DropDownOpened="OnCollectionsDropDownOpened">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate x:DataType="vm:CollectionChoice">
+                                    <Panel>
+                                        <TextBlock Text="{Binding Name}" IsVisible="{Binding !IsNone}" TextTrimming="CharacterEllipsis" />
+                                        <TextBlock Text="{x:Static lang:UiText.Home_NoCollection}" IsVisible="{Binding IsNone}" TextTrimming="CharacterEllipsis" />
+                                    </Panel>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                    </Grid>
                     <Button Classes="accent" Command="{Binding LaunchCommand}"
                             HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Padding="0,14">
                         <StackPanel Orientation="Horizontal" Spacing="10">
