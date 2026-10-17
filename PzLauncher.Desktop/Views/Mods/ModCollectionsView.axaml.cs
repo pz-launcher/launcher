@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
 using Avalonia;
@@ -14,10 +15,13 @@ using PzLauncher.Desktop.ViewModels.Mods;
 
 namespace PzLauncher.Desktop.Views.Mods;
 
-// A drag lifts a copy of the row into DragLayer and only slides the real rows with render transforms,
+// A drag lifts a copy of the row into DragLayer and only slides the realized rows with render transforms,
 // so the list isn't rebuilt per step; the move is committed once the copy has settled into the gap.
 public partial class ModCollectionsView : UserControl
 {
+    /// <summary>Every entry row's height, spacing included: the list is virtualized, so the drag counts rows instead of measuring them.</summary>
+    public const double EntryRowHeight = 44;
+
     private const double LiftScale = 1.02;
     private static readonly TimeSpan AutoScrollInterval = TimeSpan.FromMilliseconds(16);
 
@@ -37,6 +41,8 @@ public partial class ModCollectionsView : UserControl
         EntriesList.PointerMoved += OnEntriesPointerMoved;
         EntriesList.PointerReleased += OnEntriesPointerReleased;
         EntriesList.PointerCaptureLost += OnEntriesPointerCaptureLost;
+        EntriesList.ContainerPrepared += OnEntryContainerPrepared;
+        EntriesList.ContainerClearing += OnEntryContainerClearing;
         EntriesScroller.ScrollChanged += (_, _) => Follow();
         _autoScroll.Tick += (_, _) => AutoScroll();
     }
@@ -125,45 +131,54 @@ public partial class ModCollectionsView : UserControl
         }
     }
 
+    // A row realized during a drag (scrolled into view, recycled) takes its slot's offset, or the gap's hiding.
+    private void OnEntryContainerPrepared(object? sender, ContainerPreparedEventArgs e)
+    {
+        if (_drag is { } drag)
+        {
+            Track(drag, e.Container, e.Index);
+        }
+    }
+
+    private void OnEntryContainerClearing(object? sender, ContainerClearingEventArgs e)
+    {
+        if (_drag is { } drag && drag.Shifts.Remove(e.Container))
+        {
+            Untrack(e.Container);
+        }
+    }
+
     private void Lift(Press press)
     {
         if (DataContext is not ModCollectionsViewModel vm
             || vm.Entries.IndexOf(press.Entry) is not (>= 0 and var from)
-            || EntriesList.ItemsPanelRoot?.TranslatePoint(default, EntriesScroller) is not { } origin
-            || RowContainers(vm.Entries.Count) is not { } rows)
+            || EntriesList.ItemsPanelRoot is not { } panel
+            || panel.TranslatePoint(default, EntriesScroller) is not { } origin)
         {
             ReleaseCapture(press.Pointer);
             return;
         }
 
-        var layout = new ListReorderLayout([.. rows.Select(row => row.Bounds.Height)]);
+        var layout = new ListReorderLayout(vm.Entries.Count, EntryRowHeight, origin.Y + EntriesScroller.Offset.Y);
         var (duration, easing) = Motion();
-        var drag = new Drag(vm, press.Pointer, rows, layout, from, duration)
+        var drag = new Drag(vm, press.Pointer, layout, from, duration, easing)
         {
             GrabOffset = press.ViewportY - origin.Y - layout.TopOf(from),
-            PanelTopInExtent = origin.Y + EntriesScroller.Offset.Y,
             KeyScope = TopLevel.GetTopLevel(this),
         };
         _drag = drag;
 
-        Transitions Slides() =>
-        [
-            new TransformOperationsTransition { Property = RenderTransformProperty, Duration = duration, Easing = easing },
-        ];
-        foreach (var row in rows)
+        foreach (var row in EntriesList.GetRealizedContainers().ToArray())
         {
-            row.RenderTransform = Slide(0);
-            row.Transitions = Slides();
+            Track(drag, row, EntriesList.IndexFromContainer(row));
         }
 
-        rows[from].Opacity = 0;
-
         DragFloat.Content = press.Entry;
-        DragFloat.Width = rows[from].Bounds.Width;
-        Canvas.SetLeft(DragFloat, origin.X + rows[from].Bounds.X);
+        DragFloat.Width = panel.Bounds.Width;
+        Canvas.SetLeft(DragFloat, origin.X);
         Canvas.SetTop(DragFloat, origin.Y + layout.TopOf(from));
         DragFloat.RenderTransform = Float(0, 1);
-        DragFloat.Transitions = Slides();
+        DragFloat.Transitions = Slides(drag);
         DragFloat.IsVisible = true;
         DragFloat.RenderTransform = Float(0, LiftScale);
 
@@ -179,13 +194,11 @@ public partial class ModCollectionsView : UserControl
             return;
         }
 
-        var (min, max) = VisibleListRange(drag);
-        var height = drag.Layout.HeightOf(drag.From);
-        var top = ListReorderLayout.ClampTop(_pointerY - drag.GrabOffset, height, min, max);
+        var scroll = EntriesScroller.Offset.Y;
+        var top = drag.Layout.FloatTop(_pointerY - drag.GrabOffset, scroll, EntriesScroller.Viewport.Height);
         Canvas.SetTop(DragFloat, top);
 
-        var panelTop = drag.PanelTopInExtent - EntriesScroller.Offset.Y;
-        var target = drag.Layout.TargetIndex(drag.From, top - panelTop + (height / 2));
+        var target = drag.Layout.TargetIndex(drag.From, top, scroll);
         if (target != drag.Target)
         {
             drag.Target = target;
@@ -195,14 +208,13 @@ public partial class ModCollectionsView : UserControl
 
     private void AutoScroll()
     {
-        if (_drag is not { IsSettling: false })
+        if (_drag is not { IsSettling: false } drag)
         {
             return;
         }
 
         var offset = EntriesScroller.Offset;
-        var maxY = Math.Max(0, EntriesScroller.Extent.Height - EntriesScroller.Viewport.Height);
-        var y = Math.Clamp(offset.Y + ListReorderLayout.AutoScrollStep(_pointerY, EntriesScroller.Viewport.Height), 0, maxY);
+        var y = drag.Layout.AutoScrollOffset(offset.Y, _pointerY, EntriesScroller.Viewport.Height);
         if (y != offset.Y)
         {
             EntriesScroller.Offset = offset.WithY(y);
@@ -219,10 +231,7 @@ public partial class ModCollectionsView : UserControl
         drag.Target = to;
         SlideRows(drag);
 
-        // A slot scrolled out of view is approached up to the list's edge, never over the rest of the page.
-        var (min, max) = VisibleListRange(drag);
-        var panelTop = drag.PanelTopInExtent - EntriesScroller.Offset.Y;
-        var landing = ListReorderLayout.ClampTop(panelTop + drag.Layout.LandingTop(drag.From, to), drag.Layout.HeightOf(drag.From), min, max);
+        var landing = drag.Layout.LandingTop(to, EntriesScroller.Offset.Y, EntriesScroller.Viewport.Height);
         DragFloat.RenderTransform = Float(landing - Canvas.GetTop(DragFloat), 1);
         drag.Settled = DispatcherTimer.RunOnce(() => End(drag, commit: true), drag.Duration);
     }
@@ -241,14 +250,12 @@ public partial class ModCollectionsView : UserControl
         drag.Vm.Entries.CollectionChanged -= OnEntriesChanged;
         drag.KeyScope?.RemoveHandler(KeyDownEvent, OnDragKeyDown);
 
-        // Transitions go first, so the rows jump back to their slots instead of sliding there.
-        foreach (var row in drag.Rows)
+        foreach (var row in drag.Shifts.Keys)
         {
-            row.Transitions = null;
-            row.RenderTransform = null;
+            Untrack(row);
         }
 
-        drag.Rows[drag.From].ClearValue(OpacityProperty);
+        drag.Shifts.Clear();
         DragFloat.Transitions = null;
         DragFloat.RenderTransform = null;
         DragFloat.IsVisible = false;
@@ -260,25 +267,56 @@ public partial class ModCollectionsView : UserControl
         }
     }
 
-    // The part of DragLayer the list covers: the viewport, or less when the list is shorter.
-    private (double Min, double Max) VisibleListRange(Drag drag)
+    private void SlideRows(Drag drag)
     {
-        var panelTop = drag.PanelTopInExtent - EntriesScroller.Offset.Y;
-        return (Math.Max(0, panelTop), Math.Min(EntriesScroller.Viewport.Height, panelTop + drag.Layout.TotalHeight));
-    }
-
-    private static void SlideRows(Drag drag)
-    {
-        for (var i = 0; i < drag.Rows.Length; i++)
+        foreach (var (row, current) in drag.Shifts.ToArray())
         {
-            var shift = drag.Layout.ShiftOf(i, drag.From, drag.Target);
-            if (shift != drag.Shifts[i])
+            var index = EntriesList.IndexFromContainer(row);
+            var shift = index < 0 ? current : drag.Layout.ShiftOf(index, drag.From, drag.Target);
+            if (shift != current)
             {
-                drag.Shifts[i] = shift;
-                drag.Rows[i].RenderTransform = Slide(shift);
+                drag.Shifts[row] = shift;
+                row.RenderTransform = Slide(shift);
             }
         }
     }
+
+    // The first offset goes on without transitions, so a row realized mid-drag doesn't slide in from its own slot.
+    private static void Track(Drag drag, Control row, int index)
+    {
+        if (index < 0)
+        {
+            return;
+        }
+
+        var shift = drag.Layout.ShiftOf(index, drag.From, drag.Target);
+        row.Transitions = null;
+        row.RenderTransform = Slide(shift);
+        row.Transitions = Slides(drag);
+        if (index == drag.From)
+        {
+            row.Opacity = 0;
+        }
+        else
+        {
+            row.ClearValue(OpacityProperty);
+        }
+
+        drag.Shifts[row] = shift;
+    }
+
+    // Transitions go first, so the row jumps back to its slot instead of sliding there.
+    private static void Untrack(Control row)
+    {
+        row.Transitions = null;
+        row.RenderTransform = null;
+        row.ClearValue(OpacityProperty);
+    }
+
+    private static Transitions Slides(Drag drag) =>
+    [
+        new TransformOperationsTransition { Property = RenderTransformProperty, Duration = drag.Duration, Easing = drag.Easing },
+    ];
 
     // Same operation list in every state, so the transition interpolates each operation instead of a matrix.
     private static TransformOperations Slide(double y)
@@ -312,23 +350,6 @@ public partial class ModCollectionsView : UserControl
         }
     }
 
-    /// <summary><c>null</c> unless every row has a container.</summary>
-    private Control[]? RowContainers(int count)
-    {
-        var rows = new Control[count];
-        for (var i = 0; i < count; i++)
-        {
-            if (EntriesList.ContainerFromIndex(i) is not { } row)
-            {
-                return null;
-            }
-
-            rows[i] = row;
-        }
-
-        return rows;
-    }
-
     private Control? HandleAt(object? source)
     {
         for (var visual = source as Visual; visual is not null && visual != EntriesList; visual = visual.GetVisualParent())
@@ -344,14 +365,11 @@ public partial class ModCollectionsView : UserControl
 
     private sealed record Press(ModCollectionEntryRow Entry, IPointer Pointer, double ViewportY);
 
-    private sealed class Drag(ModCollectionsViewModel vm, IPointer pointer, Control[] rows, ListReorderLayout layout, int from, TimeSpan duration)
+    private sealed class Drag(ModCollectionsViewModel vm, IPointer pointer, ListReorderLayout layout, int from, TimeSpan duration, Easing easing)
     {
         public ModCollectionsViewModel Vm { get; } = vm;
 
         public IPointer Pointer { get; } = pointer;
-
-        /// <summary>The rows' containers, in list order before the drag.</summary>
-        public Control[] Rows { get; } = rows;
 
         public ListReorderLayout Layout { get; } = layout;
 
@@ -359,17 +377,17 @@ public partial class ModCollectionsView : UserControl
 
         public TimeSpan Duration { get; } = duration;
 
+        public Easing Easing { get; } = easing;
+
         /// <summary>Pointer distance below the dragged row's top.</summary>
         public double GrabOffset { get; init; }
-
-        /// <summary>The items panel's top in the scrolled content.</summary>
-        public double PanelTopInExtent { get; init; }
 
         public TopLevel? KeyScope { get; init; }
 
         public int Target { get; set; } = from;
 
-        public double[] Shifts { get; } = new double[rows.Length];
+        /// <summary>The realized containers the drag has offset, with each one's current offset.</summary>
+        public Dictionary<Control, double> Shifts { get; } = new();
 
         public bool IsSettling { get; set; }
 

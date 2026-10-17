@@ -50,3 +50,4 @@ Reference: `PzLauncher.Desktop/Themes/ShellStyles.axaml` (timing resources, cont
 - Shell control themes animate brushes with `PremultipliedBrushTransition`, never `BrushTransition`: the built-in one blends straight alpha, so a fade from `Transparent` (`#00FFFFFF`) flashes light in dark theme.
 - In-page `IsVisible` toggles are not animated.
 - A drag reorder lifts a copy of the row into an overlay and slides the other rows with render-transform transitions; the list itself changes once, after the drop settles. Reference: `PzLauncher.Desktop/Views/Mods/ModCollectionsView.axaml.cs`, geometry in `ListReorderLayout.cs`.
+- A reorderable list is virtualized with a fixed row height: the drag geometry comes from index × row height and the scroll offset, never from containers. Only realized containers get offsets: set on `ContainerPrepared` without a transition, reset on `ContainerClearing` and when the drag ends.
