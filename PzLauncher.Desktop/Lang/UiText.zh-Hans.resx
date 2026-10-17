@@ -61,6 +61,12 @@
   <data name="Home_LaunchSettings" xml:space="preserve">
     <value>启动设置</value>
   </data>
+  <data name="Home_Collection" xml:space="preserve">
+    <value>合集</value>
+  </data>
+  <data name="Home_NoCollection" xml:space="preserve">
+    <value>不使用合集（保持游戏内设置）</value>
+  </data>
   <data name="Installs_Title" xml:space="preserve">
     <value>已安装</value>
   </data>
@@ -584,29 +590,29 @@
   <data name="ModCollections_MissingCountFormat" xml:space="preserve">
     <value>未安装 {0} 个</value>
   </data>
-  <data name="ModCollections_DefaultBadge" xml:space="preserve">
-    <value>默认</value>
-  </data>
-  <data name="ModCollections_ActiveBadge" xml:space="preserve">
-    <value>使用中</value>
-  </data>
   <data name="ModCollections_NoSelection" xml:space="preserve">
     <value>请选择一个合集。</value>
   </data>
-  <data name="ModCollections_Apply" xml:space="preserve">
-    <value>应用为启用列表</value>
+  <data name="ModCollections_CurrentBadge" xml:space="preserve">
+    <value>当前</value>
   </data>
-  <data name="ModCollections_ApplyHint" xml:space="preserve">
-    <value>在游戏中只启用本合集里已安装的模组及其依赖，并按此顺序加载。</value>
+  <data name="ModCollections_Use" xml:space="preserve">
+    <value>使用此合集</value>
   </data>
-  <data name="ModCollections_SetDefault" xml:space="preserve">
-    <value>设为默认</value>
+  <data name="ModCollections_UseHint" xml:space="preserve">
+    <value>立即将此合集应用为游戏的启用列表，之后每次从启动器启动都会自动应用。</value>
   </data>
-  <data name="ModCollections_UnsetDefault" xml:space="preserve">
-    <value>取消默认</value>
+  <data name="ModCollections_InUse" xml:space="preserve">
+    <value>当前使用</value>
   </data>
-  <data name="ModCollections_DefaultHint" xml:space="preserve">
-    <value>每次从启动器启动游戏前，都会先应用默认合集。</value>
+  <data name="ModCollections_InUseHint" xml:space="preserve">
+    <value>这是当前合集，启用列表已是最新</value>
+  </data>
+  <data name="ModCollections_ApplyAgain" xml:space="preserve">
+    <value>重新应用</value>
+  </data>
+  <data name="ModCollections_ApplyAgainHint" xml:space="preserve">
+    <value>合集或游戏内的启用列表有改动，点此立即应用（启动时也会自动应用）</value>
   </data>
   <data name="ModCollections_Share" xml:space="preserve">
     <value>分享</value>

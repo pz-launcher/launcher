@@ -79,6 +79,25 @@ public sealed class ModCollectionServiceTests : IDisposable
         Assert.True(state.ActiveMatchesCollection);
     }
 
+    [Theory]
+    [InlineData("A;B;", "A,B", true, true)]
+    [InlineData("B;A;", "A,B", true, false)]
+    [InlineData("A;", "A,B", false, false)]
+    [InlineData("A;B;", "A,Gone,B", true, true)]
+    [InlineData("A;B;", "Gone", false, false)]
+    public async Task GetAsync_InUse_ComparesTheEnabledInstalledModsThenTheirOrder(string ids, string active, bool isActive, bool isActiveInOrder)
+    {
+        _mods.Local("A");
+        _mods.Local("B");
+        WriteSettings($"pack:{ids}");
+        var mods = string.Concat(active.Split(',').Select(id => $"    mod = {id},\r\n"));
+        WriteFile(ActivePath, $"VERSION = 1,\r\n\r\nmods\r\n{{\r\n{mods}}}\r\n");
+
+        var collection = Assert.Single((await GetAsync()).Collections);
+
+        Assert.Equal((isActive, isActiveInOrder), (collection.IsActive, collection.IsActiveInOrder));
+    }
+
     [Fact]
     public async Task GetAsync_EnabledListMatchingNoCollection_IsReported()
     {

@@ -232,7 +232,7 @@ public class CoreJsonContextTests
     {
         var original = new ModCollectionState(
             @"C:\Users\u\Zomboid",
-            [new ModCollection("B42·20通用合集", ["ModA", "Missing"], IsActive: true)],
+            [new ModCollection("B42·20通用合集", ["ModA", "Missing"], IsActive: true, IsActiveInOrder: false)],
             [
                 new InstalledMod("ModA", "Mod A", "2000", InstalledModSource.SteamWorkshop, ["damnlib"], ["B"], ["C"], ["D"]),
                 new InstalledMod("Local", "Local", null, InstalledModSource.Local, [], [], [], []),
@@ -249,7 +249,7 @@ public class CoreJsonContextTests
         Assert.Equal((original.CacheFolder, original.ActiveMatchesCollection), (copy.CacheFolder, copy.ActiveMatchesCollection));
         Assert.Equal(original.ActiveIds, copy.ActiveIds);
         var collection = Assert.Single(copy.Collections);
-        Assert.Equal(("B42·20通用合集", true), (collection.Name, collection.IsActive));
+        Assert.Equal(("B42·20通用合集", true, false), (collection.Name, collection.IsActive, collection.IsActiveInOrder));
         Assert.Equal(["ModA", "Missing"], collection.ModIds);
         Assert.Equal(
             original.InstalledMods.Select(mod => (mod.Id, mod.Name, mod.WorkshopId, mod.Source)),
@@ -257,6 +257,12 @@ public class CoreJsonContextTests
         var mod = copy.InstalledMods[0];
         Assert.Equal(["damnlib", "B", "C", "D"], mod.Require.Concat(mod.LoadAfter).Concat(mod.LoadBefore).Concat(mod.Incompatible));
     }
+
+    [Theory]
+    [InlineData("""{"name":"pack","modIds":null,"isActive":true,"isActiveInOrder":true}""")]
+    [InlineData("""{"name":"pack","modIds":[],"isActive":true}""")]
+    public void ModCollection_NonNullMemberNullOrMissingInJson_Throws(string json) =>
+        Assert.Throws<JsonException>(() => JsonSerializer.Deserialize(json, CoreJsonContext.Default.ModCollection));
 
     [Fact]
     public void SaveModCollectionRequest_RoundTrips()

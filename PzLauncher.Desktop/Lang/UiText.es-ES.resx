@@ -61,6 +61,12 @@
   <data name="Home_LaunchSettings" xml:space="preserve">
     <value>Ajustes de inicio</value>
   </data>
+  <data name="Home_Collection" xml:space="preserve">
+    <value>Colección</value>
+  </data>
+  <data name="Home_NoCollection" xml:space="preserve">
+    <value>Sin colección (mantener la configuración del juego)</value>
+  </data>
   <data name="Installs_Title" xml:space="preserve">
     <value>Instalaciones</value>
   </data>
@@ -584,29 +590,29 @@
   <data name="ModCollections_MissingCountFormat" xml:space="preserve">
     <value>No instalados: {0}</value>
   </data>
-  <data name="ModCollections_DefaultBadge" xml:space="preserve">
-    <value>Predeterminada</value>
-  </data>
-  <data name="ModCollections_ActiveBadge" xml:space="preserve">
-    <value>En uso</value>
-  </data>
   <data name="ModCollections_NoSelection" xml:space="preserve">
     <value>Selecciona una colección.</value>
   </data>
-  <data name="ModCollections_Apply" xml:space="preserve">
-    <value>Aplicar como lista activada</value>
+  <data name="ModCollections_CurrentBadge" xml:space="preserve">
+    <value>Actual</value>
   </data>
-  <data name="ModCollections_ApplyHint" xml:space="preserve">
-    <value>Activa en el juego solo los mods instalados de esta colección, con sus requisitos, en este orden.</value>
+  <data name="ModCollections_Use" xml:space="preserve">
+    <value>Usar esta colección</value>
   </data>
-  <data name="ModCollections_SetDefault" xml:space="preserve">
-    <value>Hacer predeterminada</value>
+  <data name="ModCollections_UseHint" xml:space="preserve">
+    <value>Aplica ahora esta colección como lista activada del juego; cada inicio desde el launcher la vuelve a aplicar.</value>
   </data>
-  <data name="ModCollections_UnsetDefault" xml:space="preserve">
-    <value>Quitar predeterminada</value>
+  <data name="ModCollections_InUse" xml:space="preserve">
+    <value>En uso</value>
   </data>
-  <data name="ModCollections_DefaultHint" xml:space="preserve">
-    <value>La colección predeterminada se aplica cada vez que inicias el juego desde el launcher.</value>
+  <data name="ModCollections_InUseHint" xml:space="preserve">
+    <value>Esta es la colección actual y la lista activada está al día</value>
+  </data>
+  <data name="ModCollections_ApplyAgain" xml:space="preserve">
+    <value>Volver a aplicar</value>
+  </data>
+  <data name="ModCollections_ApplyAgainHint" xml:space="preserve">
+    <value>La colección o la lista activada del juego cambió; aplícala ahora (al iniciar también se aplica)</value>
   </data>
   <data name="ModCollections_Share" xml:space="preserve">
     <value>Compartir</value>

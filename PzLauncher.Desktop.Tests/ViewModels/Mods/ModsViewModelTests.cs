@@ -324,7 +324,7 @@ public class ModsViewModelTests : UiTextCultureTest
     // Collections
 
     [Fact]
-    public async Task Collections_ShowCountsMissingDefaultAndInUseMarkers()
+    public async Task Collections_ShowCountsMissingAndTheCurrentCollection()
     {
         _defaults.Save(SteamGame.RootPath, "Survival");
 
@@ -332,8 +332,8 @@ public class ModsViewModelTests : UiTextCultureTest
 
         Assert.Equal(
             [
-                new ModCollectionRow("Survival", 3, 1, IsDefault: true, IsActive: false, IsSelected: true),
-                new ModCollectionRow("Driving", 1, 0, IsDefault: false, IsActive: true, IsSelected: false),
+                new ModCollectionRow("Survival", 3, 1, IsCurrent: true, IsActiveInOrder: false, IsSelected: true),
+                new ModCollectionRow("Driving", 1, 0, IsCurrent: false, IsActiveInOrder: true, IsSelected: false),
             ],
             vm.Collections.Rows);
         Assert.Equal(["Maps", "Core", "Gone"], vm.Collections.Entries.Select(entry => entry.Id));
@@ -402,7 +402,7 @@ public class ModsViewModelTests : UiTextCultureTest
     }
 
     [Fact]
-    public async Task Rename_KeepsTheOrderAndTheDefaultMark()
+    public async Task Rename_KeepsTheOrderAndTheCurrentMark()
     {
         _defaults.Save(SteamGame.RootPath, "Survival");
         var vm = await CreateActivatedAsync();
@@ -415,7 +415,7 @@ public class ModsViewModelTests : UiTextCultureTest
         Assert.Equal(["Maps", "Core", "Gone"], _service.IdsOf("Survival B42"));
         Assert.Null(_service.IdsOf("Survival"));
         Assert.Equal("Survival B42", _defaults.Get(SteamGame.RootPath));
-        Assert.True(vm.Collections.Selected?.IsDefault);
+        Assert.True(vm.Collections.Selected?.IsCurrent);
     }
 
     [Fact]
@@ -431,7 +431,7 @@ public class ModsViewModelTests : UiTextCultureTest
     }
 
     [Fact]
-    public async Task Delete_AfterConfirm_RemovesItAndClearsTheDefaultMark()
+    public async Task Delete_AfterConfirm_RemovesItAndClearsTheCurrentMark()
     {
         _defaults.Save(SteamGame.RootPath, "Survival");
         var vm = await CreateActivatedAsync();
@@ -452,24 +452,6 @@ public class ModsViewModelTests : UiTextCultureTest
         await vm.Collections.DeleteCommand.ExecuteAsync(null);
 
         Assert.Empty(_service.Deletes);
-    }
-
-    [Fact]
-    public async Task ToggleDefault_MovesTheMarkThenClearsIt()
-    {
-        _defaults.Save(SteamGame.RootPath, "Survival");
-        var vm = await CreateActivatedAsync();
-        Select(vm, "Driving");
-
-        vm.Collections.ToggleDefaultCommand.Execute(null);
-
-        Assert.Equal("Driving", _defaults.Get(SteamGame.RootPath));
-        Assert.Equal(["Driving"], vm.Collections.Rows.Where(row => row.IsDefault).Select(row => row.Name));
-
-        vm.Collections.ToggleDefaultCommand.Execute(null);
-
-        Assert.Null(_defaults.Get(SteamGame.RootPath));
-        Assert.DoesNotContain(vm.Collections.Rows, row => row.IsDefault);
     }
 
     [Fact]
@@ -712,21 +694,55 @@ public class ModsViewModelTests : UiTextCultureTest
     }
 
     [Fact]
-    public async Task Apply_WritesTheEnabledListAndShowsTheCount()
+    public async Task Use_NotCurrent_AppliesItAndMakesItCurrent()
     {
         _service.ActiveIds = [];
+        _defaults.Save(SteamGame.RootPath, "Survival");
         var vm = await CreateActivatedAsync();
         Select(vm, "Driving");
+        var collections = vm.Collections;
+        Assert.True(collections.UseCommand.CanExecute(null));
+        Assert.Equal((UiText.ModCollections_Use, UiText.ModCollections_UseHint), (collections.UseText, collections.UseHint));
 
-        await vm.Collections.ApplyCommand.ExecuteAsync(null);
+        await collections.UseCommand.ExecuteAsync(null);
 
+        Assert.Equal([(SteamGame.RootPath, "", "Driving")], _service.Applies);
         Assert.Equal(["Cars"], _service.ActiveIds);
-        Assert.Equal(string.Format(UiText.ModCollections_Applied, "Driving", 1), vm.Collections.StatusText);
-        Assert.True(vm.Collections.Rows.Single(row => row.Name == "Driving").IsActive);
+        Assert.Equal("Driving", _defaults.Get(SteamGame.RootPath));
+        Assert.Equal(["Driving"], collections.Rows.Where(row => row.IsCurrent).Select(row => row.Name));
+        Assert.Equal(string.Format(UiText.ModCollections_Applied, "Driving", 1), collections.StatusText);
+        Assert.Equal(UiText.ModCollections_InUse, collections.UseText);
+        Assert.False(collections.UseCommand.CanExecute(null));
     }
 
     [Fact]
-    public async Task Apply_Fails_ShowsTheError()
+    public async Task Use_NotCurrentButAlreadyTheEnabledList_IsStillOffered()
+    {
+        var vm = await CreateActivatedAsync();
+
+        Select(vm, "Driving");
+
+        Assert.True(vm.Collections.UseCommand.CanExecute(null));
+        Assert.Equal(UiText.ModCollections_Use, vm.Collections.UseText);
+    }
+
+    [Fact]
+    public async Task Use_Cancelled_DoesNotMakeItCurrent()
+    {
+        _service.ActiveIds = ["Tweaks"];
+        var vm = await CreateActivatedAsync();
+        Select(vm, "Driving");
+
+        await vm.Collections.UseCommand.ExecuteAsync(null);
+
+        Assert.Single(_dialogs.Prompts);
+        Assert.Empty(_service.Applies);
+        Assert.Null(_defaults.Get(SteamGame.RootPath));
+        Assert.DoesNotContain(vm.Collections.Rows, row => row.IsCurrent);
+    }
+
+    [Fact]
+    public async Task Use_Fails_ShowsTheErrorAndDoesNotMakeItCurrent()
     {
         _service.ActiveIds = [];
         var error = TestErrors.Create(ErrorCode.ModCollectionFileWriteFailed, @"C:\Users\Test\Zomboid\mods\default.txt");
@@ -734,14 +750,85 @@ public class ModsViewModelTests : UiTextCultureTest
         var vm = await CreateActivatedAsync();
         Select(vm, "Driving");
 
-        await vm.Collections.ApplyCommand.ExecuteAsync(null);
+        await vm.Collections.UseCommand.ExecuteAsync(null);
 
         Assert.Equal([ErrorMessages.ToUserText(error)], _dialogs.Errors);
+        Assert.Null(_defaults.Get(SteamGame.RootPath));
         Assert.Null(vm.Collections.StatusText);
     }
 
     [Fact]
-    public async Task GameRunning_DisablesEveryWriteButNotShareOrTheDefaultMark()
+    public async Task Use_CurrentAndUpToDate_IsDisabledAsInUse()
+    {
+        _defaults.Save(SteamGame.RootPath, "Driving");
+        var vm = await CreateActivatedAsync();
+
+        Select(vm, "Driving");
+
+        var collections = vm.Collections;
+        Assert.False(collections.UseCommand.CanExecute(null));
+        Assert.Equal((UiText.ModCollections_InUse, UiText.ModCollections_InUseHint), (collections.UseText, collections.UseHint));
+    }
+
+    [Fact]
+    public async Task Use_CurrentButTheEnabledListDiffers_IsOfferedAsApplyAgain_UnlessTheGameRuns()
+    {
+        _defaults.Save(SteamGame.RootPath, "Survival");
+        var vm = await CreateActivatedAsync();
+
+        var collections = vm.Collections;
+        Assert.Equal("Survival", collections.Selected?.Name);
+        Assert.True(collections.UseCommand.CanExecute(null));
+        Assert.Equal((UiText.ModCollections_ApplyAgain, UiText.ModCollections_ApplyAgainHint), (collections.UseText, collections.UseHint));
+
+        _runState.IsGameRunning = true;
+
+        Assert.False(collections.UseCommand.CanExecute(null));
+    }
+
+    [Fact]
+    public async Task Use_CurrentWithTheSameModsInAnotherOrder_IsOfferedAsApplyAgain()
+    {
+        _service.WithCollection("Mixed", "Tweaks", "Cars");
+        _service.ActiveIds = ["Cars", "Tweaks"];
+        _defaults.Save(SteamGame.RootPath, "Mixed");
+        var vm = await CreateActivatedAsync();
+
+        Select(vm, "Mixed");
+
+        Assert.True(vm.Collections.UseCommand.CanExecute(null));
+        Assert.Equal(UiText.ModCollections_ApplyAgain, vm.Collections.UseText);
+    }
+
+    [Fact]
+    public async Task Move_OfTheCurrentUpToDateCollection_OffersApplyAgainBeforeTheWrite()
+    {
+        _service.WithCollection("Mixed", "Cars", "Tweaks");
+        _service.ActiveIds = ["Cars", "Tweaks"];
+        _defaults.Save(SteamGame.RootPath, "Mixed");
+        var vm = await CreateActivatedAsync();
+        Select(vm, "Mixed");
+        var collections = vm.Collections;
+        Assert.False(collections.UseCommand.CanExecute(null));
+
+        collections.Move(0, 1);
+
+        Assert.Empty(_service.Saves);
+        Assert.True(collections.UseCommand.CanExecute(null));
+        Assert.Equal(UiText.ModCollections_ApplyAgain, collections.UseText);
+
+        await vm.ActivateCommand.ExecuteAsync(null);
+
+        Assert.Equal(UiText.ModCollections_ApplyAgain, collections.UseText);
+
+        collections.Move(1, 0);
+
+        Assert.Equal(UiText.ModCollections_InUse, collections.UseText);
+        Assert.False(collections.UseCommand.CanExecute(null));
+    }
+
+    [Fact]
+    public async Task GameRunning_DisablesEveryWriteButNotShare()
     {
         var vm = await CreateActivatedAsync();
 
@@ -754,7 +841,7 @@ public class ModsViewModelTests : UiTextCultureTest
         Assert.False(collections.ImportCommand.CanExecute(null));
         Assert.False(collections.RenameCommand.CanExecute(null));
         Assert.False(collections.DeleteCommand.CanExecute(null));
-        Assert.False(collections.ApplyCommand.CanExecute(null));
+        Assert.False(collections.UseCommand.CanExecute(null));
         Assert.False(collections.AutoSortCommand.CanExecute(null));
         Assert.False(collections.AddModCommand.CanExecute(_service.InstalledMods[0]));
         Assert.False(collections.RemoveModCommand.CanExecute(collections.Entries[0]));
@@ -764,7 +851,6 @@ public class ModsViewModelTests : UiTextCultureTest
         Assert.False(collections.MoveToBottomCommand.CanExecute(collections.Entries[1]));
         Assert.False(collections.CanReorder);
         Assert.True(collections.ShareCommand.CanExecute(null));
-        Assert.True(collections.ToggleDefaultCommand.CanExecute(null));
 
         collections.Move(0, 1);
         _time.Advance(OrderSaveDelay);

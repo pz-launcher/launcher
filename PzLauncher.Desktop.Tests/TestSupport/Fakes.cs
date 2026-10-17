@@ -411,8 +411,7 @@ public sealed class FakeModCollectionService : IModCollectionService
         var active = ActiveIds.Where(installed.Contains).ToHashSet(StringComparer.Ordinal);
         List<ModCollection> collections =
         [
-            .. Collections.Select(collection =>
-                new ModCollection(collection.Name, collection.ModIds, active.SetEquals(ModLoadOrder.Resolve(collection.ModIds, InstalledMods).EnabledIds))),
+            .. Collections.Select(collection => ModCollection.Create(collection.Name, collection.ModIds, InstalledMods, ActiveIds)),
         ];
         return Task.FromResult<Result<ModCollectionState>>(new ModCollectionState(
             @"C:\Users\Test\Zomboid", collections, [.. InstalledMods], [.. ActiveIds], active.Count == 0 || collections.Any(collection => collection.IsActive)));

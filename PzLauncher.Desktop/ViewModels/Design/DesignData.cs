@@ -69,8 +69,7 @@ public static class DesignData
 
     private static readonly ModCollectionOrderWriter OrderWriter = new(ModCollectionsSample, RunState, new SamplePlatform(), TimeProvider.System);
 
-    public static HomeViewModel Home { get; } =
-        new(Installs, GameLaunch, InstallOverrides, new NoDialogs(), ZombieBuddySample, ZombieBuddyChannels, new SampleZabric(), ModCollectionDefaults, Applier, OrderWriter, RunState);
+    public static HomeViewModel Home { get; } = CreateHome();
 
     public static ModsViewModel Mods { get; } = CreateMods();
 
@@ -95,6 +94,15 @@ public static class DesignData
     {
         var vm = new InstallsViewModel(new SampleInstallDetection(), new NoFolderPicker(), new SamplePlatform(), Localization);
         vm.ScanCommand.Execute(null);
+        return vm;
+    }
+
+    private static HomeViewModel CreateHome()
+    {
+        var vm = new HomeViewModel(
+            Installs, GameLaunch, InstallOverrides, new NoDialogs(), ZombieBuddySample, ZombieBuddyChannels, new SampleZabric(), ModCollectionsSample,
+            ModCollectionDefaults, Applier, OrderWriter, RunState);
+        vm.ActivateCommand.Execute(null);
         return vm;
     }
 
@@ -251,8 +259,9 @@ public static class DesignData
             Task.FromResult<Result<ModCollectionState>>(new ModCollectionState(
                 Path.Combine(SampleHome, "Zomboid"),
                 [
-                    new ModCollection("Survival", ["ExampleCore", "ExampleMaps", "ExampleTweaks"], IsActive: true),
-                    new ModCollection("Vehicles", ["ExampleCars", "ExampleCarsLite", "ExampleRemoved"], IsActive: false),
+                    new ModCollection("Survival", ["ExampleCore", "ExampleMaps", "ExampleTweaks"], IsActive: true, IsActiveInOrder: true),
+                    new ModCollection("Survival, tweaks first", ["ExampleTweaks", "ExampleCore", "ExampleMaps"], IsActive: true, IsActiveInOrder: false),
+                    new ModCollection("Vehicles", ["ExampleCars", "ExampleCarsLite", "ExampleRemoved"], IsActive: false, IsActiveInOrder: false),
                 ],
                 Installed,
                 ["ExampleCore", "ExampleMaps", "ExampleTweaks"],

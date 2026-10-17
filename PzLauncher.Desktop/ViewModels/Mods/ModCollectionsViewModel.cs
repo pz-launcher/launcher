@@ -16,7 +16,7 @@ using PzLauncher.Desktop.Services;
 
 namespace PzLauncher.Desktop.ViewModels.Mods;
 
-/// <summary>The game's mod collections of the install in use: edit, order, share, import, apply and mark the default.</summary>
+/// <summary>The game's mod collections of the install in use: edit, order, share, import, and use one as the current collection.</summary>
 public partial class ModCollectionsViewModel : ViewModelBase
 {
     private const int MaxAddCandidates = 50;
@@ -54,13 +54,27 @@ public partial class ModCollectionsViewModel : ViewModelBase
     public partial IReadOnlyList<ModCollectionRow> Rows { get; private set; }
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(HasSelection))]
+    [NotifyPropertyChangedFor(nameof(HasSelection), nameof(UseText), nameof(UseHint))]
     [NotifyCanExecuteChangedFor(
-        nameof(RenameCommand), nameof(DeleteCommand), nameof(ApplyCommand), nameof(AutoSortCommand),
-        nameof(ShareCommand), nameof(ToggleDefaultCommand), nameof(AddModCommand))]
+        nameof(RenameCommand), nameof(DeleteCommand), nameof(UseCommand), nameof(AutoSortCommand),
+        nameof(ShareCommand), nameof(AddModCommand))]
     public partial ModCollectionRow? Selected { get; private set; }
 
     public bool HasSelection => Selected is not null;
+
+    public string UseText => Selected switch
+    {
+        { IsCurrent: true, IsActiveInOrder: true } => UiText.ModCollections_InUse,
+        { IsCurrent: true } => UiText.ModCollections_ApplyAgain,
+        _ => UiText.ModCollections_Use,
+    };
+
+    public string UseHint => Selected switch
+    {
+        { IsCurrent: true, IsActiveInOrder: true } => UiText.ModCollections_InUseHint,
+        { IsCurrent: true } => UiText.ModCollections_ApplyAgainHint,
+        _ => UiText.ModCollections_UseHint,
+    };
 
     /// <summary>Loaded, and the cache folder holds no collection.</summary>
     public bool IsEmpty => _page.State is not null && Rows.Count == 0;
@@ -225,8 +239,10 @@ public partial class ModCollectionsViewModel : ViewModelBase
         SelectByName(null);
     }
 
-    [RelayCommand(CanExecute = nameof(CanWriteSelected))]
-    private async Task ApplyAsync()
+    private bool CanUse() => CanWriteSelected() && Selected is not { IsCurrent: true, IsActiveInOrder: true };
+
+    [RelayCommand(CanExecute = nameof(CanUse))]
+    private async Task UseAsync()
     {
         if (Selected is not { } row)
         {
@@ -235,7 +251,14 @@ public partial class ModCollectionsViewModel : ViewModelBase
 
         var name = row.Name;
         ModCollectionApplyOutcome? outcome = null;
-        await _page.RunAsync(async (root, extraGameArgs) => outcome = await _applier.ApplyAsync(root, extraGameArgs, name));
+        await _page.RunAsync(async (root, extraGameArgs) =>
+        {
+            outcome = await _applier.ApplyAsync(root, extraGameArgs, name);
+            if (outcome is ModCollectionApplyOutcome.Applied && _defaults.Get(root) != name)
+            {
+                _defaults.Save(root, name);
+            }
+        });
         switch (outcome)
         {
             case ModCollectionApplyOutcome.Applied applied:
@@ -279,28 +302,6 @@ public partial class ModCollectionsViewModel : ViewModelBase
         await _clipboard.SetTextAsync(ModCollectionShareText.Format(row.Name, _ids));
         var name = row.Name;
         ShowStatus(() => Format(UiText.ModCollections_Shared, name));
-    }
-
-    private bool CanToggleDefault() => Selected is not null && _page.Install is not null;
-
-    [RelayCommand(CanExecute = nameof(CanToggleDefault))]
-    private void ToggleDefault()
-    {
-        if (Selected is not { } row || _page.Install is not { } install)
-        {
-            return;
-        }
-
-        if (row.IsDefault)
-        {
-            _defaults.Clear(install.RootPath);
-        }
-        else
-        {
-            _defaults.Save(install.RootPath, row.Name);
-        }
-
-        Rebuild(_page.State);
     }
 
     [RelayCommand(CanExecute = nameof(CanWriteSelected))]
@@ -350,11 +351,17 @@ public partial class ModCollectionsViewModel : ViewModelBase
 
         NotifyMoveCommands();
         _page.ScheduleOrderSave(row.Name, [.. _ids]);
+        RefreshSelectedInUse(row);
     }
 
     partial void OnAddSearchTextChanged(string value) => RefreshCandidates();
 
-    internal void RenderTexts() => StatusText = _statusSource?.Invoke();
+    internal void RenderTexts()
+    {
+        StatusText = _statusSource?.Invoke();
+        OnPropertyChanged(nameof(UseText));
+        OnPropertyChanged(nameof(UseHint));
+    }
 
     private async Task SaveIdsAsync(IReadOnlyList<string> ids)
     {
@@ -420,7 +427,6 @@ public partial class ModCollectionsViewModel : ViewModelBase
                 break;
             case nameof(ModsViewModel.Install):
                 ShowStatus(null);
-                ToggleDefaultCommand.NotifyCanExecuteChanged();
                 break;
         }
     }
@@ -432,7 +438,7 @@ public partial class ModCollectionsViewModel : ViewModelBase
         ImportCommand.NotifyCanExecuteChanged();
         RenameCommand.NotifyCanExecuteChanged();
         DeleteCommand.NotifyCanExecuteChanged();
-        ApplyCommand.NotifyCanExecuteChanged();
+        UseCommand.NotifyCanExecuteChanged();
         AutoSortCommand.NotifyCanExecuteChanged();
         AddModCommand.NotifyCanExecuteChanged();
         RemoveModCommand.NotifyCanExecuteChanged();
@@ -461,18 +467,25 @@ public partial class ModCollectionsViewModel : ViewModelBase
         }
 
         var installed = state.InstalledMods.Select(mod => mod.Id).ToHashSet(StringComparer.Ordinal);
-        var defaultName = _page.Install is { } install ? _defaults.Get(install.RootPath) : null;
+        var currentName = _page.Install is { } install ? _defaults.Get(install.RootPath) : null;
         var selected = state.Collections.FirstOrDefault(collection => collection.Name == _selectedName) ?? state.Collections.FirstOrDefault();
         _selectedName = selected?.Name;
         Rows =
         [
-            .. state.Collections.Select(collection => new ModCollectionRow(
-                collection.Name,
-                collection.ModIds.Count,
-                collection.ModIds.Count(id => !installed.Contains(id)),
-                collection.Name == defaultName,
-                collection.IsActive,
-                collection.Name == _selectedName)),
+            .. state.Collections.Select(collection =>
+            {
+                // A queued reorder isn't in the files yet, so Core's in-use flag still describes the old order.
+                var shown = _page.PendingOrderOf(collection.Name) is { } pending
+                    ? ModCollection.Create(collection.Name, pending, state.InstalledMods, state.ActiveIds)
+                    : collection;
+                return new ModCollectionRow(
+                    collection.Name,
+                    collection.ModIds.Count,
+                    collection.ModIds.Count(id => !installed.Contains(id)),
+                    collection.Name == currentName,
+                    shown.IsActiveInOrder,
+                    collection.Name == _selectedName);
+            }),
         ];
         Selected = Rows.FirstOrDefault(row => row.IsSelected);
 
@@ -487,6 +500,22 @@ public partial class ModCollectionsViewModel : ViewModelBase
 
         RefreshCandidates();
         NotifyWriteCommands();
+    }
+
+    private void RefreshSelectedInUse(ModCollectionRow row)
+    {
+        if (_page.State is not { } state)
+        {
+            return;
+        }
+
+        var shown = ModCollection.Create(row.Name, _ids, state.InstalledMods, state.ActiveIds);
+        var updated = row with { IsActiveInOrder = shown.IsActiveInOrder };
+        if (updated != row)
+        {
+            Rows = [.. Rows.Select(other => other.Name == row.Name ? updated : other)];
+            Selected = updated;
+        }
     }
 
     private void RefreshCandidates()

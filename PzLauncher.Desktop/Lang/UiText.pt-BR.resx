@@ -61,6 +61,12 @@
   <data name="Home_LaunchSettings" xml:space="preserve">
     <value>Configurações de inicialização</value>
   </data>
+  <data name="Home_Collection" xml:space="preserve">
+    <value>Coleção</value>
+  </data>
+  <data name="Home_NoCollection" xml:space="preserve">
+    <value>Sem coleção (manter as configurações do jogo)</value>
+  </data>
   <data name="Installs_Title" xml:space="preserve">
     <value>Instalações</value>
   </data>
@@ -584,29 +590,29 @@
   <data name="ModCollections_MissingCountFormat" xml:space="preserve">
     <value>Não instalados: {0}</value>
   </data>
-  <data name="ModCollections_DefaultBadge" xml:space="preserve">
-    <value>Padrão</value>
-  </data>
-  <data name="ModCollections_ActiveBadge" xml:space="preserve">
-    <value>Em uso</value>
-  </data>
   <data name="ModCollections_NoSelection" xml:space="preserve">
     <value>Selecione uma coleção.</value>
   </data>
-  <data name="ModCollections_Apply" xml:space="preserve">
-    <value>Aplicar como lista ativada</value>
+  <data name="ModCollections_CurrentBadge" xml:space="preserve">
+    <value>Atual</value>
   </data>
-  <data name="ModCollections_ApplyHint" xml:space="preserve">
-    <value>Ativa no jogo apenas os mods instalados desta coleção, com os requisitos deles, nesta ordem.</value>
+  <data name="ModCollections_Use" xml:space="preserve">
+    <value>Usar esta coleção</value>
   </data>
-  <data name="ModCollections_SetDefault" xml:space="preserve">
-    <value>Definir como padrão</value>
+  <data name="ModCollections_UseHint" xml:space="preserve">
+    <value>Aplica agora esta coleção como lista ativada do jogo; cada início pelo launcher a aplica de novo.</value>
   </data>
-  <data name="ModCollections_UnsetDefault" xml:space="preserve">
-    <value>Remover padrão</value>
+  <data name="ModCollections_InUse" xml:space="preserve">
+    <value>Em uso</value>
   </data>
-  <data name="ModCollections_DefaultHint" xml:space="preserve">
-    <value>A coleção padrão é aplicada sempre que você inicia o jogo pelo launcher.</value>
+  <data name="ModCollections_InUseHint" xml:space="preserve">
+    <value>Esta é a coleção atual e a lista ativada está atualizada</value>
+  </data>
+  <data name="ModCollections_ApplyAgain" xml:space="preserve">
+    <value>Aplicar de novo</value>
+  </data>
+  <data name="ModCollections_ApplyAgainHint" xml:space="preserve">
+    <value>A coleção ou a lista ativada no jogo mudou; aplique agora (ao iniciar ela também é aplicada)</value>
   </data>
   <data name="ModCollections_Share" xml:space="preserve">
     <value>Compartilhar</value>

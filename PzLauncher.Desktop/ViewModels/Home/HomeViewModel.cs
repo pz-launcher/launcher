@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
@@ -7,6 +8,7 @@ using CommunityToolkit.Mvvm.Input;
 using PzLauncher.Core.Common;
 using PzLauncher.Core.Installs;
 using PzLauncher.Core.Launch;
+using PzLauncher.Core.Mod.Collections;
 using PzLauncher.Core.Mod.Zabric;
 using PzLauncher.Core.Mod.ZombieBuddy;
 using PzLauncher.Desktop.Localization;
@@ -26,10 +28,17 @@ public partial class HomeViewModel : ViewModelBase
     private readonly IZombieBuddyService _zombieBuddy;
     private readonly IZombieBuddyChannelService _channels;
     private readonly IZabricService _zabric;
+    private readonly IModCollectionService _collections;
     private readonly IModCollectionDefaultsService _defaultCollections;
     private readonly ModCollectionApplier _applier;
     private readonly IModCollectionOrderWriter _orderWriter;
     private readonly GameRunState _runState;
+
+    private CollectionChoice _selectedCollection = CollectionChoice.None;
+    private bool _activated;
+
+    // A newer collection load supersedes one still in flight.
+    private int _collectionsVersion;
 
     public HomeViewModel(
         InstallsViewModel installs,
@@ -39,6 +48,7 @@ public partial class HomeViewModel : ViewModelBase
         IZombieBuddyService zombieBuddy,
         IZombieBuddyChannelService channels,
         IZabricService zabric,
+        IModCollectionService collections,
         IModCollectionDefaultsService defaultCollections,
         ModCollectionApplier applier,
         IModCollectionOrderWriter orderWriter,
@@ -51,10 +61,12 @@ public partial class HomeViewModel : ViewModelBase
         _zombieBuddy = zombieBuddy;
         _channels = channels;
         _zabric = zabric;
+        _collections = collections;
         _defaultCollections = defaultCollections;
         _applier = applier;
         _orderWriter = orderWriter;
         _runState = runState;
+        CollectionChoices = [CollectionChoice.None];
 
         // Never unsubscribed: all of these are app-lifetime singletons.
         installs.PropertyChanged += OnInstallsPropertyChanged;
@@ -74,11 +86,50 @@ public partial class HomeViewModel : ViewModelBase
     /// <inheritdoc cref="GameRunState.IsGameRunning"/>
     public bool IsGameRunning => _runState.IsGameRunning;
 
-    private bool IsGameSelected => SelectedInstall is { Kind: PzInstallKind.Game };
+    public bool IsGameSelected => SelectedInstall is { Kind: PzInstallKind.Game };
+
+    /// <summary>The selected install's collections in file order, then <see cref="CollectionChoice.None"/>.</summary>
+    [ObservableProperty] public partial IReadOnlyList<CollectionChoice> CollectionChoices { get; private set; }
+
+    // The combo box pushes null while its items are replaced; that must not clear the choice.
+    /// <summary>The current collection, applied before each launch. Picking one only saves the choice.</summary>
+    public CollectionChoice? CollectionSelection
+    {
+        get => _selectedCollection;
+        set
+        {
+            if (value is null || value == _selectedCollection || SelectedInstall is not { Kind: PzInstallKind.Game } install)
+            {
+                return;
+            }
+
+            _selectedCollection = value;
+            OnPropertyChanged();
+            if (value.Name is { } name)
+            {
+                _defaultCollections.Save(install.RootPath, name);
+            }
+            else
+            {
+                _defaultCollections.Clear(install.RootPath);
+            }
+        }
+    }
+
+    public bool CanChooseCollection => IsGameSelected && !IsGameRunning;
 
     // The installs page owns the run-once rule; Home is the start page, so this is what scans at startup.
+    // Every visit re-reads the collections: they and the current one may have changed on the mods page or in-game.
     [RelayCommand]
-    private Task ActivateAsync() => _installs.ActivateCommand.ExecuteAsync(null);
+    private async Task ActivateAsync()
+    {
+        await _installs.ActivateCommand.ExecuteAsync(null);
+        _activated = true;
+        await LoadCollectionsAsync();
+    }
+
+    [RelayCommand]
+    private Task RefreshCollectionsAsync() => LoadCollectionsAsync();
 
     [RelayCommand]
     private void ChooseInstall() => ChooseInstallRequested?.Invoke(this, EventArgs.Empty);
@@ -196,12 +247,66 @@ public partial class HomeViewModel : ViewModelBase
         return await _dialogs.ShowZombieBuddySetupAsync(setup);
     }
 
+    private async Task LoadCollectionsAsync()
+    {
+        var version = ++_collectionsVersion;
+        if (SelectedInstall is not { Kind: PzInstallKind.Game } install)
+        {
+            ShowCollections(null, []);
+            return;
+        }
+
+        var read = await _collections.GetAsync(install.RootPath, _overrides.Get(install.RootPath).ExtraGameArgs);
+        if (version != _collectionsVersion)
+        {
+            return;
+        }
+
+        if (!read.IsSuccess)
+        {
+            // Only "no collection" is offered, but the saved one stays: a launch reports why it can't be applied.
+            ShowCollections(install, []);
+            return;
+        }
+
+        var names = read.Value.Collections.Select(collection => collection.Name).ToList();
+
+        // Deleted outside the launcher (in-game): forget it, so the launch doesn't report it as not found every time.
+        if (_defaultCollections.Get(install.RootPath) is { } saved && !names.Contains(saved, StringComparer.Ordinal))
+        {
+            _defaultCollections.Clear(install.RootPath);
+        }
+
+        ShowCollections(install, names);
+    }
+
+    private void ShowCollections(PzInstall? install, IReadOnlyList<string> names)
+    {
+        CollectionChoice[] choices = [.. names.Select(name => new CollectionChoice(name)), CollectionChoice.None];
+        if (!choices.SequenceEqual(CollectionChoices))
+        {
+            CollectionChoices = choices;
+        }
+
+        var saved = install is null ? null : _defaultCollections.Get(install.RootPath);
+        _selectedCollection = saved is not null && names.Contains(saved, StringComparer.Ordinal) ? new CollectionChoice(saved) : CollectionChoice.None;
+        OnPropertyChanged(nameof(CollectionSelection));
+    }
+
     private void OnRunStatePropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName is nameof(GameRunState.IsGameRunning))
+        if (e.PropertyName is not nameof(GameRunState.IsGameRunning))
         {
-            OnPropertyChanged(nameof(IsGameRunning));
-            LaunchCommand.NotifyCanExecuteChanged();
+            return;
+        }
+
+        OnPropertyChanged(nameof(IsGameRunning));
+        OnPropertyChanged(nameof(CanChooseCollection));
+        LaunchCommand.NotifyCanExecuteChanged();
+        if (!IsGameRunning && _activated)
+        {
+            // The game may have rewritten the collections file. Fire and forget: a failed read only empties the list.
+            _ = LoadCollectionsAsync();
         }
     }
 
@@ -212,8 +317,20 @@ public partial class HomeViewModel : ViewModelBase
             OnPropertyChanged(nameof(SelectedInstall));
             OnPropertyChanged(nameof(IsScanning));
             OnPropertyChanged(nameof(IsEmpty));
+            OnPropertyChanged(nameof(IsGameSelected));
+            OnPropertyChanged(nameof(CanChooseCollection));
             LaunchCommand.NotifyCanExecuteChanged();
             LaunchSettingsCommand.NotifyCanExecuteChanged();
+        }
+
+        if (e.PropertyName is nameof(InstallsViewModel.SelectedInstall))
+        {
+            // The old install's names must never be picked for the new one.
+            ShowCollections(null, []);
+            if (_activated)
+            {
+                _ = LoadCollectionsAsync();
+            }
         }
     }
 }

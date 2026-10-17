@@ -1,3 +1,4 @@
+using System;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using PzLauncher.Desktop.ViewModels.Home;
@@ -17,6 +18,14 @@ public partial class HomeView : UserControl
         if (DataContext is HomeViewModel vm && vm.ActivateCommand.CanExecute(null))
         {
             vm.ActivateCommand.Execute(null);
+        }
+    }
+
+    private void OnCollectionsDropDownOpened(object? sender, EventArgs e)
+    {
+        if (DataContext is HomeViewModel vm && vm.RefreshCollectionsCommand.CanExecute(null))
+        {
+            vm.RefreshCollectionsCommand.Execute(null);
         }
     }
 }

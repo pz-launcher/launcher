@@ -32,7 +32,7 @@ public class MainViewModelTests : UiTextCultureTest
         var applier = new ModCollectionApplier(collections, dialogs);
         var orderWriter = new ModCollectionOrderWriter(collections, runState, new FakePlatformEnvironment(), new ManualTimeProvider());
         return new(
-            new HomeViewModel(installs, launcher, overrides, dialogs, zombieBuddy, channels, new FakeZabricService(), defaults, applier, orderWriter, runState),
+            new HomeViewModel(installs, launcher, overrides, dialogs, zombieBuddy, channels, new FakeZabricService(), collections, defaults, applier, orderWriter, runState),
             installs,
             new ModsViewModel(
                 installs, collections, overrides, defaults, applier, dialogs, new FakeClipboardService(), runState, orderWriter, Localization),

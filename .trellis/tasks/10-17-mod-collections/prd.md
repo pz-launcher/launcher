@@ -53,7 +53,9 @@ Collections are those of the install selected in the launcher (game installs onl
   chosen collection (appended at the end, R3 rules). It never changes `default.txt`.
 - **R1 List** — "合集管理" lists the cache folder's collections with mod count, a marker on the default
   collection (R7), and an "in use" marker on every collection that, applied, enables at least one mod and gives the
-  current `default.txt` set of installed mods (so nothing is "in use" while no installed mod is enabled).
+  current `default.txt` set of installed mods (so nothing is "in use" while no installed mod is enabled). When the
+  applied order also equals `default.txt`'s order of installed mods, the apply button is disabled with the tooltip
+  "已是当前启用列表"; when only the order differs, the marker reads "使用中·顺序不同" and the button "应用新顺序" (D11).
 - **R2 Installed mods** — the launcher enumerates installed mods in the game's lookup order (first copy of an id wins),
   reading id, name, Workshop item id, `require`, `loadAfter`, `loadBefore`, `incompatible`. Shown per collection row
   as name + id; ids not installed are kept in the collection and shown as missing.
@@ -148,6 +150,15 @@ Collections are those of the install selected in the launcher (game installs onl
   included, with the choice to cancel (user, 2026-10-17).
 - D10: drag reorder lifts the row out (floating row, landing gap, rows slide aside), plus move to top / bottom
   buttons (user, 2026-10-17).
+- D11: "in use" splits into exact (apply disabled) and same mods in another order (apply as "应用新顺序")
+  (user, 2026-10-17).
+- D12 (supersedes the UI of D1, D2 and D11; user, 2026-10-17): one concept, the **current collection** (stored in the
+  existing `defaultModCollections` preference). The Collections page has a single "使用此合集" button: it applies the
+  collection now (R6a/R6b prompts as before) and makes it current; on the current collection it reads "当前使用"
+  (disabled) when `default.txt` already matches it in order, else "重新应用". Only the current collection is
+  marked in the list ("当前"). Home shows a collection dropdown next to 启动 with the install's collections plus
+  "不使用合集（保持游戏内设置）"; picking one only changes the current collection, the launch applies it (R7, R8 unchanged);
+  "不使用合集" clears it and the launch leaves `default.txt` alone.
 - D7: navigation is a "模组" tab with "模组管理" and "合集管理" sections (user, 2026-10-17).
 - D8: 模组管理 is a read-only browser of installed mods plus "添加到合集"; the enabled list changes only through
   collections, so it never fights the default collection (user, 2026-10-17).

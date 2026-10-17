@@ -22,7 +22,7 @@
 | `javaRuntimes` | array of absolute Java home paths (manually added); a non-string or non-absolute entry is dropped, the rest kept | `UserPreferences.ManualJavaHomes` |
 | `installs` | object: absolute install root → `{javaHome, maxMemoryMb, minMemoryMb, jvmArgs, gameArgs, gc}` (`gc`: `g1`, `zgc`, `shenandoah`, `parallel`, `serial`; unknown loads as null); an invalid entry is dropped, the rest kept | `UserPreferences.InstallOverrides` |
 | `zombieBuddyChannels` | object: absolute install root → `stable` or `beta`; an unknown value or non-absolute key is dropped, the rest kept | `UserPreferences.ZombieBuddyChannels` |
-| `defaultModCollections` | object: absolute install root → non-empty collection name (the collection applied before each launch); a non-string, empty or non-absolute entry is dropped, the rest kept | `UserPreferences.DefaultModCollections` |
+| `defaultModCollections` | object: absolute install root → non-empty collection name (the current collection, applied before each launch); a non-string, empty or non-absolute entry is dropped, the rest kept | `UserPreferences.DefaultModCollections` |
 | `window` | `{x, y, width, height, maximized}`: normal-state position (int, physical px), client size (number > 0, DIPs), maximized (bool); invalid if any member is missing | `WindowPlacement` |
 
 A new preference gets a nullable field, its own save method and a stable string mapping (never an enum name).

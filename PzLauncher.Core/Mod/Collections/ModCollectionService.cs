@@ -42,12 +42,7 @@ internal sealed partial class ModCollectionService(
         var installedIds = new HashSet<string>(installed.Select(mod => mod.Id), StringComparer.Ordinal);
         var activeInstalled = new HashSet<string>(active.Value.ModIds.Where(installedIds.Contains), StringComparer.Ordinal);
         var collections = settings.Value.Collections
-            .Select(collection =>
-            {
-                var ids = Ordered(collection, orders);
-                var enabled = ModLoadOrder.Resolve(ids, installed).EnabledIds;
-                return new ModCollection(collection.Name, ids, enabled.Count > 0 && activeInstalled.SetEquals(enabled));
-            })
+            .Select(collection => ModCollection.Create(collection.Name, Ordered(collection, orders), installed, active.Value.ModIds))
             .ToList();
 
         return new ModCollectionState(

@@ -1,6 +1,6 @@
 namespace PzLauncher.Desktop.Services;
 
-/// <summary>Per-install default mod collection, applied before every launch; looked up with the platform's path comparison and persisted through <see cref="IPreferenceStore"/>.</summary>
+/// <summary>Per-install current mod collection, applied before every launch; looked up with the platform's path comparison and persisted through <see cref="IPreferenceStore"/>.</summary>
 public interface IModCollectionDefaultsService
 {
     /// <summary><c>null</c> when none is marked.</summary>
