@@ -1,0 +1,112 @@
+name: Gitee Sync
+
+on:
+  push:
+    branches: [main]
+  # Backfills or re-syncs one release; safe to repeat.
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to sync, e.g. v0.2.0
+        required: true
+        type: string
+  # release.yml calls this after creating the GitHub Release: a release created with GITHUB_TOKEN
+  # raises no event that could trigger this workflow on its own.
+  workflow_call:
+    inputs:
+      tag:
+        required: true
+        type: string
+    secrets:
+      GITEE_TOKEN:
+        required: true
+
+permissions:
+  contents: read
+
+env:
+  GITEE_REPO: dontcampy/pzl
+
+jobs:
+  mirror-main:
+    name: Mirror main
+    # A call from release.yml carries the caller's tag-push context, so the event alone is not enough.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    # The push is forced, so an older run finishing last would roll Gitee back.
+    concurrency:
+      group: gitee-mirror-main
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          # Gitee rejects pushes from a shallow clone.
+          fetch-depth: 0
+
+      - name: Push main
+        env:
+          GITEE_TOKEN: ${{ secrets.GITEE_TOKEN }}
+        run: git push --force "https://dontcampy:$GITEE_TOKEN@gitee.com/$GITEE_REPO.git" "$GITHUB_SHA:refs/heads/main"
+
+  release:
+    name: Sync release ${{ inputs.tag }}
+    if: inputs.tag != ''
+    runs-on: ubuntu-latest
+    env:
+      TAG: ${{ inputs.tag }}
+      GH_TOKEN: ${{ github.token }}
+      GITEE_TOKEN: ${{ secrets.GITEE_TOKEN }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Push tag
+        run: git push --force "https://dontcampy:$GITEE_TOKEN@gitee.com/$GITEE_REPO.git" "refs/tags/$TAG:refs/tags/$TAG"
+
+      - name: Fetch GitHub release
+        run: |
+          gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json name,body,isPrerelease > github-release.json
+          gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --dir dist
+
+      - name: Create or update Gitee release
+        run: |
+          set -euo pipefail
+          api="https://gitee.com/api/v5/repos/$GITEE_REPO"
+          name=$(jq -r '.name' github-release.json)
+          body=$(jq -r '.body' github-release.json)
+          prerelease=$(jq -r '.isPrerelease' github-release.json)
+          # Gitee requires a non-empty name and body.
+          [[ -n "$name" ]] || name="$TAG"
+          [[ -n "$body" ]] || body="$TAG"
+          # --form-string: release notes starting with @ or < must not be read as a file.
+          fields=(
+            --form-string "access_token=$GITEE_TOKEN"
+            --form-string "tag_name=$TAG"
+            --form-string "name=$name"
+            --form-string "body=$body"
+            --form-string "prerelease=$prerelease"
+          )
+
+          # A tag without a release answers 200 with a null body.
+          id=$(curl -sS --fail-with-body "$api/releases/tags/$TAG?access_token=$GITEE_TOKEN" | jq -r '.id // empty')
+          if [[ -n "$id" ]]; then
+            curl -sS --fail-with-body -o /dev/null -X PATCH "${fields[@]}" "$api/releases/$id"
+          else
+            id=$(curl -sS --fail-with-body "${fields[@]}" \
+              --form-string "target_commitish=$(git rev-list -n 1 "$TAG")" \
+              "$api/releases" | jq -r '.id')
+          fi
+
+          attached=$(curl -sS --fail-with-body "$api/releases/$id/attach_files?access_token=$GITEE_TOKEN&per_page=100" | jq -r '.[].name')
+          for file in dist/*; do
+            if grep -qxF "$(basename "$file")" <<< "$attached"; then
+              echo "Already attached: $(basename "$file")"
+              continue
+            fi
+            curl -sS --fail-with-body -o /dev/null \
+              --form-string "access_token=$GITEE_TOKEN" \
+              -F "file=@$file" \
+              "$api/releases/$id/attach_files"
+            echo "Attached: $(basename "$file")"
+          done

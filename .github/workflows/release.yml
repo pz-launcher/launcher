@@ -103,3 +103,11 @@ jobs:
             --generate-notes \
             --verify-tag \
             "${flags[@]}"
+
+  gitee:
+    name: Gitee
+    needs: release
+    uses: ./.github/workflows/gitee-sync.yml
+    with:
+      tag: ${{ github.ref_name }}
+    secrets: inherit
