@@ -214,4 +214,84 @@ public sealed class ZombieBuddyPreloadConfigTests : IDisposable
 
         Assert.Equal((ConfigPath, "Zabric"), (error.Details["path"], error.Details["modId"]));
     }
+
+    private Task<Result<ZombieBuddyPreload>> RemoveOtherModAsync() => ZombieBuddyPreloadConfig.RemoveAsync(_configFolder, "OtherMod", Ct);
+
+    [Fact]
+    public async Task RemoveAsync_NoFileOrFolder_IsNotApplicableAndCreatesNothing()
+    {
+        Assert.Equal(ZombieBuddyPreload.NotApplicable, ResultAssert.Ok(await RemoveOtherModAsync()));
+
+        Assert.False(Directory.Exists(_configFolder));
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("""{"trusted_authors": []}""")]
+    [InlineData("""{"preload_mods": null}""")]
+    [InlineData("""{"preload_mods": {"Zabric": {"infPath": "a", "jarPath": "b"}}}""")]
+    public async Task RemoveAsync_NoEntry_IsNotApplicableWithoutWriting(string json)
+    {
+        WriteConfig(json);
+
+        Assert.Equal(ZombieBuddyPreload.NotApplicable, ResultAssert.Ok(await RemoveOtherModAsync()));
+
+        Assert.Equal(json, await File.ReadAllTextAsync(ConfigPath, Ct));
+    }
+
+    [Fact]
+    public async Task RemoveAsync_RealConfig_DropsOnlyTheEntry()
+    {
+        var original = JsonNode.Parse(Fixtures.Read("ZombieBuddy", "config.json"))!.AsObject();
+        WriteConfig(Fixtures.Read("ZombieBuddy", "config.json"));
+
+        Assert.Equal(ZombieBuddyPreload.Removed, ResultAssert.Ok(await RemoveOtherModAsync()));
+
+        var written = ReadConfig();
+        Assert.Equal(original.Select(field => field.Key), written.Select(field => field.Key));
+        foreach (var (key, value) in original.Where(field => field.Key != "preload_mods"))
+        {
+            Assert.True(JsonNode.DeepEquals(value, written[key]), key);
+        }
+
+        var preload = written["preload_mods"]!.AsObject();
+        Assert.Equal(["Zabric"], preload.Select(mod => mod.Key));
+        Assert.True(JsonNode.DeepEquals(original["preload_mods"]!["Zabric"], preload["Zabric"]));
+    }
+
+    [Fact]
+    public async Task RemoveAsync_EntryBetweenOthers_KeepsTheirOrder()
+    {
+        WriteConfig(ConfigWith(("Zabric", "a", "b"), ("OtherMod", "c", "d"), ("Last", "e", "f")));
+
+        Assert.Equal(ZombieBuddyPreload.Removed, ResultAssert.Ok(await RemoveOtherModAsync()));
+
+        Assert.Equal(["Zabric", "Last"], ReadConfig()["preload_mods"]!.AsObject().Select(mod => mod.Key));
+    }
+
+    [Theory]
+    [InlineData("[]")]
+    [InlineData("{")]
+    [InlineData("""{"preload_mods": 1}""")]
+    public async Task RemoveAsync_InvalidConfig_ReturnsPreloadConfigInvalidAndLeavesTheFile(string json)
+    {
+        WriteConfig(json);
+
+        var error = ResultAssert.Failed(await RemoveOtherModAsync(), ErrorCode.ZombieBuddyPreloadConfigInvalid);
+
+        Assert.Equal((ConfigPath, "OtherMod"), (error.Details["path"], error.Details["modId"]));
+        Assert.Equal(json, await File.ReadAllTextAsync(ConfigPath, Ct));
+    }
+
+    [Fact]
+    public async Task RemoveAsync_ConfigLocked_ReturnsPreloadConfigIoFailed()
+    {
+        Assert.SkipUnless(OperatingSystem.IsWindows(), "Only Windows refuses to read a file opened without sharing.");
+        WriteConfig(ConfigWith(("OtherMod", "a", "b")));
+
+        using var locked = File.Open(ConfigPath, FileMode.Open, FileAccess.Read, FileShare.None);
+        var error = ResultAssert.Failed(await RemoveOtherModAsync(), ErrorCode.ZombieBuddyPreloadConfigIoFailed);
+
+        Assert.Equal((ConfigPath, "OtherMod"), (error.Details["path"], error.Details["modId"]));
+    }
 }

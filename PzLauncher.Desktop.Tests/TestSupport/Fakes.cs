@@ -5,6 +5,7 @@ using PzLauncher.Core.Launch;
 using PzLauncher.Core.Mod;
 using PzLauncher.Core.Mod.Collections;
 using PzLauncher.Core.Mod.Zabric;
+using PzLauncher.Core.Mod.ZBSkipOnlineChecks;
 using PzLauncher.Core.Mod.ZombieBuddy;
 using PzLauncher.Core.Platform;
 using PzLauncher.Desktop.Localization;
@@ -527,6 +528,12 @@ public sealed class FakeZombieBuddyService : IZombieBuddyService
         AllowAllChanges.Add((installRoot, allowAll));
         return SetAllowAll(allowAll);
     }
+
+    public Task<Result> EnsurePatchesJarAsync(
+        string installRoot, string sourceJar, string jarFile, string packageName, CancellationToken ct = default) => Task.FromResult(Result.Ok());
+
+    public Task<Result> RemovePatchesJarAsync(string installRoot, string jarFile, string packageName, CancellationToken ct = default) =>
+        Task.FromResult(Result.Ok());
 }
 
 public sealed class FakeZabricService : IZabricService
@@ -539,6 +546,19 @@ public sealed class FakeZabricService : IZabricService
     {
         Preloads.Add((installRoot, extraGameArgs));
         return Task.FromResult(PreloadResult);
+    }
+}
+
+public sealed class FakeZBSkipOnlineChecksService : IZBSkipOnlineChecksService
+{
+    public Func<Result> Sync { get; set; } = Result.Ok;
+
+    public List<(string Root, string ExtraGameArgs, bool ZabricPreloaded)> Syncs { get; } = [];
+
+    public Task<Result> SyncAsync(string installRoot, string extraGameArgs, bool zabricPreloaded, CancellationToken ct = default)
+    {
+        Syncs.Add((installRoot, extraGameArgs, zabricPreloaded));
+        return Task.FromResult(Sync());
     }
 }
 

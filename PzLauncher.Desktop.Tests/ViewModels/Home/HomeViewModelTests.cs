@@ -24,6 +24,7 @@ public class HomeViewModelTests : UiTextCultureTest
     private readonly FakeZombieBuddyService _zombieBuddy = new();
     private readonly FakeZombieBuddyChannelService _channels = new();
     private readonly FakeZabricService _zabric = new();
+    private readonly FakeZBSkipOnlineChecksService _skipOnlineChecks = new();
     private readonly FakeModCollectionDefaultsService _defaultCollections = new();
     private readonly FakeModCollectionService _collections = new();
     private readonly GameRunState _runState = new();
@@ -38,7 +39,9 @@ public class HomeViewModelTests : UiTextCultureTest
     private InstallsViewModel Installs { get; }
 
     private HomeViewModel CreateViewModel() =>
-        new(Installs, _launcher, _overrides, _dialogs, _zombieBuddy, _channels, _zabric, _collections, _defaultCollections, new ModCollectionApplier(_collections, _dialogs), _orderWriter, _runState);
+        new(
+            Installs, _launcher, _overrides, _dialogs, _zombieBuddy, _channels, _zabric, _skipOnlineChecks, _collections, _defaultCollections,
+            new ModCollectionApplier(_collections, _dialogs), _orderWriter, _runState);
 
     private async Task<HomeViewModel> CreateActivatedViewModelAsync(params PzInstall[] installs)
     {
@@ -220,6 +223,7 @@ public class HomeViewModelTests : UiTextCultureTest
 
         Assert.Single(_dialogs.Setups);
         Assert.Empty(_zabric.Preloads);
+        Assert.Empty(_skipOnlineChecks.Syncs);
         Assert.Empty(_launcher.Launches);
         Assert.True(vm.LaunchCommand.CanExecute(null));
     }
@@ -285,6 +289,52 @@ public class HomeViewModelTests : UiTextCultureTest
     {
         var error = TestErrors.Create(ErrorCode.ZombieBuddyPreloadConfigInvalid, @"C:\Users\u\.zombie_buddy\config.json");
         _zabric.PreloadResult = error;
+        var launchesWhenShown = new List<int>();
+        _dialogs.Shown += () => launchesWhenShown.Add(_launcher.Launches.Count);
+        var vm = await CreateActivatedViewModelAsync(SteamGame);
+
+        await LaunchAndExitAsync(vm);
+
+        Assert.Equal([ErrorMessages.ToUserText(error)], _dialogs.Errors);
+        Assert.Equal([0], launchesWhenShown);
+        Assert.Single(_launcher.Launches);
+    }
+
+    public static TheoryData<Result<ZombieBuddyPreload>, bool> ZabricOutcomes => new()
+    {
+        { ZombieBuddyPreload.Written, true },
+        { ZombieBuddyPreload.Current, true },
+        { ZombieBuddyPreload.NotApplicable, false },
+        { TestErrors.Create(ErrorCode.ZombieBuddyPreloadConfigInvalid, @"C:\Users\u\.zombie_buddy\config.json"), false },
+    };
+
+    [Theory]
+    [MemberData(nameof(ZabricOutcomes))]
+    public async Task Launch_AfterZabric_SyncsSkipOnlineChecksWithTheInstallsGameArgsAndWhetherZabricIsPreloaded(
+        Result<ZombieBuddyPreload> zabric, bool zabricPreloaded)
+    {
+        _overrides.Set(SteamGame.RootPath, GameLaunchOverrides.Empty with { ExtraGameArgs = @"-cachedir=D:\pz" });
+        _zabric.PreloadResult = zabric;
+        var preloadsWhenSynced = new List<int>();
+        _skipOnlineChecks.Sync = () =>
+        {
+            preloadsWhenSynced.Add(_zabric.Preloads.Count);
+            return Result.Ok();
+        };
+        var vm = await CreateActivatedViewModelAsync(SteamGame);
+
+        await LaunchAndExitAsync(vm);
+
+        Assert.Equal([1], preloadsWhenSynced);
+        Assert.Equal([(SteamGame.RootPath, @"-cachedir=D:\pz", zabricPreloaded)], _skipOnlineChecks.Syncs);
+        Assert.Single(_launcher.Launches);
+    }
+
+    [Fact]
+    public async Task Launch_SkipOnlineChecksSyncFails_ShowsTheErrorThenLaunches()
+    {
+        var error = TestErrors.Create(ErrorCode.ZombieBuddyCopyFailed, @"E:\SteamLibrary\steamapps\common\ProjectZomboid\ZBSkipOnlineChecks.jar");
+        _skipOnlineChecks.Sync = () => error;
         var launchesWhenShown = new List<int>();
         _dialogs.Shown += () => launchesWhenShown.Add(_launcher.Launches.Count);
         var vm = await CreateActivatedViewModelAsync(SteamGame);
@@ -391,6 +441,7 @@ public class HomeViewModelTests : UiTextCultureTest
         Assert.Equal([SteamGame.RootPath], _zombieBuddy.Removals);
         Assert.Empty(_zombieBuddy.Initializations);
         Assert.Empty(_zabric.Preloads);
+        Assert.Empty(_skipOnlineChecks.Syncs);
         Assert.Single(_launcher.Launches);
     }
 
@@ -419,6 +470,7 @@ public class HomeViewModelTests : UiTextCultureTest
 
         Assert.Empty(_dialogs.Setups);
         Assert.Empty(_zabric.Preloads);
+        Assert.Empty(_skipOnlineChecks.Syncs);
         Assert.Single(_launcher.Launches);
     }
 

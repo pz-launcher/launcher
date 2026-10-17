@@ -5,6 +5,7 @@ using PzLauncher.Core.Java;
 using PzLauncher.Core.Launch;
 using PzLauncher.Core.Mod.Collections;
 using PzLauncher.Core.Mod.Zabric;
+using PzLauncher.Core.Mod.ZBSkipOnlineChecks;
 using PzLauncher.Core.Mod.ZombieBuddy;
 using PzLauncher.Core.Platform;
 using PzLauncher.Core.Steam;
@@ -28,6 +29,7 @@ public static class ServiceCollectionExtensions
         services.TryAddSingleton<IGameLaunchService, GameLaunchService>();
         services.TryAddSingleton<IZombieBuddyService, ZombieBuddyService>();
         services.TryAddSingleton<IZabricService, ZabricService>();
+        services.TryAddSingleton<IZBSkipOnlineChecksService, ZBSkipOnlineChecksService>();
         services.TryAddSingleton<IModCollectionService, ModCollectionService>();
 
         return services;

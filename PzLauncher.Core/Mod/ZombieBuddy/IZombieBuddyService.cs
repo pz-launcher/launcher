@@ -17,4 +17,14 @@ public interface IZombieBuddyService
 
     /// <summary>Rewrites only the <c>policy</c> option of the json's agent arg.</summary>
     Task<Result> SetAllowAllAsync(string installRoot, bool allowAll, CancellationToken ct = default);
+
+    /// <summary>
+    /// Copies <paramref name="sourceJar"/> to the game folder as <paramref name="jarFile"/> when missing or different, then makes
+    /// the agent arg's <c>patches_jar</c> hold one <c>&lt;jarFile&gt;:&lt;packageName&gt;</c> entry for the package. Without an
+    /// agent arg nothing is done; nothing is written when both are already so.
+    /// </summary>
+    Task<Result> EnsurePatchesJarAsync(string installRoot, string sourceJar, string jarFile, string packageName, CancellationToken ct = default);
+
+    /// <summary>Removes the package's <c>patches_jar</c> entries, then deletes <paramref name="jarFile"/> from the game folder; nothing is written when neither exists.</summary>
+    Task<Result> RemovePatchesJarAsync(string installRoot, string jarFile, string packageName, CancellationToken ct = default);
 }

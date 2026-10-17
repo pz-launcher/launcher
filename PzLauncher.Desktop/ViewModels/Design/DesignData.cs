@@ -10,6 +10,7 @@ using PzLauncher.Core.Launch;
 using PzLauncher.Core.Mod;
 using PzLauncher.Core.Mod.Collections;
 using PzLauncher.Core.Mod.Zabric;
+using PzLauncher.Core.Mod.ZBSkipOnlineChecks;
 using PzLauncher.Core.Mod.ZombieBuddy;
 using PzLauncher.Core.Platform;
 using PzLauncher.Desktop.Localization;
@@ -100,8 +101,8 @@ public static class DesignData
     private static HomeViewModel CreateHome()
     {
         var vm = new HomeViewModel(
-            Installs, GameLaunch, InstallOverrides, new NoDialogs(), ZombieBuddySample, ZombieBuddyChannels, new SampleZabric(), ModCollectionsSample,
-            ModCollectionDefaults, Applier, OrderWriter, RunState);
+            Installs, GameLaunch, InstallOverrides, new NoDialogs(), ZombieBuddySample, ZombieBuddyChannels, new SampleZabric(), new SampleSkipOnlineChecks(),
+            ModCollectionsSample, ModCollectionDefaults, Applier, OrderWriter, RunState);
         vm.ActivateCommand.Execute(null);
         return vm;
     }
@@ -226,12 +227,24 @@ public static class DesignData
             new TaskCompletionSource<Result>().Task;
 
         public Task<Result> SetAllowAllAsync(string installRoot, bool allowAll, CancellationToken ct = default) => Task.FromResult(Result.Ok());
+
+        public Task<Result> EnsurePatchesJarAsync(
+            string installRoot, string sourceJar, string jarFile, string packageName, CancellationToken ct = default) => Task.FromResult(Result.Ok());
+
+        public Task<Result> RemovePatchesJarAsync(string installRoot, string jarFile, string packageName, CancellationToken ct = default) =>
+            Task.FromResult(Result.Ok());
     }
 
     private sealed class SampleZabric : IZabricService
     {
         public Task<Result<ZombieBuddyPreload>> EnsurePreloadAsync(string installRoot, string extraGameArgs, CancellationToken ct = default) =>
             Task.FromResult<Result<ZombieBuddyPreload>>(ZombieBuddyPreload.Current);
+    }
+
+    private sealed class SampleSkipOnlineChecks : IZBSkipOnlineChecksService
+    {
+        public Task<Result> SyncAsync(string installRoot, string extraGameArgs, bool zabricPreloaded, CancellationToken ct = default) =>
+            Task.FromResult(Result.Ok());
     }
 
     private sealed class SampleZombieBuddyChannels : IZombieBuddyChannelService

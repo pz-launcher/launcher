@@ -10,6 +10,7 @@ using PzLauncher.Core.Installs;
 using PzLauncher.Core.Launch;
 using PzLauncher.Core.Mod.Collections;
 using PzLauncher.Core.Mod.Zabric;
+using PzLauncher.Core.Mod.ZBSkipOnlineChecks;
 using PzLauncher.Core.Mod.ZombieBuddy;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Services;
@@ -28,6 +29,7 @@ public partial class HomeViewModel : ViewModelBase
     private readonly IZombieBuddyService _zombieBuddy;
     private readonly IZombieBuddyChannelService _channels;
     private readonly IZabricService _zabric;
+    private readonly IZBSkipOnlineChecksService _skipOnlineChecks;
     private readonly IModCollectionService _collections;
     private readonly IModCollectionDefaultsService _defaultCollections;
     private readonly ModCollectionApplier _applier;
@@ -48,6 +50,7 @@ public partial class HomeViewModel : ViewModelBase
         IZombieBuddyService zombieBuddy,
         IZombieBuddyChannelService channels,
         IZabricService zabric,
+        IZBSkipOnlineChecksService skipOnlineChecks,
         IModCollectionService collections,
         IModCollectionDefaultsService defaultCollections,
         ModCollectionApplier applier,
@@ -61,6 +64,7 @@ public partial class HomeViewModel : ViewModelBase
         _zombieBuddy = zombieBuddy;
         _channels = channels;
         _zabric = zabric;
+        _skipOnlineChecks = skipOnlineChecks;
         _collections = collections;
         _defaultCollections = defaultCollections;
         _applier = applier;
@@ -192,6 +196,13 @@ public partial class HomeViewModel : ViewModelBase
             if (!preload.IsSuccess)
             {
                 await _dialogs.ShowErrorAsync(ErrorMessages.ToUserText(preload.Error));
+            }
+
+            var zabricPreloaded = preload is { IsSuccess: true, Value: ZombieBuddyPreload.Current or ZombieBuddyPreload.Written };
+            var skip = await _skipOnlineChecks.SyncAsync(install.RootPath, overrides.ExtraGameArgs, zabricPreloaded);
+            if (!skip.IsSuccess)
+            {
+                await _dialogs.ShowErrorAsync(ErrorMessages.ToUserText(skip.Error));
             }
         }
 

@@ -11,6 +11,13 @@ internal static class ZombieBuddyAgentArgs
 
     private const char OptionSeparator = ',';
 
+    // ZombieBuddy Agent.java: patches_jar=<path>:<package>[;<path>:<package>...].
+    private const string PatchesJarKey = "patches_jar";
+
+    private const char EntrySeparator = ';';
+
+    private const char PatchSeparator = ':';
+
     public static bool IsAgentArg(string arg, PlatformKind os) => Matches(arg, ZombieBuddyFiles.AgentArg(os));
 
     public static bool IsAnyAgentArg(string arg) => ZombieBuddyFiles.AllAgentArgs.Any(agent => Matches(arg, agent));
@@ -74,8 +81,93 @@ internal static class ZombieBuddyAgentArgs
             kept.Add($"{PolicyKey}={AllowAllPolicy}");
         }
 
+        return Rewrite(vmArgs, os, index, kept);
+    }
+
+    /// <summary>
+    /// Makes the first agent arg's <c>patches_jar</c> hold one <c>&lt;path&gt;:&lt;package&gt;</c> entry for the package:
+    /// the first one replaced in place, any others dropped, else appended. Unchanged args come back as the same instance.
+    /// </summary>
+    public static IReadOnlyList<string> WithPatchesJar(IReadOnlyList<string> vmArgs, PlatformKind os, string path, string packageName) =>
+        EditPatchesJar(vmArgs, os, packageName, $"{path}{PatchSeparator}{packageName}");
+
+    /// <summary>Drops the package's <c>patches_jar</c> entries, and the option when none is left. Unchanged args come back as the same instance.</summary>
+    public static IReadOnlyList<string> WithoutPatchesJar(IReadOnlyList<string> vmArgs, PlatformKind os, string packageName) =>
+        EditPatchesJar(vmArgs, os, packageName, entry: null);
+
+    // ZombieBuddy reads only the last patches_jar option, so the earlier ones are left as they are.
+    private static IReadOnlyList<string> EditPatchesJar(IReadOnlyList<string> vmArgs, PlatformKind os, string packageName, string? entry)
+    {
+        var index = IndexOfAgent(vmArgs, os);
+        if (index < 0)
+        {
+            return vmArgs;
+        }
+
+        var options = Options(vmArgs[index], os);
+        var at = options.FindLastIndex(option => IsKey(option, PatchesJarKey));
+        if (at < 0)
+        {
+            if (entry is null)
+            {
+                return vmArgs;
+            }
+
+            options.Add($"{PatchesJarKey}={entry}");
+            return Rewrite(vmArgs, os, index, options);
+        }
+
+        var option = options[at];
+        var separator = option.IndexOf('=', StringComparison.Ordinal);
+        string[] entries = separator < 0 ? [] : option[(separator + 1)..].Split(EntrySeparator, StringSplitOptions.RemoveEmptyEntries);
+        var kept = new List<string>(entries.Length + 1);
+        var placed = false;
+        foreach (var existing in entries)
+        {
+            if (!IsPackageEntry(existing, packageName))
+            {
+                kept.Add(existing);
+            }
+            else if (entry is { } own && !placed)
+            {
+                kept.Add(own);
+                placed = true;
+            }
+        }
+
+        if (entry is { } added && !placed)
+        {
+            kept.Add(added);
+        }
+        else if (entry is null && kept.Count == entries.Length)
+        {
+            return vmArgs;
+        }
+
+        // Dropping the last option would hand ZombieBuddy an earlier one; left empty, it keeps those unread.
+        if (kept.Count == 0 && !options.Take(at).Any(earlier => IsKey(earlier, PatchesJarKey)))
+        {
+            options.RemoveAt(at);
+        }
+        else
+        {
+            options[at] = $"{(separator < 0 ? option : option[..separator])}={string.Join(EntrySeparator, kept)}";
+        }
+
+        return Rewrite(vmArgs, os, index, options);
+    }
+
+    // The text after the last ':' fits both ZombieBuddy split rules: on the first ':' up to 2.3.x, on the last since 3.0.
+    private static bool IsPackageEntry(string entry, string packageName)
+    {
+        var separator = entry.LastIndexOf(PatchSeparator);
+        return separator >= 0 && string.Equals(entry[(separator + 1)..].Trim(), packageName, StringComparison.Ordinal);
+    }
+
+    private static IReadOnlyList<string> Rewrite(IReadOnlyList<string> vmArgs, PlatformKind os, int index, List<string> options)
+    {
         var agent = ZombieBuddyFiles.AgentArg(os);
-        var rewritten = kept.Count == 0 ? agent : $"{agent}={string.Join(OptionSeparator, kept)}";
+        var rewritten = options.Count == 0 ? agent : $"{agent}={string.Join(OptionSeparator, options)}";
         if (string.Equals(rewritten, vmArgs[index], StringComparison.Ordinal))
         {
             return vmArgs;
