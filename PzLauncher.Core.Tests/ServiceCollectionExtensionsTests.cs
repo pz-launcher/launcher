@@ -4,9 +4,9 @@ using Microsoft.Extensions.Logging.Abstractions;
 using PzLauncher.Core.Installs;
 using PzLauncher.Core.Java;
 using PzLauncher.Core.Launch;
+using PzLauncher.Core.Mod.ZombieBuddy;
 using PzLauncher.Core.Platform;
 using PzLauncher.Core.Tests.TestSupport;
-using PzLauncher.Core.ZombieBuddy;
 
 namespace PzLauncher.Core.Tests;
 

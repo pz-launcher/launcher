@@ -57,11 +57,9 @@ public enum ErrorCode
     [JsonStringEnumMemberName("zombiebuddy.delete_failed")] ZombieBuddyDeleteFailed,
     [JsonStringEnumMemberName("zombiebuddy.config_write_failed")] ZombieBuddyConfigWriteFailed,
     [JsonStringEnumMemberName("zombiebuddy.not_initialized")] ZombieBuddyNotInitialized,
-
-    // ── zabric ────────────────────────────────────────────────
-    [JsonStringEnumMemberName("zabric.not_preloadable")] ZabricNotPreloadable,
-    [JsonStringEnumMemberName("zabric.preload_config_invalid")] ZabricPreloadConfigInvalid,
-    [JsonStringEnumMemberName("zabric.preload_config_io_failed")] ZabricPreloadConfigIoFailed,
+    [JsonStringEnumMemberName("zombiebuddy.mod_not_preloadable")] ZombieBuddyModNotPreloadable,
+    [JsonStringEnumMemberName("zombiebuddy.preload_config_invalid")] ZombieBuddyPreloadConfigInvalid,
+    [JsonStringEnumMemberName("zombiebuddy.preload_config_io_failed")] ZombieBuddyPreloadConfigIoFailed,
 }
 
 public static class ErrorCodeExtensions

@@ -3,8 +3,7 @@ using PzLauncher.Core.Common;
 using PzLauncher.Core.Installs;
 using PzLauncher.Core.Java;
 using PzLauncher.Core.Launch;
-using PzLauncher.Core.Zabric;
-using PzLauncher.Core.ZombieBuddy;
+using PzLauncher.Core.Mod.ZombieBuddy;
 
 namespace PzLauncher.Core.Serialization;
 
@@ -30,5 +29,5 @@ namespace PzLauncher.Core.Serialization;
 [JsonSerializable(typeof(ZombieBuddyChannel))]
 [JsonSerializable(typeof(ZombieBuddyStatus))]
 [JsonSerializable(typeof(ZombieBuddyProgress))]
-[JsonSerializable(typeof(ZabricPreload))]
+[JsonSerializable(typeof(ZombieBuddyPreload))]
 public sealed partial class CoreJsonContext : JsonSerializerContext;

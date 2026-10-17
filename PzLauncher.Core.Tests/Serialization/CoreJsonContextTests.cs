@@ -3,9 +3,8 @@ using PzLauncher.Core.Common;
 using PzLauncher.Core.Installs;
 using PzLauncher.Core.Java;
 using PzLauncher.Core.Launch;
+using PzLauncher.Core.Mod.ZombieBuddy;
 using PzLauncher.Core.Serialization;
-using PzLauncher.Core.Zabric;
-using PzLauncher.Core.ZombieBuddy;
 
 namespace PzLauncher.Core.Tests.Serialization;
 
@@ -215,14 +214,14 @@ public class CoreJsonContextTests
     }
 
     [Fact]
-    public void ZabricPreload_EveryValue_RoundTripsAsItsName()
+    public void ZombieBuddyPreload_EveryValue_RoundTripsAsItsName()
     {
-        foreach (var value in Enum.GetValues<ZabricPreload>())
+        foreach (var value in Enum.GetValues<ZombieBuddyPreload>())
         {
-            var json = JsonSerializer.Serialize(value, CoreJsonContext.Default.ZabricPreload);
+            var json = JsonSerializer.Serialize(value, CoreJsonContext.Default.ZombieBuddyPreload);
 
             Assert.Equal($"\"{value}\"", json);
-            Assert.Equal(value, JsonSerializer.Deserialize(json, CoreJsonContext.Default.ZabricPreload));
+            Assert.Equal(value, JsonSerializer.Deserialize(json, CoreJsonContext.Default.ZombieBuddyPreload));
         }
     }
 }

@@ -1,4 +1,4 @@
-using PzLauncher.Core.ZombieBuddy;
+using PzLauncher.Core.Mod.ZombieBuddy;
 using PzLauncher.Desktop.Services;
 using PzLauncher.Desktop.Tests.TestSupport;
 using static PzLauncher.Desktop.Tests.TestSupport.TestZombieBuddy;

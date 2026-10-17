@@ -7,9 +7,9 @@ using PzLauncher.Core.Common;
 using PzLauncher.Core.Installs;
 using PzLauncher.Core.Java;
 using PzLauncher.Core.Launch;
+using PzLauncher.Core.Mod.Zabric;
+using PzLauncher.Core.Mod.ZombieBuddy;
 using PzLauncher.Core.Platform;
-using PzLauncher.Core.Zabric;
-using PzLauncher.Core.ZombieBuddy;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Services;
 using PzLauncher.Desktop.Themes;
@@ -193,8 +193,8 @@ public static class DesignData
 
     private sealed class SampleZabric : IZabricService
     {
-        public Task<Result<ZabricPreload>> EnsurePreloadAsync(string installRoot, string extraGameArgs, CancellationToken ct = default) =>
-            Task.FromResult<Result<ZabricPreload>>(ZabricPreload.Current);
+        public Task<Result<ZombieBuddyPreload>> EnsurePreloadAsync(string installRoot, string extraGameArgs, CancellationToken ct = default) =>
+            Task.FromResult<Result<ZombieBuddyPreload>>(ZombieBuddyPreload.Current);
     }
 
     private sealed class SampleZombieBuddyChannels : IZombieBuddyChannelService

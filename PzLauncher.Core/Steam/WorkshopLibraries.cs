@@ -14,6 +14,8 @@ internal sealed partial class WorkshopLibraries(
     public static string ContentFolder(string library) =>
         Path.Combine(library, "steamapps", "workshop", "content", PzSteamApps.Game.ToString(CultureInfo.InvariantCulture));
 
+    public static string ItemFolder(string library, string itemId) => Path.Combine(ContentFolder(library), itemId);
+
     // ZombieBuddy's installer order: the game's own library, then each Steam root and the libraries it lists.
     public async Task<IReadOnlyList<string>> CandidatesAsync(string installRoot, CancellationToken ct)
     {

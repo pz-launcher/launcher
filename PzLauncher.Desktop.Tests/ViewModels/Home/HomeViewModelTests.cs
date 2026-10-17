@@ -1,7 +1,7 @@
 using PzLauncher.Core.Common;
 using PzLauncher.Core.Installs;
 using PzLauncher.Core.Launch;
-using PzLauncher.Core.ZombieBuddy;
+using PzLauncher.Core.Mod.ZombieBuddy;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Services;
 using PzLauncher.Desktop.Tests.TestSupport;
@@ -277,7 +277,7 @@ public class HomeViewModelTests : UiTextCultureTest
     [Fact]
     public async Task Launch_ZabricPreloadFails_ShowsTheErrorThenLaunches()
     {
-        var error = TestErrors.Create(ErrorCode.ZabricPreloadConfigInvalid, @"C:\Users\u\.zombie_buddy\config.json");
+        var error = TestErrors.Create(ErrorCode.ZombieBuddyPreloadConfigInvalid, @"C:\Users\u\.zombie_buddy\config.json");
         _zabric.PreloadResult = error;
         var launchesWhenShown = new List<int>();
         _dialogs.Shown += () => launchesWhenShown.Add(_launcher.Launches.Count);

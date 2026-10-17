@@ -4,11 +4,10 @@ using PzLauncher.Core.Common;
 using PzLauncher.Core.Installs;
 using PzLauncher.Core.Java;
 using PzLauncher.Core.Launch;
+using PzLauncher.Core.Mod.ZombieBuddy;
 using PzLauncher.Core.Platform;
 using PzLauncher.Core.Serialization;
 using PzLauncher.Core.Steam;
-using PzLauncher.Core.Zabric;
-using PzLauncher.Core.ZombieBuddy;
 
 namespace PzLauncher.Core.Tests.Common;
 
@@ -53,9 +52,9 @@ public partial class ErrorCodeTests
         [ErrorCode.ZombieBuddyDeleteFailed] = (ZombieBuddyErrors.DeleteFailed("p", "r"), ErrorKind.External),
         [ErrorCode.ZombieBuddyConfigWriteFailed] = (ZombieBuddyErrors.ConfigWriteFailed("p", "r"), ErrorKind.External),
         [ErrorCode.ZombieBuddyNotInitialized] = (ZombieBuddyErrors.NotInitialized("p"), ErrorKind.Conflict),
-        [ErrorCode.ZabricNotPreloadable] = (ZabricErrors.NotPreloadable("p", "r"), ErrorKind.Validation),
-        [ErrorCode.ZabricPreloadConfigInvalid] = (ZabricErrors.PreloadConfigInvalid("p", "r"), ErrorKind.Validation),
-        [ErrorCode.ZabricPreloadConfigIoFailed] = (ZabricErrors.PreloadConfigIoFailed("p", "r"), ErrorKind.External),
+        [ErrorCode.ZombieBuddyModNotPreloadable] = (ZombieBuddyErrors.ModNotPreloadable("m", "p", "r"), ErrorKind.Validation),
+        [ErrorCode.ZombieBuddyPreloadConfigInvalid] = (ZombieBuddyErrors.PreloadConfigInvalid("m", "p", "r"), ErrorKind.Validation),
+        [ErrorCode.ZombieBuddyPreloadConfigIoFailed] = (ZombieBuddyErrors.PreloadConfigIoFailed("m", "p", "r"), ErrorKind.External),
     };
 
     [GeneratedRegex(@"^[a-z]+\.[a-z0-9]+(_[a-z0-9]+)*$")]
@@ -121,9 +120,9 @@ public partial class ErrorCodeTests
     [InlineData(ErrorCode.ZombieBuddyDeleteFailed, "zombiebuddy.delete_failed")]
     [InlineData(ErrorCode.ZombieBuddyConfigWriteFailed, "zombiebuddy.config_write_failed")]
     [InlineData(ErrorCode.ZombieBuddyNotInitialized, "zombiebuddy.not_initialized")]
-    [InlineData(ErrorCode.ZabricNotPreloadable, "zabric.not_preloadable")]
-    [InlineData(ErrorCode.ZabricPreloadConfigInvalid, "zabric.preload_config_invalid")]
-    [InlineData(ErrorCode.ZabricPreloadConfigIoFailed, "zabric.preload_config_io_failed")]
+    [InlineData(ErrorCode.ZombieBuddyModNotPreloadable, "zombiebuddy.mod_not_preloadable")]
+    [InlineData(ErrorCode.ZombieBuddyPreloadConfigInvalid, "zombiebuddy.preload_config_invalid")]
+    [InlineData(ErrorCode.ZombieBuddyPreloadConfigIoFailed, "zombiebuddy.preload_config_io_failed")]
     public void ToWireName_ExistingCodes_AreStable(ErrorCode code, string wireName) =>
         Assert.Equal(wireName, code.ToWireName());
 

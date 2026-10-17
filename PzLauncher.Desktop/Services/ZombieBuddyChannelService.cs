@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using PzLauncher.Core.Mod.ZombieBuddy;
 using PzLauncher.Core.Platform;
-using PzLauncher.Core.ZombieBuddy;
 
 namespace PzLauncher.Desktop.Services;
 

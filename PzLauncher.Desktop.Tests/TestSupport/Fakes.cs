@@ -2,9 +2,9 @@ using PzLauncher.Core.Common;
 using PzLauncher.Core.Installs;
 using PzLauncher.Core.Java;
 using PzLauncher.Core.Launch;
+using PzLauncher.Core.Mod.Zabric;
+using PzLauncher.Core.Mod.ZombieBuddy;
 using PzLauncher.Core.Platform;
-using PzLauncher.Core.Zabric;
-using PzLauncher.Core.ZombieBuddy;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Services;
 using PzLauncher.Desktop.Themes;
@@ -339,11 +339,11 @@ public sealed class FakeZombieBuddyService : IZombieBuddyService
 
 public sealed class FakeZabricService : IZabricService
 {
-    public Result<ZabricPreload> PreloadResult { get; set; } = ZabricPreload.NotApplicable;
+    public Result<ZombieBuddyPreload> PreloadResult { get; set; } = ZombieBuddyPreload.NotApplicable;
 
     public List<(string Root, string ExtraGameArgs)> Preloads { get; } = [];
 
-    public Task<Result<ZabricPreload>> EnsurePreloadAsync(string installRoot, string extraGameArgs, CancellationToken ct = default)
+    public Task<Result<ZombieBuddyPreload>> EnsurePreloadAsync(string installRoot, string extraGameArgs, CancellationToken ct = default)
     {
         Preloads.Add((installRoot, extraGameArgs));
         return Task.FromResult(PreloadResult);

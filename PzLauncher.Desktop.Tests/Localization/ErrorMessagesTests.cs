@@ -84,4 +84,25 @@ public class ErrorMessagesTests : UiTextCultureTest
         Assert.Contains("134", crashedText, StringComparison.Ordinal);
         Assert.Contains("Unrecognized VM option 'Foo'", earlyText, StringComparison.Ordinal);
     }
+
+    [Theory]
+    [MemberData(nameof(TestLanguages.All), MemberType = typeof(TestLanguages))]
+    public void ToUserText_PreloadErrors_IncludeTheModId(AppLanguage language)
+    {
+        Localization.SetLanguage(language);
+        ErrorCode[] codes =
+        [
+            ErrorCode.ZombieBuddyModNotPreloadable, ErrorCode.ZombieBuddyPreloadConfigInvalid, ErrorCode.ZombieBuddyPreloadConfigIoFailed,
+        ];
+
+        foreach (var code in codes)
+        {
+            var error = new Error(code, Fallback, ErrorKind.Validation)
+            {
+                Details = new Dictionary<string, string> { ["modId"] = "SomeMod", ["path"] = @"C:\zb\config.json", ["reason"] = "r" },
+            };
+
+            Assert.Contains("SomeMod", ErrorMessages.ToUserText(error), StringComparison.Ordinal);
+        }
+    }
 }

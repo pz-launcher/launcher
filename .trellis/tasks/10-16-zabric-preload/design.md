@@ -139,3 +139,40 @@ User request: Zabric lives in `PzLauncher.Core.Zabric`, separate from ZombieBudd
 - Desktop: `HomeViewModel` takes `IZabricService`; `FakeZabricService` and a
   `DesignData` sample; Zabric removed from the ZombieBuddy fake/sample.
 - Tests move to `PzLauncher.Core.Tests/Zabric/`.
+
+## Revision (2026-10-17, 2): shared mod logic under `PzLauncher.Core.Mod`
+
+User request: extract what Zabric and ZombieBuddy share and put both under
+`PzLauncher.Core.Mod`. Supersedes the folder/namespace and error-code parts of
+the revision above; behaviour is unchanged.
+
+- `PzLauncher.Core/Mod/` (`PzLauncher.Core.Mod`), any Project Zomboid mod:
+  - `ModInfo`: reads a version folder's `mod.info` (first line per key, case-
+    insensitive key, non-empty value), highest version folder, `common/`
+    fallback when the version folder's has no `javaJarFile`.
+  - `ModLocator`: finds a mod by id in the game's order (staged Workshop,
+    Steam Workshop items with an optional preferred item first, `<cache>/mods`);
+    `CacheFolder(extraGameArgs, gameFolder, home)`.
+  - `ModFolders`: path constants/helpers for those roots and `-cachedir=`.
+- `PzLauncher.Core/Mod/ZombieBuddy/` (`PzLauncher.Core.Mod.ZombieBuddy`): the
+  existing ZombieBuddy feature moved as is, plus what any ZombieBuddy Java mod
+  needs:
+  - `ZombieBuddyJavaMod`: preloadable check on a `ModInfo` (jar from
+    `javaJarFile`, `javaPkgName`, `javaPreload=true`, manifest `ZB-Preload`).
+  - `ZombieBuddyPreloadConfig.EnsureAsync(configFolder, modId, entry, first)`:
+    registers one `preload_mods` entry (current by path or jar sha256; other
+    content kept; atomic; no write when unchanged; `first` moves it to the front).
+  - `ZombieBuddyPreload` (NotApplicable/Current/Written) and
+    `ZombieBuddyPreloadEntry` replace the Zabric-named types.
+  - Errors back in the `zombiebuddy` section: `zombiebuddy.mod_not_preloadable`,
+    `zombiebuddy.preload_config_invalid`, `zombiebuddy.preload_config_io_failed`
+    (`ZombieBuddyModNotPreloadable`, `ZombieBuddyPreloadConfigInvalid`,
+    `ZombieBuddyPreloadConfigIoFailed`); `zabric` section removed.
+- `PzLauncher.Core/Mod/Zabric/` (`PzLauncher.Core.Mod.Zabric`): `IZabricService`
+  / `ZabricService` and `ZabricFiles` (mod id, item id) only; it calls
+  `ModLocator`, `ZombieBuddyJavaMod` and `ZombieBuddyPreloadConfig` with
+  `first: true`.
+- `Steam/WorkshopLibraries` stays in Steam and gains the per-item lookup
+  (`<library>/steamapps/workshop/content/108600/<itemId>`) that ZombieBuddy's
+  channel lookup uses; ZombieBuddy keeps its installer lookup rules.
+- Tests mirror the folders (`PzLauncher.Core.Tests/Mod/...`).

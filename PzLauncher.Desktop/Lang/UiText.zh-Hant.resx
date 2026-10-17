@@ -212,14 +212,14 @@
   <data name="Error_ZombieBuddyNotInitialized" xml:space="preserve">
     <value>此安裝尚未初始化 ZombieBuddy。請先在「啟動設定」中執行「初始化」。</value>
   </data>
-  <data name="Error_ZabricNotPreloadable" xml:space="preserve">
-    <value>Zabric 無法預先載入：{0} 不符合 ZombieBuddy 的預先載入要求（{1}）。請更新 Zabric 或在 Steam 中重新訂閱。遊戲將在未預先載入的情況下啟動。</value>
+  <data name="Error_ZombieBuddyModNotPreloadable" xml:space="preserve">
+    <value>{2} 無法預先載入：{0} 不符合 ZombieBuddy 的預先載入要求（{1}）。請更新 {2} 或在 Steam 中重新訂閱。遊戲將在未預先載入的情況下啟動。</value>
   </data>
-  <data name="Error_ZabricPreloadConfigInvalid" xml:space="preserve">
-    <value>ZombieBuddy 設定 {0} 無效，因此未將 Zabric 加入其預先載入清單。請修正或刪除該檔案。遊戲將在未預先載入的情況下啟動。</value>
+  <data name="Error_ZombieBuddyPreloadConfigInvalid" xml:space="preserve">
+    <value>ZombieBuddy 設定 {0} 無效，因此未將 {1} 加入其預先載入清單。請修正或刪除該檔案。遊戲將在未預先載入的情況下啟動。</value>
   </data>
-  <data name="Error_ZabricPreloadConfigIoFailed" xml:space="preserve">
-    <value>無法讀取或寫入 ZombieBuddy 設定 {0}（{1}），因此未將 Zabric 加入其預先載入清單。遊戲將在未預先載入的情況下啟動。</value>
+  <data name="Error_ZombieBuddyPreloadConfigIoFailed" xml:space="preserve">
+    <value>無法讀取或寫入 ZombieBuddy 設定 {0}（{1}），因此未將 {2} 加入其預先載入清單。遊戲將在未預先載入的情況下啟動。</value>
   </data>
   <data name="Error_FolderNotLocal" xml:space="preserve">
     <value>{0} 不是這台電腦上的資料夾，啟動器無法開啟它。請選擇本機資料夾。</value>
