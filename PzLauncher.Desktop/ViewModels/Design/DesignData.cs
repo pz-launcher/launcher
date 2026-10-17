@@ -7,6 +7,8 @@ using PzLauncher.Core.Common;
 using PzLauncher.Core.Installs;
 using PzLauncher.Core.Java;
 using PzLauncher.Core.Launch;
+using PzLauncher.Core.Mod;
+using PzLauncher.Core.Mod.Collections;
 using PzLauncher.Core.Mod.Zabric;
 using PzLauncher.Core.Mod.ZombieBuddy;
 using PzLauncher.Core.Platform;
@@ -16,6 +18,7 @@ using PzLauncher.Desktop.Themes;
 using PzLauncher.Desktop.ViewModels.Home;
 using PzLauncher.Desktop.ViewModels.Installs;
 using PzLauncher.Desktop.ViewModels.Java;
+using PzLauncher.Desktop.ViewModels.Mods;
 using PzLauncher.Desktop.ViewModels.Settings;
 using PzLauncher.Desktop.ViewModels.LaunchSettings;
 using PzLauncher.Desktop.ViewModels.ZombieBuddy;
@@ -58,8 +61,20 @@ public static class DesignData
 
     private static readonly GameRunState RunState = new();
 
+    private static readonly SampleModCollections ModCollectionsSample = new();
+
+    private static readonly SampleModCollectionDefaults ModCollectionDefaults = new();
+
+    private static readonly ModCollectionApplier Applier = new(ModCollectionsSample, new NoDialogs());
+
     public static HomeViewModel Home { get; } =
-        new(Installs, GameLaunch, InstallOverrides, new NoDialogs(), ZombieBuddySample, ZombieBuddyChannels, new SampleZabric(), RunState);
+        new(Installs, GameLaunch, InstallOverrides, new NoDialogs(), ZombieBuddySample, ZombieBuddyChannels, new SampleZabric(), ModCollectionDefaults, Applier, RunState);
+
+    public static ModsViewModel Mods { get; } = CreateMods();
+
+    public static InstalledModsViewModel InstalledMods => Mods.Mods;
+
+    public static ModCollectionsViewModel ModCollections => Mods.Collections;
 
     public static JavaRuntimesViewModel Java { get; } = CreateJava();
 
@@ -69,7 +84,7 @@ public static class DesignData
 
     public static ZombieBuddySetupViewModel ZombieBuddySetup { get; } = CreateZombieBuddySetup();
 
-    public static MainViewModel Main { get; } = new(Home, Installs, Settings, LaunchSettings, new LanguageMenuViewModel(Localization, Preferences));
+    public static MainViewModel Main { get; } = new(Home, Installs, Mods, Settings, LaunchSettings, new LanguageMenuViewModel(Localization, Preferences));
 
     private static string SampleAppPath(string installDir) =>
         Path.Combine(SampleSteamRoot, "steamapps", "common", installDir);
@@ -78,6 +93,14 @@ public static class DesignData
     {
         var vm = new InstallsViewModel(new SampleInstallDetection(), new NoFolderPicker(), new SamplePlatform(), Localization);
         vm.ScanCommand.Execute(null);
+        return vm;
+    }
+
+    private static ModsViewModel CreateMods()
+    {
+        var vm = new ModsViewModel(
+            Installs, ModCollectionsSample, InstallOverrides, ModCollectionDefaults, Applier, new NoDialogs(), new NoClipboard(), RunState, Localization, TimeProvider.System);
+        vm.ActivateCommand.Execute(null);
         return vm;
     }
 
@@ -156,6 +179,10 @@ public static class DesignData
     {
         public Task ShowErrorAsync(string message) => Task.CompletedTask;
 
+        public Task<bool> ConfirmAsync(ConfirmPrompt prompt) => Task.FromResult(false);
+
+        public Task<TextPromptResult> PromptTextAsync(TextPrompt prompt) => Task.FromResult<TextPromptResult>(new TextPromptResult.Cancelled());
+
         public Task<bool> ShowZombieBuddySetupAsync(ZombieBuddySetupViewModel setup) => Task.FromResult(false);
     }
 
@@ -204,6 +231,61 @@ public static class DesignData
         public void Save(string installRoot, ZombieBuddyChannel channel)
         {
         }
+    }
+
+    // A few fictional mods: one collection in use, one missing a mod and holding an incompatible pair.
+    private sealed class SampleModCollections : IModCollectionService
+    {
+        private static readonly InstalledMod[] Installed =
+        [
+            Mod("ExampleCore", "Example Core Library", "1000101", InstalledModSource.SteamWorkshop),
+            Mod("ExampleMaps", "Example Map Pack", "1000102", InstalledModSource.SteamWorkshop, require: ["ExampleCore"]),
+            Mod("ExampleCars", "Example Vehicles", "1000103", InstalledModSource.SteamWorkshop, incompatible: ["ExampleCarsLite"]),
+            Mod("ExampleCarsLite", "Example Vehicles Lite", "1000104", InstalledModSource.StagedWorkshop),
+            Mod("ExampleTweaks", "Example Tweaks", null, InstalledModSource.Local),
+        ];
+
+        public Task<Result<ModCollectionState>> GetAsync(string installRoot, string extraGameArgs, CancellationToken ct = default) =>
+            Task.FromResult<Result<ModCollectionState>>(new ModCollectionState(
+                Path.Combine(SampleHome, "Zomboid"),
+                [
+                    new ModCollection("Survival", ["ExampleCore", "ExampleMaps", "ExampleTweaks"], IsActive: true),
+                    new ModCollection("Vehicles", ["ExampleCars", "ExampleCarsLite", "ExampleRemoved"], IsActive: false),
+                ],
+                Installed,
+                ["ExampleCore", "ExampleMaps", "ExampleTweaks"],
+                ActiveMatchesCollection: true));
+
+        public Task<Result> SaveAsync(SaveModCollectionRequest request, CancellationToken ct = default) => Task.FromResult(Result.Ok());
+
+        public Task<Result> DeleteAsync(string installRoot, string extraGameArgs, string name, CancellationToken ct = default) => Task.FromResult(Result.Ok());
+
+        public Task<Result<ApplyModCollectionResult>> ApplyAsync(string installRoot, string extraGameArgs, string name, CancellationToken ct = default) =>
+            Task.FromResult<Result<ApplyModCollectionResult>>(new ApplyModCollectionResult([], [], []));
+
+        private static InstalledMod Mod(
+            string id, string name, string? workshopId, InstalledModSource source, string[]? require = null, string[]? incompatible = null) =>
+            new(id, name, workshopId, source, require ?? [], [], [], incompatible ?? []);
+    }
+
+    private sealed class SampleModCollectionDefaults : IModCollectionDefaultsService
+    {
+        public string? Get(string installRoot) => "Survival";
+
+        public void Save(string installRoot, string name)
+        {
+        }
+
+        public void Clear(string installRoot)
+        {
+        }
+    }
+
+    private sealed class NoClipboard : IClipboardService
+    {
+        public Task SetTextAsync(string text) => Task.CompletedTask;
+
+        public Task<string?> GetTextAsync() => Task.FromResult<string?>(null);
     }
 
     private sealed class SampleJavaDiscovery : IJavaDiscoveryService
@@ -260,6 +342,8 @@ public static class DesignData
         public Task SaveInstallOverridesAsync(string installRoot, GameLaunchOverrides overrides, CancellationToken ct = default) => Task.CompletedTask;
 
         public Task SaveZombieBuddyChannelAsync(string installRoot, ZombieBuddyChannel channel, CancellationToken ct = default) => Task.CompletedTask;
+
+        public Task SaveDefaultModCollectionAsync(string installRoot, string? name, CancellationToken ct = default) => Task.CompletedTask;
     }
 
     private sealed class NoWindowPlacement : IWindowPlacementService

@@ -15,7 +15,7 @@ namespace PzLauncher.Desktop.Services;
 
 public sealed partial class JsonPreferenceStore(string filePath, ILogger logger) : IPreferenceStore
 {
-    private static readonly PreferencesFile Empty = new(null, null, null, null, null, null);
+    private static readonly PreferencesFile Empty = new(null, null, null, null, null, null, null);
 
     // Saves are fire-and-forget; one at a time so the last choice is the one left on disk.
     private readonly SemaphoreSlim _saveGate = new(1, 1);
@@ -64,11 +64,18 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger)
             LogInvalidZombieBuddyChannels(logger, filePath);
         }
 
+        var collections = ToDefaultModCollections(file.DefaultModCollections);
+        if (collections.Count != (file.DefaultModCollections?.Count ?? 0))
+        {
+            LogInvalidDefaultModCollections(logger, filePath);
+        }
+
         return new UserPreferences(language, theme, window)
         {
             ManualJavaHomes = javaHomes,
             InstallOverrides = installs,
             ZombieBuddyChannels = channels,
+            DefaultModCollections = collections,
         };
     }
 
@@ -127,6 +134,25 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger)
             ct);
     }
 
+    public Task SaveDefaultModCollectionAsync(string installRoot, string? name, CancellationToken ct = default) =>
+        SaveAsync(
+            file =>
+            {
+                var entries = new Dictionary<string, JsonElement>(
+                    file.DefaultModCollections ?? new Dictionary<string, JsonElement>(), StringComparer.Ordinal);
+                if (name is null)
+                {
+                    entries.Remove(installRoot);
+                }
+                else
+                {
+                    entries[installRoot] = JsonSerializer.SerializeToElement(name, DesktopJsonContext.Default.String);
+                }
+
+                return file with { DefaultModCollections = entries };
+            },
+            ct);
+
     private static List<string> ToManualJavaHomes(IReadOnlyList<JsonElement>? entries) =>
     [
         .. (entries ?? [])
@@ -159,6 +185,20 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger)
                 && ZombieBuddyChannelPreferences.FromPreferenceName(element.GetString()) is { } channel)
             {
                 result[root] = channel;
+            }
+        }
+
+        return result;
+    }
+
+    private static Dictionary<string, string> ToDefaultModCollections(IReadOnlyDictionary<string, JsonElement>? entries)
+    {
+        var result = new Dictionary<string, string>(StringComparer.Ordinal);
+        foreach (var (root, element) in entries ?? new Dictionary<string, JsonElement>())
+        {
+            if (IsAbsolutePath(root) && element.ValueKind == JsonValueKind.String && element.GetString() is { Length: > 0 } name)
+            {
+                result[root] = name;
             }
         }
 
@@ -290,6 +330,9 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger)
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "ZombieBuddy channel preference {Path} holds entries that aren't valid; ignoring them")]
     private static partial void LogInvalidZombieBuddyChannels(ILogger logger, string path);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Default mod collection preference {Path} holds entries that aren't valid; ignoring them")]
+    private static partial void LogInvalidDefaultModCollections(ILogger logger, string path);
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Preferences {Path} could not be saved")]
     private static partial void LogSaveFailed(ILogger logger, string path, Exception exception);

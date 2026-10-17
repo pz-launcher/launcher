@@ -31,6 +31,9 @@ public sealed class JsonPreferenceStoreTests : IDisposable
     private static UserPreferences WithChannels(params (string Root, ZombieBuddyChannel Channel)[] channels) =>
         new(null, null, null) { ZombieBuddyChannels = channels.ToDictionary(entry => entry.Root, entry => entry.Channel) };
 
+    private static UserPreferences WithDefaultCollections(params (string Root, string Name)[] defaults) =>
+        new(null, null, null) { DefaultModCollections = defaults.ToDictionary(entry => entry.Root, entry => entry.Name) };
+
     private static UserPreferences WithInstalls(params (string Root, GameLaunchOverrides Overrides)[] installs) =>
         new(null, null, null) { InstallOverrides = installs.ToDictionary(install => install.Root, install => install.Overrides) };
 
@@ -185,6 +188,7 @@ public sealed class JsonPreferenceStoreTests : IDisposable
     [InlineData(3)]
     [InlineData(4)]
     [InlineData(5)]
+    [InlineData(6)]
     public async Task SaveOneField_FileHoldsTheOthers_KeepsAll(int savedLast)
     {
         var ct = TestContext.Current.CancellationToken;
@@ -196,6 +200,7 @@ public sealed class JsonPreferenceStoreTests : IDisposable
             () => CreateStore().SaveManualJavaHomesAsync([JavaA], ct),
             () => CreateStore().SaveInstallOverridesAsync(GameRoot, Overrides, ct),
             () => CreateStore().SaveZombieBuddyChannelAsync(GameRoot, ZombieBuddyChannel.Beta, ct),
+            () => CreateStore().SaveDefaultModCollectionAsync(GameRoot, "B42 pack", ct),
         ];
 
         // Separate stores, as across app runs.
@@ -210,6 +215,7 @@ public sealed class JsonPreferenceStoreTests : IDisposable
                 ManualJavaHomes = [JavaA],
                 InstallOverrides = WithInstalls((GameRoot, Overrides)).InstallOverrides,
                 ZombieBuddyChannels = WithChannels((GameRoot, ZombieBuddyChannel.Beta)).ZombieBuddyChannels,
+                DefaultModCollections = WithDefaultCollections((GameRoot, "B42 pack")).DefaultModCollections,
             },
             CreateStore().Load());
     }
@@ -228,7 +234,9 @@ public sealed class JsonPreferenceStoreTests : IDisposable
             store.SaveInstallOverridesAsync(GameRoot, Overrides, TestContext.Current.CancellationToken),
             store.SaveInstallOverridesAsync(OtherRoot, GameLaunchOverrides.Empty, TestContext.Current.CancellationToken),
             store.SaveZombieBuddyChannelAsync(GameRoot, ZombieBuddyChannel.Beta, TestContext.Current.CancellationToken),
-            store.SaveZombieBuddyChannelAsync(OtherRoot, ZombieBuddyChannel.Stable, TestContext.Current.CancellationToken));
+            store.SaveZombieBuddyChannelAsync(OtherRoot, ZombieBuddyChannel.Stable, TestContext.Current.CancellationToken),
+            store.SaveDefaultModCollectionAsync(GameRoot, "B42 pack", TestContext.Current.CancellationToken),
+            store.SaveDefaultModCollectionAsync(OtherRoot, "my collection", TestContext.Current.CancellationToken));
 
         Assert.Equal(
             new UserPreferences(AppLanguage.PortugueseBrazil, AppTheme.Dark, Placement)
@@ -236,6 +244,7 @@ public sealed class JsonPreferenceStoreTests : IDisposable
                 ManualJavaHomes = [JavaA, JavaB],
                 InstallOverrides = WithInstalls((GameRoot, Overrides), (OtherRoot, GameLaunchOverrides.Empty)).InstallOverrides,
                 ZombieBuddyChannels = WithChannels((GameRoot, ZombieBuddyChannel.Beta), (OtherRoot, ZombieBuddyChannel.Stable)).ZombieBuddyChannels,
+                DefaultModCollections = WithDefaultCollections((GameRoot, "B42 pack"), (OtherRoot, "my collection")).DefaultModCollections,
             },
             CreateStore().Load());
     }
@@ -251,6 +260,7 @@ public sealed class JsonPreferenceStoreTests : IDisposable
         await CreateStore().SaveManualJavaHomesAsync([JavaA], TestContext.Current.CancellationToken);
         await CreateStore().SaveInstallOverridesAsync(GameRoot, Overrides, TestContext.Current.CancellationToken);
         await CreateStore().SaveZombieBuddyChannelAsync(GameRoot, ZombieBuddyChannel.Beta, TestContext.Current.CancellationToken);
+        await CreateStore().SaveDefaultModCollectionAsync(GameRoot, "B42 pack", TestContext.Current.CancellationToken);
 
         Assert.Equal(new UserPreferences(null, null, null), CreateStore().Load());
     }
@@ -311,6 +321,8 @@ public sealed class JsonPreferenceStoreTests : IDisposable
     [InlineData("""{"installs":[]}""")]
     [InlineData("""{"zombieBuddyChannels":5}""")]
     [InlineData("""{"zombieBuddyChannels":["beta"]}""")]
+    [InlineData("""{"defaultModCollections":5}""")]
+    [InlineData("""{"defaultModCollections":["B42 pack"]}""")]
     public void Load_CorruptOrUnknownContent_ReturnsNoChoices(string content)
     {
         WriteFile(content);
@@ -439,6 +451,64 @@ public sealed class JsonPreferenceStoreTests : IDisposable
             new UserPreferences(null, AppTheme.Dark, null)
             {
                 ZombieBuddyChannels = WithChannels((GameRoot, ZombieBuddyChannel.Beta), (OtherRoot, ZombieBuddyChannel.Stable)).ZombieBuddyChannels,
+            },
+            CreateStore().Load());
+    }
+
+    [Fact]
+    public async Task SaveDefaultModCollectionAsync_ThenLoad_RoundTripsPerInstall()
+    {
+        var store = CreateStore();
+
+        await store.SaveDefaultModCollectionAsync(GameRoot, "B42 通用合集", TestContext.Current.CancellationToken);
+        await store.SaveDefaultModCollectionAsync(OtherRoot, "my collection", TestContext.Current.CancellationToken);
+        await store.SaveDefaultModCollectionAsync(GameRoot, "Vanilla+", TestContext.Current.CancellationToken);
+
+        Assert.Equal(WithDefaultCollections((GameRoot, "Vanilla+"), (OtherRoot, "my collection")), CreateStore().Load());
+    }
+
+    [Fact]
+    public async Task SaveDefaultModCollectionAsync_Null_RemovesOnlyThatInstallsEntry()
+    {
+        await CreateStore().SaveDefaultModCollectionAsync(GameRoot, "B42 pack", TestContext.Current.CancellationToken);
+        await CreateStore().SaveDefaultModCollectionAsync(OtherRoot, "my collection", TestContext.Current.CancellationToken);
+
+        await CreateStore().SaveDefaultModCollectionAsync(GameRoot, null, TestContext.Current.CancellationToken);
+
+        Assert.Equal(WithDefaultCollections((OtherRoot, "my collection")), CreateStore().Load());
+    }
+
+    [Fact]
+    public async Task SaveDefaultModCollectionAsync_WritesNamesKeyedByRoot()
+    {
+        await CreateStore().SaveDefaultModCollectionAsync(GameRoot, "B42 pack", TestContext.Current.CancellationToken);
+
+        Assert.Equal(
+            "{\"defaultModCollections\":{" + JsonSerializer.Serialize(GameRoot) + ":\"B42 pack\"}}",
+            await File.ReadAllTextAsync(FilePath, TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
+    public void Load_DefaultModCollectionsWithInvalidEntries_KeepsTheValidOnesAndOtherFields()
+    {
+        string Key(string root) => JsonSerializer.Serialize(root);
+        WriteFile($$"""
+            {"theme":"dark","defaultModCollections":{
+              {{Key(GameRoot)}}:"B42 pack",
+              {{Key(OtherRoot)}}:"my collection",
+              {{Key("relative/ProjectZomboid")}}:"B42 pack",
+              {{Key(Path.Combine(GameRoot, "empty"))}}:"",
+              {{Key(Path.Combine(GameRoot, "number"))}}:1,
+              {{Key(Path.Combine(GameRoot, "null"))}}:null,
+              {{Key(Path.Combine(GameRoot, "object"))}}:{"name":"B42 pack"}
+            }
+            }
+            """);
+
+        Assert.Equal(
+            new UserPreferences(null, AppTheme.Dark, null)
+            {
+                DefaultModCollections = WithDefaultCollections((GameRoot, "B42 pack"), (OtherRoot, "my collection")).DefaultModCollections,
             },
             CreateStore().Load());
     }

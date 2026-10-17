@@ -14,25 +14,8 @@ internal static class AtomicJsonFile
         Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
     };
 
-    // Same folder, so the move is a rename: a reader never sees a half-written file.
-    public static async Task WriteAsync(string path, JsonNode root, CancellationToken ct)
-    {
-        var temp = $"{path}.{Guid.NewGuid():N}.tmp";
-        var moved = false;
-        try
-        {
-            await File.WriteAllBytesAsync(temp, Serialize(root), ct).ConfigureAwait(false);
-            File.Move(temp, path, overwrite: true);
-            moved = true;
-        }
-        finally
-        {
-            if (!moved)
-            {
-                TryDelete(temp);
-            }
-        }
-    }
+    public static Task WriteAsync(string path, JsonNode root, CancellationToken ct) =>
+        AtomicFile.WriteAsync(path, Serialize(root), ct);
 
     private static byte[] Serialize(JsonNode root)
     {
@@ -43,17 +26,5 @@ internal static class AtomicJsonFile
         }
 
         return stream.ToArray();
-    }
-
-    private static void TryDelete(string path)
-    {
-        try
-        {
-            File.Delete(path);
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-        {
-            // Best effort: a stray temp file is harmless.
-        }
     }
 }

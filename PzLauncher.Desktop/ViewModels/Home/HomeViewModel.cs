@@ -1,5 +1,6 @@
 using System;
 using System.ComponentModel;
+using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -11,6 +12,7 @@ using PzLauncher.Core.Mod.ZombieBuddy;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Services;
 using PzLauncher.Desktop.ViewModels.Installs;
+using PzLauncher.Desktop.ViewModels.Mods;
 using PzLauncher.Desktop.ViewModels.ZombieBuddy;
 
 namespace PzLauncher.Desktop.ViewModels.Home;
@@ -24,6 +26,8 @@ public partial class HomeViewModel : ViewModelBase
     private readonly IZombieBuddyService _zombieBuddy;
     private readonly IZombieBuddyChannelService _channels;
     private readonly IZabricService _zabric;
+    private readonly IModCollectionDefaultsService _defaultCollections;
+    private readonly ModCollectionApplier _applier;
     private readonly GameRunState _runState;
 
     public HomeViewModel(
@@ -34,6 +38,8 @@ public partial class HomeViewModel : ViewModelBase
         IZombieBuddyService zombieBuddy,
         IZombieBuddyChannelService channels,
         IZabricService zabric,
+        IModCollectionDefaultsService defaultCollections,
+        ModCollectionApplier applier,
         GameRunState runState)
     {
         _installs = installs;
@@ -43,6 +49,8 @@ public partial class HomeViewModel : ViewModelBase
         _zombieBuddy = zombieBuddy;
         _channels = channels;
         _zabric = zabric;
+        _defaultCollections = defaultCollections;
+        _applier = applier;
         _runState = runState;
 
         // Never unsubscribed: all of these are app-lifetime singletons.
@@ -92,18 +100,38 @@ public partial class HomeViewModel : ViewModelBase
             return;
         }
 
-        if (!await PrepareZombieBuddyAsync(install.RootPath))
+        var overrides = _overrides.Get(install.RootPath);
+
+        // A failed apply is reported, then the game starts with the enabled list it already has.
+        var removeZombieBuddy = false;
+        if (_defaultCollections.Get(install.RootPath) is { } collection)
+        {
+            switch (await _applier.ApplyAsync(install.RootPath, overrides.ExtraGameArgs, collection))
+            {
+                case ModCollectionApplyOutcome.Cancelled:
+                    return;
+                case ModCollectionApplyOutcome.Failed failed:
+                    await _dialogs.ShowErrorAsync(ErrorMessages.ToUserText(failed.Error));
+                    break;
+                case ModCollectionApplyOutcome.Applied applied:
+                    removeZombieBuddy = !applied.Result.EnabledIds.Contains(ZombieBuddyMod.Id, StringComparer.Ordinal);
+                    break;
+            }
+        }
+
+        if (!await PrepareZombieBuddyAsync(install.RootPath, removeZombieBuddy))
         {
             return;
         }
 
-        var overrides = _overrides.Get(install.RootPath);
-
         // A failed preload is reported, then the game starts as it would without the launcher.
-        var preload = await _zabric.EnsurePreloadAsync(install.RootPath, overrides.ExtraGameArgs);
-        if (!preload.IsSuccess)
+        if (!removeZombieBuddy)
         {
-            await _dialogs.ShowErrorAsync(ErrorMessages.ToUserText(preload.Error));
+            var preload = await _zabric.EnsurePreloadAsync(install.RootPath, overrides.ExtraGameArgs);
+            if (!preload.IsSuccess)
+            {
+                await _dialogs.ShowErrorAsync(ErrorMessages.ToUserText(preload.Error));
+            }
         }
 
         var result = await _launcher.LaunchAsync(new LaunchGameRequest(install.RootPath, overrides));
@@ -131,7 +159,8 @@ public partial class HomeViewModel : ViewModelBase
     }
 
     // False when the user cancelled the setup dialog. A status error falls through: the launch reports the same config problem.
-    private async Task<bool> PrepareZombieBuddyAsync(string installRoot)
+    // The applied default collection decides when it leaves ZombieBuddy out: then only leftovers are removed.
+    private async Task<bool> PrepareZombieBuddyAsync(string installRoot, bool remove)
     {
         var status = await _zombieBuddy.GetStatusAsync(installRoot);
         if (!status.IsSuccess)
@@ -139,12 +168,14 @@ public partial class HomeViewModel : ViewModelBase
             return true;
         }
 
-        ZombieBuddySetupMode? needed = status.Value.NeededAction switch
-        {
-            ZombieBuddyAction.None => null,
-            ZombieBuddyAction.Initialize => ZombieBuddySetupMode.Initialize,
-            ZombieBuddyAction.Remove => ZombieBuddySetupMode.Remove,
-        };
+        ZombieBuddySetupMode? needed = remove
+            ? status.Value.HasLeftovers ? ZombieBuddySetupMode.Remove : null
+            : status.Value.NeededAction switch
+            {
+                ZombieBuddyAction.None => null,
+                ZombieBuddyAction.Initialize => ZombieBuddySetupMode.Initialize,
+                ZombieBuddyAction.Remove => ZombieBuddySetupMode.Remove,
+            };
         if (needed is not { } mode)
         {
             return true;

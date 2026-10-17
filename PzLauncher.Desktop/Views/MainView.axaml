@@ -36,6 +36,10 @@
                                       IsChecked="{Binding CurrentTab, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:ShellPage.Installs}}"
                                       Click="OnTabClick" />
                     <controls:NavItem Theme="{StaticResource Shell.TitleBarTab}" chrome:WindowDecorationProperties.ElementRole="User"
+                                      Icon="PuzzlePiece" Content="{x:Static lang:UiText.Shell_NavMods}"
+                                      IsChecked="{Binding CurrentTab, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:ShellPage.Mods}}"
+                                      Click="OnTabClick" />
+                    <controls:NavItem Theme="{StaticResource Shell.TitleBarTab}" chrome:WindowDecorationProperties.ElementRole="User"
                                       Icon="Settings" Content="{x:Static lang:UiText.Shell_NavSettings}"
                                       IsChecked="{Binding CurrentTab, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:ShellPage.Settings}}"
                                       Click="OnTabClick" />

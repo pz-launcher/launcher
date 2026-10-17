@@ -4,6 +4,7 @@ using PzLauncher.Desktop.Themes;
 using PzLauncher.Desktop.ViewModels;
 using PzLauncher.Desktop.ViewModels.Home;
 using PzLauncher.Desktop.ViewModels.Installs;
+using PzLauncher.Desktop.ViewModels.Mods;
 using PzLauncher.Desktop.ViewModels.Settings;
 using PzLauncher.Desktop.ViewModels.LaunchSettings;
 using static PzLauncher.Desktop.Tests.TestSupport.TestInstalls;
@@ -26,9 +27,14 @@ public class MainViewModelTests : UiTextCultureTest
         var channels = new FakeZombieBuddyChannelService();
         var runState = new GameRunState();
         var dialogs = new FakeDialogService();
+        var collections = new FakeModCollectionService();
+        var defaults = new FakeModCollectionDefaultsService();
+        var applier = new ModCollectionApplier(collections, dialogs);
         return new(
-            new HomeViewModel(installs, launcher, overrides, dialogs, zombieBuddy, channels, new FakeZabricService(), runState),
+            new HomeViewModel(installs, launcher, overrides, dialogs, zombieBuddy, channels, new FakeZabricService(), defaults, applier, runState),
             installs,
+            new ModsViewModel(
+                installs, collections, overrides, defaults, applier, dialogs, new FakeClipboardService(), runState, Localization, new ManualTimeProvider()),
             new SettingsViewModel(new FakeThemeService(AppTheme.Light), store, new FakeWindowPlacementService(), java),
             new LaunchSettingsViewModel(
                 installs, launcher, overrides, java, zombieBuddy, channels, runState, dialogs, new FakePlatformEnvironment(), Localization),
@@ -54,6 +60,7 @@ public class MainViewModelTests : UiTextCultureTest
 
     [Theory]
     [InlineData(ShellPage.Installs)]
+    [InlineData(ShellPage.Mods)]
     [InlineData(ShellPage.Settings)]
     public void Navigate_OtherPage_ShowsIt(ShellPage page)
     {
@@ -63,13 +70,23 @@ public class MainViewModelTests : UiTextCultureTest
 
         vm.CurrentPageKind = page;
 
-        Assert.Same(page == ShellPage.Installs ? vm.Installs : vm.Settings, vm.CurrentPage);
+        Assert.Same(
+            page switch
+            {
+                ShellPage.Home => vm.Home,
+                ShellPage.Installs => vm.Installs,
+                ShellPage.Mods => vm.Mods,
+                ShellPage.Settings => vm.Settings,
+                ShellPage.LaunchSettings => vm.LaunchSettings,
+            },
+            vm.CurrentPage);
         Assert.Contains(nameof(MainViewModel.CurrentPage), changed);
     }
 
     [Theory]
     [InlineData(ShellPage.Home, ShellPage.Home)]
     [InlineData(ShellPage.Installs, ShellPage.Installs)]
+    [InlineData(ShellPage.Mods, ShellPage.Mods)]
     [InlineData(ShellPage.Settings, ShellPage.Settings)]
     [InlineData(ShellPage.LaunchSettings, ShellPage.Home)]
     public void CurrentTab_SubPageHighlightsItsTab(ShellPage page, ShellPage tab)

@@ -17,6 +17,7 @@ using PzLauncher.Desktop.ViewModels;
 using PzLauncher.Desktop.ViewModels.Home;
 using PzLauncher.Desktop.ViewModels.Installs;
 using PzLauncher.Desktop.ViewModels.Java;
+using PzLauncher.Desktop.ViewModels.Mods;
 using PzLauncher.Desktop.ViewModels.Settings;
 using PzLauncher.Desktop.ViewModels.LaunchSettings;
 using PzLauncher.Desktop.Views;
@@ -45,6 +46,7 @@ public partial class App : Application
             services.AddPzLauncherCore();
             services.AddSingleton<IFolderPicker>(new AvaloniaFolderPicker(() => desktop.MainWindow));
             services.AddSingleton<IDialogService>(new AvaloniaDialogService(() => desktop.MainWindow));
+            services.AddSingleton<IClipboardService>(new AvaloniaClipboardService(() => desktop.MainWindow));
             WindowPlacementPersistence? windowPlacement = null;
             services.AddSingleton<IWindowPlacementService>(new WindowPlacementService(() => windowPlacement));
             services.AddSingleton<IPreferenceStore>(sp =>
@@ -52,6 +54,8 @@ public partial class App : Application
             services.AddSingleton(sp => sp.GetRequiredService<IPreferenceStore>().Load());
             services.AddSingleton<IInstallOverridesService, InstallOverridesService>();
             services.AddSingleton<IZombieBuddyChannelService, ZombieBuddyChannelService>();
+            services.AddSingleton<IModCollectionDefaultsService, ModCollectionDefaultsService>();
+            services.AddSingleton<ModCollectionApplier>();
             services.AddSingleton<GameRunState>();
             services.AddSingleton<ILocalizationService>(sp => new LocalizationService(
                 sp.GetRequiredService<UserPreferences>().Language ?? AppLanguages.FromCulture(CultureInfo.CurrentUICulture)));
@@ -62,6 +66,7 @@ public partial class App : Application
             services.AddSingleton<JavaRuntimesViewModel>();
             services.AddSingleton<HomeViewModel>();
             services.AddSingleton<LaunchSettingsViewModel>();
+            services.AddSingleton<ModsViewModel>();
             services.AddSingleton<SettingsViewModel>();
             services.AddSingleton<LanguageMenuViewModel>();
             services.AddSingleton<MainViewModel>();

@@ -28,10 +28,10 @@ internal static partial class ModLocator
     public static async Task<ModInfo?> FindAsync(
         string modId, string? preferredItemId, string? cache, IReadOnlyList<string> libraries, ILogger logger, CancellationToken ct)
     {
-        foreach (var modFolder in Candidates(modId, preferredItemId, cache, libraries, logger))
+        foreach (var root in Roots(preferredItemId, cache, libraries, logger))
         {
             ct.ThrowIfCancellationRequested();
-            if (await ReadAsync(modFolder, logger, ct).ConfigureAwait(false) is { } info
+            if (await ReadAsync(Path.Combine(root.ModsFolder, modId), logger, ct).ConfigureAwait(false) is { } info
                 && string.Equals(info.Value(ModFolders.IdKey), modId, StringComparison.Ordinal))
             {
                 return info;
@@ -56,14 +56,14 @@ internal static partial class ModLocator
         return version;
     }
 
-    private static IEnumerable<string> Candidates(
-        string modId, string? preferredItemId, string? cache, IReadOnlyList<string> libraries, ILogger logger)
+    /// <summary>The <c>mods</c> folders the game searches, in its lookup order.</summary>
+    public static IEnumerable<ModRoot> Roots(string? preferredItemId, string? cache, IReadOnlyList<string> libraries, ILogger logger)
     {
         if (cache is not null)
         {
             foreach (var item in Subfolders(ModFolders.StagedWorkshopFolder(cache), logger))
             {
-                yield return ModFolders.StagedModFolder(item, modId);
+                yield return new ModRoot(ModFolders.StagedModsFolder(item), InstalledModSource.StagedWorkshop, null);
             }
         }
 
@@ -72,18 +72,18 @@ internal static partial class ModLocator
             var items = Subfolders(WorkshopLibraries.ContentFolder(library), logger);
             foreach (var item in items.OrderBy(item => !string.Equals(Path.GetFileName(item), preferredItemId, StringComparison.Ordinal)))
             {
-                yield return ModFolders.WorkshopModFolder(item, modId);
+                yield return new ModRoot(ModFolders.WorkshopModsFolder(item), InstalledModSource.SteamWorkshop, Path.GetFileName(item));
             }
         }
 
         if (cache is not null)
         {
-            yield return ModFolders.LocalModFolder(cache, modId);
+            yield return new ModRoot(ModFolders.LocalModsFolder(cache), InstalledModSource.Local, null);
         }
     }
 
     // The highest version folder that holds a mod.info is the one read, whatever its id.
-    private static async Task<ModInfo?> ReadAsync(string modFolder, ILogger logger, CancellationToken ct)
+    public static async Task<ModInfo?> ReadAsync(string modFolder, ILogger logger, CancellationToken ct)
     {
         var versions = new List<(string Folder, int[] Version)>();
         foreach (var folder in Subfolders(modFolder, logger))
@@ -115,7 +115,7 @@ internal static partial class ModLocator
     }
 
     // Ordinal order; empty when the folder is missing or unreadable.
-    private static List<string> Subfolders(string folder, ILogger logger)
+    public static List<string> Subfolders(string folder, ILogger logger)
     {
         if (!Directory.Exists(folder))
         {
@@ -147,6 +147,8 @@ internal static partial class ModLocator
 
         return x.Length.CompareTo(y.Length);
     }
+
+    internal readonly record struct ModRoot(string ModsFolder, InstalledModSource Source, string? WorkshopId);
 
     [LoggerMessage(Level = LogLevel.Debug, Message = "Mod lookup skipped {Path}: {Detail}")]
     private static partial void LogSkipped(ILogger logger, string path, string detail);

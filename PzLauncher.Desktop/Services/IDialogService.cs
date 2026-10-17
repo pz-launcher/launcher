@@ -3,11 +3,16 @@ using PzLauncher.Desktop.ViewModels.ZombieBuddy;
 
 namespace PzLauncher.Desktop.Services;
 
+/// <summary>Every dialog is modal over the main window and completes when the user closes it.</summary>
 public interface IDialogService
 {
-    /// <summary>Modal over the main window; completes when the user closes it.</summary>
     Task ShowErrorAsync(string message);
 
-    /// <summary>Modal over the main window; starts the operation when it opens. <c>true</c> when the user chose to launch the game.</summary>
+    /// <summary><c>true</c> only for the confirm button; closing the window is cancel.</summary>
+    Task<bool> ConfirmAsync(ConfirmPrompt prompt);
+
+    Task<TextPromptResult> PromptTextAsync(TextPrompt prompt);
+
+    /// <summary>Starts the operation when it opens. <c>true</c> when the user chose to launch the game.</summary>
     Task<bool> ShowZombieBuddySetupAsync(ZombieBuddySetupViewModel setup);
 }

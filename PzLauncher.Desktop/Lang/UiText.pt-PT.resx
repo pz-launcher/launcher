@@ -22,6 +22,9 @@
   <data name="Shell_NavInstalls" xml:space="preserve">
     <value>Instalações</value>
   </data>
+  <data name="Shell_NavMods" xml:space="preserve">
+    <value>Mods</value>
+  </data>
   <data name="Shell_NavSettings" xml:space="preserve">
     <value>Definições</value>
   </data>
@@ -105,6 +108,9 @@
   </data>
   <data name="Dialog_Ok" xml:space="preserve">
     <value>OK</value>
+  </data>
+  <data name="Dialog_Cancel" xml:space="preserve">
+    <value>Cancelar</value>
   </data>
   <data name="Error_ResultUninitialized" xml:space="preserve">
     <value>Ocorreu um erro interno no launcher. Comunique-o como um erro.</value>
@@ -220,6 +226,27 @@
   </data>
   <data name="Error_ZombieBuddyPreloadConfigIoFailed" xml:space="preserve">
     <value>Não foi possível ler ou escrever a configuração do ZombieBuddy {0} ({1}), pelo que o {2} não foi adicionado à lista de pré-carregamento. O jogo será iniciado sem o pré-carregamento.</value>
+  </data>
+  <data name="Error_ModCollectionCacheFolderUnresolved" xml:space="preserve">
+    <value>Não foi possível encontrar a pasta de cache do jogo para {0}. Verifique o argumento -cachedir= nas definições de arranque.</value>
+  </data>
+  <data name="Error_ModCollectionNameInvalid" xml:space="preserve">
+    <value>"{0}" não é um nome de coleção válido. O nome não pode estar vazio nem conter \ / : * ? " &lt; &gt; |.</value>
+  </data>
+  <data name="Error_ModCollectionModIdInvalid" xml:space="preserve">
+    <value>"{0}" não é um id de mod válido para uma coleção.</value>
+  </data>
+  <data name="Error_ModCollectionNotFound" xml:space="preserve">
+    <value>Já não existe uma coleção chamada "{0}". Atualize a lista e tente novamente.</value>
+  </data>
+  <data name="Error_ModCollectionFileUnreadable" xml:space="preserve">
+    <value>Não foi possível ler o ficheiro da lista de mods {0}. Verifique se não está aberto noutro programa e tente novamente.</value>
+  </data>
+  <data name="Error_ModCollectionFileMalformed" xml:space="preserve">
+    <value>O ficheiro da lista de mods {0} não está no formato que o jogo escreve, pelo que o launcher não o alterou.</value>
+  </data>
+  <data name="Error_ModCollectionFileWriteFailed" xml:space="preserve">
+    <value>Não foi possível guardar o ficheiro da lista de mods {0}. Se o jogo estiver aberto, feche-o e tente novamente.</value>
   </data>
   <data name="Error_FolderNotLocal" xml:space="preserve">
     <value>{0} não é uma pasta deste computador, pelo que o launcher não a consegue abrir. Escolha uma pasta local.</value>
@@ -460,5 +487,236 @@
   </data>
   <data name="ZombieBuddyStep_RemoveAgentArg" xml:space="preserve">
     <value>Remover o agente Java do ProjectZomboid64.json</value>
+  </data>
+  <data name="Mods_SectionMods" xml:space="preserve">
+    <value>Mods instalados</value>
+  </data>
+  <data name="Mods_SectionCollections" xml:space="preserve">
+    <value>Coleções</value>
+  </data>
+  <data name="Mods_Refresh" xml:space="preserve">
+    <value>Atualizar</value>
+  </data>
+  <data name="Mods_GameRunning" xml:space="preserve">
+    <value>O jogo está em execução. As alterações estão desativadas até que seja fechado.</value>
+  </data>
+  <data name="Mods_NoGameInstall" xml:space="preserve">
+    <value>Escolha uma instalação do jogo na página Instalações para gerir os respetivos mods.</value>
+  </data>
+  <data name="Mods_SearchPlaceholder" xml:space="preserve">
+    <value>Procurar por nome, ID ou ID da Oficina</value>
+  </data>
+  <data name="Mods_FilterAll" xml:space="preserve">
+    <value>Todos</value>
+  </data>
+  <data name="Mods_FilterEnabled" xml:space="preserve">
+    <value>Ativados</value>
+  </data>
+  <data name="Mods_FilterNotEnabled" xml:space="preserve">
+    <value>Não ativados</value>
+  </data>
+  <data name="Mods_SelectedFormat" xml:space="preserve">
+    <value>{0} selecionados</value>
+  </data>
+  <data name="Mods_AddToCollection" xml:space="preserve">
+    <value>Adicionar à coleção…</value>
+  </data>
+  <data name="Mods_ClearSelection" xml:space="preserve">
+    <value>Limpar seleção</value>
+  </data>
+  <data name="Mods_ColumnName" xml:space="preserve">
+    <value>Nome</value>
+  </data>
+  <data name="Mods_ColumnId" xml:space="preserve">
+    <value>ID</value>
+  </data>
+  <data name="Mods_ColumnWorkshopId" xml:space="preserve">
+    <value>ID da Oficina</value>
+  </data>
+  <data name="Mods_ColumnSource" xml:space="preserve">
+    <value>Origem</value>
+  </data>
+  <data name="Mods_ColumnEnabled" xml:space="preserve">
+    <value>Ativado</value>
+  </data>
+  <data name="Mods_ColumnCollections" xml:space="preserve">
+    <value>Coleções</value>
+  </data>
+  <data name="Mods_Empty" xml:space="preserve">
+    <value>Nenhum mod instalado foi encontrado.</value>
+  </data>
+  <data name="Mods_FilterEmpty" xml:space="preserve">
+    <value>Nenhum mod corresponde à procura ou ao filtro.</value>
+  </data>
+  <data name="Mods_Enabled" xml:space="preserve">
+    <value>Ativado</value>
+  </data>
+  <data name="Mods_NameWithId" xml:space="preserve">
+    <value>{0} ({1})</value>
+  </data>
+  <data name="ModSource_SteamWorkshop" xml:space="preserve">
+    <value>Oficina Steam</value>
+  </data>
+  <data name="ModSource_StagedWorkshop" xml:space="preserve">
+    <value>Envio para a Oficina (local)</value>
+  </data>
+  <data name="ModSource_Local" xml:space="preserve">
+    <value>Pasta mods local</value>
+  </data>
+  <data name="ModCollections_New" xml:space="preserve">
+    <value>Nova</value>
+  </data>
+  <data name="ModCollections_NewFromEnabled" xml:space="preserve">
+    <value>Da lista ativada</value>
+  </data>
+  <data name="ModCollections_Import" xml:space="preserve">
+    <value>Importar</value>
+  </data>
+  <data name="ModCollections_Empty" xml:space="preserve">
+    <value>Ainda não existem coleções. Crie uma ou importe o texto de partilha copiado do jogo.</value>
+  </data>
+  <data name="ModCollections_CountFormat" xml:space="preserve">
+    <value>{0} mods</value>
+  </data>
+  <data name="ModCollections_MissingCountFormat" xml:space="preserve">
+    <value>{0} em falta</value>
+  </data>
+  <data name="ModCollections_DefaultBadge" xml:space="preserve">
+    <value>Predefinida</value>
+  </data>
+  <data name="ModCollections_ActiveBadge" xml:space="preserve">
+    <value>Em uso</value>
+  </data>
+  <data name="ModCollections_NoSelection" xml:space="preserve">
+    <value>Selecione uma coleção.</value>
+  </data>
+  <data name="ModCollections_Apply" xml:space="preserve">
+    <value>Aplicar como lista ativada</value>
+  </data>
+  <data name="ModCollections_ApplyHint" xml:space="preserve">
+    <value>Ativa no jogo apenas os mods instalados desta coleção, com os requisitos deles, nesta ordem.</value>
+  </data>
+  <data name="ModCollections_SetDefault" xml:space="preserve">
+    <value>Definir como predefinida</value>
+  </data>
+  <data name="ModCollections_UnsetDefault" xml:space="preserve">
+    <value>Remover predefinição</value>
+  </data>
+  <data name="ModCollections_DefaultHint" xml:space="preserve">
+    <value>A coleção predefinida é aplicada sempre que inicia o jogo a partir do launcher.</value>
+  </data>
+  <data name="ModCollections_Share" xml:space="preserve">
+    <value>Partilhar</value>
+  </data>
+  <data name="ModCollections_AutoSort" xml:space="preserve">
+    <value>Ordenar automaticamente</value>
+  </data>
+  <data name="ModCollections_AutoSortHint" xml:space="preserve">
+    <value>Ordena como a ordenação automática do jogo: por ID e depois cada mod após os mods depois dos quais carrega ou que exige.</value>
+  </data>
+  <data name="ModCollections_Rename" xml:space="preserve">
+    <value>Renomear</value>
+  </data>
+  <data name="ModCollections_Delete" xml:space="preserve">
+    <value>Eliminar</value>
+  </data>
+  <data name="ModCollections_AddPlaceholder" xml:space="preserve">
+    <value>Adicionar um mod: procure mods instalados por nome, ID ou ID da Oficina</value>
+  </data>
+  <data name="ModCollections_DragHint" xml:space="preserve">
+    <value>Arraste para reordenar</value>
+  </data>
+  <data name="ModCollections_Missing" xml:space="preserve">
+    <value>Não instalado</value>
+  </data>
+  <data name="ModCollections_MoveUp" xml:space="preserve">
+    <value>Mover para cima</value>
+  </data>
+  <data name="ModCollections_MoveDown" xml:space="preserve">
+    <value>Mover para baixo</value>
+  </data>
+  <data name="ModCollections_RemoveMod" xml:space="preserve">
+    <value>Remover da coleção</value>
+  </data>
+  <data name="ModCollections_NameInvalid" xml:space="preserve">
+    <value>Introduza um nome sem nenhum destes carateres: \ / : * ? " &lt; &gt; |</value>
+  </data>
+  <data name="ModCollections_OverwriteTitle" xml:space="preserve">
+    <value>Substituir a coleção?</value>
+  </data>
+  <data name="ModCollections_OverwriteMessage" xml:space="preserve">
+    <value>Já existe uma coleção chamada "{0}". Pretende substituí-la?</value>
+  </data>
+  <data name="ModCollections_Overwrite" xml:space="preserve">
+    <value>Substituir</value>
+  </data>
+  <data name="ModCollections_NewTitle" xml:space="preserve">
+    <value>Nova coleção</value>
+  </data>
+  <data name="ModCollections_Create" xml:space="preserve">
+    <value>Criar</value>
+  </data>
+  <data name="ModCollections_NewFromEnabledTitle" xml:space="preserve">
+    <value>Nova coleção a partir da lista ativada</value>
+  </data>
+  <data name="ModCollections_ImportTitle" xml:space="preserve">
+    <value>Importar coleções</value>
+  </data>
+  <data name="ModCollections_ImportMessage" xml:space="preserve">
+    <value>Cole o texto de partilha do jogo ou do launcher, uma coleção por linha (nome:id1;id2;…;).</value>
+  </data>
+  <data name="ModCollections_RenameTitle" xml:space="preserve">
+    <value>Renomear coleção</value>
+  </data>
+  <data name="ModCollections_DeleteTitle" xml:space="preserve">
+    <value>Eliminar a coleção?</value>
+  </data>
+  <data name="ModCollections_DeleteMessage" xml:space="preserve">
+    <value>Eliminar a coleção "{0}"? Antes é feita uma cópia de segurança do ficheiro de listas de mods do jogo.</value>
+  </data>
+  <data name="ModCollections_Applied" xml:space="preserve">
+    <value>"{0}" aplicada: {1} mods ativados.</value>
+  </data>
+  <data name="ModCollections_Shared" xml:space="preserve">
+    <value>Texto de partilha de "{0}" copiado para a área de transferência.</value>
+  </data>
+  <data name="ModCollections_NameMessage" xml:space="preserve">
+    <value>Nome da coleção:</value>
+  </data>
+  <data name="ModCollections_ImportNothing" xml:space="preserve">
+    <value>Nenhuma coleção encontrada. Cada linha precisa de um nome, dois-pontos e os IDs dos mods.</value>
+  </data>
+  <data name="ModCollections_ImportNameInvalid" xml:space="preserve">
+    <value>"{0}" não pode ser usado como nome de coleção.</value>
+  </data>
+  <data name="ModApply_KeepTitle" xml:space="preserve">
+    <value>Manter a lista ativada atual?</value>
+  </data>
+  <data name="ModApply_KeepMessage" xml:space="preserve">
+    <value>A lista ativada do jogo ({0} mods) não corresponde a nenhuma coleção, e aplicar "{1}" substitui-a. Guardá-la antes como coleção?</value>
+  </data>
+  <data name="ModApply_KeepDefaultName" xml:space="preserve">
+    <value>Lista ativada original</value>
+  </data>
+  <data name="ModApply_KeepSave" xml:space="preserve">
+    <value>Guardar e aplicar</value>
+  </data>
+  <data name="ModApply_KeepSkip" xml:space="preserve">
+    <value>Aplicar sem guardar</value>
+  </data>
+  <data name="ModApply_DropTitle" xml:space="preserve">
+    <value>Alguns mods não serão ativados</value>
+  </data>
+  <data name="ModApply_DropMessage" xml:space="preserve">
+    <value>Ao aplicar "{0}", estes mods ficam de fora:</value>
+  </data>
+  <data name="ModApply_DropContinue" xml:space="preserve">
+    <value>Continuar</value>
+  </data>
+  <data name="ModApply_DropMissing" xml:space="preserve">
+    <value>{0}: não instalado</value>
+  </data>
+  <data name="ModApply_DropIncompatible" xml:space="preserve">
+    <value>{0}: incompatível com {1}</value>
   </data>
 </root>

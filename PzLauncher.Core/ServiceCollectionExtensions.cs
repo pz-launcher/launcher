@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using PzLauncher.Core.Installs;
 using PzLauncher.Core.Java;
 using PzLauncher.Core.Launch;
+using PzLauncher.Core.Mod.Collections;
 using PzLauncher.Core.Mod.Zabric;
 using PzLauncher.Core.Mod.ZombieBuddy;
 using PzLauncher.Core.Platform;
@@ -27,6 +28,7 @@ public static class ServiceCollectionExtensions
         services.TryAddSingleton<IGameLaunchService, GameLaunchService>();
         services.TryAddSingleton<IZombieBuddyService, ZombieBuddyService>();
         services.TryAddSingleton<IZabricService, ZabricService>();
+        services.TryAddSingleton<IModCollectionService, ModCollectionService>();
 
         return services;
     }

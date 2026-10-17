@@ -3,6 +3,8 @@ using PzLauncher.Core.Common;
 using PzLauncher.Core.Installs;
 using PzLauncher.Core.Java;
 using PzLauncher.Core.Launch;
+using PzLauncher.Core.Mod;
+using PzLauncher.Core.Mod.Collections;
 using PzLauncher.Core.Mod.ZombieBuddy;
 using PzLauncher.Core.Serialization;
 
@@ -223,5 +225,102 @@ public class CoreJsonContextTests
             Assert.Equal($"\"{value}\"", json);
             Assert.Equal(value, JsonSerializer.Deserialize(json, CoreJsonContext.Default.ZombieBuddyPreload));
         }
+    }
+
+    [Fact]
+    public void ModCollectionState_RoundTrips_WithStringEnums()
+    {
+        var original = new ModCollectionState(
+            @"C:\Users\u\Zomboid",
+            [new ModCollection("B42·20通用合集", ["ModA", "Missing"], IsActive: true)],
+            [
+                new InstalledMod("ModA", "Mod A", "2000", InstalledModSource.SteamWorkshop, ["damnlib"], ["B"], ["C"], ["D"]),
+                new InstalledMod("Local", "Local", null, InstalledModSource.Local, [], [], [], []),
+            ],
+            ["ModA"],
+            ActiveMatchesCollection: true);
+
+        var json = JsonSerializer.Serialize(original, CoreJsonContext.Default.ModCollectionState);
+        var copy = JsonSerializer.Deserialize(json, CoreJsonContext.Default.ModCollectionState);
+
+        Assert.Contains("\"source\":\"SteamWorkshop\"", json, StringComparison.Ordinal);
+        Assert.Contains("\"workshopId\":null", json, StringComparison.Ordinal);
+        Assert.NotNull(copy);
+        Assert.Equal((original.CacheFolder, original.ActiveMatchesCollection), (copy.CacheFolder, copy.ActiveMatchesCollection));
+        Assert.Equal(original.ActiveIds, copy.ActiveIds);
+        var collection = Assert.Single(copy.Collections);
+        Assert.Equal(("B42·20通用合集", true), (collection.Name, collection.IsActive));
+        Assert.Equal(["ModA", "Missing"], collection.ModIds);
+        Assert.Equal(
+            original.InstalledMods.Select(mod => (mod.Id, mod.Name, mod.WorkshopId, mod.Source)),
+            copy.InstalledMods.Select(mod => (mod.Id, mod.Name, mod.WorkshopId, mod.Source)));
+        var mod = copy.InstalledMods[0];
+        Assert.Equal(["damnlib", "B", "C", "D"], mod.Require.Concat(mod.LoadAfter).Concat(mod.LoadBefore).Concat(mod.Incompatible));
+    }
+
+    [Fact]
+    public void SaveModCollectionRequest_RoundTrips()
+    {
+        var original = new SaveModCollectionRequest(@"E:\Games\PZ", @"-cachedir=D:\pz", "old", "new", ["B", "A"]);
+
+        var json = JsonSerializer.Serialize(original, CoreJsonContext.Default.SaveModCollectionRequest);
+        var copy = JsonSerializer.Deserialize(json, CoreJsonContext.Default.SaveModCollectionRequest);
+
+        Assert.NotNull(copy);
+        Assert.Equal(
+            (original.InstallRoot, original.ExtraGameArgs, original.OriginalName, original.Name),
+            (copy.InstallRoot, copy.ExtraGameArgs, copy.OriginalName, copy.Name));
+        Assert.Equal(["B", "A"], copy.ModIds);
+    }
+
+    [Theory]
+    [InlineData("""{"installRoot":"/pz","extraGameArgs":"","originalName":null,"name":null,"modIds":[]}""")]
+    [InlineData("""{"installRoot":"/pz","extraGameArgs":"","originalName":null,"name":"pack","modIds":null}""")]
+    [InlineData("""{"installRoot":"/pz","originalName":null,"name":"pack","modIds":[]}""")]
+    public void SaveModCollectionRequest_NonNullMemberNullOrMissingInJson_Throws(string json) =>
+        Assert.Throws<JsonException>(() => JsonSerializer.Deserialize(json, CoreJsonContext.Default.SaveModCollectionRequest));
+
+    [Theory]
+    [InlineData("""{"id":null,"name":"A","workshopId":null,"source":"Local","require":[],"loadAfter":[],"loadBefore":[],"incompatible":[]}""")]
+    [InlineData("""{"id":"A","name":"A","workshopId":null,"source":"Local","require":null,"loadAfter":[],"loadBefore":[],"incompatible":[]}""")]
+    [InlineData("""{"id":"A","name":"A","source":"Local","require":[],"loadAfter":[],"loadBefore":[],"incompatible":[]}""")]
+    public void InstalledMod_NonNullMemberNullOrMissingInJson_Throws(string json) =>
+        Assert.Throws<JsonException>(() => JsonSerializer.Deserialize(json, CoreJsonContext.Default.InstalledMod));
+
+    [Theory]
+    [InlineData("""{"enabledIds":[],"missingIds":null,"skippedIncompatible":[]}""")]
+    [InlineData("""{"enabledIds":[],"missingIds":[],"skippedIncompatible":[{"id":"C","conflictsWith":null}]}""")]
+    [InlineData("""{"enabledIds":[],"missingIds":[]}""")]
+    public void ApplyModCollectionResult_NonNullMemberNullOrMissingInJson_Throws(string json) =>
+        Assert.Throws<JsonException>(() => JsonSerializer.Deserialize(json, CoreJsonContext.Default.ApplyModCollectionResult));
+
+    [Fact]
+    public void ApplyModCollectionResult_RoundTrips()
+    {
+        var original = new ApplyModCollectionResult(["A", "B"], ["Missing"], [new ModConflict("C", "A")]);
+
+        var json = JsonSerializer.Serialize(original, CoreJsonContext.Default.ApplyModCollectionResult);
+        var copy = JsonSerializer.Deserialize(json, CoreJsonContext.Default.ApplyModCollectionResult);
+
+        Assert.Contains("""
+            "skippedIncompatible":[{"id":"C","conflictsWith":"A"}]
+            """, json, StringComparison.Ordinal);
+        Assert.NotNull(copy);
+        Assert.Equal(original.EnabledIds, copy.EnabledIds);
+        Assert.Equal(original.MissingIds, copy.MissingIds);
+        Assert.Equal(original.SkippedIncompatible, copy.SkippedIncompatible);
+    }
+
+    [Fact]
+    public void SharedModCollection_RoundTrips()
+    {
+        var original = new SharedModCollection("pack", ["A"]);
+
+        var copy = JsonSerializer.Deserialize(
+            JsonSerializer.Serialize(original, CoreJsonContext.Default.SharedModCollection), CoreJsonContext.Default.SharedModCollection);
+
+        Assert.NotNull(copy);
+        Assert.Equal("pack", copy.Name);
+        Assert.Equal(["A"], copy.ModIds);
     }
 }

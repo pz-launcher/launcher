@@ -1,0 +1,582 @@
+using PzLauncher.Core.Common;
+using PzLauncher.Core.Installs;
+using PzLauncher.Core.Launch;
+using PzLauncher.Core.Mod;
+using PzLauncher.Core.Mod.Collections;
+using PzLauncher.Desktop.Lang;
+using PzLauncher.Desktop.Localization;
+using PzLauncher.Desktop.Services;
+using PzLauncher.Desktop.Tests.TestSupport;
+using PzLauncher.Desktop.ViewModels.Installs;
+using PzLauncher.Desktop.ViewModels.Mods;
+using static PzLauncher.Desktop.Tests.TestSupport.TestInstalls;
+using static PzLauncher.Desktop.Tests.TestSupport.TestMods;
+
+namespace PzLauncher.Desktop.Tests.ViewModels.Mods;
+
+[Collection(UiTextCultureCollection.Name)]
+public class ModsViewModelTests : UiTextCultureTest
+{
+    private readonly FakeInstallDetectionService _detection = new();
+    private readonly FakeModCollectionService _service = new();
+    private readonly FakeInstallOverridesService _overrides = new();
+    private readonly FakeModCollectionDefaultsService _defaults = new();
+    private readonly FakeDialogService _dialogs = new();
+    private readonly FakeClipboardService _clipboard = new();
+    private readonly GameRunState _runState = new();
+
+    public ModsViewModelTests()
+    {
+        Installs = new(_detection, new FakeFolderPicker(), new FakePlatformEnvironment(), Localization);
+        _service
+            .WithMods(
+                Mod("Core", name: "Core Library", workshopId: "1001"),
+                Mod("Maps", name: "Map Pack", workshopId: "1002", require: ["Core"]),
+                Mod("Cars", name: "Vehicles", workshopId: "1003"),
+                Mod("Tweaks", name: "Tweaks", source: InstalledModSource.Local))
+            .WithCollection("Survival", "Maps", "Core", "Gone")
+            .WithCollection("Driving", "Cars");
+        _service.ActiveIds = ["Cars"];
+    }
+
+    private InstallsViewModel Installs { get; }
+
+    private async Task<ModsViewModel> CreateActivatedAsync(params PzInstall[] installs)
+    {
+        _detection.ScanResults.Enqueue(FakeInstallDetectionService.Found(installs.Length == 0 ? [SteamGame] : installs));
+        await Installs.ActivateCommand.ExecuteAsync(null);
+        var vm = new ModsViewModel(
+            Installs, _service, _overrides, _defaults, new ModCollectionApplier(_service, _dialogs), _dialogs, _clipboard, _runState, Localization, new ManualTimeProvider());
+        await vm.ActivateCommand.ExecuteAsync(null);
+        return vm;
+    }
+
+    private static void Select(ModsViewModel vm, string name) =>
+        vm.Collections.SelectCommand.Execute(vm.Collections.Rows.Single(row => row.Name == name));
+
+    // Page
+
+    [Fact]
+    public async Task Activate_ReadsTheInstallInUseWithItsGameArgs()
+    {
+        _overrides.Set(SteamGame.RootPath, GameLaunchOverrides.Empty with { ExtraGameArgs = @"-cachedir=D:\pz" });
+
+        var vm = await CreateActivatedAsync();
+
+        Assert.Equal([(SteamGame.RootPath, @"-cachedir=D:\pz")], _service.GetRequests);
+        Assert.NotNull(vm.State);
+        Assert.True(vm.CanWrite);
+    }
+
+    [Fact]
+    public async Task Activate_EveryVisit_ReadsTheFilesAgain()
+    {
+        var vm = await CreateActivatedAsync();
+
+        await vm.ActivateCommand.ExecuteAsync(null);
+
+        Assert.Equal(2, _service.GetRequests.Count);
+    }
+
+    [Fact]
+    public async Task DedicatedServerInUse_ShowsNoInstallAndAllowsNoWrites()
+    {
+        var vm = await CreateActivatedAsync(SteamServer);
+
+        Assert.True(vm.HasNoGameInstall);
+        Assert.Null(vm.State);
+        Assert.Empty(_service.GetRequests);
+        Assert.False(vm.Collections.NewCommand.CanExecute(null));
+    }
+
+    [Fact]
+    public async Task InstallInUseChanges_ReadsTheNewInstall()
+    {
+        var vm = await CreateActivatedAsync(SteamGame, ManualGame);
+
+        Installs.Use(ManualGame.RootPath);
+        await vm.RefreshCommand.ExecuteAsync(null);
+
+        Assert.Contains(_service.GetRequests, request => request.Root == ManualGame.RootPath);
+        Assert.Equal(ManualGame, vm.Install);
+    }
+
+    [Fact]
+    public async Task ReadFails_ShowsTheErrorAndNoState()
+    {
+        var error = TestErrors.Create(ErrorCode.ModCollectionCacheFolderUnresolved, SteamGame.RootPath);
+        _service.GetError = () => error;
+
+        var vm = await CreateActivatedAsync();
+
+        Assert.Equal(ErrorMessages.ToUserText(error), vm.ErrorText);
+        Assert.Null(vm.State);
+        Assert.False(vm.CanWrite);
+    }
+
+    // Installed mods
+
+    [Fact]
+    public async Task InstalledMods_ShowEveryModByNameWithEnabledAndCollections()
+    {
+        var vm = await CreateActivatedAsync();
+
+        var rows = vm.Mods.VisibleRows;
+        Assert.Equal(["Core Library", "Map Pack", "Tweaks", "Vehicles"], rows.Select(row => row.Mod.Name));
+        Assert.Equal(["Cars"], rows.Where(row => row.IsEnabled).Select(row => row.Mod.Id));
+        Assert.Equal("Survival", rows.Single(row => row.Mod.Id == "Core").CollectionNames);
+        Assert.Equal("", rows.Single(row => row.Mod.Id == "Tweaks").CollectionNames);
+    }
+
+    [Theory]
+    [InlineData("map", "Maps")]
+    [InlineData("CARS", "Cars")]
+    [InlineData("1001", "Core")]
+    public async Task InstalledMods_Search_MatchesNameIdOrWorkshopId(string search, string expected)
+    {
+        var vm = await CreateActivatedAsync();
+
+        vm.Mods.SearchText = search;
+
+        Assert.Equal([expected], vm.Mods.VisibleRows.Select(row => row.Mod.Id));
+    }
+
+    [Theory]
+    [InlineData(InstalledModsFilter.All, 4)]
+    [InlineData(InstalledModsFilter.Enabled, 1)]
+    [InlineData(InstalledModsFilter.NotEnabled, 3)]
+    public async Task InstalledMods_Filter_NarrowsByEnabledList(InstalledModsFilter filter, int count)
+    {
+        var vm = await CreateActivatedAsync();
+
+        vm.Mods.Filter = filter;
+
+        Assert.Equal(count, vm.Mods.VisibleRows.Count);
+    }
+
+    [Fact]
+    public async Task InstalledMods_SearchMatchesNothing_IsFilterEmpty()
+    {
+        var vm = await CreateActivatedAsync();
+
+        vm.Mods.SearchText = "no such mod";
+
+        Assert.True(vm.Mods.IsFilterEmpty);
+        Assert.False(vm.Mods.IsEmpty);
+    }
+
+    [Fact]
+    public async Task InstalledMods_AddToCollection_AppendsTheNewSelectedModsAndNeverTouchesTheEnabledList()
+    {
+        var vm = await CreateActivatedAsync();
+        foreach (var row in vm.Mods.VisibleRows.Where(row => row.Mod.Id is "Tweaks" or "Core" or "Cars"))
+        {
+            row.IsSelected = true;
+        }
+
+        Assert.True(vm.Mods.CanAddToCollection);
+        await vm.Mods.AddTargets.Single(target => target.Name == "Survival").AddCommand.ExecuteAsync(null);
+
+        Assert.Equal(["Maps", "Core", "Gone", "Tweaks", "Cars"], _service.IdsOf("Survival"));
+        Assert.Equal(0, vm.Mods.SelectedCount);
+        Assert.Empty(_service.Applies);
+        Assert.Equal(["Cars"], _service.ActiveIds);
+    }
+
+    [Fact]
+    public async Task InstalledMods_Selection_SurvivesAReload()
+    {
+        var vm = await CreateActivatedAsync();
+        vm.Mods.VisibleRows.Single(row => row.Mod.Id == "Tweaks").IsSelected = true;
+
+        await vm.RefreshCommand.ExecuteAsync(null);
+
+        Assert.True(vm.Mods.VisibleRows.Single(row => row.Mod.Id == "Tweaks").IsSelected);
+        Assert.Equal(1, vm.Mods.SelectedCount);
+    }
+
+    [Fact]
+    public async Task InstalledMods_GameRunning_CannotAddToCollection()
+    {
+        var vm = await CreateActivatedAsync();
+        vm.Mods.VisibleRows[0].IsSelected = true;
+
+        _runState.IsGameRunning = true;
+        await vm.Mods.AddTargets[0].AddCommand.ExecuteAsync(null);
+
+        Assert.False(vm.Mods.CanAddToCollection);
+        Assert.Empty(_service.Saves);
+    }
+
+    // Collections
+
+    [Fact]
+    public async Task Collections_ShowCountsMissingDefaultAndInUseMarkers()
+    {
+        _defaults.Save(SteamGame.RootPath, "Survival");
+
+        var vm = await CreateActivatedAsync();
+
+        Assert.Equal(
+            [
+                new ModCollectionRow("Survival", 3, 1, IsDefault: true, IsActive: false, IsSelected: true),
+                new ModCollectionRow("Driving", 1, 0, IsDefault: false, IsActive: true, IsSelected: false),
+            ],
+            vm.Collections.Rows);
+        Assert.Equal(["Maps", "Core", "Gone"], vm.Collections.Entries.Select(entry => entry.Id));
+        Assert.Equal([false, false, true], vm.Collections.Entries.Select(entry => entry.IsMissing));
+        Assert.Equal(["Map Pack", "Core Library", "Gone"], vm.Collections.Entries.Select(entry => entry.Name));
+        Assert.Equal([1, 2, 3], vm.Collections.Entries.Select(entry => entry.Number));
+    }
+
+    [Fact]
+    public async Task New_CreatesAnEmptyCollectionAndSelectsIt()
+    {
+        var vm = await CreateActivatedAsync();
+        _dialogs.Accept(" Fresh ");
+
+        await vm.Collections.NewCommand.ExecuteAsync(null);
+
+        Assert.Equal([], _service.IdsOf("Fresh"));
+        Assert.Equal("Fresh", vm.Collections.Selected?.Name);
+        Assert.Empty(vm.Collections.Entries);
+    }
+
+    [Fact]
+    public async Task New_ExistingName_OverwritesOnlyAfterConfirm()
+    {
+        var vm = await CreateActivatedAsync();
+        _dialogs.Accept("Driving");
+        _dialogs.ConfirmAnswers.Enqueue(true);
+
+        await vm.Collections.NewCommand.ExecuteAsync(null);
+
+        Assert.Single(_dialogs.Confirms);
+        Assert.Equal([], _service.IdsOf("Driving"));
+    }
+
+    [Fact]
+    public async Task New_Cancelled_WritesNothing()
+    {
+        var vm = await CreateActivatedAsync();
+
+        await vm.Collections.NewCommand.ExecuteAsync(null);
+
+        Assert.Single(_dialogs.Prompts);
+        Assert.Empty(_service.Saves);
+    }
+
+    [Fact]
+    public async Task NewFromEnabled_SavesTheEnabledListInItsOrder()
+    {
+        _service.ActiveIds = ["Tweaks", "Cars", "Unknown"];
+        var vm = await CreateActivatedAsync();
+        _dialogs.Accept("Current");
+
+        await vm.Collections.NewFromEnabledCommand.ExecuteAsync(null);
+
+        Assert.Equal(["Tweaks", "Cars", "Unknown"], _service.IdsOf("Current"));
+    }
+
+    [Fact]
+    public async Task NewFromEnabled_NothingEnabled_IsDisabled()
+    {
+        _service.ActiveIds = [];
+
+        var vm = await CreateActivatedAsync();
+
+        Assert.False(vm.Collections.NewFromEnabledCommand.CanExecute(null));
+    }
+
+    [Fact]
+    public async Task Rename_KeepsTheOrderAndTheDefaultMark()
+    {
+        _defaults.Save(SteamGame.RootPath, "Survival");
+        var vm = await CreateActivatedAsync();
+        _dialogs.Accept("Survival B42");
+
+        await vm.Collections.RenameCommand.ExecuteAsync(null);
+
+        var save = Assert.Single(_service.Saves);
+        Assert.Equal((SteamGame.RootPath, "Survival", "Survival B42"), (save.InstallRoot, save.OriginalName, save.Name));
+        Assert.Equal(["Maps", "Core", "Gone"], _service.IdsOf("Survival B42"));
+        Assert.Null(_service.IdsOf("Survival"));
+        Assert.Equal("Survival B42", _defaults.Get(SteamGame.RootPath));
+        Assert.True(vm.Collections.Selected?.IsDefault);
+    }
+
+    [Fact]
+    public async Task Rename_SameName_WritesNothing()
+    {
+        var vm = await CreateActivatedAsync();
+        _dialogs.Accept("Survival");
+
+        await vm.Collections.RenameCommand.ExecuteAsync(null);
+
+        Assert.Empty(_dialogs.Confirms);
+        Assert.Empty(_service.Saves);
+    }
+
+    [Fact]
+    public async Task Delete_AfterConfirm_RemovesItAndClearsTheDefaultMark()
+    {
+        _defaults.Save(SteamGame.RootPath, "Survival");
+        var vm = await CreateActivatedAsync();
+        _dialogs.ConfirmAnswers.Enqueue(true);
+
+        await vm.Collections.DeleteCommand.ExecuteAsync(null);
+
+        Assert.Equal(["Survival"], _service.Deletes);
+        Assert.Null(_defaults.Get(SteamGame.RootPath));
+        Assert.Equal("Driving", vm.Collections.Selected?.Name);
+    }
+
+    [Fact]
+    public async Task Delete_Declined_WritesNothing()
+    {
+        var vm = await CreateActivatedAsync();
+
+        await vm.Collections.DeleteCommand.ExecuteAsync(null);
+
+        Assert.Empty(_service.Deletes);
+    }
+
+    [Fact]
+    public async Task ToggleDefault_MovesTheMarkThenClearsIt()
+    {
+        _defaults.Save(SteamGame.RootPath, "Survival");
+        var vm = await CreateActivatedAsync();
+        Select(vm, "Driving");
+
+        vm.Collections.ToggleDefaultCommand.Execute(null);
+
+        Assert.Equal("Driving", _defaults.Get(SteamGame.RootPath));
+        Assert.Equal(["Driving"], vm.Collections.Rows.Where(row => row.IsDefault).Select(row => row.Name));
+
+        vm.Collections.ToggleDefaultCommand.Execute(null);
+
+        Assert.Null(_defaults.Get(SteamGame.RootPath));
+        Assert.DoesNotContain(vm.Collections.Rows, row => row.IsDefault);
+    }
+
+    [Fact]
+    public async Task Share_CopiesTheGamesShareTextInTheShownOrder()
+    {
+        var vm = await CreateActivatedAsync();
+
+        await vm.Collections.ShareCommand.ExecuteAsync(null);
+
+        Assert.Equal("Survival:Maps;Core;Gone;\n", _clipboard.Text);
+        Assert.NotNull(vm.Collections.StatusText);
+    }
+
+    [Fact]
+    public async Task Import_PrefillsFromTheClipboard_SavesEveryLineAndOverwritesOnlyAfterConfirm()
+    {
+        const string text = "!fav!Core;\nShared:Tweaks;Cars;\nDriving:Maps;\n";
+        _clipboard.Text = text;
+        var vm = await CreateActivatedAsync();
+        _dialogs.Accept(text);
+        _dialogs.ConfirmAnswers.Enqueue(false);
+
+        await vm.Collections.ImportCommand.ExecuteAsync(null);
+
+        var prompt = Assert.Single(_dialogs.Prompts);
+        Assert.Equal(text.Trim(), prompt.InitialText);
+        Assert.True(prompt.IsMultiline);
+        Assert.Equal(["Tweaks", "Cars"], _service.IdsOf("Shared"));
+        Assert.Equal(["Cars"], _service.IdsOf("Driving"));
+        Assert.Equal("Shared", vm.Collections.Selected?.Name);
+    }
+
+    [Fact]
+    public async Task Import_ClipboardWithoutCollections_StartsEmpty_AndValidatesThePaste()
+    {
+        _clipboard.Text = "hello";
+        var vm = await CreateActivatedAsync();
+
+        await vm.Collections.ImportCommand.ExecuteAsync(null);
+
+        var prompt = Assert.Single(_dialogs.Prompts);
+        Assert.Equal("", prompt.InitialText);
+        Assert.Equal(UiText.ModCollections_ImportNothing, prompt.Validate("no collection here"));
+        Assert.NotNull(prompt.Validate("bad|name:Core;"));
+        Assert.Null(prompt.Validate("Good:Core;"));
+        Assert.Empty(_service.Saves);
+    }
+
+    [Fact]
+    public async Task Move_WritesOnceWithTheFinalOrder()
+    {
+        var vm = await CreateActivatedAsync();
+
+        vm.Collections.Move(0, 2);
+        vm.Collections.Move(2, 1);
+
+        Assert.Empty(_service.Saves);
+        Assert.Equal(["Core", "Maps", "Gone"], vm.Collections.Entries.Select(entry => entry.Id));
+        Assert.Equal([1, 2, 3], vm.Collections.Entries.Select(entry => entry.Number));
+
+        await vm.FlushOrderAsync();
+
+        var save = Assert.Single(_service.Saves);
+        Assert.Equal(("Survival", "Survival"), (save.OriginalName, save.Name));
+        Assert.Equal(["Core", "Maps", "Gone"], save.ModIds);
+    }
+
+    [Fact]
+    public async Task Move_ReloadBeforeTheWrite_KeepsTheShownOrder()
+    {
+        var vm = await CreateActivatedAsync();
+        vm.Collections.Move(0, 1);
+
+        await vm.ActivateCommand.ExecuteAsync(null);
+
+        Assert.Equal(["Core", "Maps", "Gone"], vm.Collections.Entries.Select(entry => entry.Id));
+    }
+
+    [Fact]
+    public async Task Move_ThenAnotherWrite_SavesTheOrderFirst()
+    {
+        var vm = await CreateActivatedAsync();
+        vm.Collections.Move(0, 1);
+        _dialogs.Accept("Fresh");
+
+        await vm.Collections.NewCommand.ExecuteAsync(null);
+
+        Assert.Equal(["Survival", "Fresh"], _service.Saves.Select(save => save.Name));
+        Assert.Equal(["Core", "Maps", "Gone"], _service.IdsOf("Survival"));
+    }
+
+    [Fact]
+    public async Task MoveUpAndDown_MoveOneStep()
+    {
+        var vm = await CreateActivatedAsync();
+
+        vm.Collections.MoveDownCommand.Execute(vm.Collections.Entries[0]);
+        vm.Collections.MoveUpCommand.Execute(vm.Collections.Entries[2]);
+        vm.Collections.MoveUpCommand.Execute(vm.Collections.Entries[0]);
+
+        Assert.Equal(["Core", "Gone", "Maps"], vm.Collections.Entries.Select(entry => entry.Id));
+    }
+
+    [Fact]
+    public async Task AutoSort_SavesTheGamesOrder()
+    {
+        var vm = await CreateActivatedAsync();
+
+        await vm.Collections.AutoSortCommand.ExecuteAsync(null);
+
+        Assert.Equal(ModLoadOrder.AutoSort(["Maps", "Core", "Gone"], _service.InstalledMods), _service.IdsOf("Survival"));
+        Assert.Equal(["Core", "Maps", "Gone"], vm.Collections.Entries.Select(entry => entry.Id));
+    }
+
+    [Fact]
+    public async Task AddMod_SearchListsInstalledModsNotInTheCollection_AndAppends()
+    {
+        var vm = await CreateActivatedAsync();
+
+        vm.Collections.AddSearchText = "a";
+
+        Assert.Equal(["Tweaks", "Vehicles"], vm.Collections.AddCandidates.Select(mod => mod.Name));
+
+        await vm.Collections.AddModCommand.ExecuteAsync(vm.Collections.AddCandidates[1]);
+
+        Assert.Equal(["Maps", "Core", "Gone", "Cars"], _service.IdsOf("Survival"));
+    }
+
+    [Fact]
+    public async Task RemoveMod_DropsItAndKeepsTheRest()
+    {
+        var vm = await CreateActivatedAsync();
+
+        await vm.Collections.RemoveModCommand.ExecuteAsync(vm.Collections.Entries[0]);
+
+        Assert.Equal(["Core", "Gone"], _service.IdsOf("Survival"));
+    }
+
+    [Fact]
+    public async Task SaveFails_ShowsTheErrorAndRereads()
+    {
+        var vm = await CreateActivatedAsync();
+        var error = TestErrors.Create(ErrorCode.ModCollectionFileWriteFailed, @"C:\Users\Test\Zomboid\Lua\pz_modlist_settings.cfg");
+        _service.SaveError = _ => error;
+
+        await vm.Collections.RemoveModCommand.ExecuteAsync(vm.Collections.Entries[0]);
+
+        Assert.Equal([ErrorMessages.ToUserText(error)], _dialogs.Errors);
+        Assert.Equal(2, _service.GetRequests.Count);
+        Assert.Equal(3, vm.Collections.Entries.Count);
+    }
+
+    [Fact]
+    public async Task Apply_WritesTheEnabledListAndShowsTheCount()
+    {
+        _service.ActiveIds = [];
+        var vm = await CreateActivatedAsync();
+        Select(vm, "Driving");
+
+        await vm.Collections.ApplyCommand.ExecuteAsync(null);
+
+        Assert.Equal(["Cars"], _service.ActiveIds);
+        Assert.Equal(string.Format(UiText.ModCollections_Applied, "Driving", 1), vm.Collections.StatusText);
+        Assert.True(vm.Collections.Rows.Single(row => row.Name == "Driving").IsActive);
+    }
+
+    [Fact]
+    public async Task Apply_Fails_ShowsTheError()
+    {
+        _service.ActiveIds = [];
+        var error = TestErrors.Create(ErrorCode.ModCollectionFileWriteFailed, @"C:\Users\Test\Zomboid\mods\default.txt");
+        _service.ApplyError = _ => error;
+        var vm = await CreateActivatedAsync();
+        Select(vm, "Driving");
+
+        await vm.Collections.ApplyCommand.ExecuteAsync(null);
+
+        Assert.Equal([ErrorMessages.ToUserText(error)], _dialogs.Errors);
+        Assert.Null(vm.Collections.StatusText);
+    }
+
+    [Fact]
+    public async Task GameRunning_DisablesEveryWriteButNotShareOrTheDefaultMark()
+    {
+        var vm = await CreateActivatedAsync();
+
+        _runState.IsGameRunning = true;
+
+        var collections = vm.Collections;
+        Assert.False(vm.CanWrite);
+        Assert.False(collections.NewCommand.CanExecute(null));
+        Assert.False(collections.NewFromEnabledCommand.CanExecute(null));
+        Assert.False(collections.ImportCommand.CanExecute(null));
+        Assert.False(collections.RenameCommand.CanExecute(null));
+        Assert.False(collections.DeleteCommand.CanExecute(null));
+        Assert.False(collections.ApplyCommand.CanExecute(null));
+        Assert.False(collections.AutoSortCommand.CanExecute(null));
+        Assert.False(collections.AddModCommand.CanExecute(_service.InstalledMods[0]));
+        Assert.False(collections.RemoveModCommand.CanExecute(collections.Entries[0]));
+        Assert.False(collections.MoveUpCommand.CanExecute(collections.Entries[1]));
+        Assert.True(collections.ShareCommand.CanExecute(null));
+        Assert.True(collections.ToggleDefaultCommand.CanExecute(null));
+
+        collections.Move(0, 1);
+        await vm.FlushOrderAsync();
+
+        Assert.Equal(["Maps", "Core", "Gone"], collections.Entries.Select(entry => entry.Id));
+        Assert.Empty(_service.Saves);
+    }
+
+    [Fact]
+    public async Task GameExits_RereadsTheFiles()
+    {
+        var vm = await CreateActivatedAsync();
+        _runState.IsGameRunning = true;
+
+        _service.WithCollection("Added in-game", "Tweaks");
+        _runState.IsGameRunning = false;
+
+        Assert.True(vm.CanWrite);
+        Assert.Contains(vm.Collections.Rows, row => row.Name == "Added in-game");
+    }
+}

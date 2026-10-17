@@ -58,16 +58,23 @@ Each hazard has a test that feeds bad input and asserts the code.
 
 ## Writing files we don't own
 
-Game files (`ProjectZomboid64.json`, files copied into the game folder) are the
-user's, and so is ZombieBuddy's `config.json`. Reference: `PzLauncher.Core/Launch/PzLaunchConfigEditor.cs`,
-`PzLauncher.Core/Mod/ZombieBuddy/ZombieBuddyPreloadConfig.cs`, `PzLauncher.Core/Mod/ZombieBuddy/ZombieBuddyService.cs`;
-atomic write in `PzLauncher.Core/Common/AtomicJsonFile.cs`.
+Game files (`ProjectZomboid64.json`, files copied into the game folder, the cache folder's
+`Lua/pz_modlist_settings.cfg` and `mods/default.txt`) are the user's, and so is ZombieBuddy's `config.json`.
+Reference: `PzLauncher.Core/Launch/PzLaunchConfigEditor.cs`,
+`PzLauncher.Core/Mod/ZombieBuddy/ZombieBuddyPreloadConfig.cs`, `PzLauncher.Core/Mod/ZombieBuddy/ZombieBuddyService.cs`,
+`PzLauncher.Core/Mod/Collections/ModListSettingsFile.cs`, `ActiveModsFile.cs`; atomic write in
+`PzLauncher.Core/Common/AtomicFile.cs` (`AtomicJsonFile.cs` for json).
 
 - Change only the key the feature owns; every other byte of meaning survives
   a rewrite (unknown fields, nested entries). A file the rewrite would lose
   data from (duplicate keys) is `launch.config_malformed`, not "fixed".
 - Write atomically: temp file in the same folder, then `File.Move(overwrite)`;
   delete the temp file on failure or cancellation. No write when unchanged.
+- A file the game also rewrites while running (the text files above) is re-read
+  right before each write, never written from a cached copy. Untouched lines keep
+  their bytes, line terminators and BOM; invalid UTF-8 is `*.file_malformed`,
+  never decoded with replacement characters. The previous content goes to a
+  rolling `<file>.pzlauncher.bak` first.
 - Multi-step operations are idempotent per step, so a retry re-runs from the
   start instead of resuming.
 - Tests prove unrelated content survives a round trip, with a fixture copied

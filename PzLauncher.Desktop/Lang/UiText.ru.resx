@@ -22,6 +22,9 @@
   <data name="Shell_NavInstalls" xml:space="preserve">
     <value>Установки</value>
   </data>
+  <data name="Shell_NavMods" xml:space="preserve">
+    <value>Моды</value>
+  </data>
   <data name="Shell_NavSettings" xml:space="preserve">
     <value>Настройки</value>
   </data>
@@ -105,6 +108,9 @@
   </data>
   <data name="Dialog_Ok" xml:space="preserve">
     <value>ОК</value>
+  </data>
+  <data name="Dialog_Cancel" xml:space="preserve">
+    <value>Отмена</value>
   </data>
   <data name="Error_ResultUninitialized" xml:space="preserve">
     <value>Внутренняя ошибка лаунчера. Пожалуйста, сообщите о ней разработчикам.</value>
@@ -220,6 +226,27 @@
   </data>
   <data name="Error_ZombieBuddyPreloadConfigIoFailed" xml:space="preserve">
     <value>Не удалось прочитать или записать конфигурацию ZombieBuddy {0} ({1}), поэтому {2} не добавлен в список предзагрузки. Игра запустится без предзагрузки.</value>
+  </data>
+  <data name="Error_ModCollectionCacheFolderUnresolved" xml:space="preserve">
+    <value>Не удалось найти папку кэша игры для {0}. Проверьте игровой аргумент -cachedir= в настройках запуска.</value>
+  </data>
+  <data name="Error_ModCollectionNameInvalid" xml:space="preserve">
+    <value>«{0}» — недопустимое имя сборки. Имя не может быть пустым или содержать \ / : * ? " &lt; &gt; |.</value>
+  </data>
+  <data name="Error_ModCollectionModIdInvalid" xml:space="preserve">
+    <value>«{0}» — недопустимый id мода для сборки.</value>
+  </data>
+  <data name="Error_ModCollectionNotFound" xml:space="preserve">
+    <value>Сборки «{0}» больше нет. Обновите список и попробуйте снова.</value>
+  </data>
+  <data name="Error_ModCollectionFileUnreadable" xml:space="preserve">
+    <value>Не удалось прочитать файл списка модов {0}. Убедитесь, что он не открыт в другой программе, и попробуйте снова.</value>
+  </data>
+  <data name="Error_ModCollectionFileMalformed" xml:space="preserve">
+    <value>Файл списка модов {0} не в том формате, в котором его пишет игра, поэтому лаунчер его не изменил.</value>
+  </data>
+  <data name="Error_ModCollectionFileWriteFailed" xml:space="preserve">
+    <value>Не удалось сохранить файл списка модов {0}. Если игра запущена, закройте её и попробуйте снова.</value>
   </data>
   <data name="Error_FolderNotLocal" xml:space="preserve">
     <value>{0} — не папка на этом компьютере, поэтому лаунчер не может её открыть. Выберите локальную папку.</value>
@@ -460,5 +487,236 @@
   </data>
   <data name="ZombieBuddyStep_RemoveAgentArg" xml:space="preserve">
     <value>Удаление Java-агента из ProjectZomboid64.json</value>
+  </data>
+  <data name="Mods_SectionMods" xml:space="preserve">
+    <value>Установленные моды</value>
+  </data>
+  <data name="Mods_SectionCollections" xml:space="preserve">
+    <value>Сборки</value>
+  </data>
+  <data name="Mods_Refresh" xml:space="preserve">
+    <value>Обновить</value>
+  </data>
+  <data name="Mods_GameRunning" xml:space="preserve">
+    <value>Игра запущена. Изменения недоступны, пока она не закроется.</value>
+  </data>
+  <data name="Mods_NoGameInstall" xml:space="preserve">
+    <value>Выберите установку игры на странице «Установки», чтобы управлять её модами.</value>
+  </data>
+  <data name="Mods_SearchPlaceholder" xml:space="preserve">
+    <value>Поиск по названию, ID или ID в мастерской</value>
+  </data>
+  <data name="Mods_FilterAll" xml:space="preserve">
+    <value>Все</value>
+  </data>
+  <data name="Mods_FilterEnabled" xml:space="preserve">
+    <value>Включённые</value>
+  </data>
+  <data name="Mods_FilterNotEnabled" xml:space="preserve">
+    <value>Не включённые</value>
+  </data>
+  <data name="Mods_SelectedFormat" xml:space="preserve">
+    <value>Выбрано: {0}</value>
+  </data>
+  <data name="Mods_AddToCollection" xml:space="preserve">
+    <value>Добавить в сборку…</value>
+  </data>
+  <data name="Mods_ClearSelection" xml:space="preserve">
+    <value>Снять выбор</value>
+  </data>
+  <data name="Mods_ColumnName" xml:space="preserve">
+    <value>Название</value>
+  </data>
+  <data name="Mods_ColumnId" xml:space="preserve">
+    <value>ID</value>
+  </data>
+  <data name="Mods_ColumnWorkshopId" xml:space="preserve">
+    <value>ID в мастерской</value>
+  </data>
+  <data name="Mods_ColumnSource" xml:space="preserve">
+    <value>Источник</value>
+  </data>
+  <data name="Mods_ColumnEnabled" xml:space="preserve">
+    <value>Включён</value>
+  </data>
+  <data name="Mods_ColumnCollections" xml:space="preserve">
+    <value>Сборки</value>
+  </data>
+  <data name="Mods_Empty" xml:space="preserve">
+    <value>Установленные моды не найдены.</value>
+  </data>
+  <data name="Mods_FilterEmpty" xml:space="preserve">
+    <value>Нет модов, подходящих под поиск или фильтр.</value>
+  </data>
+  <data name="Mods_Enabled" xml:space="preserve">
+    <value>Включён</value>
+  </data>
+  <data name="Mods_NameWithId" xml:space="preserve">
+    <value>{0} ({1})</value>
+  </data>
+  <data name="ModSource_SteamWorkshop" xml:space="preserve">
+    <value>Мастерская Steam</value>
+  </data>
+  <data name="ModSource_StagedWorkshop" xml:space="preserve">
+    <value>Загрузка в мастерскую (локально)</value>
+  </data>
+  <data name="ModSource_Local" xml:space="preserve">
+    <value>Локальная папка mods</value>
+  </data>
+  <data name="ModCollections_New" xml:space="preserve">
+    <value>Создать</value>
+  </data>
+  <data name="ModCollections_NewFromEnabled" xml:space="preserve">
+    <value>Из включённых</value>
+  </data>
+  <data name="ModCollections_Import" xml:space="preserve">
+    <value>Импорт</value>
+  </data>
+  <data name="ModCollections_Empty" xml:space="preserve">
+    <value>Сборок пока нет. Создайте сборку или импортируйте текст, скопированный в игре.</value>
+  </data>
+  <data name="ModCollections_CountFormat" xml:space="preserve">
+    <value>Модов: {0}</value>
+  </data>
+  <data name="ModCollections_MissingCountFormat" xml:space="preserve">
+    <value>Не хватает: {0}</value>
+  </data>
+  <data name="ModCollections_DefaultBadge" xml:space="preserve">
+    <value>По умолчанию</value>
+  </data>
+  <data name="ModCollections_ActiveBadge" xml:space="preserve">
+    <value>Используется</value>
+  </data>
+  <data name="ModCollections_NoSelection" xml:space="preserve">
+    <value>Выберите сборку.</value>
+  </data>
+  <data name="ModCollections_Apply" xml:space="preserve">
+    <value>Применить как список включённых</value>
+  </data>
+  <data name="ModCollections_ApplyHint" xml:space="preserve">
+    <value>Включить в игре только установленные моды этой сборки вместе с их зависимостями, в этом порядке.</value>
+  </data>
+  <data name="ModCollections_SetDefault" xml:space="preserve">
+    <value>Сделать по умолчанию</value>
+  </data>
+  <data name="ModCollections_UnsetDefault" xml:space="preserve">
+    <value>Убрать по умолчанию</value>
+  </data>
+  <data name="ModCollections_DefaultHint" xml:space="preserve">
+    <value>Сборка по умолчанию применяется при каждом запуске игры из лаунчера.</value>
+  </data>
+  <data name="ModCollections_Share" xml:space="preserve">
+    <value>Поделиться</value>
+  </data>
+  <data name="ModCollections_AutoSort" xml:space="preserve">
+    <value>Автосортировка</value>
+  </data>
+  <data name="ModCollections_AutoSortHint" xml:space="preserve">
+    <value>Сортировка как в игре: по ID, затем каждый мод после модов, после которых он загружается или которые ему нужны.</value>
+  </data>
+  <data name="ModCollections_Rename" xml:space="preserve">
+    <value>Переименовать</value>
+  </data>
+  <data name="ModCollections_Delete" xml:space="preserve">
+    <value>Удалить</value>
+  </data>
+  <data name="ModCollections_AddPlaceholder" xml:space="preserve">
+    <value>Добавить мод: поиск установленных по названию, ID или ID в мастерской</value>
+  </data>
+  <data name="ModCollections_DragHint" xml:space="preserve">
+    <value>Перетащите, чтобы изменить порядок</value>
+  </data>
+  <data name="ModCollections_Missing" xml:space="preserve">
+    <value>Не установлен</value>
+  </data>
+  <data name="ModCollections_MoveUp" xml:space="preserve">
+    <value>Выше</value>
+  </data>
+  <data name="ModCollections_MoveDown" xml:space="preserve">
+    <value>Ниже</value>
+  </data>
+  <data name="ModCollections_RemoveMod" xml:space="preserve">
+    <value>Убрать из сборки</value>
+  </data>
+  <data name="ModCollections_NameInvalid" xml:space="preserve">
+    <value>Введите имя без этих символов: \ / : * ? " &lt; &gt; |</value>
+  </data>
+  <data name="ModCollections_OverwriteTitle" xml:space="preserve">
+    <value>Перезаписать сборку?</value>
+  </data>
+  <data name="ModCollections_OverwriteMessage" xml:space="preserve">
+    <value>Сборка «{0}» уже есть. Перезаписать её?</value>
+  </data>
+  <data name="ModCollections_Overwrite" xml:space="preserve">
+    <value>Перезаписать</value>
+  </data>
+  <data name="ModCollections_NewTitle" xml:space="preserve">
+    <value>Новая сборка</value>
+  </data>
+  <data name="ModCollections_Create" xml:space="preserve">
+    <value>Создать</value>
+  </data>
+  <data name="ModCollections_NewFromEnabledTitle" xml:space="preserve">
+    <value>Новая сборка из включённых модов</value>
+  </data>
+  <data name="ModCollections_ImportTitle" xml:space="preserve">
+    <value>Импорт сборок</value>
+  </data>
+  <data name="ModCollections_ImportMessage" xml:space="preserve">
+    <value>Вставьте текст из игры или лаунчера, по одной сборке в строке (имя:id1;id2;…;).</value>
+  </data>
+  <data name="ModCollections_RenameTitle" xml:space="preserve">
+    <value>Переименовать сборку</value>
+  </data>
+  <data name="ModCollections_DeleteTitle" xml:space="preserve">
+    <value>Удалить сборку?</value>
+  </data>
+  <data name="ModCollections_DeleteMessage" xml:space="preserve">
+    <value>Удалить сборку «{0}»? Сначала будет сохранена резервная копия файла списков модов игры.</value>
+  </data>
+  <data name="ModCollections_Applied" xml:space="preserve">
+    <value>Сборка «{0}» применена: включено модов — {1}.</value>
+  </data>
+  <data name="ModCollections_Shared" xml:space="preserve">
+    <value>Текст сборки «{0}» скопирован в буфер обмена.</value>
+  </data>
+  <data name="ModCollections_NameMessage" xml:space="preserve">
+    <value>Имя сборки:</value>
+  </data>
+  <data name="ModCollections_ImportNothing" xml:space="preserve">
+    <value>Сборки не найдены. В каждой строке нужны имя, двоеточие и ID модов.</value>
+  </data>
+  <data name="ModCollections_ImportNameInvalid" xml:space="preserve">
+    <value>«{0}» нельзя использовать как имя сборки.</value>
+  </data>
+  <data name="ModApply_KeepTitle" xml:space="preserve">
+    <value>Сохранить текущий список включённых?</value>
+  </data>
+  <data name="ModApply_KeepMessage" xml:space="preserve">
+    <value>Список включённых модов игры ({0}) не совпадает ни с одной сборкой, и применение «{1}» его заменит. Сначала сохранить его как сборку?</value>
+  </data>
+  <data name="ModApply_KeepDefaultName" xml:space="preserve">
+    <value>Исходный список включённых</value>
+  </data>
+  <data name="ModApply_KeepSave" xml:space="preserve">
+    <value>Сохранить и применить</value>
+  </data>
+  <data name="ModApply_KeepSkip" xml:space="preserve">
+    <value>Применить без сохранения</value>
+  </data>
+  <data name="ModApply_DropTitle" xml:space="preserve">
+    <value>Некоторые моды не будут включены</value>
+  </data>
+  <data name="ModApply_DropMessage" xml:space="preserve">
+    <value>При применении «{0}» будут пропущены эти моды:</value>
+  </data>
+  <data name="ModApply_DropContinue" xml:space="preserve">
+    <value>Продолжить</value>
+  </data>
+  <data name="ModApply_DropMissing" xml:space="preserve">
+    <value>{0}: не установлен</value>
+  </data>
+  <data name="ModApply_DropIncompatible" xml:space="preserve">
+    <value>{0}: несовместим с {1}</value>
   </data>
 </root>

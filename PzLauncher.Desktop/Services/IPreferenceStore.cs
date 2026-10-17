@@ -22,6 +22,9 @@ public sealed record UserPreferences(AppLanguage? Language, AppTheme? Theme, Win
     /// <summary>Keyed by install root as saved (ordinal); empty when none are saved.</summary>
     public IReadOnlyDictionary<string, ZombieBuddyChannel> ZombieBuddyChannels { get; init; } = new Dictionary<string, ZombieBuddyChannel>();
 
+    /// <summary>Collection name per install root as saved (ordinal); empty when none are saved.</summary>
+    public IReadOnlyDictionary<string, string> DefaultModCollections { get; init; } = new Dictionary<string, string>();
+
     // Compares the collections by content; the generated equality would compare references.
     public bool Equals(UserPreferences? other) =>
         other is not null
@@ -32,10 +35,12 @@ public sealed record UserPreferences(AppLanguage? Language, AppTheme? Theme, Win
         && InstallOverrides.Count == other.InstallOverrides.Count
         && InstallOverrides.All(entry => other.InstallOverrides.TryGetValue(entry.Key, out var value) && entry.Value == value)
         && ZombieBuddyChannels.Count == other.ZombieBuddyChannels.Count
-        && ZombieBuddyChannels.All(entry => other.ZombieBuddyChannels.TryGetValue(entry.Key, out var value) && entry.Value == value);
+        && ZombieBuddyChannels.All(entry => other.ZombieBuddyChannels.TryGetValue(entry.Key, out var value) && entry.Value == value)
+        && DefaultModCollections.Count == other.DefaultModCollections.Count
+        && DefaultModCollections.All(entry => other.DefaultModCollections.TryGetValue(entry.Key, out var value) && entry.Value == value);
 
     public override int GetHashCode() =>
-        HashCode.Combine(Language, Theme, Window, ManualJavaHomes.Count, InstallOverrides.Count, ZombieBuddyChannels.Count);
+        HashCode.Combine(Language, Theme, Window, ManualJavaHomes.Count, InstallOverrides.Count, ZombieBuddyChannels.Count, DefaultModCollections.Count);
 }
 
 public interface IPreferenceStore
@@ -60,4 +65,7 @@ public interface IPreferenceStore
 
     /// <inheritdoc cref="SaveInstallOverridesAsync"/>
     Task SaveZombieBuddyChannelAsync(string installRoot, ZombieBuddyChannel channel, CancellationToken ct = default);
+
+    /// <summary><c>null</c> removes this install's entry. <inheritdoc cref="SaveInstallOverridesAsync"/></summary>
+    Task SaveDefaultModCollectionAsync(string installRoot, string? name, CancellationToken ct = default);
 }

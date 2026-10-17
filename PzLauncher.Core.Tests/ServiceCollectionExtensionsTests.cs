@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using PzLauncher.Core.Installs;
 using PzLauncher.Core.Java;
 using PzLauncher.Core.Launch;
+using PzLauncher.Core.Mod.Collections;
 using PzLauncher.Core.Mod.ZombieBuddy;
 using PzLauncher.Core.Platform;
 using PzLauncher.Core.Tests.TestSupport;
@@ -24,6 +25,7 @@ public class ServiceCollectionExtensionsTests
         Assert.Same(provider.GetRequiredService<IJavaDiscoveryService>(), provider.GetRequiredService<IJavaDiscoveryService>());
         Assert.Same(provider.GetRequiredService<IGameLaunchService>(), provider.GetRequiredService<IGameLaunchService>());
         Assert.Same(provider.GetRequiredService<IZombieBuddyService>(), provider.GetRequiredService<IZombieBuddyService>());
+        Assert.Same(provider.GetRequiredService<IModCollectionService>(), provider.GetRequiredService<IModCollectionService>());
     }
 
     [Fact]

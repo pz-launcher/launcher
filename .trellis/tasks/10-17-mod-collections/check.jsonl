@@ -1,0 +1,8 @@
+{"file": ".trellis/spec/common/test-strategy.md", "reason": "temp-dir fixtures, fakes, error-code assertions, test naming"}
+{"file": ".trellis/spec/common/coding-rules.md", "reason": "comment density, nullability, AOT"}
+{"file": ".trellis/spec/common/formatting.md", "reason": "dotnet format only this task's .cs files"}
+{"file": ".trellis/spec/core/service-api.md", "reason": "DTO registration and round-trip tests"}
+{"file": ".trellis/spec/core/error-handling.md", "reason": "IO/access errors mapped at the boundary"}
+{"file": ".trellis/spec/desktop/preferences.md", "reason": "per-field preference tests: round-trip, missing, unknown, keeps others, unwritable"}
+{"file": ".trellis/spec/desktop/localization.md", "reason": "resx completeness tests"}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "cfg/default.txt/sidecar/preferences data flow across Core and Desktop"}

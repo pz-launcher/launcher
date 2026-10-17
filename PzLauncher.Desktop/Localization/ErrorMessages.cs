@@ -49,6 +49,13 @@ public static class ErrorMessages
             ErrorCode.ZombieBuddyModNotPreloadable => Format(UiText.Error_ZombieBuddyModNotPreloadable, path, Detail(error, "reason"), Detail(error, "modId")),
             ErrorCode.ZombieBuddyPreloadConfigInvalid => Format(UiText.Error_ZombieBuddyPreloadConfigInvalid, path, Detail(error, "modId")),
             ErrorCode.ZombieBuddyPreloadConfigIoFailed => Format(UiText.Error_ZombieBuddyPreloadConfigIoFailed, path, Detail(error, "reason"), Detail(error, "modId")),
+            ErrorCode.ModCollectionCacheFolderUnresolved => Format(UiText.Error_ModCollectionCacheFolderUnresolved, path),
+            ErrorCode.ModCollectionNameInvalid => Format(UiText.Error_ModCollectionNameInvalid, Detail(error, "name")),
+            ErrorCode.ModCollectionModIdInvalid => Format(UiText.Error_ModCollectionModIdInvalid, Detail(error, "modId")),
+            ErrorCode.ModCollectionNotFound => Format(UiText.Error_ModCollectionNotFound, Detail(error, "name")),
+            ErrorCode.ModCollectionFileUnreadable => Format(UiText.Error_ModCollectionFileUnreadable, path),
+            ErrorCode.ModCollectionFileMalformed => Format(UiText.Error_ModCollectionFileMalformed, path),
+            ErrorCode.ModCollectionFileWriteFailed => Format(UiText.Error_ModCollectionFileWriteFailed, path),
             ErrorCode.ResultUninitialized => UiText.Error_ResultUninitialized,
         };
     }
