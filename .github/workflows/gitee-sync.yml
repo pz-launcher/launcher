@@ -70,6 +70,7 @@ jobs:
           gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --dir dist
 
       - name: Create or update Gitee release
+        timeout-minutes: 60
         run: |
           set -euo pipefail
           api="https://gitee.com/api/v5/repos/$GITEE_REPO"
@@ -98,15 +99,49 @@ jobs:
               "$api/releases" | jq -r '.id')
           fi
 
-          attached=$(curl -sS --fail-with-body "$api/releases/$id/attach_files?access_token=$GITEE_TOKEN&per_page=100" | jq -r '.[].name')
+          attached_names() {
+            curl -sS --fail-with-body "$api/releases/$id/attach_files?access_token=$GITEE_TOKEN&per_page=100" | jq -r '.[].name'
+          }
+
+          # curl redraws its progress meter with \r every second; keep one line per 10 s for the log.
+          throttle_progress() {
+            local line last=-10
+            while IFS= read -r -d $'\r' line; do
+              if (( SECONDS - last >= 10 )); then
+                printf '%s\n' "${line%$'\n'}"
+                last=$SECONDS
+              fi
+            done
+            printf '%s' "$line"
+          }
+
+          attached=$(attached_names)
           for file in dist/*; do
-            if grep -qxF "$(basename "$file")" <<< "$attached"; then
-              echo "Already attached: $(basename "$file")"
+            asset=$(basename "$file")
+            if grep -qxF "$asset" <<< "$attached"; then
+              echo "Already attached: $asset"
               continue
             fi
-            curl -sS --fail-with-body -o /dev/null \
-              --form-string "access_token=$GITEE_TOKEN" \
-              -F "file=@$file" \
-              "$api/releases/$id/attach_files"
-            echo "Attached: $(basename "$file")"
+            for attempt in 1 2 3; do
+              echo "Uploading $asset ($(du -h "$file" | cut -f1)), attempt $attempt"
+              rm -f response.json
+              # Uploads from GitHub runners to Gitee can stall indefinitely; give up below 10 KB/s for a minute.
+              if curl -S --fail-with-body -o response.json \
+                --speed-limit 10240 --speed-time 60 \
+                --form-string "access_token=$GITEE_TOKEN" \
+                -F "file=@$file" \
+                "$api/releases/$id/attach_files" 2>&1 | throttle_progress; then
+                echo "Attached: $asset"
+                continue 2
+              fi
+              cat response.json 2> /dev/null || true
+              echo
+              # The upload may have completed on Gitee even though curl gave up waiting for the response.
+              if grep -qxF "$asset" <<< "$(attached_names)"; then
+                echo "Attached: $asset"
+                continue 2
+              fi
+            done
+            echo "::error::Could not attach $asset after 3 attempts"
+            exit 1
           done
