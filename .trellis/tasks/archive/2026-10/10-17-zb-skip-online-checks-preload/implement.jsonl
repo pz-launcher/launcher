@@ -1,0 +1,7 @@
+{"file": ".trellis/spec/common/architecture.md", "reason": "Core owns the enabled-list check, lookup, config.json and game-json edits; Desktop only calls it from Home"}
+{"file": ".trellis/spec/common/coding-rules.md", "reason": "comments, nullability, async, AOT-safe JsonNode edits"}
+{"file": ".trellis/spec/common/test-strategy.md", "reason": "temp-dir fixtures, fakes, error-code assertions, test naming"}
+{"file": ".trellis/spec/core/directory-structure.md", "reason": "new Mod/ZBSkipOnlineChecks feature folder; constants in one place"}
+{"file": ".trellis/spec/core/service-api.md", "reason": "new service interface and IZombieBuddyService methods, DI registration, ZombieBuddyPreload enum DTO"}
+{"file": ".trellis/spec/core/error-handling.md", "reason": "reused zombiebuddy.* and launch-config errors; editing files we do not own"}
+{"file": ".trellis/tasks/archive/2026-10/10-16-zabric-preload/design.md", "reason": "Zabric preload precedent this task mirrors"}
