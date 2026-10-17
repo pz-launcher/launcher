@@ -16,6 +16,7 @@ namespace PzLauncher.Core.Serialization;
     RespectNullableAnnotations = true,
     RespectRequiredConstructorParameters = true)]
 [JsonSerializable(typeof(Error))]
+[JsonSerializable(typeof(IReadOnlyList<Error>))]
 [JsonSerializable(typeof(ErrorCode))]
 [JsonSerializable(typeof(string))]
 [JsonSerializable(typeof(PzInstall))]

@@ -28,8 +28,11 @@ public static class ServiceCollectionExtensions
         services.TryAddSingleton<IJavaDiscoveryService, JavaDiscoveryService>();
         services.TryAddSingleton<IGameLaunchService, GameLaunchService>();
         services.TryAddSingleton<IZombieBuddyService, ZombieBuddyService>();
-        services.TryAddSingleton<IZabricService, ZabricService>();
-        services.TryAddSingleton<IZBSkipOnlineChecksService, ZBSkipOnlineChecksService>();
+        services.TryAddSingleton<IZombieBuddyModsService, ZombieBuddyModsService>();
+
+        // Steps run in this order and a later one may read an earlier one's outcome.
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<IZombieBuddyLaunchStep, ZabricLaunchStep>());
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<IZombieBuddyLaunchStep, ZBSkipOnlineChecksLaunchStep>());
         services.TryAddSingleton<IModCollectionService, ModCollectionService>();
 
         return services;

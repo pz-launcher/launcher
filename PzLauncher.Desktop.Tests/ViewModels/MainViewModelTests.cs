@@ -33,7 +33,7 @@ public class MainViewModelTests : UiTextCultureTest
         var orderWriter = new ModCollectionOrderWriter(collections, runState, new FakePlatformEnvironment(), new ManualTimeProvider());
         return new(
             new HomeViewModel(
-                installs, launcher, overrides, dialogs, zombieBuddy, channels, new FakeZabricService(), new FakeZBSkipOnlineChecksService(),
+                installs, launcher, overrides, dialogs, zombieBuddy, channels, new FakeZombieBuddyModsService(),
                 collections, defaults, applier, orderWriter, runState),
             installs,
             new ModsViewModel(
