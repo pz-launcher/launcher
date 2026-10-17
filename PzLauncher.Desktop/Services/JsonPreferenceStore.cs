@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using PzLauncher.Core.Launch;
 using PzLauncher.Core.Mod.ZombieBuddy;
+using PzLauncher.Core.Update;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Themes;
 
@@ -15,7 +16,7 @@ namespace PzLauncher.Desktop.Services;
 
 public sealed partial class JsonPreferenceStore(string filePath, ILogger logger) : IPreferenceStore
 {
-    private static readonly PreferencesFile Empty = new(null, null, null, null, null, null, null);
+    private static readonly PreferencesFile Empty = new(null, null, null, null, null, null, null, null, null);
 
     // Saves are fire-and-forget; one at a time so the last choice is the one left on disk.
     private readonly SemaphoreSlim _saveGate = new(1, 1);
@@ -70,8 +71,29 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger)
             LogInvalidDefaultModCollections(logger, filePath);
         }
 
+        var updateSource = file.UpdateSource is { ValueKind: JsonValueKind.String } source
+            ? UpdateSourcePreferences.FromPreferenceName(source.GetString())
+            : null;
+        if (updateSource is null && file.UpdateSource is { ValueKind: not JsonValueKind.Null })
+        {
+            LogInvalidUpdateSource(logger, filePath);
+        }
+
+        var autoCheckUpdates = file.AutoCheckUpdates?.ValueKind switch
+        {
+            JsonValueKind.True => true,
+            JsonValueKind.False => false,
+            _ => (bool?)null,
+        };
+        if (autoCheckUpdates is null && file.AutoCheckUpdates is { ValueKind: not JsonValueKind.Null })
+        {
+            LogInvalidAutoCheckUpdates(logger, filePath);
+        }
+
         return new UserPreferences(language, theme, window)
         {
+            UpdateSource = updateSource,
+            AutoCheckUpdates = autoCheckUpdates,
             ManualJavaHomes = javaHomes,
             InstallOverrides = installs,
             ZombieBuddyChannels = channels,
@@ -152,6 +174,18 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger)
                 return file with { DefaultModCollections = entries };
             },
             ct);
+
+    public Task SaveUpdateSourceAsync(UpdateSource source, CancellationToken ct = default)
+    {
+        var entry = JsonSerializer.SerializeToElement(source.PreferenceName(), DesktopJsonContext.Default.String);
+        return SaveAsync(file => file with { UpdateSource = entry }, ct);
+    }
+
+    public Task SaveAutoCheckUpdatesAsync(bool enabled, CancellationToken ct = default)
+    {
+        var entry = JsonSerializer.SerializeToElement(enabled, DesktopJsonContext.Default.Boolean);
+        return SaveAsync(file => file with { AutoCheckUpdates = entry }, ct);
+    }
 
     private static List<string> ToManualJavaHomes(IReadOnlyList<JsonElement>? entries) =>
     [
@@ -333,6 +367,12 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger)
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Default mod collection preference {Path} holds entries that aren't valid; ignoring them")]
     private static partial void LogInvalidDefaultModCollections(ILogger logger, string path);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Update source preference {Path} holds an unsupported value; using automatic")]
+    private static partial void LogInvalidUpdateSource(ILogger logger, string path);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Automatic update check preference {Path} is not true or false; checking automatically")]
+    private static partial void LogInvalidAutoCheckUpdates(ILogger logger, string path);
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Preferences {Path} could not be saved")]
     private static partial void LogSaveFailed(ILogger logger, string path, Exception exception);

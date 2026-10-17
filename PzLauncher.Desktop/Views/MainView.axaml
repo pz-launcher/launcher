@@ -6,6 +6,7 @@
              xmlns:controls="using:PzLauncher.Desktop.Views.Controls"
              xmlns:chrome="using:Avalonia.Controls.Chrome"
              xmlns:ic="using:FluentIcons.Avalonia"
+             xmlns:update="using:PzLauncher.Desktop.Views.Update"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="640"
@@ -16,7 +17,7 @@
         <x:Static Member="design:DesignData.Main" />
     </Design.DataContext>
 
-    <Grid RowDefinitions="44,*">
+    <Grid RowDefinitions="44,Auto,*">
         <!-- Title bar: empty space drags the window and double-click maximizes; interactive children opt out with the User role. -->
         <Border Grid.Row="0" Background="{DynamicResource Shell.TitleBarBackground}"
                 chrome:WindowDecorationProperties.ElementRole="TitleBar">
@@ -90,9 +91,11 @@
             </Grid>
         </Border>
 
+        <update:UpdateBannerView Grid.Row="1" DataContext="{Binding UpdateBanner}" Foreground="{DynamicResource Shell.TextPrimary}" />
+
         <!-- The page view is picked by the DataTemplates in App.axaml.
              The content present when this view first loads (launch, language rebuild) shows without the transition. -->
-        <TransitioningContentControl Grid.Row="1" Content="{Binding CurrentPage}" Foreground="{DynamicResource Shell.TextPrimary}">
+        <TransitioningContentControl Grid.Row="2" Content="{Binding CurrentPage}" Foreground="{DynamicResource Shell.TextPrimary}">
             <TransitioningContentControl.PageTransition>
                 <controls:FadeRiseTransition Duration="{StaticResource Shell.PageTransitionDuration}"
                                              Easing="{StaticResource Shell.MotionEasing}" Offset="8" />

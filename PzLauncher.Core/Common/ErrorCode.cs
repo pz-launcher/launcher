@@ -69,6 +69,15 @@ public enum ErrorCode
     [JsonStringEnumMemberName("modcollection.file_unreadable")] ModCollectionFileUnreadable,
     [JsonStringEnumMemberName("modcollection.file_malformed")] ModCollectionFileMalformed,
     [JsonStringEnumMemberName("modcollection.file_write_failed")] ModCollectionFileWriteFailed,
+
+    // ── update ────────────────────────────────────────────────
+    [JsonStringEnumMemberName("update.network_failed")] UpdateNetworkFailed,
+    [JsonStringEnumMemberName("update.release_info_invalid")] UpdateReleaseInfoInvalid,
+    [JsonStringEnumMemberName("update.package_invalid")] UpdatePackageInvalid,
+    [JsonStringEnumMemberName("update.install_folder_not_writable")] UpdateInstallFolderNotWritable,
+    [JsonStringEnumMemberName("update.install_failed")] UpdateInstallFailed,
+    [JsonStringEnumMemberName("update.development_build")] UpdateDevelopmentBuild,
+    [JsonStringEnumMemberName("update.restart_failed")] UpdateRestartFailed,
 }
 
 public static class ErrorCodeExtensions

@@ -56,6 +56,13 @@ public static class ErrorMessages
             ErrorCode.ModCollectionFileUnreadable => Format(UiText.Error_ModCollectionFileUnreadable, path),
             ErrorCode.ModCollectionFileMalformed => Format(UiText.Error_ModCollectionFileMalformed, path),
             ErrorCode.ModCollectionFileWriteFailed => Format(UiText.Error_ModCollectionFileWriteFailed, path),
+            ErrorCode.UpdateNetworkFailed => Format(UiText.Error_UpdateNetworkFailed, Detail(error, "source")),
+            ErrorCode.UpdateReleaseInfoInvalid => Format(UiText.Error_UpdateReleaseInfoInvalid, Detail(error, "source")),
+            ErrorCode.UpdatePackageInvalid => Format(UiText.Error_UpdatePackageInvalid, Detail(error, "package")),
+            ErrorCode.UpdateInstallFolderNotWritable => Format(UiText.Error_UpdateInstallFolderNotWritable, path),
+            ErrorCode.UpdateInstallFailed => Format(UiText.Error_UpdateInstallFailed, path),
+            ErrorCode.UpdateDevelopmentBuild => UiText.Error_UpdateDevelopmentBuild,
+            ErrorCode.UpdateRestartFailed => Format(UiText.Error_UpdateRestartFailed, path),
             ErrorCode.ResultUninitialized => UiText.Error_ResultUninitialized,
         };
     }

@@ -22,6 +22,8 @@
                 <TextBlock Classes="sidebarHeader" Text="{x:Static lang:UiText.Settings_LauncherGroup}" />
                 <controls:NavItem Icon="PaintBrush" Content="{x:Static lang:UiText.Settings_Appearance}"
                                   IsChecked="{Binding Section, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:SettingsSection.Appearance}}" />
+                <controls:NavItem Icon="ArrowSync" Content="{x:Static lang:UiText.Settings_Updates}"
+                                  IsChecked="{Binding Section, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:SettingsSection.Updates}}" />
                 <TextBlock Classes="sidebarHeader" Text="{x:Static lang:UiText.Settings_GameGroup}" />
                 <controls:NavItem Icon="DrinkCoffee" Content="{x:Static lang:UiText.Settings_Java}"
                                   IsChecked="{Binding Section, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:SettingsSection.Java}}" />
@@ -42,7 +44,10 @@
                 <TextBlock Text="{x:Static lang:UiText.Settings_Window}" FontSize="16" FontWeight="SemiBold" />
                 <Button Content="{x:Static lang:UiText.Settings_ResetWindowSize}" Command="{Binding ResetWindowSizeCommand}" />
             </StackPanel>
-            <!-- Wrapped: the section view's own DataContext is the Java view model, so it can't bind Section itself. -->
+            <!-- Wrapped: each section view's own DataContext is its view model, so it can't bind Section itself. -->
+            <Panel IsVisible="{Binding Section, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:SettingsSection.Updates}}">
+                <settings:UpdateSettingsView DataContext="{Binding Updates}" />
+            </Panel>
             <Panel IsVisible="{Binding Section, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:SettingsSection.Java}}">
                 <settings:JavaSettingsView DataContext="{Binding Java}" />
             </Panel>

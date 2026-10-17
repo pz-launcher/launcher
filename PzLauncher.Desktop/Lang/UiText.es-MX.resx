@@ -254,6 +254,27 @@
   <data name="Error_ModCollectionFileWriteFailed" xml:space="preserve">
     <value>No se pudo guardar el archivo de lista de mods {0}. Si el juego está abierto, ciérralo y vuelve a intentarlo.</value>
   </data>
+  <data name="Error_UpdateNetworkFailed" xml:space="preserve">
+    <value>No se pudo conectar con el servidor de actualizaciones ({0}). Revisa tu conexión a internet o elige otra fuente de actualizaciones y vuelve a intentarlo.</value>
+  </data>
+  <data name="Error_UpdateReleaseInfoInvalid" xml:space="preserve">
+    <value>El servidor de actualizaciones ({0}) envió información de la versión que el launcher no puede leer. Inténtalo más tarde o elige otra fuente de actualizaciones.</value>
+  </data>
+  <data name="Error_UpdatePackageInvalid" xml:space="preserve">
+    <value>La actualización descargada {0} está dañada o incompleta, así que se descartó. Inténtalo más tarde.</value>
+  </data>
+  <data name="Error_UpdateInstallFolderNotWritable" xml:space="preserve">
+    <value>El launcher no puede escribir en su carpeta {0}, así que no puede actualizarse solo. Descarga la nueva versión desde la página de la versión.</value>
+  </data>
+  <data name="Error_UpdateInstallFailed" xml:space="preserve">
+    <value>No se pudo instalar la actualización en {0}, así que se conservó la versión actual. Cierra cualquier programa que esté usando los archivos del launcher y vuelve a intentarlo.</value>
+  </data>
+  <data name="Error_UpdateDevelopmentBuild" xml:space="preserve">
+    <value>Las actualizaciones no están disponibles para versiones de desarrollo.</value>
+  </data>
+  <data name="Error_UpdateRestartFailed" xml:space="preserve">
+    <value>La actualización se instaló, pero no se pudo iniciar {0}. Vuelve a abrir PzLauncher manualmente.</value>
+  </data>
   <data name="Error_FolderNotLocal" xml:space="preserve">
     <value>{0} no es una carpeta de esta computadora, así que el launcher no puede abrirla. Elige una carpeta local.</value>
   </data>
@@ -277,6 +298,24 @@
   </data>
   <data name="Settings_ResetWindowSize" xml:space="preserve">
     <value>Restablecer tamaño de la ventana</value>
+  </data>
+  <data name="Settings_Updates" xml:space="preserve">
+    <value>Actualizaciones</value>
+  </data>
+  <data name="Settings_UpdatesCurrentVersion" xml:space="preserve">
+    <value>Versión actual: {0}</value>
+  </data>
+  <data name="Settings_UpdateSource" xml:space="preserve">
+    <value>Fuente de actualizaciones</value>
+  </data>
+  <data name="Settings_UpdateSourceHint" xml:space="preserve">
+    <value>Automático usa la que responda primero entre GitHub y Gitee. En China continental, Gitee suele ser más rápido.</value>
+  </data>
+  <data name="Settings_AutoCheckUpdates" xml:space="preserve">
+    <value>Buscar actualizaciones al iniciar PzLauncher</value>
+  </data>
+  <data name="Settings_CheckNow" xml:space="preserve">
+    <value>Buscar ahora</value>
   </data>
   <data name="Settings_GameGroup" xml:space="preserve">
     <value>Juego</value>
@@ -736,5 +775,56 @@
   </data>
   <data name="ModApply_DropIncompatible" xml:space="preserve">
     <value>{0}: incompatible con {1}</value>
+  </data>
+  <data name="Update_BannerReady" xml:space="preserve">
+    <value>Se descargó la versión {0}.</value>
+  </data>
+  <data name="Update_BannerAvailable" xml:space="preserve">
+    <value>La versión {0} está disponible.</value>
+  </data>
+  <data name="Update_Restart" xml:space="preserve">
+    <value>Reiniciar y actualizar</value>
+  </data>
+  <data name="Update_RestartBlocked" xml:space="preserve">
+    <value>Cierra primero el juego: si reinicias ahora, el launcher dejará de seguirlo. Con «Más tarde», la actualización igual se instala al cerrar PzLauncher.</value>
+  </data>
+  <data name="Update_Later" xml:space="preserve">
+    <value>Más tarde</value>
+  </data>
+  <data name="Update_OpenDownloadPage" xml:space="preserve">
+    <value>Abrir página de descarga</value>
+  </data>
+  <data name="Update_Dismiss" xml:space="preserve">
+    <value>Descartar</value>
+  </data>
+  <data name="Update_StatusChecking" xml:space="preserve">
+    <value>Buscando actualizaciones…</value>
+  </data>
+  <data name="Update_StatusUpToDate" xml:space="preserve">
+    <value>PzLauncher está actualizado.</value>
+  </data>
+  <data name="Update_StatusDownloading" xml:space="preserve">
+    <value>Descargando la versión {0} desde {1}…</value>
+  </data>
+  <data name="Update_StatusDownloadingPercent" xml:space="preserve">
+    <value>Descargando la versión {0} desde {1}… {2}%</value>
+  </data>
+  <data name="Update_StatusReady" xml:space="preserve">
+    <value>Se descargó la versión {0}. Se instalará cuando reinicies o cierres PzLauncher.</value>
+  </data>
+  <data name="Update_StatusAvailable" xml:space="preserve">
+    <value>La versión {0} está disponible. El launcher no puede escribir en su carpeta, así que descárgala desde la página de la versión.</value>
+  </data>
+  <data name="Update_StatusInstalled" xml:space="preserve">
+    <value>Se instaló la versión {0}. Vuelve a abrir PzLauncher para usarla.</value>
+  </data>
+  <data name="UpdateSource_Auto" xml:space="preserve">
+    <value>Automático</value>
+  </data>
+  <data name="UpdateSource_GitHub" xml:space="preserve">
+    <value>GitHub</value>
+  </data>
+  <data name="UpdateSource_Gitee" xml:space="preserve">
+    <value>Gitee</value>
   </data>
 </root>
