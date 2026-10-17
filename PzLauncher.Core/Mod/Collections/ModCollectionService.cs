@@ -46,7 +46,7 @@ internal sealed partial class ModCollectionService(
             {
                 var ids = Ordered(collection, orders);
                 var enabled = ModLoadOrder.Resolve(ids, installed).EnabledIds;
-                return new ModCollection(collection.Name, ids, activeInstalled.SetEquals(enabled));
+                return new ModCollection(collection.Name, ids, enabled.Count > 0 && activeInstalled.SetEquals(enabled));
             })
             .ToList();
 

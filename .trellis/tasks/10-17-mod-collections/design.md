@@ -93,7 +93,8 @@ depends on hash order:
    does not block its dependent (the game doesn't either).
 4. Each id emitted once.
 
-A collection `IsActive` when the id set of its `Resolve` result equals the `default.txt` id set (order ignored).
+A collection `IsActive` when its `Resolve` result enables at least one mod and its id set equals the installed part
+of the `default.txt` id set (order ignored).
 `ActiveMatchesCollection` = the active set is empty or some collection `IsActive`; when false, Desktop shows the R6a
 prompt before applying.
 

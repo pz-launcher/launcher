@@ -51,7 +51,8 @@ Collections are those of the install selected in the launcher (game installs onl
   it. Search by name/id/Workshop id; filters all / enabled / not enabled. "添加到合集…" adds the selected mod(s) to a
   chosen collection (appended at the end, R3 rules). It never changes `default.txt`.
 - **R1 List** — "合集管理" lists the cache folder's collections with mod count, a marker on the default
-  collection (R7), and a marker on every collection whose installed mods equal the current `default.txt` set.
+  collection (R7), and an "in use" marker on every collection that, applied, enables at least one mod and gives the
+  current `default.txt` set of installed mods (so nothing is "in use" while no installed mod is enabled).
 - **R2 Installed mods** — the launcher enumerates installed mods in the game's lookup order (first copy of an id wins),
   reading id, name, Workshop item id, `require`, `loadAfter`, `loadBefore`, `incompatible`. Shown per collection row
   as name + id; ids not installed are kept in the collection and shown as missing.

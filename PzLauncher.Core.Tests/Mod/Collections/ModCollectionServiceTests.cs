@@ -91,6 +91,19 @@ public sealed class ModCollectionServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task GetAsync_NothingEnabled_CollectionsEnablingNothingAreNotInUse()
+    {
+        _mods.Local("A");
+        WriteSettings("empty:", "gone:Missing;", "pack:A;");
+        WriteFile(ActivePath, "VERSION = 1,\r\n\r\nmods\r\n{\r\n    mod = Missing,\r\n}\r\n");
+
+        var state = await GetAsync();
+
+        Assert.Equal([("empty", false), ("gone", false), ("pack", false)], state.Collections.Select(c => (c.Name, c.IsActive)));
+        Assert.True(state.ActiveMatchesCollection);
+    }
+
+    [Fact]
     public async Task GetAsync_NoFiles_IsEmptyAndMatches()
     {
         var state = await GetAsync();
