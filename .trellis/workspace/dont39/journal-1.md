@@ -255,3 +255,25 @@ Planned and built mod collection management (PR #9): Core IModCollectionService 
 ### Status
 
 [OK] **Completed**
+
+
+## Session 10: ZB Skip Online Checks setup at launch
+<!-- trellis-session: v=2 fp=d8fa6d8682c4f779 -->
+
+**Date**: 2026-10-17
+**Task**: ZB Skip Online Checks setup at launch
+**Branch**: `main`
+
+### Summary
+
+On Home launch the launcher keeps ZBSkipOnlineChecks in step with the enabled mod list: enabled under allow-all registers it in ZombieBuddy preload_mods after Zabric and adds its patches_jar agent start (jar copied to the game folder, entry in ProjectZomboid64.json); not enabled removes both. Check fixed two WithoutPatchesJar edge cases. Build and tests pass; in-game check not done yet.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `dd48a76` | Set up ZB Skip Online Checks at launch |
+
+### Status
+
+[OK] **Completed**
