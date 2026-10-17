@@ -1,4 +1,3 @@
-using System.Globalization;
 using PzLauncher.Core.Platform;
 using PzLauncher.Core.Steam;
 
@@ -22,6 +21,13 @@ internal static class ZombieBuddyFiles
 
     public const string JavaAgentArg = "-javaagent:" + AgentJar;
 
+    // ZombieBuddy's Agent.configDir and Config.java.
+    public const string ConfigDirOption = "config_dir";
+
+    public const string DefaultConfigFolder = ".zombie_buddy";
+
+    public const string ConfigFile = "config.json";
+
     public static IReadOnlyList<ZombieBuddyChannel> Channels { get; } = [ZombieBuddyChannel.Stable, ZombieBuddyChannel.Beta];
 
     public static IReadOnlyList<string> LeftoverFiles { get; } = [NativeLoader, AgentJar, PendingJarUpdate];
@@ -35,10 +41,7 @@ internal static class ZombieBuddyFiles
         ZombieBuddyChannel.Beta => BetaItemId,
     };
 
-    public static string ItemFolder(string library, ZombieBuddyChannel channel) => Path.Combine(WorkshopContentFolder(library), ItemId(channel));
-
-    public static string WorkshopContentFolder(string library) =>
-        Path.Combine(library, "steamapps", "workshop", "content", PzSteamApps.Game.ToString(CultureInfo.InvariantCulture));
+    public static string ItemFolder(string library, ZombieBuddyChannel channel) => Path.Combine(WorkshopLibraries.ContentFolder(library), ItemId(channel));
 
     public static string LibsFolder(string item) => Path.Combine(item, "mods", "ZombieBuddy", "libs");
 

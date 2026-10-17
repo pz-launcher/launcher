@@ -3,6 +3,7 @@ using PzLauncher.Core.Common;
 using PzLauncher.Core.Installs;
 using PzLauncher.Core.Java;
 using PzLauncher.Core.Launch;
+using PzLauncher.Core.Zabric;
 using PzLauncher.Core.ZombieBuddy;
 
 namespace PzLauncher.Core.Serialization;

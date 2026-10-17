@@ -60,7 +60,7 @@ Each hazard has a test that feeds bad input and asserts the code.
 
 Game files (`ProjectZomboid64.json`, files copied into the game folder) are the
 user's, and so is ZombieBuddy's `config.json`. Reference: `PzLauncher.Core/Launch/PzLaunchConfigEditor.cs`,
-`PzLauncher.Core/ZombieBuddy/ZombieBuddyConfigEditor.cs`, `PzLauncher.Core/ZombieBuddy/ZombieBuddyService.cs`;
+`PzLauncher.Core/Zabric/ZabricPreloadConfig.cs`, `PzLauncher.Core/ZombieBuddy/ZombieBuddyService.cs`;
 atomic write in `PzLauncher.Core/Common/AtomicJsonFile.cs`.
 
 - Change only the key the feature owns; every other byte of meaning survives

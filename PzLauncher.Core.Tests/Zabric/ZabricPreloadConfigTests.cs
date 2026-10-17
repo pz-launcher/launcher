@@ -1,17 +1,17 @@
 using System.Text.Json.Nodes;
 using PzLauncher.Core.Common;
 using PzLauncher.Core.Tests.TestSupport;
-using PzLauncher.Core.ZombieBuddy;
+using PzLauncher.Core.Zabric;
 
-namespace PzLauncher.Core.Tests.ZombieBuddy;
+namespace PzLauncher.Core.Tests.Zabric;
 
-public sealed class ZombieBuddyConfigEditorTests : IDisposable
+public sealed class ZabricPreloadConfigTests : IDisposable
 {
     private readonly TempDirectory _temp = new();
     private readonly string _configFolder;
     private readonly ZabricPreloadEntry _entry;
 
-    public ZombieBuddyConfigEditorTests()
+    public ZabricPreloadConfigTests()
     {
         _configFolder = Path.Combine(_temp.Path, "zb", ".zombie_buddy");
         var version = ZabricBuilder.Create(Path.Combine(_temp.Path, "Workshop", "Zabric"));
@@ -25,7 +25,7 @@ public sealed class ZombieBuddyConfigEditorTests : IDisposable
     private string ConfigPath => Path.Combine(_configFolder, "config.json");
 
     private Task<Result<ZabricPreload>> EnsureAsync(StringComparison pathComparison = StringComparison.Ordinal) =>
-        ZombieBuddyConfigEditor.EnsureZabricAsync(_configFolder, _entry, pathComparison, Ct);
+        ZabricPreloadConfig.EnsureAsync(_configFolder, _entry, pathComparison, Ct);
 
     private void WriteConfig(string json)
     {
@@ -55,7 +55,7 @@ public sealed class ZombieBuddyConfigEditorTests : IDisposable
     }
 
     [Fact]
-    public async Task EnsureZabricAsync_NoFileOrFolder_CreatesTheConfigWithTheEntry()
+    public async Task EnsureAsync_NoFileOrFolder_CreatesTheConfigWithTheEntry()
     {
         Assert.Equal(ZabricPreload.Written, ResultAssert.Ok(await EnsureAsync()));
 
@@ -66,7 +66,7 @@ public sealed class ZombieBuddyConfigEditorTests : IDisposable
     [InlineData("")]
     [InlineData(" \n")]
     [InlineData("""{"preload_mods": null}""")]
-    public async Task EnsureZabricAsync_BlankFileOrNullPreloadMods_WritesTheEntry(string json)
+    public async Task EnsureAsync_BlankFileOrNullPreloadMods_WritesTheEntry(string json)
     {
         WriteConfig(json);
 
@@ -76,7 +76,7 @@ public sealed class ZombieBuddyConfigEditorTests : IDisposable
     }
 
     [Fact]
-    public async Task EnsureZabricAsync_SamePathsInAnotherCase_IsCurrentWithoutWriting()
+    public async Task EnsureAsync_SamePathsInAnotherCase_IsCurrentWithoutWriting()
     {
         var json = ConfigWith(("Zabric", _entry.InfPath.ToUpperInvariant(), _entry.JarPath.ToUpperInvariant()));
         WriteConfig(json);
@@ -87,7 +87,7 @@ public sealed class ZombieBuddyConfigEditorTests : IDisposable
     }
 
     [Fact]
-    public async Task EnsureZabricAsync_ByteIdenticalCopyElsewhere_IsCurrentWithoutWriting()
+    public async Task EnsureAsync_ByteIdenticalCopyElsewhere_IsCurrentWithoutWriting()
     {
         var other = OtherCopy("v1");
         var json = ConfigWith(("Zabric", other.InfPath, other.JarPath), ("OtherMod", "a", "b"));
@@ -101,7 +101,7 @@ public sealed class ZombieBuddyConfigEditorTests : IDisposable
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
-    public async Task EnsureZabricAsync_StoredJarDiffersOrIsMissing_ReplacesTheEntry(bool missing)
+    public async Task EnsureAsync_StoredJarDiffersOrIsMissing_ReplacesTheEntry(bool missing)
     {
         var other = OtherCopy("v2");
         if (missing)
@@ -117,7 +117,7 @@ public sealed class ZombieBuddyConfigEditorTests : IDisposable
     }
 
     [Fact]
-    public async Task EnsureZabricAsync_CurrentButNotFirst_MovesTheStoredEntryFirst()
+    public async Task EnsureAsync_CurrentButNotFirst_MovesTheStoredEntryFirst()
     {
         var other = OtherCopy("v1");
         WriteConfig(ConfigWith(("OtherMod", "a", "b"), ("Zabric", other.InfPath, other.JarPath)));
@@ -129,7 +129,7 @@ public sealed class ZombieBuddyConfigEditorTests : IDisposable
     }
 
     [Fact]
-    public async Task EnsureZabricAsync_RealConfig_KeepsEveryOtherFieldAndEntry()
+    public async Task EnsureAsync_RealConfig_KeepsEveryOtherFieldAndEntry()
     {
         var original = JsonNode.Parse(Fixtures.Read("ZombieBuddy", "config.json"))!.AsObject();
         WriteConfig(Fixtures.Read("ZombieBuddy", "config.json"));
@@ -155,24 +155,24 @@ public sealed class ZombieBuddyConfigEditorTests : IDisposable
     [InlineData("""{"preload_mods": 1}""")]
     [InlineData("""{"preload_mods": []}""")]
     [InlineData("""{"trusted_authors": [], "trusted_authors": [1]}""")]
-    public async Task EnsureZabricAsync_InvalidConfig_ReturnsPreloadConfigInvalidAndLeavesTheFile(string json)
+    public async Task EnsureAsync_InvalidConfig_ReturnsPreloadConfigInvalidAndLeavesTheFile(string json)
     {
         WriteConfig(json);
 
-        var error = ResultAssert.Failed(await EnsureAsync(), ErrorCode.ZombieBuddyPreloadConfigInvalid);
+        var error = ResultAssert.Failed(await EnsureAsync(), ErrorCode.ZabricPreloadConfigInvalid);
 
         Assert.Equal(ConfigPath, error.Details["path"]);
         Assert.Equal(json, await File.ReadAllTextAsync(ConfigPath, Ct));
     }
 
     [Fact]
-    public async Task EnsureZabricAsync_ConfigLocked_ReturnsPreloadConfigIoFailed()
+    public async Task EnsureAsync_ConfigLocked_ReturnsPreloadConfigIoFailed()
     {
         Assert.SkipUnless(OperatingSystem.IsWindows(), "Only Windows refuses to read a file opened without sharing.");
         WriteConfig("{}");
 
         using var locked = File.Open(ConfigPath, FileMode.Open, FileAccess.Read, FileShare.None);
-        var error = ResultAssert.Failed(await EnsureAsync(), ErrorCode.ZombieBuddyPreloadConfigIoFailed);
+        var error = ResultAssert.Failed(await EnsureAsync(), ErrorCode.ZabricPreloadConfigIoFailed);
 
         Assert.Equal(ConfigPath, error.Details["path"]);
     }

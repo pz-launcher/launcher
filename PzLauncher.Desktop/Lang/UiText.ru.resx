@@ -212,13 +212,13 @@
   <data name="Error_ZombieBuddyNotInitialized" xml:space="preserve">
     <value>ZombieBuddy не инициализирован для этой установки. Сначала выполните «Инициализировать» в «Настройках запуска».</value>
   </data>
-  <data name="Error_ZombieBuddyZabricNotPreloadable" xml:space="preserve">
+  <data name="Error_ZabricNotPreloadable" xml:space="preserve">
     <value>Zabric не удаётся предзагрузить: {0} не соответствует требованиям ZombieBuddy к предзагрузке ({1}). Обновите Zabric или заново подпишитесь на мод в Steam. Игра запустится без предзагрузки.</value>
   </data>
-  <data name="Error_ZombieBuddyPreloadConfigInvalid" xml:space="preserve">
+  <data name="Error_ZabricPreloadConfigInvalid" xml:space="preserve">
     <value>Конфигурация ZombieBuddy {0} повреждена, поэтому Zabric не добавлен в список предзагрузки. Исправьте или удалите файл. Игра запустится без предзагрузки.</value>
   </data>
-  <data name="Error_ZombieBuddyPreloadConfigIoFailed" xml:space="preserve">
+  <data name="Error_ZabricPreloadConfigIoFailed" xml:space="preserve">
     <value>Не удалось прочитать или записать конфигурацию ZombieBuddy {0} ({1}), поэтому Zabric не добавлен в список предзагрузки. Игра запустится без предзагрузки.</value>
   </data>
   <data name="Error_FolderNotLocal" xml:space="preserve">

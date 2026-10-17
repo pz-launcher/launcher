@@ -46,9 +46,9 @@ public static class ErrorMessages
             ErrorCode.ZombieBuddyDeleteFailed => Format(UiText.Error_ZombieBuddyDeleteFailed, path),
             ErrorCode.ZombieBuddyConfigWriteFailed => Format(UiText.Error_ZombieBuddyConfigWriteFailed, path),
             ErrorCode.ZombieBuddyNotInitialized => UiText.Error_ZombieBuddyNotInitialized,
-            ErrorCode.ZombieBuddyZabricNotPreloadable => Format(UiText.Error_ZombieBuddyZabricNotPreloadable, path, Detail(error, "reason")),
-            ErrorCode.ZombieBuddyPreloadConfigInvalid => Format(UiText.Error_ZombieBuddyPreloadConfigInvalid, path),
-            ErrorCode.ZombieBuddyPreloadConfigIoFailed => Format(UiText.Error_ZombieBuddyPreloadConfigIoFailed, path, Detail(error, "reason")),
+            ErrorCode.ZabricNotPreloadable => Format(UiText.Error_ZabricNotPreloadable, path, Detail(error, "reason")),
+            ErrorCode.ZabricPreloadConfigInvalid => Format(UiText.Error_ZabricPreloadConfigInvalid, path),
+            ErrorCode.ZabricPreloadConfigIoFailed => Format(UiText.Error_ZabricPreloadConfigIoFailed, path, Detail(error, "reason")),
             ErrorCode.ResultUninitialized => UiText.Error_ResultUninitialized,
         };
     }

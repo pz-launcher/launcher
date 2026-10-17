@@ -1,4 +1,4 @@
-namespace PzLauncher.Core.ZombieBuddy;
+namespace PzLauncher.Core.Zabric;
 
 public enum ZabricPreload
 {

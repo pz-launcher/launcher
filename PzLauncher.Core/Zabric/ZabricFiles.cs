@@ -1,6 +1,6 @@
-namespace PzLauncher.Core.ZombieBuddy;
+namespace PzLauncher.Core.Zabric;
 
-// Mirrors Zabric's PreloadConfig and widener/ModFolders, and ZombieBuddy's Config.java / Agent.configDir.
+// Mirrors Zabric's PreloadConfig and widener/ModFolders, and ZombieBuddy's Config.java.
 internal static class ZabricFiles
 {
     public const string ModId = "Zabric";
@@ -22,12 +22,6 @@ internal static class ZabricFiles
     public const string ManifestEntry = "META-INF/MANIFEST.MF";
 
     public const string ManifestPreloadAttribute = "ZB-Preload";
-
-    public const string ConfigDirOption = "config_dir";
-
-    public const string DefaultConfigFolder = ".zombie_buddy";
-
-    public const string ConfigFile = "config.json";
 
     public const string PreloadModsKey = "preload_mods";
 

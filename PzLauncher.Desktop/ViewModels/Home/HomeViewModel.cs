@@ -6,6 +6,7 @@ using CommunityToolkit.Mvvm.Input;
 using PzLauncher.Core.Common;
 using PzLauncher.Core.Installs;
 using PzLauncher.Core.Launch;
+using PzLauncher.Core.Zabric;
 using PzLauncher.Core.ZombieBuddy;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Services;
@@ -22,6 +23,7 @@ public partial class HomeViewModel : ViewModelBase
     private readonly IDialogService _dialogs;
     private readonly IZombieBuddyService _zombieBuddy;
     private readonly IZombieBuddyChannelService _channels;
+    private readonly IZabricService _zabric;
     private readonly GameRunState _runState;
 
     public HomeViewModel(
@@ -31,6 +33,7 @@ public partial class HomeViewModel : ViewModelBase
         IDialogService dialogs,
         IZombieBuddyService zombieBuddy,
         IZombieBuddyChannelService channels,
+        IZabricService zabric,
         GameRunState runState)
     {
         _installs = installs;
@@ -39,6 +42,7 @@ public partial class HomeViewModel : ViewModelBase
         _dialogs = dialogs;
         _zombieBuddy = zombieBuddy;
         _channels = channels;
+        _zabric = zabric;
         _runState = runState;
 
         // Never unsubscribed: all of these are app-lifetime singletons.
@@ -96,7 +100,7 @@ public partial class HomeViewModel : ViewModelBase
         var overrides = _overrides.Get(install.RootPath);
 
         // A failed preload is reported, then the game starts as it would without the launcher.
-        var preload = await _zombieBuddy.EnsureZabricPreloadAsync(install.RootPath, overrides.ExtraGameArgs);
+        var preload = await _zabric.EnsurePreloadAsync(install.RootPath, overrides.ExtraGameArgs);
         if (!preload.IsSuccess)
         {
             await _dialogs.ShowErrorAsync(ErrorMessages.ToUserText(preload.Error));

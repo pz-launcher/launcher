@@ -3,6 +3,7 @@ using PzLauncher.Core.Installs;
 using PzLauncher.Core.Java;
 using PzLauncher.Core.Launch;
 using PzLauncher.Core.Platform;
+using PzLauncher.Core.Zabric;
 using PzLauncher.Core.ZombieBuddy;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Services;
@@ -302,8 +303,6 @@ public sealed class FakeZombieBuddyService : IZombieBuddyService
 
     public Func<bool, Task<Result>> SetAllowAll { get; set; } = _ => Task.FromResult(Result.Ok());
 
-    public Result<ZabricPreload> ZabricPreloadResult { get; set; } = ZabricPreload.NotApplicable;
-
     public List<string> StatusRequests { get; } = [];
 
     public List<(string Root, ZombieBuddyChannel Channel)> Initializations { get; } = [];
@@ -311,8 +310,6 @@ public sealed class FakeZombieBuddyService : IZombieBuddyService
     public List<string> Removals { get; } = [];
 
     public List<(string Root, bool AllowAll)> AllowAllChanges { get; } = [];
-
-    public List<(string Root, string ExtraGameArgs)> ZabricPreloads { get; } = [];
 
     public Task<Result<ZombieBuddyStatus>> GetStatusAsync(string installRoot, CancellationToken ct = default)
     {
@@ -338,11 +335,18 @@ public sealed class FakeZombieBuddyService : IZombieBuddyService
         AllowAllChanges.Add((installRoot, allowAll));
         return SetAllowAll(allowAll);
     }
+}
 
-    public Task<Result<ZabricPreload>> EnsureZabricPreloadAsync(string installRoot, string extraGameArgs, CancellationToken ct = default)
+public sealed class FakeZabricService : IZabricService
+{
+    public Result<ZabricPreload> PreloadResult { get; set; } = ZabricPreload.NotApplicable;
+
+    public List<(string Root, string ExtraGameArgs)> Preloads { get; } = [];
+
+    public Task<Result<ZabricPreload>> EnsurePreloadAsync(string installRoot, string extraGameArgs, CancellationToken ct = default)
     {
-        ZabricPreloads.Add((installRoot, extraGameArgs));
-        return Task.FromResult(ZabricPreloadResult);
+        Preloads.Add((installRoot, extraGameArgs));
+        return Task.FromResult(PreloadResult);
     }
 }
 
@@ -377,15 +381,17 @@ public static class TestZombieBuddy
 
     public static readonly ZombieBuddyStep[] RemoveSteps = [ZombieBuddyStep.DeleteFiles, ZombieBuddyStep.RemoveAgentArg];
 
-    public static readonly ZombieBuddyStatus NotSubscribed = new(true, [], false, false, false, ZombieBuddyAction.None);
+    public const string ConfigFolder = @"C:\Users\u\.zombie_buddy";
 
-    public static readonly ZombieBuddyStatus Leftovers = new(true, [], false, true, false, ZombieBuddyAction.Remove);
+    public static readonly ZombieBuddyStatus NotSubscribed = new(true, [], false, false, false, ConfigFolder, ZombieBuddyAction.None);
+
+    public static readonly ZombieBuddyStatus Leftovers = new(true, [], false, true, false, ConfigFolder, ZombieBuddyAction.Remove);
 
     public static ZombieBuddyStatus NotInitialized(params ZombieBuddyItem[] subscribed) =>
-        new(true, subscribed.Length == 0 ? [StableItem] : subscribed, false, false, false, ZombieBuddyAction.Initialize);
+        new(true, subscribed.Length == 0 ? [StableItem] : subscribed, false, false, false, ConfigFolder, ZombieBuddyAction.Initialize);
 
     public static ZombieBuddyStatus Initialized(bool allowAll = false, params ZombieBuddyItem[] subscribed) =>
-        new(true, subscribed.Length == 0 ? [StableItem] : subscribed, true, true, allowAll, ZombieBuddyAction.None);
+        new(true, subscribed.Length == 0 ? [StableItem] : subscribed, true, true, allowAll, ConfigFolder, ZombieBuddyAction.None);
 
     /// <summary>Reports like the real service: each step as it starts, then completion; fails at <paramref name="failAt"/> with <paramref name="error"/>.</summary>
     public static Result Run(IReadOnlyList<ZombieBuddyStep> steps, IProgress<ZombieBuddyProgress>? progress, int? failAt = null, Error? error = null)

@@ -2,7 +2,7 @@ using System.IO.Compression;
 using System.Text;
 using PzLauncher.Core.Common;
 
-namespace PzLauncher.Core.ZombieBuddy;
+namespace PzLauncher.Core.Zabric;
 
 /// <summary>The <c>mod.info</c> ZombieBuddy reads for a version folder, whose jar path is relative to that folder.</summary>
 internal sealed class ZabricModInfo(string infPath, string versionFolder, IReadOnlyList<string> lines)
@@ -66,22 +66,22 @@ internal sealed class ZabricModInfo(string infPath, string versionFolder, IReadO
         if (Value(ZabricFiles.JarFileKey) is not { } jarFile
             || !PathNormalizer.TryNormalizeAbsolute(Path.Combine(VersionFolder, jarFile), out var jar))
         {
-            return ZombieBuddyErrors.ZabricNotPreloadable(InfPath, NoJarFile);
+            return ZabricErrors.NotPreloadable(InfPath, NoJarFile);
         }
 
         if (!File.Exists(jar))
         {
-            return ZombieBuddyErrors.ZabricNotPreloadable(jar, MissingJar);
+            return ZabricErrors.NotPreloadable(jar, MissingJar);
         }
 
         if (Value(ZabricFiles.PkgNameKey) is null)
         {
-            return ZombieBuddyErrors.ZabricNotPreloadable(InfPath, MissingPkgName);
+            return ZabricErrors.NotPreloadable(InfPath, MissingPkgName);
         }
 
         if (!string.Equals(Value(ZabricFiles.PreloadKey), True, StringComparison.OrdinalIgnoreCase))
         {
-            return ZombieBuddyErrors.ZabricNotPreloadable(InfPath, NotJavaPreload);
+            return ZabricErrors.NotPreloadable(InfPath, NotJavaPreload);
         }
 
         string? manifest;
@@ -91,12 +91,12 @@ internal sealed class ZabricModInfo(string infPath, string versionFolder, IReadO
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException)
         {
-            return ZombieBuddyErrors.ZabricNotPreloadable(jar, UnreadableJar);
+            return ZabricErrors.NotPreloadable(jar, UnreadableJar);
         }
 
         return manifest is not null && HasManifestPreload(manifest)
             ? new ZabricPreloadEntry(InfPath, jar)
-            : ZombieBuddyErrors.ZabricNotPreloadable(jar, NoManifestPreload);
+            : ZabricErrors.NotPreloadable(jar, NoManifestPreload);
     }
 
     // The main section ends at the first empty line; a line starting with a space continues the previous one.

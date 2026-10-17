@@ -2,8 +2,9 @@ using System.Globalization;
 using Microsoft.Extensions.Logging;
 using PzLauncher.Core.Common;
 using PzLauncher.Core.Launch;
+using PzLauncher.Core.Steam;
 
-namespace PzLauncher.Core.ZombieBuddy;
+namespace PzLauncher.Core.Zabric;
 
 // The game's mod lookup order: staged Workshop items, Steam Workshop items, then the cache's mods folder; first found wins.
 internal static partial class ZabricLocator
@@ -63,7 +64,7 @@ internal static partial class ZabricLocator
 
         foreach (var library in libraries)
         {
-            var items = Subfolders(ZombieBuddyFiles.WorkshopContentFolder(library), logger);
+            var items = Subfolders(WorkshopLibraries.ContentFolder(library), logger);
             foreach (var item in items.OrderBy(item => !string.Equals(Path.GetFileName(item), ZabricFiles.ItemId, StringComparison.Ordinal)))
             {
                 yield return ZabricFiles.WorkshopModFolder(item);

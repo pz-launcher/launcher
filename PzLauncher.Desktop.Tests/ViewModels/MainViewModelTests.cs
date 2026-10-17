@@ -27,7 +27,7 @@ public class MainViewModelTests : UiTextCultureTest
         var runState = new GameRunState();
         var dialogs = new FakeDialogService();
         return new(
-            new HomeViewModel(installs, launcher, overrides, dialogs, zombieBuddy, channels, runState),
+            new HomeViewModel(installs, launcher, overrides, dialogs, zombieBuddy, channels, new FakeZabricService(), runState),
             installs,
             new SettingsViewModel(new FakeThemeService(AppTheme.Light), store, new FakeWindowPlacementService(), java),
             new LaunchSettingsViewModel(

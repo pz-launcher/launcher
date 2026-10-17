@@ -1,8 +1,8 @@
 using Microsoft.Extensions.Logging.Abstractions;
 using PzLauncher.Core.Tests.TestSupport;
-using PzLauncher.Core.ZombieBuddy;
+using PzLauncher.Core.Zabric;
 
-namespace PzLauncher.Core.Tests.ZombieBuddy;
+namespace PzLauncher.Core.Tests.Zabric;
 
 public sealed class ZabricLocatorTests : IDisposable
 {

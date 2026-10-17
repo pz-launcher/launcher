@@ -1,8 +1,8 @@
 using PzLauncher.Core.Common;
 using PzLauncher.Core.Tests.TestSupport;
-using PzLauncher.Core.ZombieBuddy;
+using PzLauncher.Core.Zabric;
 
-namespace PzLauncher.Core.Tests.ZombieBuddy;
+namespace PzLauncher.Core.Tests.Zabric;
 
 public sealed class ZabricModInfoTests : IDisposable
 {
@@ -66,7 +66,7 @@ public sealed class ZabricModInfoTests : IDisposable
     {
         var version = ZabricBuilder.Create(_modFolder, modInfo: modInfo);
 
-        var error = ResultAssert.Failed(await (await ReadAsync(version)).CheckPreloadableAsync(Ct), ErrorCode.ZombieBuddyZabricNotPreloadable);
+        var error = ResultAssert.Failed(await (await ReadAsync(version)).CheckPreloadableAsync(Ct), ErrorCode.ZabricNotPreloadable);
 
         Assert.Equal(reason, error.Details["reason"]);
         Assert.Equal(jarPath ? Path.Combine(version, "media", "java", "Other.jar") : ZabricBuilder.InfPath(version), error.Details["path"]);
@@ -79,7 +79,7 @@ public sealed class ZabricModInfoTests : IDisposable
     {
         var version = ZabricBuilder.Create(_modFolder, manifest: manifest);
 
-        var error = ResultAssert.Failed(await (await ReadAsync(version)).CheckPreloadableAsync(Ct), ErrorCode.ZombieBuddyZabricNotPreloadable);
+        var error = ResultAssert.Failed(await (await ReadAsync(version)).CheckPreloadableAsync(Ct), ErrorCode.ZabricNotPreloadable);
 
         Assert.Equal((ZabricModInfo.NoManifestPreload, ZabricBuilder.JarPath(version)), (error.Details["reason"], error.Details["path"]));
     }
@@ -90,7 +90,7 @@ public sealed class ZabricModInfoTests : IDisposable
         var version = ZabricBuilder.Create(_modFolder);
         await File.WriteAllTextAsync(ZabricBuilder.JarPath(version), "not a zip", Ct);
 
-        var error = ResultAssert.Failed(await (await ReadAsync(version)).CheckPreloadableAsync(Ct), ErrorCode.ZombieBuddyZabricNotPreloadable);
+        var error = ResultAssert.Failed(await (await ReadAsync(version)).CheckPreloadableAsync(Ct), ErrorCode.ZabricNotPreloadable);
 
         Assert.Equal(ZabricModInfo.UnreadableJar, error.Details["reason"]);
     }

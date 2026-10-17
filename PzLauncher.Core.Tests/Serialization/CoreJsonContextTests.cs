@@ -4,6 +4,7 @@ using PzLauncher.Core.Installs;
 using PzLauncher.Core.Java;
 using PzLauncher.Core.Launch;
 using PzLauncher.Core.Serialization;
+using PzLauncher.Core.Zabric;
 using PzLauncher.Core.ZombieBuddy;
 
 namespace PzLauncher.Core.Tests.Serialization;
@@ -184,6 +185,7 @@ public class CoreJsonContextTests
             IsInitialized: false,
             HasLeftovers: true,
             IsAllowAll: true,
+            ConfigFolder: "/home/u/.zombie_buddy",
             ZombieBuddyAction.Initialize);
 
         var json = JsonSerializer.Serialize(original, CoreJsonContext.Default.ZombieBuddyStatus);
@@ -194,8 +196,8 @@ public class CoreJsonContextTests
         Assert.NotNull(copy);
         Assert.Equal(original.Subscribed, copy.Subscribed);
         Assert.Equal(
-            (original.IsSupported, original.IsInitialized, original.HasLeftovers, original.IsAllowAll, original.NeededAction),
-            (copy.IsSupported, copy.IsInitialized, copy.HasLeftovers, copy.IsAllowAll, copy.NeededAction));
+            (original.IsSupported, original.IsInitialized, original.HasLeftovers, original.IsAllowAll, original.ConfigFolder, original.NeededAction),
+            (copy.IsSupported, copy.IsInitialized, copy.HasLeftovers, copy.IsAllowAll, copy.ConfigFolder, copy.NeededAction));
     }
 
     [Fact]

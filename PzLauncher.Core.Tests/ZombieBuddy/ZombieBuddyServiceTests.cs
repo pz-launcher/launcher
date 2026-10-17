@@ -36,12 +36,16 @@ public sealed class ZombieBuddyServiceTests : IDisposable
 
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
-    private ZombieBuddyService CreateService() => new(
-        InstallDetectionServiceScanTests.CreateService(_platform),
-        new SteamLocator(_platform),
-        new SteamLibraryReader(),
-        _platform,
+    private ZombieBuddyService CreateService() => CreateService(_platform);
+
+    internal static ZombieBuddyService CreateService(FakePlatformEnvironment platform) => new(
+        InstallDetectionServiceScanTests.CreateService(platform),
+        CreateWorkshopLibraries(platform),
+        platform,
         NullLogger<ZombieBuddyService>.Instance);
+
+    internal static WorkshopLibraries CreateWorkshopLibraries(FakePlatformEnvironment platform) =>
+        new(new SteamLocator(platform), new SteamLibraryReader(), platform, NullLogger<WorkshopLibraries>.Instance);
 
     private void UseLinux()
     {
@@ -201,6 +205,34 @@ public sealed class ZombieBuddyServiceTests : IDisposable
         var root = CreateGame(JsonWith(Native + "=verbosity=1,policy=allow-all"));
 
         Assert.True((await StatusAsync(root)).IsAllowAll);
+    }
+
+    [Fact]
+    public async Task GetStatusAsync_NoConfigDirOption_ConfigFolderIsInHome()
+    {
+        _platform.HomeDirectory = _temp.CreateDirectory("home");
+        var root = CreateGame(JsonWith(Native + "=policy=allow-all"));
+
+        Assert.Equal(Path.Combine(_platform.HomeDirectory, ".zombie_buddy"), (await StatusAsync(root)).ConfigFolder);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task GetStatusAsync_ConfigDirOption_IsTheConfigFolder(bool relative)
+    {
+        var configDir = relative ? "zb config" : Path.Combine(_temp.Path, "zb");
+        var root = CreateGame(JsonWith($"{Native}=config_dir= {configDir} ,policy=allow-all"));
+
+        Assert.Equal(relative ? Path.Combine(root, configDir) : configDir, (await StatusAsync(root)).ConfigFolder);
+    }
+
+    [Fact]
+    public async Task GetStatusAsync_HomeUnresolvable_HasNoConfigFolder()
+    {
+        _platform.HomeDirectory = "";
+
+        Assert.Null((await StatusAsync(CreateGame())).ConfigFolder);
     }
 
     [Fact]

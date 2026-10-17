@@ -113,3 +113,29 @@ mapping, Kind pinned in `ErrorCodeTests` (`.trellis/spec/core/error-handling.md`
 
 - The feature is one Core method plus one call in Home; reverting removes it.
   The written entry is valid ZombieBuddy config and harmless if left behind.
+
+## Revision (2026-10-17): Zabric in its own feature folder
+
+User request: Zabric lives in `PzLauncher.Core.Zabric`, separate from ZombieBuddy.
+
+- `PzLauncher.Core/Zabric/`: `IZabricService` / `ZabricService` (singleton,
+  own gate) with `EnsurePreloadAsync(installRoot, extraGameArgs, ct)` →
+  `Result<ZabricPreload>`; `ZabricFiles`, `ZabricLocator`, `ZabricModInfo`,
+  `ZabricPreload`, `ZabricPreloadEntry`, `ZabricErrors`, and the config editor
+  as `ZabricPreloadConfig` (named after Zabric's `PreloadConfig`).
+  `IZombieBuddyService` loses `EnsureZabricPreloadAsync`.
+- ZombieBuddy keeps only ZombieBuddy facts: `config_dir` option, default
+  `.zombie_buddy` folder and `config.json` name move to `ZombieBuddyFiles`;
+  `ZombieBuddyStatus` gains `ConfigFolder` (string?, null when unsupported or
+  unresolvable). `ZabricService` reads `IsSupported`, `IsAllowAll`,
+  `ConfigFolder` from `IZombieBuddyService.GetStatusAsync`; a status error →
+  `NotApplicable`.
+- Steam library order (`CandidateLibrariesAsync` + `OwnLibrary`) moves to an
+  internal `Steam/WorkshopLibraries` singleton used by both services.
+- Error codes become a `zabric` section: `zabric.not_preloadable`,
+  `zabric.preload_config_invalid`, `zabric.preload_config_io_failed`
+  (`ZabricNotPreloadable`, `ZabricPreloadConfigInvalid`,
+  `ZabricPreloadConfigIoFailed`); resx keys and `ErrorMessages` follow.
+- Desktop: `HomeViewModel` takes `IZabricService`; `FakeZabricService` and a
+  `DesignData` sample; Zabric removed from the ZombieBuddy fake/sample.
+- Tests move to `PzLauncher.Core.Tests/Zabric/`.

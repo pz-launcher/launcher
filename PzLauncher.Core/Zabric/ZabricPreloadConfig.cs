@@ -2,20 +2,21 @@ using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using PzLauncher.Core.Common;
+using PzLauncher.Core.ZombieBuddy;
 
-namespace PzLauncher.Core.ZombieBuddy;
+namespace PzLauncher.Core.Zabric;
 
 /// <summary>Edits only <c>preload_mods.Zabric</c> of ZombieBuddy's <c>config.json</c>, by Zabric's own rules (its PreloadConfig).</summary>
-internal static class ZombieBuddyConfigEditor
+internal static class ZabricPreloadConfig
 {
     // A duplicate key would otherwise lose one of its values on write.
     private static readonly JsonDocumentOptions ReadOptions = new() { AllowDuplicateProperties = false };
 
     /// <summary>Writes nothing when the stored entry is current and first.</summary>
-    public static async Task<Result<ZabricPreload>> EnsureZabricAsync(
+    public static async Task<Result<ZabricPreload>> EnsureAsync(
         string configFolder, ZabricPreloadEntry entry, StringComparison pathComparison, CancellationToken ct)
     {
-        var path = Path.Combine(configFolder, ZabricFiles.ConfigFile);
+        var path = Path.Combine(configFolder, ZombieBuddyFiles.ConfigFile);
         string json;
         try
         {
@@ -27,7 +28,7 @@ internal static class ZombieBuddyConfigEditor
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            return ZombieBuddyErrors.PreloadConfigIoFailed(path, ex.Message);
+            return ZabricErrors.PreloadConfigIoFailed(path, ex.Message);
         }
 
         var root = Parse(json, path);
@@ -38,7 +39,7 @@ internal static class ZombieBuddyConfigEditor
 
         if (root.Value.TryGetPropertyValue(ZabricFiles.PreloadModsKey, out var mods) && mods is not (null or JsonObject))
         {
-            return ZombieBuddyErrors.PreloadConfigInvalid(path, "preload_mods is not a JSON object.");
+            return ZabricErrors.PreloadConfigInvalid(path, "preload_mods is not a JSON object.");
         }
 
         if (mods is not JsonObject preload)
@@ -67,7 +68,7 @@ internal static class ZombieBuddyConfigEditor
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            return ZombieBuddyErrors.PreloadConfigIoFailed(path, ex.Message);
+            return ZabricErrors.PreloadConfigIoFailed(path, ex.Message);
         }
 
         return ZabricPreload.Written;
@@ -88,10 +89,10 @@ internal static class ZombieBuddyConfigEditor
         }
         catch (JsonException ex)
         {
-            return ZombieBuddyErrors.PreloadConfigInvalid(path, ex.Message);
+            return ZabricErrors.PreloadConfigInvalid(path, ex.Message);
         }
 
-        return node is JsonObject root ? root : ZombieBuddyErrors.PreloadConfigInvalid(path, "The file holds no JSON object.");
+        return node is JsonObject root ? root : ZabricErrors.PreloadConfigInvalid(path, "The file holds no JSON object.");
     }
 
     // The same files, or files ZombieBuddy would load the same jar bytes from: a client and a dedicated server on one

@@ -3,13 +3,13 @@ using Microsoft.Extensions.Logging.Abstractions;
 using PzLauncher.Core.Common;
 using PzLauncher.Core.Platform;
 using PzLauncher.Core.Steam;
-using PzLauncher.Core.Tests.Installs;
 using PzLauncher.Core.Tests.TestSupport;
-using PzLauncher.Core.ZombieBuddy;
+using PzLauncher.Core.Tests.ZombieBuddy;
+using PzLauncher.Core.Zabric;
 
-namespace PzLauncher.Core.Tests.ZombieBuddy;
+namespace PzLauncher.Core.Tests.Zabric;
 
-public sealed class ZombieBuddyServiceZabricPreloadTests : IDisposable
+public sealed class ZabricServiceTests : IDisposable
 {
     private const string AllowAll = "-agentlib:zbNative=policy=allow-all";
 
@@ -17,21 +17,20 @@ public sealed class ZombieBuddyServiceZabricPreloadTests : IDisposable
     private readonly string _library;
     private readonly string _home;
     private readonly FakePlatformEnvironment _platform;
-    private readonly ZombieBuddyService _service;
+    private readonly ZabricService _service;
 
-    public ZombieBuddyServiceZabricPreloadTests()
+    public ZabricServiceTests()
     {
         var steam = new SteamLayoutBuilder(_temp.Path);
         _library = steam.CreateLibrary("Library");
         _home = _temp.CreateDirectory("home");
         _platform = FakePlatformEnvironment.WithRegistrySteam(steam.CreateSteamRoot(_library));
         _platform.HomeDirectory = _home;
-        _service = new ZombieBuddyService(
-            InstallDetectionServiceScanTests.CreateService(_platform),
-            new SteamLocator(_platform),
-            new SteamLibraryReader(),
+        _service = new ZabricService(
+            ZombieBuddyServiceTests.CreateService(_platform),
+            ZombieBuddyServiceTests.CreateWorkshopLibraries(_platform),
             _platform,
-            NullLogger<ZombieBuddyService>.Instance);
+            NullLogger<ZabricService>.Instance);
     }
 
     public void Dispose() => _temp.Dispose();
@@ -46,13 +45,13 @@ public sealed class ZombieBuddyServiceZabricPreloadTests : IDisposable
         Installs.CreateFlat("ProjectZomboid", GameInstallBuilder.WindowsGameJsonWith(agentArg), withJre: false);
 
     private string SteamZabric(string? modInfo = null) =>
-        ZabricBuilder.Create(Path.Combine(ZombieBuddyFiles.WorkshopContentFolder(_library), "3820726385", "mods", "Zabric"), modInfo: modInfo);
+        ZabricBuilder.Create(Path.Combine(WorkshopLibraries.ContentFolder(_library), "3820726385", "mods", "Zabric"), modInfo: modInfo);
 
     private static string StagedZabric(string cache, string classes = "v1") =>
         ZabricBuilder.Create(Path.Combine(cache, "Workshop", "Zabric", "Contents", "mods", "Zabric"), classes: classes);
 
     private async Task<ZabricPreload> EnsureAsync(string root, string extraGameArgs = "") =>
-        ResultAssert.Ok(await _service.EnsureZabricPreloadAsync(root, extraGameArgs, Ct));
+        ResultAssert.Ok(await _service.EnsurePreloadAsync(root, extraGameArgs, Ct));
 
     private static (string? Inf, string? Jar) StoredZabric(string config)
     {
@@ -61,7 +60,7 @@ public sealed class ZombieBuddyServiceZabricPreloadTests : IDisposable
     }
 
     [Fact]
-    public async Task EnsureZabricPreloadAsync_AllowAllWithSteamCopy_WritesTheEntryThenIsCurrent()
+    public async Task EnsurePreloadAsync_AllowAllWithSteamCopy_WritesTheEntryThenIsCurrent()
     {
         var root = CreateGame();
         var zabric = SteamZabric();
@@ -76,7 +75,7 @@ public sealed class ZombieBuddyServiceZabricPreloadTests : IDisposable
     [InlineData("-agentlib:zbNative")]
     [InlineData("-agentlib:zbNative=policy=prompt")]
     [InlineData("-javaagent:ZombieBuddy.jar=policy=allow-all")]
-    public async Task EnsureZabricPreloadAsync_NotAllowAll_IsNotApplicable(string agentArg)
+    public async Task EnsurePreloadAsync_NotAllowAll_IsNotApplicable(string agentArg)
     {
         var root = CreateGame(agentArg);
         SteamZabric();
@@ -86,7 +85,7 @@ public sealed class ZombieBuddyServiceZabricPreloadTests : IDisposable
     }
 
     [Fact]
-    public async Task EnsureZabricPreloadAsync_NoZabric_IsNotApplicable()
+    public async Task EnsurePreloadAsync_NoZabric_IsNotApplicable()
     {
         var root = CreateGame();
         SteamZabric(ZabricBuilder.ModInfo(id: "Other"));
@@ -98,7 +97,7 @@ public sealed class ZombieBuddyServiceZabricPreloadTests : IDisposable
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public async Task EnsureZabricPreloadAsync_ServerOrMacOS_IsNotApplicable(bool macOS)
+    public async Task EnsurePreloadAsync_ServerOrMacOS_IsNotApplicable(bool macOS)
     {
         var root = macOS ? CreateGame() : Installs.CreateServer("Server");
         SteamZabric();
@@ -112,7 +111,7 @@ public sealed class ZombieBuddyServiceZabricPreloadTests : IDisposable
     }
 
     [Fact]
-    public async Task EnsureZabricPreloadAsync_GameJsonMissing_IsNotApplicable()
+    public async Task EnsurePreloadAsync_GameJsonMissing_IsNotApplicable()
     {
         var root = Installs.CreateFlat("ProjectZomboid", json: null, withJre: false);
         SteamZabric();
@@ -121,7 +120,7 @@ public sealed class ZombieBuddyServiceZabricPreloadTests : IDisposable
     }
 
     [Fact]
-    public async Task EnsureZabricPreloadAsync_StagedCopies_UsesTheOneInTheCacheDirOfTheGameArgs()
+    public async Task EnsurePreloadAsync_StagedCopies_UsesTheOneInTheCacheDirOfTheGameArgs()
     {
         var root = CreateGame();
         SteamZabric();
@@ -136,41 +135,49 @@ public sealed class ZombieBuddyServiceZabricPreloadTests : IDisposable
         Assert.Equal(ZabricBuilder.JarPath(inCache), StoredZabric(DefaultConfig).Jar);
     }
 
-    [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public async Task EnsureZabricPreloadAsync_ConfigDirOption_WritesThere(bool relative)
+    [Fact]
+    public async Task EnsurePreloadAsync_ConfigDirOption_WritesThere()
     {
-        var configDir = relative ? "zb config" : Path.Combine(_temp.Path, "zb");
-        var root = CreateGame($"-agentlib:zbNative=config_dir= {configDir} ,policy=allow-all");
+        var configDir = Path.Combine(_temp.Path, "zb");
+        var root = CreateGame($"-agentlib:zbNative=config_dir={configDir},policy=allow-all");
         SteamZabric();
 
         Assert.Equal(ZabricPreload.Written, await EnsureAsync(root));
 
-        Assert.True(File.Exists(Path.Combine(relative ? Path.Combine(root, configDir) : configDir, "config.json")));
+        Assert.True(File.Exists(Path.Combine(configDir, "config.json")));
         Assert.False(File.Exists(DefaultConfig));
     }
 
     [Fact]
-    public async Task EnsureZabricPreloadAsync_FoundCopyNotPreloadable_ReturnsTheReasonWithoutWriting()
+    public async Task EnsurePreloadAsync_NoConfigFolder_IsNotApplicable()
+    {
+        var root = CreateGame();
+        SteamZabric();
+        _platform.HomeDirectory = "";
+
+        Assert.Equal(ZabricPreload.NotApplicable, await EnsureAsync(root));
+    }
+
+    [Fact]
+    public async Task EnsurePreloadAsync_FoundCopyNotPreloadable_ReturnsTheReasonWithoutWriting()
     {
         var root = CreateGame();
         var zabric = SteamZabric();
         ZabricBuilder.WriteJar(ZabricBuilder.JarPath(zabric), "Manifest-Version: 1.0\r\n\r\n");
 
-        var error = ResultAssert.Failed(await _service.EnsureZabricPreloadAsync(root, "", Ct), ErrorCode.ZombieBuddyZabricNotPreloadable);
+        var error = ResultAssert.Failed(await _service.EnsurePreloadAsync(root, "", Ct), ErrorCode.ZabricNotPreloadable);
 
         Assert.Equal(ZabricModInfo.NoManifestPreload, error.Details["reason"]);
         Assert.False(File.Exists(DefaultConfig));
     }
 
     [Fact]
-    public async Task EnsureZabricPreloadAsync_CancelledToken_Throws()
+    public async Task EnsurePreloadAsync_CancelledToken_Throws()
     {
         var root = CreateGame();
         using var cts = new CancellationTokenSource();
         await cts.CancelAsync();
 
-        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => _service.EnsureZabricPreloadAsync(root, "", cts.Token));
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => _service.EnsurePreloadAsync(root, "", cts.Token));
     }
 }

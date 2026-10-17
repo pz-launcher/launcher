@@ -9,8 +9,7 @@ namespace PzLauncher.Core.ZombieBuddy;
 
 internal sealed partial class ZombieBuddyService(
     IInstallDetectionService installs,
-    SteamLocator locator,
-    SteamLibraryReader reader,
+    WorkshopLibraries workshop,
     IPlatformEnvironment platform,
     ILogger<ZombieBuddyService> logger) : IZombieBuddyService
 {
@@ -48,7 +47,8 @@ internal sealed partial class ZombieBuddyService(
         var action = subscribed.Count > 0
             ? initialized ? ZombieBuddyAction.None : ZombieBuddyAction.Initialize
             : leftovers ? ZombieBuddyAction.Remove : ZombieBuddyAction.None;
-        return new ZombieBuddyStatus(true, subscribed, initialized, leftovers, ZombieBuddyAgentArgs.IsAllowAll(vmArgs, os), action);
+        return new ZombieBuddyStatus(
+            true, subscribed, initialized, leftovers, ZombieBuddyAgentArgs.IsAllowAll(vmArgs, os), ConfigFolder(vmArgs, game), action);
     }
 
     public async Task<Result> InitializeAsync(
@@ -139,61 +139,6 @@ internal sealed partial class ZombieBuddyService(
         }
     }
 
-    public async Task<Result<ZabricPreload>> EnsureZabricPreloadAsync(string installRoot, string extraGameArgs, CancellationToken ct = default)
-    {
-        ct.ThrowIfCancellationRequested();
-
-        // The launch that follows reports a bad install or json itself.
-        var target = await ResolveAsync(installRoot, ct).ConfigureAwait(false);
-        if (!target.IsSuccess)
-        {
-            return ZabricPreload.NotApplicable;
-        }
-
-        var (root, game) = target.Value;
-        var os = platform.Os;
-        await _gate.WaitAsync(ct).ConfigureAwait(false);
-        try
-        {
-            var config = await PzLaunchConfigEditor.LoadAsync(Path.Combine(game, PzLaunchFiles.ConfigFile), ct).ConfigureAwait(false);
-            if (!config.IsSuccess || !ZombieBuddyAgentArgs.IsAllowAll(config.Value.VmArgs, os))
-            {
-                return ZabricPreload.NotApplicable;
-            }
-
-            var libraries = await CandidateLibrariesAsync(root, ct).ConfigureAwait(false);
-            var cache = ZabricLocator.CacheFolder(extraGameArgs, game, platform.HomeDirectory);
-            if (await ZabricLocator.FindAsync(cache, libraries, logger, ct).ConfigureAwait(false) is not { } zabric
-                || ConfigFolder(config.Value.VmArgs, game) is not { } configFolder)
-            {
-                return ZabricPreload.NotApplicable;
-            }
-
-            var entry = await zabric.CheckPreloadableAsync(ct).ConfigureAwait(false);
-            if (!entry.IsSuccess)
-            {
-                return Logged(entry.Error);
-            }
-
-            var result = await ZombieBuddyConfigEditor.EnsureZabricAsync(configFolder, entry.Value, platform.PathComparison, ct).ConfigureAwait(false);
-            if (!result.IsSuccess)
-            {
-                return Logged(result.Error);
-            }
-
-            if (result.Value == ZabricPreload.Written)
-            {
-                LogZabricWritten(logger, Path.Combine(configFolder, ZabricFiles.ConfigFile), entry.Value.JarPath);
-            }
-
-            return result;
-        }
-        finally
-        {
-            _gate.Release();
-        }
-    }
-
     private static ZombieBuddyStep CopyStep(string file) => file switch
     {
         ZombieBuddyFiles.NativeLoader => ZombieBuddyStep.CopyNativeLoader,
@@ -218,12 +163,12 @@ internal sealed partial class ZombieBuddyService(
     // ZombieBuddy's Agent.configDir; a relative config_dir resolves against the game's working folder.
     private string? ConfigFolder(IReadOnlyList<string> vmArgs, string game)
     {
-        if (ZombieBuddyAgentArgs.Option(vmArgs, platform.Os, ZabricFiles.ConfigDirOption) is { Length: > 0 } configured)
+        if (ZombieBuddyAgentArgs.Option(vmArgs, platform.Os, ZombieBuddyFiles.ConfigDirOption) is { Length: > 0 } configured)
         {
             return PathNormalizer.TryNormalizeAgainst(configured, game, out var folder) ? folder : null;
         }
 
-        return PathNormalizer.TryNormalizeAbsolute(platform.HomeDirectory, out var home) ? Path.Combine(home, ZabricFiles.DefaultConfigFolder) : null;
+        return PathNormalizer.TryNormalizeAbsolute(platform.HomeDirectory, out var home) ? Path.Combine(home, ZombieBuddyFiles.DefaultConfigFolder) : null;
     }
 
     private async Task<Result<Target>> ResolveAsync(string installRoot, CancellationToken ct)
@@ -311,14 +256,14 @@ internal sealed partial class ZombieBuddyService(
 
     private async Task<Result<string>> FindItemAsync(string installRoot, ZombieBuddyChannel channel, CancellationToken ct)
     {
-        var libraries = await CandidateLibrariesAsync(installRoot, ct).ConfigureAwait(false);
+        var libraries = await workshop.CandidatesAsync(installRoot, ct).ConfigureAwait(false);
         var folder = libraries.Select(library => ZombieBuddyFiles.ItemFolder(library, channel)).FirstOrDefault(Directory.Exists);
         return folder is null ? ZombieBuddyErrors.NotSubscribed(ZombieBuddyFiles.ItemId(channel)) : folder;
     }
 
     private async Task<List<ZombieBuddyItem>> FindItemsAsync(string installRoot, CancellationToken ct)
     {
-        var libraries = await CandidateLibrariesAsync(installRoot, ct).ConfigureAwait(false);
+        var libraries = await workshop.CandidatesAsync(installRoot, ct).ConfigureAwait(false);
         var items = new List<ZombieBuddyItem>();
         foreach (var channel in ZombieBuddyFiles.Channels)
         {
@@ -332,54 +277,6 @@ internal sealed partial class ZombieBuddyService(
         return items;
     }
 
-    // The installer's order: the game's own library, then each Steam root and the libraries it lists.
-    private async Task<List<string>> CandidateLibrariesAsync(string installRoot, CancellationToken ct)
-    {
-        var seen = new HashSet<string>(StringComparer.FromComparison(platform.PathComparison));
-        var libraries = new List<string>();
-
-        void Add(string? path)
-        {
-            if (PathNormalizer.TryNormalizeAbsolute(path, out var normalized) && seen.Add(normalized))
-            {
-                libraries.Add(normalized);
-            }
-        }
-
-        Add(OwnLibrary(installRoot));
-        foreach (var root in locator.FindSteamRoots())
-        {
-            ct.ThrowIfCancellationRequested();
-            Add(root);
-            var listed = await reader.ReadLibraryPathsAsync(root, ct).ConfigureAwait(false);
-            if (!listed.IsSuccess)
-            {
-                LogIgnored(logger, listed.Error.Code.ToWireName(), listed.Error.Message);
-                continue;
-            }
-
-            foreach (var library in listed.Value)
-            {
-                Add(library);
-            }
-        }
-
-        return libraries;
-    }
-
-    // A Steam install root is <library>/steamapps/common/<installdir>; a manual folder has no own library.
-    private string? OwnLibrary(string installRoot)
-    {
-        var common = Path.GetDirectoryName(installRoot);
-        var steamapps = Path.GetDirectoryName(common);
-        return common is not null
-            && steamapps is not null
-            && string.Equals(Path.GetFileName(common), "common", platform.PathComparison)
-            && string.Equals(Path.GetFileName(steamapps), "steamapps", platform.PathComparison)
-                ? Path.GetDirectoryName(steamapps)
-                : null;
-    }
-
     private Error Logged(Error error)
     {
         LogWarning(logger, error.Code.ToWireName(), error.Message);
@@ -388,12 +285,6 @@ internal sealed partial class ZombieBuddyService(
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "ZombieBuddy: {Code}: {Detail}")]
     private static partial void LogWarning(ILogger logger, string code, string detail);
-
-    [LoggerMessage(Level = LogLevel.Information, Message = "ZombieBuddy: Zabric preload written to {ConfigPath}: {JarPath}")]
-    private static partial void LogZabricWritten(ILogger logger, string configPath, string jarPath);
-
-    [LoggerMessage(Level = LogLevel.Debug, Message = "ZombieBuddy: Steam library list ignored: {Code}: {Detail}")]
-    private static partial void LogIgnored(ILogger logger, string code, string detail);
 
     /// <param name="GameFolder">The folder that holds the json; Linux nests it below the root.</param>
     private sealed record Target(string RootPath, string GameFolder);
