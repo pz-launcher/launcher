@@ -1,0 +1,7 @@
+{"file": ".trellis/spec/common/architecture.md", "reason": "Core owns lookup and config edit; Desktop only calls it from Home"}
+{"file": ".trellis/spec/common/coding-rules.md", "reason": "comments, nullability, async, AOT (JsonNode, ZipFile)"}
+{"file": ".trellis/spec/common/test-strategy.md", "reason": "temp-dir fixtures, fakes, error-code assertions, test naming"}
+{"file": ".trellis/spec/core/directory-structure.md", "reason": "new types in the existing ZombieBuddy/ feature folder, constants in one place"}
+{"file": ".trellis/spec/core/service-api.md", "reason": "new IZombieBuddyService method and enum DTO in CoreJsonContext"}
+{"file": ".trellis/spec/core/error-handling.md", "reason": "new zombiebuddy.* codes; untrusted mod.info/jar; writing a file we don't own"}
+{"file": ".trellis/spec/desktop/localization.md", "reason": "error texts in all 10 resx files"}

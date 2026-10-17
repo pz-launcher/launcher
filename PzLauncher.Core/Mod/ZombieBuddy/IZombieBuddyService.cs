@@ -1,6 +1,6 @@
 using PzLauncher.Core.Common;
 
-namespace PzLauncher.Core.ZombieBuddy;
+namespace PzLauncher.Core.Mod.ZombieBuddy;
 
 /// <summary>Sets up the ZombieBuddy Workshop mod in a game install: its files in the game folder, its agent arg in <c>ProjectZomboid64.json</c>.</summary>
 public interface IZombieBuddyService

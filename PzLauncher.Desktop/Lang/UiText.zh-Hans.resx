@@ -212,6 +212,15 @@
   <data name="Error_ZombieBuddyNotInitialized" xml:space="preserve">
     <value>此安装尚未初始化 ZombieBuddy。请先在“启动设置”中运行“初始化”。</value>
   </data>
+  <data name="Error_ZombieBuddyModNotPreloadable" xml:space="preserve">
+    <value>{2} 无法预加载：{0} 不满足 ZombieBuddy 的预加载要求（{1}）。请更新 {2} 或在 Steam 中重新订阅。游戏将在不预加载的情况下启动。</value>
+  </data>
+  <data name="Error_ZombieBuddyPreloadConfigInvalid" xml:space="preserve">
+    <value>ZombieBuddy 配置 {0} 无效，因此未将 {1} 加入其预加载列表。请修复或删除该文件。游戏将在不预加载的情况下启动。</value>
+  </data>
+  <data name="Error_ZombieBuddyPreloadConfigIoFailed" xml:space="preserve">
+    <value>无法读取或写入 ZombieBuddy 配置 {0}（{1}），因此未将 {2} 加入其预加载列表。游戏将在不预加载的情况下启动。</value>
+  </data>
   <data name="Error_FolderNotLocal" xml:space="preserve">
     <value>{0} 不是这台电脑上的文件夹，启动器无法打开它。请选择本地文件夹。</value>
   </data>
@@ -419,8 +428,8 @@
   <data name="ZombieBuddy_Launch" xml:space="preserve">
     <value>启动游戏</value>
   </data>
-  <data name="ZombieBuddy_Close" xml:space="preserve">
-    <value>关闭</value>
+  <data name="ZombieBuddy_Confirm" xml:space="preserve">
+    <value>确认</value>
   </data>
   <data name="ZombieBuddy_Cancel" xml:space="preserve">
     <value>取消</value>

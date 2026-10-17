@@ -212,6 +212,15 @@
   <data name="Error_ZombieBuddyNotInitialized" xml:space="preserve">
     <value>ZombieBuddy no está inicializado en esta instalación. Ejecuta primero Inicializar en Ajustes de inicio.</value>
   </data>
+  <data name="Error_ZombieBuddyModNotPreloadable" xml:space="preserve">
+    <value>No se puede precargar {2}: {0} no cumple los requisitos de precarga de ZombieBuddy ({1}). Actualiza {2} o vuelve a suscribirte en Steam. El juego se iniciará sin la precarga.</value>
+  </data>
+  <data name="Error_ZombieBuddyPreloadConfigInvalid" xml:space="preserve">
+    <value>La configuración de ZombieBuddy {0} no es válida, así que {1} no se ha añadido a su lista de precarga. Corrige o elimina el archivo. El juego se iniciará sin la precarga.</value>
+  </data>
+  <data name="Error_ZombieBuddyPreloadConfigIoFailed" xml:space="preserve">
+    <value>No se pudo leer ni escribir la configuración de ZombieBuddy {0} ({1}), así que {2} no se ha añadido a su lista de precarga. El juego se iniciará sin la precarga.</value>
+  </data>
   <data name="Error_FolderNotLocal" xml:space="preserve">
     <value>{0} no es una carpeta de este ordenador, así que el launcher no puede abrirla. Elige una carpeta local.</value>
   </data>
@@ -419,8 +428,8 @@
   <data name="ZombieBuddy_Launch" xml:space="preserve">
     <value>Iniciar juego</value>
   </data>
-  <data name="ZombieBuddy_Close" xml:space="preserve">
-    <value>Cerrar</value>
+  <data name="ZombieBuddy_Confirm" xml:space="preserve">
+    <value>Aceptar</value>
   </data>
   <data name="ZombieBuddy_Cancel" xml:space="preserve">
     <value>Cancelar</value>

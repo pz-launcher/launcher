@@ -48,9 +48,9 @@
             <Button Content="{x:Static lang:UiText.ZombieBuddy_Retry}" Command="{Binding RetryCommand}" IsVisible="{Binding IsFailed}" />
             <Button Classes="accent" Content="{x:Static lang:UiText.ZombieBuddy_Launch}" Command="{Binding LaunchCommand}"
                     IsVisible="{Binding OffersLaunch}" />
-            <Button Classes="accent" Content="{x:Static lang:UiText.ZombieBuddy_Close}" Command="{Binding CloseCommand}"
-                    IsVisible="{Binding OffersClose}" />
-            <Button Content="{x:Static lang:UiText.ZombieBuddy_Cancel}" Command="{Binding CancelCommand}" />
+            <Button Classes="accent" Content="{x:Static lang:UiText.ZombieBuddy_Confirm}" Command="{Binding ConfirmCommand}"
+                    IsVisible="{Binding OffersConfirm}" />
+            <Button Content="{x:Static lang:UiText.ZombieBuddy_Cancel}" Command="{Binding CancelCommand}" IsVisible="{Binding OffersCancel}" />
         </StackPanel>
     </StackPanel>
 </UserControl>

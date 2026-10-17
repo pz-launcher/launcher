@@ -1,8 +1,7 @@
-using System.Globalization;
 using PzLauncher.Core.Platform;
 using PzLauncher.Core.Steam;
 
-namespace PzLauncher.Core.ZombieBuddy;
+namespace PzLauncher.Core.Mod.ZombieBuddy;
 
 // Mirrors ZombieBuddy's own installer (installer/installer.go, v4.3) and doc/Installation.md.
 internal static class ZombieBuddyFiles
@@ -22,6 +21,28 @@ internal static class ZombieBuddyFiles
 
     public const string JavaAgentArg = "-javaagent:" + AgentJar;
 
+    // ZombieBuddy's Agent.configDir and Config.java.
+    public const string ConfigDirOption = "config_dir";
+
+    public const string DefaultConfigFolder = ".zombie_buddy";
+
+    public const string ConfigFile = "config.json";
+
+    public const string PreloadModsKey = "preload_mods";
+
+    public const string InfPathKey = "infPath";
+
+    public const string JarPathKey = "jarPath";
+
+    // What ZombieBuddy's Loader.preloadMods checks in a Java mod.
+    public const string PkgNameKey = "javaPkgName";
+
+    public const string PreloadKey = "javaPreload";
+
+    public const string ManifestEntry = "META-INF/MANIFEST.MF";
+
+    public const string ManifestPreloadAttribute = "ZB-Preload";
+
     public static IReadOnlyList<ZombieBuddyChannel> Channels { get; } = [ZombieBuddyChannel.Stable, ZombieBuddyChannel.Beta];
 
     public static IReadOnlyList<string> LeftoverFiles { get; } = [NativeLoader, AgentJar, PendingJarUpdate];
@@ -35,9 +56,7 @@ internal static class ZombieBuddyFiles
         ZombieBuddyChannel.Beta => BetaItemId,
     };
 
-    public static string ItemFolder(string library, ZombieBuddyChannel channel) =>
-        Path.Combine(
-            library, "steamapps", "workshop", "content", PzSteamApps.Game.ToString(CultureInfo.InvariantCulture), ItemId(channel));
+    public static string ItemFolder(string library, ZombieBuddyChannel channel) => WorkshopLibraries.ItemFolder(library, ItemId(channel));
 
     public static string LibsFolder(string item) => Path.Combine(item, "mods", "ZombieBuddy", "libs");
 

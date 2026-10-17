@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using PzLauncher.Core.Common;
-using PzLauncher.Core.ZombieBuddy;
+using PzLauncher.Core.Mod.ZombieBuddy;
 using PzLauncher.Desktop.Lang;
 using PzLauncher.Desktop.Localization;
 
@@ -26,10 +26,13 @@ public sealed partial class ZombieBuddySetupViewModel(
 
     public ZombieBuddySetupMode Mode { get; } = mode;
 
-    /// <summary>Success offers launching the game (Home); otherwise only closing (launch settings).</summary>
+    /// <summary>Success offers launching the game (Home); otherwise only confirming (launch settings).</summary>
     public bool OffersLaunch { get; } = offersLaunch;
 
-    public bool OffersClose => !OffersLaunch;
+    // Once a close-only dialog has succeeded there is nothing left to cancel, and 取消 would read as undoing it.
+    public bool OffersConfirm => !OffersLaunch && IsSucceeded;
+
+    public bool OffersCancel => !OffersConfirm;
 
     public string Title => Mode switch
     {
@@ -52,8 +55,8 @@ public sealed partial class ZombieBuddySetupViewModel(
     [ObservableProperty] public partial string? ErrorText { get; private set; }
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsFailed))]
-    [NotifyCanExecuteChangedFor(nameof(LaunchCommand), nameof(CloseCommand), nameof(RetryCommand))]
+    [NotifyPropertyChangedFor(nameof(IsFailed), nameof(OffersConfirm), nameof(OffersCancel))]
+    [NotifyCanExecuteChangedFor(nameof(LaunchCommand), nameof(ConfirmCommand), nameof(RetryCommand))]
     public partial bool IsSucceeded { get; private set; }
 
     [ObservableProperty]
@@ -82,7 +85,7 @@ public sealed partial class ZombieBuddySetupViewModel(
     private void Launch() => CloseRequested?.Invoke(this, true);
 
     [RelayCommand(CanExecute = nameof(IsSucceeded))]
-    private void Close() => CloseRequested?.Invoke(this, false);
+    private void Confirm() => CloseRequested?.Invoke(this, false);
 
     [RelayCommand]
     private void Cancel()

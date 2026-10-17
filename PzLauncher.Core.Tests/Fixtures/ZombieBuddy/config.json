@@ -1,0 +1,20 @@
+{
+  "trusted_authors": [
+    76561198000000001
+  ],
+  "preload_mods": {
+    "OtherMod": {
+      "infPath": "C:\\Users\\player\\Zomboid\\Workshop\\OtherMod\\Contents\\mods\\OtherMod\\42\\mod.info",
+      "jarPath": "C:\\Users\\player\\Zomboid\\Workshop\\OtherMod\\Contents\\mods\\OtherMod\\42\\media\\java\\OtherMod.jar"
+    },
+    "Zabric": {
+      "infPath": "C:\\Users\\player\\Zomboid\\Workshop\\Zabric\\Contents\\mods\\Zabric\\42\\mod.info",
+      "jarPath": "C:\\Users\\player\\Zomboid\\Workshop\\Zabric\\Contents\\mods\\Zabric\\42\\media\\java\\Zabric.jar"
+    }
+  },
+  "auto_fix_mod_order": true,
+  "fix_approval_dialog_cursor": true,
+  "future_option": {
+    "nested": [1, 2.50, "Zomboid ü", null]
+  }
+}

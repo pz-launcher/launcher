@@ -7,8 +7,9 @@ using PzLauncher.Core.Common;
 using PzLauncher.Core.Installs;
 using PzLauncher.Core.Java;
 using PzLauncher.Core.Launch;
+using PzLauncher.Core.Mod.Zabric;
+using PzLauncher.Core.Mod.ZombieBuddy;
 using PzLauncher.Core.Platform;
-using PzLauncher.Core.ZombieBuddy;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Services;
 using PzLauncher.Desktop.Themes;
@@ -57,7 +58,8 @@ public static class DesignData
 
     private static readonly GameRunState RunState = new();
 
-    public static HomeViewModel Home { get; } = new(Installs, GameLaunch, InstallOverrides, new NoDialogs(), ZombieBuddySample, ZombieBuddyChannels, RunState);
+    public static HomeViewModel Home { get; } =
+        new(Installs, GameLaunch, InstallOverrides, new NoDialogs(), ZombieBuddySample, ZombieBuddyChannels, new SampleZabric(), RunState);
 
     public static JavaRuntimesViewModel Java { get; } = CreateJava();
 
@@ -173,6 +175,7 @@ public static class DesignData
                 IsInitialized: true,
                 HasLeftovers: true,
                 IsAllowAll: true,
+                ConfigFolder: Path.Combine(SampleHome, ".zombie_buddy"),
                 NeededAction: ZombieBuddyAction.None));
 
         public Task<Result> InitializeAsync(
@@ -186,6 +189,12 @@ public static class DesignData
             new TaskCompletionSource<Result>().Task;
 
         public Task<Result> SetAllowAllAsync(string installRoot, bool allowAll, CancellationToken ct = default) => Task.FromResult(Result.Ok());
+    }
+
+    private sealed class SampleZabric : IZabricService
+    {
+        public Task<Result<ZombieBuddyPreload>> EnsurePreloadAsync(string installRoot, string extraGameArgs, CancellationToken ct = default) =>
+            Task.FromResult<Result<ZombieBuddyPreload>>(ZombieBuddyPreload.Current);
     }
 
     private sealed class SampleZombieBuddyChannels : IZombieBuddyChannelService

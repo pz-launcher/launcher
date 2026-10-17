@@ -1,4 +1,4 @@
-namespace PzLauncher.Core.ZombieBuddy;
+namespace PzLauncher.Core.Mod.ZombieBuddy;
 
 /// <summary>What must run before the game starts.</summary>
 public enum ZombieBuddyAction

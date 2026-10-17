@@ -1,5 +1,5 @@
 using CommunityToolkit.Mvvm.ComponentModel;
-using PzLauncher.Core.ZombieBuddy;
+using PzLauncher.Core.Mod.ZombieBuddy;
 
 namespace PzLauncher.Desktop.ViewModels.ZombieBuddy;
 

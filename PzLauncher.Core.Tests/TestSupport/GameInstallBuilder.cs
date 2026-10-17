@@ -9,6 +9,13 @@ public sealed class GameInstallBuilder(string baseDirectory, PlatformKind os)
 {
     public static string WindowsGameJson => Fixtures.Read("Launch", "game-windows.json");
 
+    /// <summary>The shipped Windows json with these args first in its top-level vmArgs.</summary>
+    public static string WindowsGameJsonWith(params string[] vmArgs) =>
+        WindowsGameJson.Replace(
+            "\"vmArgs\" : [ \"-Djava.awt",
+            $"\"vmArgs\" : [ {string.Concat(vmArgs.Select(arg => $"\"{arg.Replace(@"\", @"\\", StringComparison.Ordinal)}\", "))}\"-Djava.awt",
+            StringComparison.Ordinal);
+
     public static string LinuxGameJson => Fixtures.Read("Launch", "game-linux.json");
 
     public static string ServerJson => Fixtures.Read("Launch", "server-windows.json");

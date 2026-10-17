@@ -1,6 +1,6 @@
 using PzLauncher.Core.Common;
 
-namespace PzLauncher.Core.ZombieBuddy;
+namespace PzLauncher.Core.Mod.ZombieBuddy;
 
 internal static class ZombieBuddyErrors
 {
@@ -38,5 +38,24 @@ internal static class ZombieBuddyErrors
         new(ErrorCode.ZombieBuddyNotInitialized, $"Launch configuration has no ZombieBuddy agent argument: {path}", ErrorKind.Conflict)
         {
             Details = new Dictionary<string, string> { ["path"] = path },
+        };
+
+    // reason: one of the ZombieBuddyJavaMod reason constants; path: the mod.info or jar that fails it.
+    public static Error ModNotPreloadable(string modId, string path, string reason) =>
+        new(ErrorCode.ZombieBuddyModNotPreloadable, $"Java mod {modId} can't be preloaded: {path} ({reason})", ErrorKind.Validation)
+        {
+            Details = new Dictionary<string, string> { ["modId"] = modId, ["path"] = path, ["reason"] = reason },
+        };
+
+    public static Error PreloadConfigInvalid(string modId, string path, string reason) =>
+        new(ErrorCode.ZombieBuddyPreloadConfigInvalid, $"ZombieBuddy config left untouched: {path} ({reason})", ErrorKind.Validation)
+        {
+            Details = new Dictionary<string, string> { ["modId"] = modId, ["path"] = path, ["reason"] = reason },
+        };
+
+    public static Error PreloadConfigIoFailed(string modId, string path, string reason) =>
+        new(ErrorCode.ZombieBuddyPreloadConfigIoFailed, $"ZombieBuddy config could not be read or written: {path} ({reason})", ErrorKind.External)
+        {
+            Details = new Dictionary<string, string> { ["modId"] = modId, ["path"] = path, ["reason"] = reason },
         };
 }

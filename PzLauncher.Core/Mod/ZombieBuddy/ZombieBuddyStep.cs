@@ -1,4 +1,4 @@
-namespace PzLauncher.Core.ZombieBuddy;
+namespace PzLauncher.Core.Mod.ZombieBuddy;
 
 public enum ZombieBuddyStep
 {

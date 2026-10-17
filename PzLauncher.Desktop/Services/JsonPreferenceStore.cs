@@ -7,7 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using PzLauncher.Core.Launch;
-using PzLauncher.Core.ZombieBuddy;
+using PzLauncher.Core.Mod.ZombieBuddy;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Themes;
 

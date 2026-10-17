@@ -1,7 +1,7 @@
 using System.Text.Json;
 using Microsoft.Extensions.Logging.Abstractions;
 using PzLauncher.Core.Launch;
-using PzLauncher.Core.ZombieBuddy;
+using PzLauncher.Core.Mod.ZombieBuddy;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Services;
 using PzLauncher.Desktop.Tests.TestSupport;

@@ -46,6 +46,9 @@ public static class ErrorMessages
             ErrorCode.ZombieBuddyDeleteFailed => Format(UiText.Error_ZombieBuddyDeleteFailed, path),
             ErrorCode.ZombieBuddyConfigWriteFailed => Format(UiText.Error_ZombieBuddyConfigWriteFailed, path),
             ErrorCode.ZombieBuddyNotInitialized => UiText.Error_ZombieBuddyNotInitialized,
+            ErrorCode.ZombieBuddyModNotPreloadable => Format(UiText.Error_ZombieBuddyModNotPreloadable, path, Detail(error, "reason"), Detail(error, "modId")),
+            ErrorCode.ZombieBuddyPreloadConfigInvalid => Format(UiText.Error_ZombieBuddyPreloadConfigInvalid, path, Detail(error, "modId")),
+            ErrorCode.ZombieBuddyPreloadConfigIoFailed => Format(UiText.Error_ZombieBuddyPreloadConfigIoFailed, path, Detail(error, "reason"), Detail(error, "modId")),
             ErrorCode.ResultUninitialized => UiText.Error_ResultUninitialized,
         };
     }
@@ -57,6 +60,9 @@ public static class ErrorMessages
 
     private static string Format(string format, string first, string second) =>
         string.Format(CultureInfo.CurrentCulture, format, first, second);
+
+    private static string Format(string format, string first, string second, string third) =>
+        string.Format(CultureInfo.CurrentCulture, format, first, second, third);
 
     private static string Detail(Error error, string key) =>
         error.Details.TryGetValue(key, out var value) ? value : "?";

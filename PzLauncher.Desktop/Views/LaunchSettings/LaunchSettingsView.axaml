@@ -7,7 +7,7 @@
              xmlns:controls="using:PzLauncher.Desktop.Views.Controls"
              xmlns:lang="using:PzLauncher.Desktop.Lang"
              xmlns:loc="using:PzLauncher.Desktop.Localization"
-             xmlns:zb="using:PzLauncher.Core.ZombieBuddy"
+             xmlns:zb="using:PzLauncher.Core.Mod.ZombieBuddy"
              xmlns:ic="using:FluentIcons.Avalonia"
              mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="720"
              x:Class="PzLauncher.Desktop.Views.LaunchSettings.LaunchSettingsView"

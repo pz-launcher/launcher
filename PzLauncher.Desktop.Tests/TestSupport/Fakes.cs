@@ -2,8 +2,9 @@ using PzLauncher.Core.Common;
 using PzLauncher.Core.Installs;
 using PzLauncher.Core.Java;
 using PzLauncher.Core.Launch;
+using PzLauncher.Core.Mod.Zabric;
+using PzLauncher.Core.Mod.ZombieBuddy;
 using PzLauncher.Core.Platform;
-using PzLauncher.Core.ZombieBuddy;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Services;
 using PzLauncher.Desktop.Themes;
@@ -336,6 +337,19 @@ public sealed class FakeZombieBuddyService : IZombieBuddyService
     }
 }
 
+public sealed class FakeZabricService : IZabricService
+{
+    public Result<ZombieBuddyPreload> PreloadResult { get; set; } = ZombieBuddyPreload.NotApplicable;
+
+    public List<(string Root, string ExtraGameArgs)> Preloads { get; } = [];
+
+    public Task<Result<ZombieBuddyPreload>> EnsurePreloadAsync(string installRoot, string extraGameArgs, CancellationToken ct = default)
+    {
+        Preloads.Add((installRoot, extraGameArgs));
+        return Task.FromResult(PreloadResult);
+    }
+}
+
 public sealed class FakeZombieBuddyChannelService : IZombieBuddyChannelService
 {
     private readonly Dictionary<string, ZombieBuddyChannel> _channels = new(StringComparer.OrdinalIgnoreCase);
@@ -367,15 +381,17 @@ public static class TestZombieBuddy
 
     public static readonly ZombieBuddyStep[] RemoveSteps = [ZombieBuddyStep.DeleteFiles, ZombieBuddyStep.RemoveAgentArg];
 
-    public static readonly ZombieBuddyStatus NotSubscribed = new(true, [], false, false, false, ZombieBuddyAction.None);
+    public const string ConfigFolder = @"C:\Users\u\.zombie_buddy";
 
-    public static readonly ZombieBuddyStatus Leftovers = new(true, [], false, true, false, ZombieBuddyAction.Remove);
+    public static readonly ZombieBuddyStatus NotSubscribed = new(true, [], false, false, false, ConfigFolder, ZombieBuddyAction.None);
+
+    public static readonly ZombieBuddyStatus Leftovers = new(true, [], false, true, false, ConfigFolder, ZombieBuddyAction.Remove);
 
     public static ZombieBuddyStatus NotInitialized(params ZombieBuddyItem[] subscribed) =>
-        new(true, subscribed.Length == 0 ? [StableItem] : subscribed, false, false, false, ZombieBuddyAction.Initialize);
+        new(true, subscribed.Length == 0 ? [StableItem] : subscribed, false, false, false, ConfigFolder, ZombieBuddyAction.Initialize);
 
     public static ZombieBuddyStatus Initialized(bool allowAll = false, params ZombieBuddyItem[] subscribed) =>
-        new(true, subscribed.Length == 0 ? [StableItem] : subscribed, true, true, allowAll, ZombieBuddyAction.None);
+        new(true, subscribed.Length == 0 ? [StableItem] : subscribed, true, true, allowAll, ConfigFolder, ZombieBuddyAction.None);
 
     /// <summary>Reports like the real service: each step as it starts, then completion; fails at <paramref name="failAt"/> with <paramref name="error"/>.</summary>
     public static Result Run(IReadOnlyList<ZombieBuddyStep> steps, IProgress<ZombieBuddyProgress>? progress, int? failAt = null, Error? error = null)

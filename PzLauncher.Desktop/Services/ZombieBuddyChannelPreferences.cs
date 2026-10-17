@@ -1,5 +1,5 @@
 using System;
-using PzLauncher.Core.ZombieBuddy;
+using PzLauncher.Core.Mod.ZombieBuddy;
 
 namespace PzLauncher.Desktop.Services;
 

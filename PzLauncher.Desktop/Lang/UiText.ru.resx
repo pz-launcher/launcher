@@ -212,6 +212,15 @@
   <data name="Error_ZombieBuddyNotInitialized" xml:space="preserve">
     <value>ZombieBuddy не инициализирован для этой установки. Сначала выполните «Инициализировать» в «Настройках запуска».</value>
   </data>
+  <data name="Error_ZombieBuddyModNotPreloadable" xml:space="preserve">
+    <value>{2} не удаётся предзагрузить: {0} не соответствует требованиям ZombieBuddy к предзагрузке ({1}). Обновите {2} или заново подпишитесь на мод в Steam. Игра запустится без предзагрузки.</value>
+  </data>
+  <data name="Error_ZombieBuddyPreloadConfigInvalid" xml:space="preserve">
+    <value>Конфигурация ZombieBuddy {0} повреждена, поэтому {1} не добавлен в список предзагрузки. Исправьте или удалите файл. Игра запустится без предзагрузки.</value>
+  </data>
+  <data name="Error_ZombieBuddyPreloadConfigIoFailed" xml:space="preserve">
+    <value>Не удалось прочитать или записать конфигурацию ZombieBuddy {0} ({1}), поэтому {2} не добавлен в список предзагрузки. Игра запустится без предзагрузки.</value>
+  </data>
   <data name="Error_FolderNotLocal" xml:space="preserve">
     <value>{0} — не папка на этом компьютере, поэтому лаунчер не может её открыть. Выберите локальную папку.</value>
   </data>
@@ -419,8 +428,8 @@
   <data name="ZombieBuddy_Launch" xml:space="preserve">
     <value>Запустить игру</value>
   </data>
-  <data name="ZombieBuddy_Close" xml:space="preserve">
-    <value>Закрыть</value>
+  <data name="ZombieBuddy_Confirm" xml:space="preserve">
+    <value>ОК</value>
   </data>
   <data name="ZombieBuddy_Cancel" xml:space="preserve">
     <value>Отмена</value>

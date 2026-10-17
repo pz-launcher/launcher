@@ -3,8 +3,8 @@ using PzLauncher.Core.Common;
 using PzLauncher.Core.Installs;
 using PzLauncher.Core.Java;
 using PzLauncher.Core.Launch;
+using PzLauncher.Core.Mod.ZombieBuddy;
 using PzLauncher.Core.Serialization;
-using PzLauncher.Core.ZombieBuddy;
 
 namespace PzLauncher.Core.Tests.Serialization;
 
@@ -184,6 +184,7 @@ public class CoreJsonContextTests
             IsInitialized: false,
             HasLeftovers: true,
             IsAllowAll: true,
+            ConfigFolder: "/home/u/.zombie_buddy",
             ZombieBuddyAction.Initialize);
 
         var json = JsonSerializer.Serialize(original, CoreJsonContext.Default.ZombieBuddyStatus);
@@ -194,8 +195,8 @@ public class CoreJsonContextTests
         Assert.NotNull(copy);
         Assert.Equal(original.Subscribed, copy.Subscribed);
         Assert.Equal(
-            (original.IsSupported, original.IsInitialized, original.HasLeftovers, original.IsAllowAll, original.NeededAction),
-            (copy.IsSupported, copy.IsInitialized, copy.HasLeftovers, copy.IsAllowAll, copy.NeededAction));
+            (original.IsSupported, original.IsInitialized, original.HasLeftovers, original.IsAllowAll, original.ConfigFolder, original.NeededAction),
+            (copy.IsSupported, copy.IsInitialized, copy.HasLeftovers, copy.IsAllowAll, copy.ConfigFolder, copy.NeededAction));
     }
 
     [Fact]
@@ -210,5 +211,17 @@ public class CoreJsonContextTests
         Assert.NotNull(copy);
         Assert.Equal(original.Steps, copy.Steps);
         Assert.Equal((3, true), (copy.Current, copy.IsComplete));
+    }
+
+    [Fact]
+    public void ZombieBuddyPreload_EveryValue_RoundTripsAsItsName()
+    {
+        foreach (var value in Enum.GetValues<ZombieBuddyPreload>())
+        {
+            var json = JsonSerializer.Serialize(value, CoreJsonContext.Default.ZombieBuddyPreload);
+
+            Assert.Equal($"\"{value}\"", json);
+            Assert.Equal(value, JsonSerializer.Deserialize(json, CoreJsonContext.Default.ZombieBuddyPreload));
+        }
     }
 }

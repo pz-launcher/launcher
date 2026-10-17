@@ -1,7 +1,7 @@
 using PzLauncher.Core.Common;
 using PzLauncher.Core.Installs;
 using PzLauncher.Core.Launch;
-using PzLauncher.Core.ZombieBuddy;
+using PzLauncher.Core.Mod.ZombieBuddy;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Services;
 using PzLauncher.Desktop.Tests.TestSupport;
@@ -22,6 +22,7 @@ public class HomeViewModelTests : UiTextCultureTest
     private readonly FakeDialogService _dialogs = new();
     private readonly FakeZombieBuddyService _zombieBuddy = new();
     private readonly FakeZombieBuddyChannelService _channels = new();
+    private readonly FakeZabricService _zabric = new();
     private readonly GameRunState _runState = new();
 
     public HomeViewModelTests()
@@ -31,7 +32,7 @@ public class HomeViewModelTests : UiTextCultureTest
 
     private InstallsViewModel Installs { get; }
 
-    private HomeViewModel CreateViewModel() => new(Installs, _launcher, _overrides, _dialogs, _zombieBuddy, _channels, _runState);
+    private HomeViewModel CreateViewModel() => new(Installs, _launcher, _overrides, _dialogs, _zombieBuddy, _channels, _zabric, _runState);
 
     private async Task<HomeViewModel> CreateActivatedViewModelAsync(params PzInstall[] installs)
     {
@@ -212,6 +213,7 @@ public class HomeViewModelTests : UiTextCultureTest
         await vm.LaunchCommand.ExecuteAsync(null);
 
         Assert.Single(_dialogs.Setups);
+        Assert.Empty(_zabric.Preloads);
         Assert.Empty(_launcher.Launches);
         Assert.True(vm.LaunchCommand.CanExecute(null));
     }
@@ -249,6 +251,43 @@ public class HomeViewModelTests : UiTextCultureTest
         await launch;
 
         Assert.Equal([new LaunchGameRequest(ManualGame.RootPath, stored)], _launcher.Launches);
+    }
+
+    [Fact]
+    public async Task Launch_AfterTheSetupGate_EnsuresZabricPreloadWithTheInstallsGameArgs()
+    {
+        _overrides.Set(SteamGame.RootPath, GameLaunchOverrides.Empty with { ExtraGameArgs = @"-cachedir=D:\pz" });
+        _zombieBuddy.Status = _ => NotInitialized();
+        var preloadsWhenShown = new List<int>();
+        _dialogs.SetupResult = _ =>
+        {
+            preloadsWhenShown.Add(_zabric.Preloads.Count);
+            return Task.FromResult(true);
+        };
+        var vm = await CreateActivatedViewModelAsync(SteamGame);
+
+        await LaunchAndExitAsync(vm);
+
+        Assert.Equal([0], preloadsWhenShown);
+        Assert.Equal([(SteamGame.RootPath, @"-cachedir=D:\pz")], _zabric.Preloads);
+        Assert.Empty(_dialogs.Errors);
+        Assert.Single(_launcher.Launches);
+    }
+
+    [Fact]
+    public async Task Launch_ZabricPreloadFails_ShowsTheErrorThenLaunches()
+    {
+        var error = TestErrors.Create(ErrorCode.ZombieBuddyPreloadConfigInvalid, @"C:\Users\u\.zombie_buddy\config.json");
+        _zabric.PreloadResult = error;
+        var launchesWhenShown = new List<int>();
+        _dialogs.Shown += () => launchesWhenShown.Add(_launcher.Launches.Count);
+        var vm = await CreateActivatedViewModelAsync(SteamGame);
+
+        await LaunchAndExitAsync(vm);
+
+        Assert.Equal([ErrorMessages.ToUserText(error)], _dialogs.Errors);
+        Assert.Equal([0], launchesWhenShown);
+        Assert.Single(_launcher.Launches);
     }
 
     [Fact]

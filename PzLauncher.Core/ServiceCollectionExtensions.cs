@@ -3,9 +3,10 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using PzLauncher.Core.Installs;
 using PzLauncher.Core.Java;
 using PzLauncher.Core.Launch;
+using PzLauncher.Core.Mod.Zabric;
+using PzLauncher.Core.Mod.ZombieBuddy;
 using PzLauncher.Core.Platform;
 using PzLauncher.Core.Steam;
-using PzLauncher.Core.ZombieBuddy;
 
 namespace PzLauncher.Core;
 
@@ -20,10 +21,12 @@ public static class ServiceCollectionExtensions
 
         services.TryAddSingleton<SteamLocator>();
         services.TryAddSingleton<SteamLibraryReader>();
+        services.TryAddSingleton<WorkshopLibraries>();
         services.TryAddSingleton<IInstallDetectionService, InstallDetectionService>();
         services.TryAddSingleton<IJavaDiscoveryService, JavaDiscoveryService>();
         services.TryAddSingleton<IGameLaunchService, GameLaunchService>();
         services.TryAddSingleton<IZombieBuddyService, ZombieBuddyService>();
+        services.TryAddSingleton<IZabricService, ZabricService>();
 
         return services;
     }
