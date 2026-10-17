@@ -542,6 +542,9 @@
   <data name="Mods_ColumnCollections" xml:space="preserve">
     <value>所在合集</value>
   </data>
+  <data name="Mods_SortColumnTip" xml:space="preserve">
+    <value>按此欄排序，再次點擊反向</value>
+  </data>
   <data name="Mods_Empty" xml:space="preserve">
     <value>找不到已安裝的模組。</value>
   </data>

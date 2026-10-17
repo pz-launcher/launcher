@@ -17,10 +17,20 @@
     </Design.DataContext>
 
     <UserControl.Styles>
-        <Style Selector="TextBlock.columnHeader">
+        <!-- Border and padding hang outside the column so the label lines up with the cells below. -->
+        <Style Selector="Button.columnHeader">
+            <Setter Property="Theme" Value="{StaticResource Shell.ColumnHeader}" />
+            <Setter Property="Margin" Value="-7,0,1,0" />
+            <Setter Property="ToolTip.Tip" Value="{x:Static lang:UiText.Mods_SortColumnTip}" />
+        </Style>
+        <Style Selector="ic|FluentIcon.sortArrow">
+            <Setter Property="Icon" Value="ArrowSortUp" />
+            <Setter Property="IconVariant" Value="Regular" />
             <Setter Property="FontSize" Value="12" />
-            <Setter Property="Foreground" Value="{DynamicResource Shell.TextMuted}" />
-            <Setter Property="Margin" Value="0,0,8,0" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Grid.sortDescending ic|FluentIcon.sortArrow">
+            <Setter Property="Icon" Value="ArrowSortDown" />
         </Style>
         <Style Selector="TextBlock.cell">
             <Setter Property="VerticalAlignment" Value="Center" />
@@ -64,13 +74,62 @@
             </StackPanel>
         </WrapPanel>
 
-        <Grid DockPanel.Dock="Top" ColumnDefinitions="36,2*,1.5*,110,130,80,2*" Margin="13,0,13,4">
-            <TextBlock Grid.Column="1" Classes="columnHeader" Text="{x:Static lang:UiText.Mods_ColumnName}" />
-            <TextBlock Grid.Column="2" Classes="columnHeader" Text="{x:Static lang:UiText.Mods_ColumnId}" />
-            <TextBlock Grid.Column="3" Classes="columnHeader" Text="{x:Static lang:UiText.Mods_ColumnWorkshopId}" />
-            <TextBlock Grid.Column="4" Classes="columnHeader" Text="{x:Static lang:UiText.Mods_ColumnSource}" />
-            <TextBlock Grid.Column="5" Classes="columnHeader" Text="{x:Static lang:UiText.Mods_ColumnEnabled}" />
-            <TextBlock Grid.Column="6" Classes="columnHeader" Text="{x:Static lang:UiText.Mods_ColumnCollections}" />
+        <Grid DockPanel.Dock="Top" ColumnDefinitions="36,2*,1.5*,110,130,80,2*" Margin="13,0,13,4"
+              Classes.sortDescending="{Binding SortDescending}">
+            <Button Grid.Column="1" Classes="columnHeader" Command="{Binding SortByCommand}"
+                    CommandParameter="{x:Static vm:InstalledModsSortColumn.Name}"
+                    AutomationProperties.Name="{x:Static lang:UiText.Mods_ColumnName}">
+                <StackPanel Orientation="Horizontal" Spacing="4">
+                    <TextBlock Text="{x:Static lang:UiText.Mods_ColumnName}" />
+                    <ic:FluentIcon Classes="sortArrow"
+                                   IsVisible="{Binding SortColumn, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:InstalledModsSortColumn.Name}}" />
+                </StackPanel>
+            </Button>
+            <Button Grid.Column="2" Classes="columnHeader" Command="{Binding SortByCommand}"
+                    CommandParameter="{x:Static vm:InstalledModsSortColumn.Id}"
+                    AutomationProperties.Name="{x:Static lang:UiText.Mods_ColumnId}">
+                <StackPanel Orientation="Horizontal" Spacing="4">
+                    <TextBlock Text="{x:Static lang:UiText.Mods_ColumnId}" />
+                    <ic:FluentIcon Classes="sortArrow"
+                                   IsVisible="{Binding SortColumn, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:InstalledModsSortColumn.Id}}" />
+                </StackPanel>
+            </Button>
+            <Button Grid.Column="3" Classes="columnHeader" Command="{Binding SortByCommand}"
+                    CommandParameter="{x:Static vm:InstalledModsSortColumn.WorkshopId}"
+                    AutomationProperties.Name="{x:Static lang:UiText.Mods_ColumnWorkshopId}">
+                <StackPanel Orientation="Horizontal" Spacing="4">
+                    <TextBlock Text="{x:Static lang:UiText.Mods_ColumnWorkshopId}" />
+                    <ic:FluentIcon Classes="sortArrow"
+                                   IsVisible="{Binding SortColumn, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:InstalledModsSortColumn.WorkshopId}}" />
+                </StackPanel>
+            </Button>
+            <Button Grid.Column="4" Classes="columnHeader" Command="{Binding SortByCommand}"
+                    CommandParameter="{x:Static vm:InstalledModsSortColumn.Source}"
+                    AutomationProperties.Name="{x:Static lang:UiText.Mods_ColumnSource}">
+                <StackPanel Orientation="Horizontal" Spacing="4">
+                    <TextBlock Text="{x:Static lang:UiText.Mods_ColumnSource}" />
+                    <ic:FluentIcon Classes="sortArrow"
+                                   IsVisible="{Binding SortColumn, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:InstalledModsSortColumn.Source}}" />
+                </StackPanel>
+            </Button>
+            <Button Grid.Column="5" Classes="columnHeader" Command="{Binding SortByCommand}"
+                    CommandParameter="{x:Static vm:InstalledModsSortColumn.Enabled}"
+                    AutomationProperties.Name="{x:Static lang:UiText.Mods_ColumnEnabled}">
+                <StackPanel Orientation="Horizontal" Spacing="4">
+                    <TextBlock Text="{x:Static lang:UiText.Mods_ColumnEnabled}" />
+                    <ic:FluentIcon Classes="sortArrow"
+                                   IsVisible="{Binding SortColumn, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:InstalledModsSortColumn.Enabled}}" />
+                </StackPanel>
+            </Button>
+            <Button Grid.Column="6" Classes="columnHeader" Command="{Binding SortByCommand}"
+                    CommandParameter="{x:Static vm:InstalledModsSortColumn.Collections}"
+                    AutomationProperties.Name="{x:Static lang:UiText.Mods_ColumnCollections}">
+                <StackPanel Orientation="Horizontal" Spacing="4">
+                    <TextBlock Text="{x:Static lang:UiText.Mods_ColumnCollections}" />
+                    <ic:FluentIcon Classes="sortArrow"
+                                   IsVisible="{Binding SortColumn, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:InstalledModsSortColumn.Collections}}" />
+                </StackPanel>
+            </Button>
         </Grid>
 
         <Panel>

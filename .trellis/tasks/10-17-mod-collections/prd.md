@@ -48,7 +48,8 @@ Collections are those of the install selected in the launcher (game installs onl
   "合集管理" (same pattern as the Settings page's sections).
 - **R1a Mod management (D8)** — "模组管理" lists every installed mod (R2) with name, id, Workshop id, source
   (Steam Workshop / staged Workshop / local `mods`), enabled in `default.txt` or not, and the collections containing
-  it. Search by name/id/Workshop id; filters all / enabled / not enabled. "添加到合集…" adds the selected mod(s) to a
+  it. Clicking a column header sorts by that column (again: reverses; arrow shows column and direction; default
+  name ascending). Search by name/id/Workshop id; filters all / enabled / not enabled. "添加到合集…" adds the selected mod(s) to a
   chosen collection (appended at the end, R3 rules). It never changes `default.txt`.
 - **R1 List** — "合集管理" lists the cache folder's collections with mod count, a marker on the default
   collection (R7), and an "in use" marker on every collection that, applied, enables at least one mod and gives the

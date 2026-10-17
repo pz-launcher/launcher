@@ -542,6 +542,9 @@
   <data name="Mods_ColumnCollections" xml:space="preserve">
     <value>Colecciones</value>
   </data>
+  <data name="Mods_SortColumnTip" xml:space="preserve">
+    <value>Ordenar por esta columna; otro clic invierte el orden</value>
+  </data>
   <data name="Mods_Empty" xml:space="preserve">
     <value>No se han encontrado mods instalados.</value>
   </data>

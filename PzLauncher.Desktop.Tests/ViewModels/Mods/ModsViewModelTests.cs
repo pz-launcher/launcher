@@ -213,6 +213,114 @@ public class ModsViewModelTests : UiTextCultureTest
         Assert.Empty(_service.Saves);
     }
 
+    // Installed mods: sorting
+
+    private async Task<ModsViewModel> CreateWithSortModsAsync()
+    {
+        _service.WithMods(
+            Mod("Atlas", name: "Map Pack", workshopId: "999", source: InstalledModSource.StagedWorkshop),
+            Mod("draft", name: "Alpha", workshopId: "draft-item", source: InstalledModSource.StagedWorkshop));
+        return await CreateActivatedAsync();
+    }
+
+    private static string VisibleIds(ModsViewModel vm) => string.Join(",", vm.Mods.VisibleRows.Select(row => row.Mod.Id));
+
+    [Fact]
+    public async Task InstalledMods_Sort_DefaultsToNameAscending()
+    {
+        var vm = await CreateWithSortModsAsync();
+
+        Assert.Equal(InstalledModsSortColumn.Name, vm.Mods.SortColumn);
+        Assert.False(vm.Mods.SortDescending);
+        Assert.Equal("draft,Core,Atlas,Maps,Tweaks,Cars", VisibleIds(vm));
+    }
+
+    [Theory]
+    [InlineData(InstalledModsSortColumn.Name, "draft,Core,Atlas,Maps,Tweaks,Cars", "Cars,Tweaks,Atlas,Maps,Core,draft")]
+    [InlineData(InstalledModsSortColumn.Id, "Atlas,Cars,Core,draft,Maps,Tweaks", "Tweaks,Maps,draft,Core,Cars,Atlas")]
+    [InlineData(InstalledModsSortColumn.WorkshopId, "Atlas,Core,Maps,Cars,draft,Tweaks", "draft,Cars,Maps,Core,Atlas,Tweaks")]
+    [InlineData(InstalledModsSortColumn.Source, "draft,Atlas,Core,Maps,Cars,Tweaks", "Tweaks,Core,Maps,Cars,draft,Atlas")]
+    [InlineData(InstalledModsSortColumn.Enabled, "Cars,draft,Core,Atlas,Maps,Tweaks", "draft,Core,Atlas,Maps,Tweaks,Cars")]
+    [InlineData(InstalledModsSortColumn.Collections, "Cars,Core,Maps,draft,Atlas,Tweaks", "Core,Maps,Cars,draft,Atlas,Tweaks")]
+    public async Task InstalledMods_SortBy_AscendingThenReversedOnTheSecondClick(InstalledModsSortColumn column, string ascending, string descending)
+    {
+        var vm = await CreateWithSortModsAsync();
+        if (column == InstalledModsSortColumn.Name)
+        {
+            vm.Mods.SortByCommand.Execute(InstalledModsSortColumn.Id);
+        }
+
+        vm.Mods.SortByCommand.Execute(column);
+
+        Assert.Equal(column, vm.Mods.SortColumn);
+        Assert.False(vm.Mods.SortDescending);
+        Assert.Equal(ascending, VisibleIds(vm));
+
+        vm.Mods.SortByCommand.Execute(column);
+
+        Assert.True(vm.Mods.SortDescending);
+        Assert.Equal(descending, VisibleIds(vm));
+    }
+
+    [Fact]
+    public async Task InstalledMods_SortBy_AnotherColumn_StartsAscending()
+    {
+        var vm = await CreateWithSortModsAsync();
+        vm.Mods.SortByCommand.Execute(InstalledModsSortColumn.Id);
+        vm.Mods.SortByCommand.Execute(InstalledModsSortColumn.Id);
+
+        vm.Mods.SortByCommand.Execute(InstalledModsSortColumn.Source);
+
+        Assert.Equal(InstalledModsSortColumn.Source, vm.Mods.SortColumn);
+        Assert.False(vm.Mods.SortDescending);
+        Assert.Equal("draft,Atlas,Core,Maps,Cars,Tweaks", VisibleIds(vm));
+    }
+
+    [Fact]
+    public async Task InstalledMods_Sort_AppliesToTheSearchedAndFilteredRows()
+    {
+        var vm = await CreateWithSortModsAsync();
+        vm.Mods.SortByCommand.Execute(InstalledModsSortColumn.WorkshopId);
+        vm.Mods.SortByCommand.Execute(InstalledModsSortColumn.WorkshopId);
+
+        vm.Mods.Filter = InstalledModsFilter.NotEnabled;
+
+        Assert.Equal("draft,Maps,Core,Atlas,Tweaks", VisibleIds(vm));
+
+        vm.Mods.SearchText = "map";
+
+        Assert.Equal("Maps,Atlas", VisibleIds(vm));
+    }
+
+    [Fact]
+    public async Task InstalledMods_Sort_SurvivesAReload()
+    {
+        var vm = await CreateWithSortModsAsync();
+        vm.Mods.SortByCommand.Execute(InstalledModsSortColumn.Collections);
+        vm.Mods.SortByCommand.Execute(InstalledModsSortColumn.Collections);
+
+        await vm.RefreshCommand.ExecuteAsync(null);
+
+        Assert.Equal(InstalledModsSortColumn.Collections, vm.Mods.SortColumn);
+        Assert.True(vm.Mods.SortDescending);
+        Assert.Equal("Core,Maps,Cars,draft,Atlas,Tweaks", VisibleIds(vm));
+    }
+
+    [Fact]
+    public async Task InstalledMods_AddToCollection_AppendsInTheShownOrder()
+    {
+        var vm = await CreateWithSortModsAsync();
+        vm.Mods.SortByCommand.Execute(InstalledModsSortColumn.Name);
+        foreach (var row in vm.Mods.VisibleRows.Where(row => row.Mod.Id is "Tweaks" or "Core" or "Cars"))
+        {
+            row.IsSelected = true;
+        }
+
+        await vm.Mods.AddTargets.Single(target => target.Name == "Survival").AddCommand.ExecuteAsync(null);
+
+        Assert.Equal(["Maps", "Core", "Gone", "Cars", "Tweaks"], _service.IdsOf("Survival"));
+    }
+
     // Collections
 
     [Fact]
