@@ -226,3 +226,32 @@ Under ZombieBuddy policy=allow-all the approval dialog never runs, so Zabric was
 ### Status
 
 [OK] **Completed**
+
+
+## Session 9: Mod collection management in the launcher
+<!-- trellis-session: v=2 fp=28581a4bdf20c1f0 -->
+
+**Date**: 2026-10-17
+**Task**: Mod collection management in the launcher
+**Branch**: `feat/mod-collections`
+
+### Summary
+
+Planned and built mod collection management (PR #9): Core IModCollectionService over Lua/pz_modlist_settings.cfg and mods/default.txt (game-faithful apply, auto sort, share text, sidecar order, safe re-read writes with backups), installed-mod catalog incl. B42 common/-only mod.info. Desktop Mods tab (installed mods browser with sortable columns, collections editor with lift-out virtualized drag, top/bottom moves), single current-collection model with Home picker; launch applies it, removes ZombieBuddy when the collection lacks it, flushes pending reorders. Follow-up fixes: in-use for empty results, reorder flush on launch/close, not-installed wording. Manual UI checks still pending.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `678629a` | Manage mod collections and installed mods in the launcher |
+| `5ec5e37` | Don't mark a collection that enables nothing as in use |
+| `7d23758` | Write a pending collection reorder before launch and on close |
+| `ac82efb` | Lift a collection row out when dragging it; add move to top and bottom |
+| `1a6598e` | Virtualize a collection's mod list |
+| `9591de1` | List mods whose mod.info is only in common/; say "not installed" |
+| `234e8d9` | Sort installed mods by clicking a column header |
+| `13057a6` | Replace apply and default with one current collection |
+
+### Status
+
+[OK] **Completed**
