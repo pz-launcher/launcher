@@ -277,3 +277,25 @@ On Home launch the launcher keeps ZBSkipOnlineChecks in step with the enabled mo
 ### Status
 
 [OK] **Completed**
+
+
+## Session 11: Unify ZombieBuddy Java mod launch setup
+<!-- trellis-session: v=2 fp=6a6525ed4a8c29d5 -->
+
+**Date**: 2026-10-17
+**Task**: Unify ZombieBuddy Java mod launch setup
+**Branch**: `zb-skip-online-checks`
+
+### Summary
+
+Refactor in PR #10: Home calls IZombieBuddyModsService.PrepareLaunchAsync once; ZombieBuddyLaunch resolves status/root/cache/libraries once and finds preloadable copies; Zabric and ZB Skip Online Checks are internal launch steps run in registration order, and the Zabric dependency moved from Home into Core. Behaviour unchanged; IReadOnlyList<Error> registered in CoreJsonContext. Build and tests pass (Core 978/3 skipped, Desktop 1075).
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `651578e` | Run ZombieBuddy Java mod setups through one Core entry point |
+
+### Status
+
+[OK] **Completed**
