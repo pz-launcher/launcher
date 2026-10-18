@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.Extensions.Logging.Abstractions;
+using PzLauncher.Core.Net;
 using PzLauncher.Core.Platform;
 using PzLauncher.Core.Update;
 
@@ -34,7 +35,7 @@ internal static class UpdateTestKit
         FakeProcessRunner? processes = null) =>
         new(
             V(current),
-            new UpdateHttpClient(handler, V(current)),
+            new LauncherHttpClient(handler, V(current)),
             new FakePlatformEnvironment { Os = os },
             processes ?? new FakeProcessRunner(),
             new ManualTimeProvider(),

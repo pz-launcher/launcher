@@ -39,7 +39,12 @@ public class MainViewModelTests : UiTextCultureTest
             new ModsViewModel(
                 installs, collections, overrides, defaults, applier, dialogs, new FakeClipboardService(), runState, orderWriter, Localization),
             new SettingsViewModel(
-                new FakeThemeService(AppTheme.Light), store, new FakeWindowPlacementService(), java, new UpdateSettingsViewModel(updates, Localization)),
+                new FakeThemeService(AppTheme.Light),
+                store,
+                new FakeWindowPlacementService(),
+                java,
+                new UpdateSettingsViewModel(updates, Localization),
+                TestProxy.ViewModel(Localization, store)),
             new LaunchSettingsViewModel(
                 installs, launcher, overrides, java, zombieBuddy, channels, runState, dialogs, new FakePlatformEnvironment(), Localization),
             new LanguageMenuViewModel(Localization, store),

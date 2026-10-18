@@ -6,6 +6,7 @@ using PzLauncher.Core.Java;
 using PzLauncher.Core.Launch;
 using PzLauncher.Core.Mod.Collections;
 using PzLauncher.Core.Mod.ZombieBuddy;
+using PzLauncher.Core.Net;
 using PzLauncher.Core.Platform;
 using PzLauncher.Core.Tests.TestSupport;
 using PzLauncher.Core.Update;
@@ -28,6 +29,7 @@ public class ServiceCollectionExtensionsTests
         Assert.Same(provider.GetRequiredService<IZombieBuddyService>(), provider.GetRequiredService<IZombieBuddyService>());
         Assert.Same(provider.GetRequiredService<IModCollectionService>(), provider.GetRequiredService<IModCollectionService>());
         Assert.Same(provider.GetRequiredService<IUpdateService>(), provider.GetRequiredService<IUpdateService>());
+        Assert.Same(provider.GetRequiredService<INetworkService>(), provider.GetRequiredService<INetworkService>());
     }
 
     [Theory]

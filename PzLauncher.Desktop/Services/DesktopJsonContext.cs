@@ -7,6 +7,7 @@ namespace PzLauncher.Desktop.Services;
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
 [JsonSerializable(typeof(PreferencesFile))]
 [JsonSerializable(typeof(InstallOverridesFile))]
+[JsonSerializable(typeof(ProxyFile))]
 [JsonSerializable(typeof(string))]
 [JsonSerializable(typeof(bool))]
 internal sealed partial class DesktopJsonContext : JsonSerializerContext;
@@ -18,6 +19,7 @@ internal sealed partial class DesktopJsonContext : JsonSerializerContext;
 /// <param name="DefaultModCollections">Keyed by install root; collection names, elements for the same reason as <paramref name="JavaRuntimes"/>.</param>
 /// <param name="UpdateSource"><see cref="UpdateSourcePreferences.PreferenceName"/>; an element for the same reason as <paramref name="JavaRuntimes"/>.</param>
 /// <param name="AutoCheckUpdates">A bool; an element for the same reason as <paramref name="JavaRuntimes"/>.</param>
+/// <param name="Proxy">A <see cref="ProxyFile"/>; an element for the same reason as <paramref name="JavaRuntimes"/>.</param>
 internal sealed record PreferencesFile(
     string? Language,
     string? Theme,
@@ -27,10 +29,15 @@ internal sealed record PreferencesFile(
     IReadOnlyDictionary<string, JsonElement>? ZombieBuddyChannels,
     IReadOnlyDictionary<string, JsonElement>? DefaultModCollections,
     JsonElement? UpdateSource,
-    JsonElement? AutoCheckUpdates);
+    JsonElement? AutoCheckUpdates,
+    JsonElement? Proxy);
 
 /// <summary>Nullable members, so a missing one is told apart from a zero.</summary>
 internal sealed record WindowFile(int? X, int? Y, double? Width, double? Height, bool? Maximized);
 
 /// <param name="Gc"><see cref="GarbageCollectorPreferences.PreferenceName"/>; an unknown value follows the json.</param>
 internal sealed record InstallOverridesFile(string? JavaHome, int? MaxMemoryMb, int? MinMemoryMb, string? JvmArgs, string? GameArgs, string? Gc);
+
+/// <param name="Mode"><see cref="ProxyModePreferences.PreferenceName"/>.</param>
+/// <param name="Password"><see cref="ISecretProtector"/> output, prefixed with its scheme.</param>
+internal sealed record ProxyFile(string? Mode, string? Host, int? Port, string? Username, string? Password);

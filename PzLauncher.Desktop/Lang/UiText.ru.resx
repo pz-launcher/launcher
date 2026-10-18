@@ -275,6 +275,18 @@
   <data name="Error_UpdateRestartFailed" xml:space="preserve">
     <value>Обновление установлено, но не удалось запустить {0}. Запустите PzLauncher снова вручную.</value>
   </data>
+  <data name="Error_NetworkProxyHostInvalid" xml:space="preserve">
+    <value>Введите имя хоста или IP-адрес прокси, например 127.0.0.1. Префикс http:// допускается; прокси https:// и SOCKS не поддерживаются.</value>
+  </data>
+  <data name="Error_NetworkProxyPortInvalid" xml:space="preserve">
+    <value>Введите порт прокси от 1 до 65535.</value>
+  </data>
+  <data name="Error_NetworkUnreachable" xml:space="preserve">
+    <value>Не удалось подключиться к {0}: {1}</value>
+  </data>
+  <data name="Error_NetworkTimeout" xml:space="preserve">
+    <value>{0} не ответил за {1} с.</value>
+  </data>
   <data name="Error_FolderNotLocal" xml:space="preserve">
     <value>{0} — не папка на этом компьютере, поэтому лаунчер не может её открыть. Выберите локальную папку.</value>
   </data>
@@ -316,6 +328,51 @@
   </data>
   <data name="Settings_CheckNow" xml:space="preserve">
     <value>Проверить сейчас</value>
+  </data>
+  <data name="Settings_Proxy" xml:space="preserve">
+    <value>Прокси</value>
+  </data>
+  <data name="ProxyMode_System" xml:space="preserve">
+    <value>Системный прокси</value>
+  </data>
+  <data name="ProxyMode_None" xml:space="preserve">
+    <value>Без прокси</value>
+  </data>
+  <data name="ProxyMode_Manual" xml:space="preserve">
+    <value>HTTP-прокси вручную</value>
+  </data>
+  <data name="Proxy_SystemHintWindows" xml:space="preserve">
+    <value>Используются настройки прокси Windows (Параметры &gt; Сеть и Интернет &gt; Прокси-сервер), которые меняют Clash, v2rayN и подобные программы. Если заданы переменные среды HTTP_PROXY, HTTPS_PROXY или ALL_PROXY, приоритет у них.</value>
+  </data>
+  <data name="Proxy_SystemHintMacOS" xml:space="preserve">
+    <value>Используются сетевые настройки прокси macOS. Если заданы переменные среды http_proxy, https_proxy или all_proxy, приоритет у них.</value>
+  </data>
+  <data name="Proxy_SystemHintLinux" xml:space="preserve">
+    <value>Используются переменные среды http_proxy, https_proxy, all_proxy и no_proxy. Настройки прокси рабочего стола (GNOME, KDE) не читаются.</value>
+  </data>
+  <data name="Proxy_Address" xml:space="preserve">
+    <value>Адрес</value>
+  </data>
+  <data name="Proxy_Port" xml:space="preserve">
+    <value>Порт</value>
+  </data>
+  <data name="Proxy_Username" xml:space="preserve">
+    <value>Имя пользователя (необязательно)</value>
+  </data>
+  <data name="Proxy_Password" xml:space="preserve">
+    <value>Пароль (необязательно)</value>
+  </data>
+  <data name="Proxy_ManualHint" xml:space="preserve">
+    <value>Поддерживаются только HTTP-прокси. Локальные адреса, например localhost и 127.0.0.1, открываются напрямую.</value>
+  </data>
+  <data name="Proxy_PasswordPlainText" xml:space="preserve">
+    <value>В этой системе пароль хранится в файле настроек PzLauncher в незашифрованном виде.</value>
+  </data>
+  <data name="Proxy_TestConnection" xml:space="preserve">
+    <value>Проверить подключение</value>
+  </data>
+  <data name="Proxy_TestOk" xml:space="preserve">
+    <value>OK ({0} мс)</value>
   </data>
   <data name="Settings_GameGroup" xml:space="preserve">
     <value>Игра</value>

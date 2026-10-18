@@ -11,6 +11,7 @@ using PzLauncher.Core.Mod;
 using PzLauncher.Core.Mod.Collections;
 using PzLauncher.Core.Mod.Zabric;
 using PzLauncher.Core.Mod.ZombieBuddy;
+using PzLauncher.Core.Net;
 using PzLauncher.Core.Platform;
 using PzLauncher.Core.Update;
 using PzLauncher.Desktop.Localization;
@@ -20,6 +21,7 @@ using PzLauncher.Desktop.ViewModels.Home;
 using PzLauncher.Desktop.ViewModels.Installs;
 using PzLauncher.Desktop.ViewModels.Java;
 using PzLauncher.Desktop.ViewModels.Mods;
+using PzLauncher.Desktop.ViewModels.Net;
 using PzLauncher.Desktop.ViewModels.Settings;
 using PzLauncher.Desktop.ViewModels.LaunchSettings;
 using PzLauncher.Desktop.ViewModels.Update;
@@ -87,7 +89,10 @@ public static class DesignData
 
     public static UpdateBannerViewModel UpdateBanner { get; } = new(Updates, RunState, new NoUrlLauncher(), Localization);
 
-    public static SettingsViewModel Settings { get; } = new(new LightThemeService(), Preferences, new NoWindowPlacement(), Java, UpdateSettings);
+    public static ProxySettingsViewModel ProxySettings { get; } = new(new SampleProxySettings(), new SampleNetwork(), new SamplePlatform(), Localization);
+
+    public static SettingsViewModel Settings { get; } =
+        new(new LightThemeService(), Preferences, new NoWindowPlacement(), Java, UpdateSettings, ProxySettings);
 
     public static LaunchSettingsViewModel LaunchSettings { get; } = CreateLaunchSettings();
 
@@ -377,6 +382,33 @@ public static class DesignData
         public Task SaveUpdateSourceAsync(UpdateSource source, CancellationToken ct = default) => Task.CompletedTask;
 
         public Task SaveAutoCheckUpdatesAsync(bool enabled, CancellationToken ct = default) => Task.CompletedTask;
+
+        public Task SaveProxyAsync(SavedProxy proxy, CancellationToken ct = default) => Task.CompletedTask;
+    }
+
+    private sealed class SampleProxySettings : IProxySettingsService
+    {
+        public SavedProxy Current { get; } = new(ProxyMode.Manual, "127.0.0.1", 7890, null, null);
+
+        public Result Apply(SavedProxy proxy) => Result.Ok();
+
+        public Result ApplyDebounced(SavedProxy proxy) => Result.Ok();
+
+        public Task FlushAsync(CancellationToken ct = default) => Task.CompletedTask;
+    }
+
+    private sealed class SampleNetwork : INetworkService
+    {
+        public Core.Net.ProxySettings Proxy => Core.Net.ProxySettings.Default;
+
+        public Result ApplyProxy(Core.Net.ProxySettings settings) => Result.Ok();
+
+        public Task<IReadOnlyList<ConnectionTestResult>> TestConnectionAsync(CancellationToken ct = default) =>
+            Task.FromResult<IReadOnlyList<ConnectionTestResult>>(
+            [
+                new("GitHub", new Uri("https://example.com/github"), TimeSpan.FromMilliseconds(180), null),
+                new("Gitee", new Uri("https://example.com/gitee"), TimeSpan.FromSeconds(15), new Error(ErrorCode.NetworkTimeout, "sample", ErrorKind.External)),
+            ]);
     }
 
     private sealed class SampleUpdates : IUpdateService

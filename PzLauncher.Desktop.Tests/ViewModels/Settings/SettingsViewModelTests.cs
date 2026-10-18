@@ -18,7 +18,8 @@ public class SettingsViewModelTests : UiTextCultureTest
             _store,
             _windowPlacement,
             TestJava.ViewModel(Localization, _java, _store),
-            new UpdateSettingsViewModel(TestUpdates.Coordinator(new FakeUpdateService(), _store), Localization));
+            new UpdateSettingsViewModel(TestUpdates.Coordinator(new FakeUpdateService(), _store), Localization),
+            TestProxy.ViewModel(Localization, _store));
 
     [Theory]
     [InlineData(AppTheme.Light)]

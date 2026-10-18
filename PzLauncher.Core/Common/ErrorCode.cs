@@ -78,6 +78,12 @@ public enum ErrorCode
     [JsonStringEnumMemberName("update.install_failed")] UpdateInstallFailed,
     [JsonStringEnumMemberName("update.development_build")] UpdateDevelopmentBuild,
     [JsonStringEnumMemberName("update.restart_failed")] UpdateRestartFailed,
+
+    // ── network ───────────────────────────────────────────────
+    [JsonStringEnumMemberName("network.proxy_host_invalid")] NetworkProxyHostInvalid,
+    [JsonStringEnumMemberName("network.proxy_port_invalid")] NetworkProxyPortInvalid,
+    [JsonStringEnumMemberName("network.unreachable")] NetworkUnreachable,
+    [JsonStringEnumMemberName("network.timeout")] NetworkTimeout,
 }
 
 public static class ErrorCodeExtensions

@@ -1,5 +1,6 @@
 using System.Net;
 using PzLauncher.Core.Common;
+using PzLauncher.Core.Net;
 using PzLauncher.Core.Tests.TestSupport;
 using PzLauncher.Core.Update;
 using static PzLauncher.Core.Tests.TestSupport.UpdateTestKit;
@@ -11,9 +12,9 @@ public sealed class ReleaseFeedTests : IDisposable
     private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(30);
 
     private readonly FakeHttpHandler _handler = new();
-    private readonly UpdateHttpClient _http;
+    private readonly LauncherHttpClient _http;
 
-    public ReleaseFeedTests() => _http = new UpdateHttpClient(_handler, V("0.2.0"));
+    public ReleaseFeedTests() => _http = new LauncherHttpClient(_handler, V("0.2.0"));
 
     private ReleaseFeed GitHub => new(LauncherReleases.GitHub, _http.Client);
 

@@ -15,6 +15,7 @@ PzLauncher.Core/
 │   ├── ZombieBuddy/ # ZombieBuddy setup in a game install; Java mod preload check and preload list
 │   └── Zabric/      # Zabric's entry in ZombieBuddy's preload list
 ├── Update/          # launcher self-update: GitHub/Gitee release feeds, download + verify + stage, install with rollback
+├── Net/             # the one shared HttpClient (LauncherHttpClient), runtime-switchable proxy, proxy settings, connection test
 ├── Serialization/   # CoreJsonContext (source-gen JSON)
 └── ServiceCollectionExtensions.cs   # AddPzLauncherCore()
 ```

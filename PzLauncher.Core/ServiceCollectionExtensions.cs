@@ -7,6 +7,7 @@ using PzLauncher.Core.Launch;
 using PzLauncher.Core.Mod.Collections;
 using PzLauncher.Core.Mod.Zabric;
 using PzLauncher.Core.Mod.ZombieBuddy;
+using PzLauncher.Core.Net;
 using PzLauncher.Core.Platform;
 using PzLauncher.Core.Steam;
 using PzLauncher.Core.Update;
@@ -34,10 +35,12 @@ public static class ServiceCollectionExtensions
         services.TryAddSingleton<IZombieBuddyService, ZombieBuddyService>();
         services.TryAddSingleton<IZabricService, ZabricService>();
         services.TryAddSingleton<IModCollectionService, ModCollectionService>();
-        services.TryAddSingleton(_ => UpdateHttpClient.Create(currentVersion));
+        services.TryAddSingleton(_ => new SwitchableProxy(HttpClient.DefaultProxy));
+        services.TryAddSingleton(provider => LauncherHttpClient.Create(currentVersion, provider.GetRequiredService<SwitchableProxy>()));
+        services.TryAddSingleton<INetworkService, NetworkService>();
         services.TryAddSingleton<IUpdateService>(provider => new UpdateService(
             currentVersion,
-            provider.GetRequiredService<UpdateHttpClient>(),
+            provider.GetRequiredService<LauncherHttpClient>(),
             provider.GetRequiredService<IPlatformEnvironment>(),
             provider.GetRequiredService<IProcessRunner>(),
             provider.GetRequiredService<TimeProvider>(),

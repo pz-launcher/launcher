@@ -30,6 +30,8 @@ public sealed record UserPreferences(AppLanguage? Language, AppTheme? Theme, Win
 
     public bool? AutoCheckUpdates { get; init; }
 
+    public SavedProxy? Proxy { get; init; }
+
     // Compares the collections by content; the generated equality would compare references.
     public bool Equals(UserPreferences? other) =>
         other is not null
@@ -38,6 +40,7 @@ public sealed record UserPreferences(AppLanguage? Language, AppTheme? Theme, Win
         && Window == other.Window
         && UpdateSource == other.UpdateSource
         && AutoCheckUpdates == other.AutoCheckUpdates
+        && Proxy == other.Proxy
         && ManualJavaHomes.SequenceEqual(other.ManualJavaHomes, StringComparer.Ordinal)
         && InstallOverrides.Count == other.InstallOverrides.Count
         && InstallOverrides.All(entry => other.InstallOverrides.TryGetValue(entry.Key, out var value) && entry.Value == value)
@@ -48,7 +51,7 @@ public sealed record UserPreferences(AppLanguage? Language, AppTheme? Theme, Win
 
     public override int GetHashCode() =>
         HashCode.Combine(
-            HashCode.Combine(Language, Theme, Window, UpdateSource, AutoCheckUpdates),
+            HashCode.Combine(Language, Theme, Window, UpdateSource, AutoCheckUpdates, Proxy),
             ManualJavaHomes.Count,
             InstallOverrides.Count,
             ZombieBuddyChannels.Count,
@@ -86,4 +89,7 @@ public interface IPreferenceStore
 
     /// <inheritdoc cref="SaveLanguageAsync"/>
     Task SaveAutoCheckUpdatesAsync(bool enabled, CancellationToken ct = default);
+
+    /// <summary>The password is saved through <see cref="ISecretProtector"/>. <inheritdoc cref="SaveLanguageAsync"/></summary>
+    Task SaveProxyAsync(SavedProxy proxy, CancellationToken ct = default);
 }

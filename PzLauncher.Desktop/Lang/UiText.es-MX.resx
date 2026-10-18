@@ -275,6 +275,18 @@
   <data name="Error_UpdateRestartFailed" xml:space="preserve">
     <value>La actualización se instaló, pero no se pudo iniciar {0}. Vuelve a abrir PzLauncher manualmente.</value>
   </data>
+  <data name="Error_NetworkProxyHostInvalid" xml:space="preserve">
+    <value>Ingresa el nombre de host o la dirección IP del proxy, por ejemplo 127.0.0.1. Se admite el prefijo http://; los proxies https:// y SOCKS no son compatibles.</value>
+  </data>
+  <data name="Error_NetworkProxyPortInvalid" xml:space="preserve">
+    <value>Ingresa un puerto de proxy entre 1 y 65535.</value>
+  </data>
+  <data name="Error_NetworkUnreachable" xml:space="preserve">
+    <value>No se pudo conectar con {0}: {1}</value>
+  </data>
+  <data name="Error_NetworkTimeout" xml:space="preserve">
+    <value>{0} no respondió en {1} segundos.</value>
+  </data>
   <data name="Error_FolderNotLocal" xml:space="preserve">
     <value>{0} no es una carpeta de esta computadora, así que el launcher no puede abrirla. Elige una carpeta local.</value>
   </data>
@@ -316,6 +328,51 @@
   </data>
   <data name="Settings_CheckNow" xml:space="preserve">
     <value>Buscar ahora</value>
+  </data>
+  <data name="Settings_Proxy" xml:space="preserve">
+    <value>Proxy</value>
+  </data>
+  <data name="ProxyMode_System" xml:space="preserve">
+    <value>Usar el proxy del sistema</value>
+  </data>
+  <data name="ProxyMode_None" xml:space="preserve">
+    <value>Sin proxy</value>
+  </data>
+  <data name="ProxyMode_Manual" xml:space="preserve">
+    <value>Proxy HTTP manual</value>
+  </data>
+  <data name="Proxy_SystemHintWindows" xml:space="preserve">
+    <value>Sigue la configuración de proxy de Windows (Configuración &gt; Red e Internet &gt; Proxy), que cambian herramientas como Clash o v2rayN. Si están definidas las variables de entorno HTTP_PROXY, HTTPS_PROXY o ALL_PROXY, tienen prioridad.</value>
+  </data>
+  <data name="Proxy_SystemHintMacOS" xml:space="preserve">
+    <value>Sigue la configuración de proxy de red de macOS. Si están definidas las variables de entorno http_proxy, https_proxy o all_proxy, tienen prioridad.</value>
+  </data>
+  <data name="Proxy_SystemHintLinux" xml:space="preserve">
+    <value>Usa las variables de entorno http_proxy, https_proxy, all_proxy y no_proxy. No se lee la configuración de proxy del escritorio (GNOME, KDE).</value>
+  </data>
+  <data name="Proxy_Address" xml:space="preserve">
+    <value>Dirección</value>
+  </data>
+  <data name="Proxy_Port" xml:space="preserve">
+    <value>Puerto</value>
+  </data>
+  <data name="Proxy_Username" xml:space="preserve">
+    <value>Usuario (opcional)</value>
+  </data>
+  <data name="Proxy_Password" xml:space="preserve">
+    <value>Contraseña (opcional)</value>
+  </data>
+  <data name="Proxy_ManualHint" xml:space="preserve">
+    <value>Solo proxies HTTP. Las direcciones locales, como localhost y 127.0.0.1, se conectan directamente.</value>
+  </data>
+  <data name="Proxy_PasswordPlainText" xml:space="preserve">
+    <value>En este sistema, la contraseña se guarda sin cifrar en el archivo de preferencias de PzLauncher.</value>
+  </data>
+  <data name="Proxy_TestConnection" xml:space="preserve">
+    <value>Probar conexión</value>
+  </data>
+  <data name="Proxy_TestOk" xml:space="preserve">
+    <value>OK ({0} ms)</value>
   </data>
   <data name="Settings_GameGroup" xml:space="preserve">
     <value>Juego</value>

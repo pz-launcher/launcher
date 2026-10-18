@@ -9,7 +9,7 @@
 - `<ApplicationData>/PzLauncher/preferences.json` is read and written only through `IPreferenceStore`.
 - A missing or unknown value loads as `null`; the caller picks the fallback (`App.axaml.cs`).
 - Callers fire and forget saves; a failed save never undoes the applied choice.
-- Exception: the window placement is saved when the main window closes, so the close waits for that save, for pending install-override and collection-order writes, and for a staged launcher update to install (bounded, never during OS shutdown). Reference: `PzLauncher.Desktop/Views/WindowPlacementPersistence.cs`, `PzLauncher.Desktop/Services/ModCollectionOrderWriter.cs`.
+- Exception: the window placement is saved when the main window closes, so the close waits for that save, for pending install-override, collection-order and proxy writes, and for a staged launcher update to install (bounded, never during OS shutdown). Reference: `PzLauncher.Desktop/Views/WindowPlacementPersistence.cs`, `PzLauncher.Desktop/Services/ModCollectionOrderWriter.cs`.
 - A value that changes per slider step or keystroke debounces its file write. Reference: `PzLauncher.Desktop/Services/InstallOverridesService.cs`.
 - Restoring a saved placement goes through `WindowPlacementRules` (`PzLauncher.Desktop/Views/WindowPlacementRules.cs`): off-screen bounds open centered on the primary screen, the size is clamped to the minimum and the screen.
 
@@ -25,6 +25,7 @@
 | `defaultModCollections` | object: absolute install root → non-empty collection name (the current collection, applied before each launch); a non-string, empty or non-absolute entry is dropped, the rest kept | `UserPreferences.DefaultModCollections` |
 | `updateSource` | `auto`, `github`, `gitee`; anything else loads as null (Auto) | `UpdateSourcePreferences.PreferenceName` |
 | `autoCheckUpdates` | `true`, `false`; anything else loads as null (on) | `UserPreferences.AutoCheckUpdates` |
+| `proxy` | `{mode, host, port, username, password}`; `mode`: `system`, `none`, `manual`; an unknown mode, a member of the wrong JSON type or a non-object loads the whole entry as null (System). `host`/`port` are kept outside manual mode; an invalid one is dropped, the rest kept. Empty members are omitted. `password`: `dpapi:<base64>` (Windows, current user) or `plain:<text>` (Linux, macOS), written by `ISecretProtector`; another scheme or an undecryptable value loads as null and is logged | `UserPreferences.Proxy` (`SavedProxy`), `ProxyModePreferences.PreferenceName` |
 | `window` | `{x, y, width, height, maximized}`: normal-state position (int, physical px), client size (number > 0, DIPs), maximized (bool); invalid if any member is missing | `WindowPlacement` |
 
 A new preference gets a nullable field, its own save method and a stable string mapping (never an enum name).

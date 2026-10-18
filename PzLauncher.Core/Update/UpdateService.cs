@@ -2,13 +2,14 @@ using System.Runtime.InteropServices;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using PzLauncher.Core.Common;
+using PzLauncher.Core.Net;
 using PzLauncher.Core.Platform;
 
 namespace PzLauncher.Core.Update;
 
 internal sealed partial class UpdateService(
     SemVersion current,
-    UpdateHttpClient http,
+    LauncherHttpClient http,
     IPlatformEnvironment platform,
     IProcessRunner processes,
     TimeProvider time,

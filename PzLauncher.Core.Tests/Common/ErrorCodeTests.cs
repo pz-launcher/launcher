@@ -6,6 +6,7 @@ using PzLauncher.Core.Java;
 using PzLauncher.Core.Launch;
 using PzLauncher.Core.Mod.Collections;
 using PzLauncher.Core.Mod.ZombieBuddy;
+using PzLauncher.Core.Net;
 using PzLauncher.Core.Platform;
 using PzLauncher.Core.Serialization;
 using PzLauncher.Core.Steam;
@@ -71,6 +72,10 @@ public partial class ErrorCodeTests
         [ErrorCode.UpdateInstallFailed] = (UpdateErrors.InstallFailed("p", "r"), ErrorKind.External),
         [ErrorCode.UpdateDevelopmentBuild] = (UpdateErrors.DevelopmentBuild(SemVersion.Development), ErrorKind.Conflict),
         [ErrorCode.UpdateRestartFailed] = (UpdateErrors.RestartFailed("p", "r"), ErrorKind.External),
+        [ErrorCode.NetworkProxyHostInvalid] = (NetworkErrors.ProxyHostInvalid("h"), ErrorKind.Validation),
+        [ErrorCode.NetworkProxyPortInvalid] = (NetworkErrors.ProxyPortInvalid(0), ErrorKind.Validation),
+        [ErrorCode.NetworkUnreachable] = (NetworkErrors.Unreachable("t", "r"), ErrorKind.External),
+        [ErrorCode.NetworkTimeout] = (NetworkErrors.Timeout("t", TimeSpan.FromSeconds(15)), ErrorKind.External),
     };
 
     [GeneratedRegex(@"^[a-z]+\.[a-z0-9]+(_[a-z0-9]+)*$")]
@@ -153,6 +158,10 @@ public partial class ErrorCodeTests
     [InlineData(ErrorCode.UpdateInstallFailed, "update.install_failed")]
     [InlineData(ErrorCode.UpdateDevelopmentBuild, "update.development_build")]
     [InlineData(ErrorCode.UpdateRestartFailed, "update.restart_failed")]
+    [InlineData(ErrorCode.NetworkProxyHostInvalid, "network.proxy_host_invalid")]
+    [InlineData(ErrorCode.NetworkProxyPortInvalid, "network.proxy_port_invalid")]
+    [InlineData(ErrorCode.NetworkUnreachable, "network.unreachable")]
+    [InlineData(ErrorCode.NetworkTimeout, "network.timeout")]
     public void ToWireName_ExistingCodes_AreStable(ErrorCode code, string wireName) =>
         Assert.Equal(wireName, code.ToWireName());
 

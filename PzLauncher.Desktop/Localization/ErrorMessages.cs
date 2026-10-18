@@ -63,6 +63,10 @@ public static class ErrorMessages
             ErrorCode.UpdateInstallFailed => Format(UiText.Error_UpdateInstallFailed, path),
             ErrorCode.UpdateDevelopmentBuild => UiText.Error_UpdateDevelopmentBuild,
             ErrorCode.UpdateRestartFailed => Format(UiText.Error_UpdateRestartFailed, path),
+            ErrorCode.NetworkProxyHostInvalid => UiText.Error_NetworkProxyHostInvalid,
+            ErrorCode.NetworkProxyPortInvalid => UiText.Error_NetworkProxyPortInvalid,
+            ErrorCode.NetworkUnreachable => Format(UiText.Error_NetworkUnreachable, Detail(error, "target"), Detail(error, "reason")),
+            ErrorCode.NetworkTimeout => Format(UiText.Error_NetworkTimeout, Detail(error, "target"), Detail(error, "seconds")),
             ErrorCode.ResultUninitialized => UiText.Error_ResultUninitialized,
         };
     }

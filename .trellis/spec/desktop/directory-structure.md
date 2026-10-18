@@ -48,6 +48,14 @@ Reference: `PzLauncher.Desktop/Services/UpdateCoordinator.cs`, `PzLauncher.Deskt
 - Startup (`MainWindow.Opened`, once): a development build (`0.0.0-*`, the csproj default; `release.yml` passes `-p:Version`) does nothing; otherwise clean up, offer a staged package without network, else check when `autoCheckUpdates` is on. Startup failures are only logged (by Core); "Check now" shows them.
 - A staged package installs on "Restart and update" (install, `StartInstalledAsync`, then `IAppLifetime.Close` so the normal close flush runs) or in the close flush (`finishOnClose` of `WindowPlacementPersistence`, skipped on OS shutdown). Restart is disabled while `GameRunState.IsGameRunning`.
 
+## Proxy settings
+
+Reference: `PzLauncher.Desktop/Services/ProxySettingsService.cs`, `PzLauncher.Desktop/ViewModels/Net/ProxySettingsViewModel.cs`; Core API `INetworkService`.
+
+- `ProxySettingsService` applies the saved proxy in its constructor; `App.axaml.cs` resolves it before anything that can send a request (the update coordinator's startup check included).
+- Mode changes apply and save at once; field edits validate per keystroke and apply + save after a 300 ms debounce (`TimeProvider`). An invalid edit shows the error and leaves the last valid setting in effect and saved. The close flush includes a pending proxy change.
+- Secrets in the preference file go through `ISecretProtector` (`WindowsDpapiSecretProtector`: hand-written `LibraryImport` of crypt32, hence `AllowUnsafeBlocks` in the csproj; `PlainSecretProtector` elsewhere), chosen by `IPlatformEnvironment.Os`.
+
 ## Composition root
 
 `PzLauncher.Desktop/App.axaml.cs` is the only place that builds the DI container.

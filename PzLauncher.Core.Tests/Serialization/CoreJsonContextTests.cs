@@ -6,6 +6,7 @@ using PzLauncher.Core.Launch;
 using PzLauncher.Core.Mod;
 using PzLauncher.Core.Mod.Collections;
 using PzLauncher.Core.Mod.ZombieBuddy;
+using PzLauncher.Core.Net;
 using PzLauncher.Core.Serialization;
 using PzLauncher.Core.Update;
 
@@ -398,5 +399,42 @@ public class CoreJsonContextTests
             Assert.Equal($"\"{value}\"", json);
             Assert.Equal(value, JsonSerializer.Deserialize(json, CoreJsonContext.Default.UpdateSource));
         }
+    }
+
+    [Fact]
+    public void ProxySettings_Manual_RoundTrips()
+    {
+        var original = new ProxySettings(ProxyMode.Manual, new ManualProxy("127.0.0.1", 7890, "user", "secret"));
+
+        var json = JsonSerializer.Serialize(original, CoreJsonContext.Default.ProxySettings);
+
+        Assert.Equal("""{"mode":"Manual","manual":{"host":"127.0.0.1","port":7890,"username":"user","password":"secret"}}""", json);
+        Assert.Equal(original, JsonSerializer.Deserialize(json, CoreJsonContext.Default.ProxySettings));
+    }
+
+    [Fact]
+    public void ProxySettings_Default_RoundTrips()
+    {
+        var json = JsonSerializer.Serialize(ProxySettings.Default, CoreJsonContext.Default.ProxySettings);
+
+        Assert.Equal("""{"mode":"System","manual":null}""", json);
+        Assert.Equal(ProxySettings.Default, JsonSerializer.Deserialize(json, CoreJsonContext.Default.ProxySettings));
+    }
+
+    [Fact]
+    public void ConnectionTestResults_RoundTrip()
+    {
+        IReadOnlyList<ConnectionTestResult> original =
+        [
+            new("GitHub", new Uri("https://api.github.com/"), TimeSpan.FromMilliseconds(123), null),
+            new("Gitee", new Uri("https://gitee.com/"), TimeSpan.FromSeconds(15), new Error(ErrorCode.NetworkTimeout, "msg", ErrorKind.External)),
+        ];
+
+        var json = JsonSerializer.Serialize(original, CoreJsonContext.Default.IReadOnlyListConnectionTestResult);
+        var copy = JsonSerializer.Deserialize(json, CoreJsonContext.Default.IReadOnlyListConnectionTestResult);
+
+        Assert.Contains("\"code\":\"network.timeout\"", json, StringComparison.Ordinal);
+        Assert.NotNull(copy);
+        Assert.Equal(original.Select(r => (r.Name, r.Url, r.Elapsed, r.Error?.Code)), copy.Select(r => (r.Name, r.Url, r.Elapsed, r.Error?.Code)));
     }
 }

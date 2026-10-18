@@ -10,6 +10,7 @@ using Avalonia.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using PzLauncher.Core;
+using PzLauncher.Core.Platform;
 using PzLauncher.Desktop.Lang;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Services;
@@ -19,6 +20,7 @@ using PzLauncher.Desktop.ViewModels.Home;
 using PzLauncher.Desktop.ViewModels.Installs;
 using PzLauncher.Desktop.ViewModels.Java;
 using PzLauncher.Desktop.ViewModels.Mods;
+using PzLauncher.Desktop.ViewModels.Net;
 using PzLauncher.Desktop.ViewModels.Settings;
 using PzLauncher.Desktop.ViewModels.LaunchSettings;
 using PzLauncher.Desktop.ViewModels.Update;
@@ -53,9 +55,15 @@ public partial class App : Application
             services.AddSingleton<IAppLifetime>(new AvaloniaAppLifetime(() => desktop.MainWindow));
             WindowPlacementPersistence? windowPlacement = null;
             services.AddSingleton<IWindowPlacementService>(new WindowPlacementService(() => windowPlacement));
-            services.AddSingleton<IPreferenceStore>(sp =>
-                new JsonPreferenceStore(preferencesPath, sp.GetRequiredService<ILogger<JsonPreferenceStore>>()));
+            services.AddSingleton<ISecretProtector>(sp => sp.GetRequiredService<IPlatformEnvironment>().Os switch
+            {
+                PlatformKind.Windows => new WindowsDpapiSecretProtector(),
+                PlatformKind.MacOS or PlatformKind.Linux => new PlainSecretProtector(),
+            });
+            services.AddSingleton<IPreferenceStore>(sp => new JsonPreferenceStore(
+                preferencesPath, sp.GetRequiredService<ILogger<JsonPreferenceStore>>(), sp.GetRequiredService<ISecretProtector>()));
             services.AddSingleton(sp => sp.GetRequiredService<IPreferenceStore>().Load());
+            services.AddSingleton<IProxySettingsService, ProxySettingsService>();
             services.AddSingleton<IInstallOverridesService, InstallOverridesService>();
             services.AddSingleton<IZombieBuddyChannelService, ZombieBuddyChannelService>();
             services.AddSingleton<IModCollectionDefaultsService, ModCollectionDefaultsService>();
@@ -74,6 +82,7 @@ public partial class App : Application
             services.AddSingleton<LaunchSettingsViewModel>();
             services.AddSingleton<ModsViewModel>();
             services.AddSingleton<UpdateSettingsViewModel>();
+            services.AddSingleton<ProxySettingsViewModel>();
             services.AddSingleton<UpdateBannerViewModel>();
             services.AddSingleton<SettingsViewModel>();
             services.AddSingleton<LanguageMenuViewModel>();
@@ -81,6 +90,9 @@ public partial class App : Application
             var provider = services.BuildServiceProvider();
 
             InstallGlobalExceptionHandlers(provider.GetRequiredService<ILogger<App>>(), provider.GetRequiredService<IDialogService>());
+
+            // Applies the saved proxy; before anything else is resolved, so no request (the startup update check included) goes out without it.
+            var proxy = provider.GetRequiredService<IProxySettingsService>();
 
             // Resolved before the first window exists, so views read UiText in the startup language and theme.
             var localization = provider.GetRequiredService<ILocalizationService>();
@@ -101,7 +113,7 @@ public partial class App : Application
                 provider.GetRequiredService<IPreferenceStore>(),
                 provider.GetRequiredService<UserPreferences>().Window,
                 // A failed order write is already logged by Core; closing goes on without it.
-                ct => Task.WhenAll(installOverrides.FlushAsync(ct), orderWriter.FlushAsync(ct)),
+                ct => Task.WhenAll(installOverrides.FlushAsync(ct), orderWriter.FlushAsync(ct), proxy.FlushAsync(ct)),
                 // A staged update installs whether or not "Later" was clicked; a failure is logged and offered again next start.
                 updates.InstallPendingOnCloseAsync,
                 provider.GetRequiredService<ILogger<WindowPlacementPersistence>>());

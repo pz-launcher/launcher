@@ -4,5 +4,6 @@ public enum SettingsSection
 {
     Appearance,
     Updates,
+    Proxy,
     Java,
 }

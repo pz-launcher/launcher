@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging.Abstractions;
 using PzLauncher.Core.Common;
 using PzLauncher.Core.Installs;
 using PzLauncher.Core.Java;
@@ -6,12 +7,14 @@ using PzLauncher.Core.Mod;
 using PzLauncher.Core.Mod.Collections;
 using PzLauncher.Core.Mod.Zabric;
 using PzLauncher.Core.Mod.ZombieBuddy;
+using PzLauncher.Core.Net;
 using PzLauncher.Core.Platform;
 using PzLauncher.Core.Update;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Services;
 using PzLauncher.Desktop.Themes;
 using PzLauncher.Desktop.ViewModels.Java;
+using PzLauncher.Desktop.ViewModels.Net;
 using PzLauncher.Desktop.ViewModels.ZombieBuddy;
 
 namespace PzLauncher.Desktop.Tests.TestSupport;
@@ -203,6 +206,17 @@ public sealed class FakePreferenceStore : IPreferenceStore
     {
         SavedAutoCheckUpdates.Add(enabled);
         return Task.CompletedTask;
+    }
+
+    public List<SavedProxy> SavedProxies { get; } = [];
+
+    /// <summary>Holds proxy saves open until completed.</summary>
+    public TaskCompletionSource? ProxySaveGate { get; set; }
+
+    public Task SaveProxyAsync(SavedProxy proxy, CancellationToken ct = default)
+    {
+        SavedProxies.Add(proxy);
+        return ProxySaveGate?.Task ?? Task.CompletedTask;
     }
 }
 
@@ -852,4 +866,57 @@ public static class TestUpdates
         GameRunState? runState = null,
         IAppLifetime? app = null) =>
         new(updates, preferences ?? new FakePreferenceStore(), saved ?? new UserPreferences(null, null, null), runState ?? new GameRunState(), app ?? new FakeAppLifetime());
+}
+
+/// <summary>Validates like Core; <see cref="Applied"/> stands for every route switch.</summary>
+public sealed class FakeNetworkService : INetworkService
+{
+    public ProxySettings Proxy { get; private set; } = ProxySettings.Default;
+
+    public List<ProxySettings> Applied { get; } = [];
+
+    public Func<IReadOnlyList<ConnectionTestResult>> Results { get; set; } = () => [];
+
+    /// <summary>Holds a test open until completed.</summary>
+    public TaskCompletionSource? TestGate { get; set; }
+
+    /// <summary>The settings in effect when each test started.</summary>
+    public List<ProxySettings> Tests { get; } = [];
+
+    public Result ApplyProxy(ProxySettings settings)
+    {
+        var validated = ProxySettingsValidation.Validate(settings);
+        if (!validated.IsSuccess)
+        {
+            return validated.Error;
+        }
+
+        Proxy = validated.Value;
+        Applied.Add(validated.Value);
+        return Result.Ok();
+    }
+
+    public async Task<IReadOnlyList<ConnectionTestResult>> TestConnectionAsync(CancellationToken ct = default)
+    {
+        Tests.Add(Proxy);
+        if (TestGate is { } gate)
+        {
+            await gate.Task.WaitAsync(ct);
+        }
+
+        return Results();
+    }
+}
+
+public static class TestProxy
+{
+    public static ProxySettingsService Service(
+        FakeNetworkService network, IPreferenceStore store, SavedProxy? saved = null, TimeProvider? time = null) =>
+        new(network, store, new UserPreferences(null, null, null) { Proxy = saved }, time ?? new ManualTimeProvider(), NullLogger<ProxySettingsService>.Instance);
+
+    public static ProxySettingsViewModel ViewModel(ILocalizationService localization, IPreferenceStore store)
+    {
+        var network = new FakeNetworkService();
+        return new ProxySettingsViewModel(Service(network, store), network, new FakePlatformEnvironment(), localization);
+    }
 }

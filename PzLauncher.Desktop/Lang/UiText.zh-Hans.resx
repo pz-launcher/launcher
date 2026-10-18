@@ -275,6 +275,18 @@
   <data name="Error_UpdateRestartFailed" xml:space="preserve">
     <value>更新已安装，但无法启动 {0}。请手动重新启动 PzLauncher。</value>
   </data>
+  <data name="Error_NetworkProxyHostInvalid" xml:space="preserve">
+    <value>请输入代理的主机名或 IP 地址，例如 127.0.0.1。可以带 http:// 前缀；不支持 https:// 和 SOCKS 代理。</value>
+  </data>
+  <data name="Error_NetworkProxyPortInvalid" xml:space="preserve">
+    <value>请输入 1 到 65535 之间的代理端口。</value>
+  </data>
+  <data name="Error_NetworkUnreachable" xml:space="preserve">
+    <value>无法连接到 {0}：{1}</value>
+  </data>
+  <data name="Error_NetworkTimeout" xml:space="preserve">
+    <value>{0} 在 {1} 秒内没有响应。</value>
+  </data>
   <data name="Error_FolderNotLocal" xml:space="preserve">
     <value>{0} 不是这台电脑上的文件夹，启动器无法打开它。请选择本地文件夹。</value>
   </data>
@@ -316,6 +328,51 @@
   </data>
   <data name="Settings_CheckNow" xml:space="preserve">
     <value>立即检查</value>
+  </data>
+  <data name="Settings_Proxy" xml:space="preserve">
+    <value>代理</value>
+  </data>
+  <data name="ProxyMode_System" xml:space="preserve">
+    <value>使用系统代理</value>
+  </data>
+  <data name="ProxyMode_None" xml:space="preserve">
+    <value>不使用代理</value>
+  </data>
+  <data name="ProxyMode_Manual" xml:space="preserve">
+    <value>手动 HTTP 代理</value>
+  </data>
+  <data name="Proxy_SystemHintWindows" xml:space="preserve">
+    <value>跟随 Windows 代理设置（设置 &gt; 网络和 Internet &gt; 代理），Clash、v2rayN 等代理工具会修改这里。如果设置了 HTTP_PROXY、HTTPS_PROXY 或 ALL_PROXY 环境变量，则以环境变量为准。</value>
+  </data>
+  <data name="Proxy_SystemHintMacOS" xml:space="preserve">
+    <value>跟随 macOS 网络代理设置。如果设置了 http_proxy、https_proxy 或 all_proxy 环境变量，则以环境变量为准。</value>
+  </data>
+  <data name="Proxy_SystemHintLinux" xml:space="preserve">
+    <value>使用 http_proxy、https_proxy、all_proxy 和 no_proxy 环境变量。不会读取桌面环境（GNOME、KDE）的代理设置。</value>
+  </data>
+  <data name="Proxy_Address" xml:space="preserve">
+    <value>地址</value>
+  </data>
+  <data name="Proxy_Port" xml:space="preserve">
+    <value>端口</value>
+  </data>
+  <data name="Proxy_Username" xml:space="preserve">
+    <value>用户名（可选）</value>
+  </data>
+  <data name="Proxy_Password" xml:space="preserve">
+    <value>密码（可选）</value>
+  </data>
+  <data name="Proxy_ManualHint" xml:space="preserve">
+    <value>仅支持 HTTP 代理。localhost、127.0.0.1 等本地地址直接连接。</value>
+  </data>
+  <data name="Proxy_PasswordPlainText" xml:space="preserve">
+    <value>在此系统上，密码以明文保存在 PzLauncher 的偏好设置文件中。</value>
+  </data>
+  <data name="Proxy_TestConnection" xml:space="preserve">
+    <value>测试连接</value>
+  </data>
+  <data name="Proxy_TestOk" xml:space="preserve">
+    <value>正常（{0} 毫秒）</value>
   </data>
   <data name="Settings_GameGroup" xml:space="preserve">
     <value>游戏</value>
