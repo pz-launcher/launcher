@@ -197,6 +197,7 @@ public sealed class JsonPreferenceStoreTests : IDisposable
     [InlineData(7)]
     [InlineData(8)]
     [InlineData(9)]
+    [InlineData(10)]
     public async Task SaveOneField_FileHoldsTheOthers_KeepsAll(int savedLast)
     {
         var ct = TestContext.Current.CancellationToken;
@@ -212,6 +213,7 @@ public sealed class JsonPreferenceStoreTests : IDisposable
             () => CreateStore().SaveUpdateSourceAsync(UpdateSource.Gitee, ct),
             () => CreateStore().SaveAutoCheckUpdatesAsync(false, ct),
             () => CreateStore().SaveProxyAsync(ManualProxy, ct),
+            () => CreateStore().SaveSteamHookReminderAsync(false, ct),
         ];
 
         // Separate stores, as across app runs.
@@ -230,6 +232,7 @@ public sealed class JsonPreferenceStoreTests : IDisposable
                 UpdateSource = UpdateSource.Gitee,
                 AutoCheckUpdates = false,
                 Proxy = ManualProxy,
+                SteamHookReminder = false,
             },
             CreateStore().Load());
     }
@@ -253,7 +256,8 @@ public sealed class JsonPreferenceStoreTests : IDisposable
             store.SaveDefaultModCollectionAsync(OtherRoot, "my collection", TestContext.Current.CancellationToken),
             store.SaveUpdateSourceAsync(UpdateSource.GitHub, TestContext.Current.CancellationToken),
             store.SaveAutoCheckUpdatesAsync(false, TestContext.Current.CancellationToken),
-            store.SaveProxyAsync(ManualProxy, TestContext.Current.CancellationToken));
+            store.SaveProxyAsync(ManualProxy, TestContext.Current.CancellationToken),
+            store.SaveSteamHookReminderAsync(false, TestContext.Current.CancellationToken));
 
         Assert.Equal(
             new UserPreferences(AppLanguage.PortugueseBrazil, AppTheme.Dark, Placement)
@@ -265,6 +269,7 @@ public sealed class JsonPreferenceStoreTests : IDisposable
                 UpdateSource = UpdateSource.GitHub,
                 AutoCheckUpdates = false,
                 Proxy = ManualProxy,
+                SteamHookReminder = false,
             },
             CreateStore().Load());
     }
@@ -284,6 +289,7 @@ public sealed class JsonPreferenceStoreTests : IDisposable
         await CreateStore().SaveUpdateSourceAsync(UpdateSource.Gitee, TestContext.Current.CancellationToken);
         await CreateStore().SaveAutoCheckUpdatesAsync(false, TestContext.Current.CancellationToken);
         await CreateStore().SaveProxyAsync(ManualProxy, TestContext.Current.CancellationToken);
+        await CreateStore().SaveSteamHookReminderAsync(false, TestContext.Current.CancellationToken);
 
         Assert.Equal(new UserPreferences(null, null, null), CreateStore().Load());
     }
@@ -611,6 +617,45 @@ public sealed class JsonPreferenceStoreTests : IDisposable
         WriteFile($$"""{"theme":"dark","updateSource":"gitee","autoCheckUpdates":{{value}}}""");
 
         Assert.Equal(new UserPreferences(null, AppTheme.Dark, null) { UpdateSource = UpdateSource.Gitee }, CreateStore().Load());
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task SaveSteamHookReminderAsync_ThenLoad_RoundTrips(bool remind)
+    {
+        await CreateStore().SaveSteamHookReminderAsync(remind, TestContext.Current.CancellationToken);
+
+        Assert.Equal(new UserPreferences(null, null, null) { SteamHookReminder = remind }, CreateStore().Load());
+    }
+
+    [Fact]
+    public async Task SaveSteamHookReminderAsync_WritesBool()
+    {
+        await CreateStore().SaveSteamHookReminderAsync(false, TestContext.Current.CancellationToken);
+
+        Assert.Equal("""{"steamHookReminder":false}""", await File.ReadAllTextAsync(FilePath, TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
+    public void Load_NoSteamHookReminder_LoadsNull()
+    {
+        WriteFile("""{"theme":"dark"}""");
+
+        Assert.Null(CreateStore().Load().SteamHookReminder);
+    }
+
+    [Theory]
+    [InlineData("\"no\"")]
+    [InlineData("\"false\"")]
+    [InlineData("0")]
+    [InlineData("null")]
+    [InlineData("[]")]
+    public void Load_NonBoolSteamHookReminder_KeepsOtherFieldsAndReturnsNoChoice(string value)
+    {
+        WriteFile($$"""{"theme":"dark","steamHookReminder":{{value}},"autoCheckUpdates":false}""");
+
+        Assert.Equal(new UserPreferences(null, AppTheme.Dark, null) { AutoCheckUpdates = false }, CreateStore().Load());
     }
 
     public static TheoryData<SavedProxy> Proxies =>

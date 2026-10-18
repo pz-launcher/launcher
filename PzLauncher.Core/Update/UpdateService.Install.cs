@@ -85,7 +85,7 @@ internal sealed partial class UpdateService
         try
         {
             // Only the start matters; the handle goes at once and the new launcher outlives this one.
-            using var process = processes.Start(new ProcessStartRequest(executable, [], InstallDirectory, new Dictionary<string, string>()));
+            using var process = processes.Start(new ProcessStartRequest(executable, [LauncherArguments.Restart], InstallDirectory, new Dictionary<string, string>()));
             return Task.FromResult(Result.Ok());
         }
         catch (Exception ex) when (ex is Win32Exception or IOException or UnauthorizedAccessException)

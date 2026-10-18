@@ -8,6 +8,7 @@ using PzLauncher.Core.Mod.Collections;
 using PzLauncher.Core.Mod.ZombieBuddy;
 using PzLauncher.Core.Net;
 using PzLauncher.Core.Platform;
+using PzLauncher.Core.Steam;
 using PzLauncher.Core.Update;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Services.Launch;
@@ -15,11 +16,13 @@ using PzLauncher.Desktop.Services.Mods;
 using PzLauncher.Desktop.Services.Net;
 using PzLauncher.Desktop.Services.Preferences;
 using PzLauncher.Desktop.Services.Shell;
+using PzLauncher.Desktop.Services.Steam;
 using PzLauncher.Desktop.Services.Update;
 using PzLauncher.Desktop.Services.ZombieBuddy;
 using PzLauncher.Desktop.Themes;
 using PzLauncher.Desktop.ViewModels.Java;
 using PzLauncher.Desktop.ViewModels.Net;
+using PzLauncher.Desktop.ViewModels.Settings;
 using PzLauncher.Desktop.ViewModels.ZombieBuddy;
 
 namespace PzLauncher.Desktop.Tests.TestSupport;
@@ -223,6 +226,14 @@ public sealed class FakePreferenceStore : IPreferenceStore
         SavedProxies.Add(proxy);
         return ProxySaveGate?.Task ?? Task.CompletedTask;
     }
+
+    public List<bool> SavedSteamHookReminders { get; } = [];
+
+    public Task SaveSteamHookReminderAsync(bool remind, CancellationToken ct = default)
+    {
+        SavedSteamHookReminders.Add(remind);
+        return Task.CompletedTask;
+    }
 }
 
 /// <summary>Each successful launch starts a game that runs until <see cref="Exit"/> completes.</summary>
@@ -323,6 +334,11 @@ public sealed class FakeDialogService : IDialogService
 
     public Queue<TextPromptResult> PromptAnswers { get; } = new();
 
+    public List<(ConfirmPrompt Prompt, string OptionText)> OptionConfirms { get; } = [];
+
+    /// <summary>An empty queue cancels with the option unchecked.</summary>
+    public Queue<ConfirmOptionResult> OptionAnswers { get; } = new();
+
     public List<ZombieBuddySetupViewModel> Setups { get; } = [];
 
     public Func<ZombieBuddySetupViewModel, Task<bool>> SetupResult { get; set; } = _ => Task.FromResult(true);
@@ -341,6 +357,13 @@ public sealed class FakeDialogService : IDialogService
         Confirms.Add(prompt);
         Shown?.Invoke();
         return Task.FromResult(ConfirmAnswers.Count > 0 && ConfirmAnswers.Dequeue());
+    }
+
+    public Task<ConfirmOptionResult> ConfirmWithOptionAsync(ConfirmPrompt prompt, string optionText)
+    {
+        OptionConfirms.Add((prompt, optionText));
+        Shown?.Invoke();
+        return Task.FromResult(OptionAnswers.Count > 0 ? OptionAnswers.Dequeue() : new ConfirmOptionResult(false, false));
     }
 
     public Task<TextPromptResult> PromptTextAsync(TextPrompt prompt)
@@ -929,5 +952,70 @@ public static class TestProxy
     {
         var network = new FakeNetworkService();
         return new ProxySettingsViewModel(Service(network, store), network, new FakePlatformEnvironment(), localization);
+    }
+}
+
+/// <summary>Holds Steam's state in <see cref="Current"/>: a successful set changes it as the real service changes the file.</summary>
+public sealed class FakeSteamLaunchHookService : ISteamLaunchHookService
+{
+    public SteamLaunchHookStatus Current { get; set; } = TestSteam.Status(SteamLaunchHookState.Off);
+
+    /// <summary>Returned by every status read instead of <see cref="Current"/>.</summary>
+    public Error? StatusError { get; set; }
+
+    /// <summary>Returned by a set instead of changing <see cref="Current"/>.</summary>
+    public Error? SetError { get; set; }
+
+    public IReadOnlyList<Error> SetWarnings { get; set; } = [];
+
+    /// <summary>Holds every set open, after recording it, until completed.</summary>
+    public TaskCompletionSource? SetGate { get; set; }
+
+    public List<string> StatusRequests { get; } = [];
+
+    public List<(string LauncherExe, bool Enabled, bool RestartSteam)> Sets { get; } = [];
+
+    public Task<Result<SteamLaunchHookStatus>> GetStatusAsync(string launcherExe, CancellationToken ct = default)
+    {
+        StatusRequests.Add(launcherExe);
+        return Task.FromResult(StatusError is { } error ? Result<SteamLaunchHookStatus>.Fail(error) : Current);
+    }
+
+    public async Task<Result<SteamLaunchHookApplied>> SetAsync(string launcherExe, bool enabled, bool restartSteam, CancellationToken ct = default)
+    {
+        Sets.Add((launcherExe, enabled, restartSteam));
+        if (SetGate is { } gate)
+        {
+            await gate.Task.WaitAsync(ct);
+        }
+
+        if (SetError is { } error)
+        {
+            return error;
+        }
+
+        Current = Current with { State = enabled ? SteamLaunchHookState.On : SteamLaunchHookState.Off, HookedPath = null };
+        return new SteamLaunchHookApplied(Current, SetWarnings);
+    }
+}
+
+public static class TestSteam
+{
+    public const string LauncherExe = @"C:\Games\PzLauncher\PzLauncher.exe";
+
+    public const string OtherLauncherExe = @"D:\Old\PzLauncher.exe";
+
+    public static readonly SteamAccount Account = new(12345678, "Survivor");
+
+    public static SteamLaunchHookStatus Status(SteamLaunchHookState state, bool isSteamRunning = false) =>
+        new(Account, state, state == SteamLaunchHookState.OtherLauncher ? OtherLauncherExe : null, isSteamRunning);
+
+    public static SteamLaunchHookFlow Flow(FakeSteamLaunchHookService hooks, FakeDialogService dialogs) => new(hooks, dialogs, LauncherExe);
+
+    public static SteamSettingsViewModel ViewModel(ILocalizationService localization, IPreferenceStore store, FakeSteamLaunchHookService? hooks = null)
+    {
+        var dialogs = new FakeDialogService();
+        return new SteamSettingsViewModel(
+            Flow(hooks ?? new FakeSteamLaunchHookService(), dialogs), store, new UserPreferences(null, null, null), dialogs, new FakePlatformEnvironment(), localization);
     }
 }

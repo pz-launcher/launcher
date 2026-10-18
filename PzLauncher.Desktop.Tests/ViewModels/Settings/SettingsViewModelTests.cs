@@ -11,6 +11,7 @@ public class SettingsViewModelTests : UiTextCultureTest
     private readonly FakePreferenceStore _store = new();
     private readonly FakeWindowPlacementService _windowPlacement = new();
     private readonly FakeJavaDiscoveryService _java = new();
+    private readonly FakeSteamLaunchHookService _steam = new();
 
     private SettingsViewModel CreateViewModel(FakeThemeService theme) =>
         new(
@@ -19,7 +20,8 @@ public class SettingsViewModelTests : UiTextCultureTest
             _windowPlacement,
             TestJava.ViewModel(Localization, _java, _store),
             new UpdateSettingsViewModel(TestUpdates.Coordinator(new FakeUpdateService(), _store), Localization),
-            TestProxy.ViewModel(Localization, _store));
+            TestProxy.ViewModel(Localization, _store),
+            TestSteam.ViewModel(Localization, _store, _steam));
 
     [Theory]
     [InlineData(AppTheme.Light)]
@@ -77,5 +79,18 @@ public class SettingsViewModelTests : UiTextCultureTest
 
         Assert.Equal(1, _java.ScanCalls);
         Assert.True(vm.Java.HasScanned);
+    }
+
+    [Fact]
+    public void Section_SteamSelectedRepeatedly_ReadsSteamEachTime()
+    {
+        var vm = CreateViewModel(new FakeThemeService(AppTheme.Light));
+
+        vm.Section = SettingsSection.Steam;
+        vm.Section = SettingsSection.Appearance;
+        vm.Section = SettingsSection.Steam;
+
+        Assert.Equal(2, _steam.StatusRequests.Count);
+        Assert.True(vm.Steam.IsAvailable);
     }
 }

@@ -3,6 +3,9 @@ namespace PzLauncher.Core.Common;
 /// <summary>Throws <see cref="IOException"/> or <see cref="UnauthorizedAccessException"/>.</summary>
 internal static class AtomicFile
 {
+    /// <summary>The rolling copy of a file we don't own, taken before each rewrite, for manual recovery.</summary>
+    public const string BackupSuffix = ".pzlauncher.bak";
+
     // Same folder, so the move is a rename: a reader never sees a half-written file.
     /// <summary>Without <paramref name="overwrite"/>, an existing file at <paramref name="path"/> makes the move throw and is kept.</summary>
     public static async Task WriteAsync(string path, byte[] content, CancellationToken ct, bool overwrite = true)

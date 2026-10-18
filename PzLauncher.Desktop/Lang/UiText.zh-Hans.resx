@@ -133,6 +133,33 @@
   <data name="Error_SteamVdfMalformed" xml:space="preserve">
     <value>某个 Steam 文件已损坏，无法读取。</value>
   </data>
+  <data name="Error_SteamPlatformUnsupported" xml:space="preserve">
+    <value>只有在 Windows 上才能管理 Steam 启动选项。</value>
+  </data>
+  <data name="Error_SteamNoCurrentAccount" xml:space="preserve">
+    <value>无法确定当前登录的 Steam 账户（{0}）。请先登录一次 Steam，然后重试。</value>
+  </data>
+  <data name="Error_SteamAppNotInLocalConfig" xml:space="preserve">
+    <value>当前 Steam 账户中还没有 Project Zomboid 的设置（{0}）。请先从 Steam 启动一次游戏，然后重试。</value>
+  </data>
+  <data name="Error_SteamLocalConfigMalformed" xml:space="preserve">
+    <value>Steam 设置文件 {0} 的结构不符合预期，因此未作更改。请改为在 Steam 中设置启动选项。</value>
+  </data>
+  <data name="Error_SteamLocalConfigUnwritable" xml:space="preserve">
+    <value>无法读取或写入 Steam 设置文件 {0}。请关闭正在使用它的程序，然后重试。</value>
+  </data>
+  <data name="Error_SteamClientRunning" xml:space="preserve">
+    <value>Steam 正在运行，退出时会撤销这次更改。请关闭 Steam 后重试。</value>
+  </data>
+  <data name="Error_SteamShutdownTimedOut" xml:space="preserve">
+    <value>Steam 未在 {0} 秒内关闭，因此未作任何更改。请手动关闭 Steam，然后重试。</value>
+  </data>
+  <data name="Error_SteamShutdownUnconfirmed" xml:space="preserve">
+    <value>无法确认 Steam 是否已关闭，因此未作任何更改。请手动关闭 Steam，然后重试。</value>
+  </data>
+  <data name="Error_SteamStartFailed" xml:space="preserve">
+    <value>无法运行 {0}。如果 Steam 没有运行，请手动启动它。</value>
+  </data>
   <data name="Error_InstallFilesMissing" xml:space="preserve">
     <value>Steam 显示 {0} 处有一个安装，但该文件夹不存在。请尝试在 Steam 中验证游戏文件的完整性。</value>
   </data>
@@ -379,6 +406,57 @@
   </data>
   <data name="Settings_Java" xml:space="preserve">
     <value>Java</value>
+  </data>
+  <data name="Settings_Steam" xml:space="preserve">
+    <value>Steam</value>
+  </data>
+  <data name="Steam_Account" xml:space="preserve">
+    <value>Steam 账户：{0}</value>
+  </data>
+  <data name="Steam_Hook" xml:space="preserve">
+    <value>在 Steam 中点击“开始游戏”时打开 PzLauncher</value>
+  </data>
+  <data name="Steam_HookHint" xml:space="preserve">
+    <value>开启后，在 Steam 中点击 Project Zomboid 的“开始游戏”会打开本启动器而不是直接启动游戏，确保始终使用你的 Java、内存、合集和 ZombieBuddy 设置。请在这里点击“启动游戏”开始游戏。</value>
+  </data>
+  <data name="Steam_OtherLauncher" xml:space="preserve">
+    <value>Steam 当前会打开另一个 PzLauncher：{0}。开启后改为打开这一个。</value>
+  </data>
+  <data name="Steam_LaunchOptionsHint" xml:space="preserve">
+    <value>在 Steam 中添加的其他启动选项会传给 PzLauncher，而不是游戏。游戏参数请在“启动设置”中填写。</value>
+  </data>
+  <data name="Steam_RemindAtStartup" xml:space="preserve">
+    <value>启动时提醒</value>
+  </data>
+  <data name="Steam_Loading" xml:space="preserve">
+    <value>正在读取 Steam 设置…</value>
+  </data>
+  <data name="Steam_Applying" xml:space="preserve">
+    <value>正在应用… 如果 Steam 正在运行，会先关闭再重新启动，最多可能需要一分钟。</value>
+  </data>
+  <data name="Steam_ConfirmTitle" xml:space="preserve">
+    <value>关闭 Steam？</value>
+  </data>
+  <data name="Steam_ConfirmMessage" xml:space="preserve">
+    <value>Steam 正在运行。它会在退出时保存设置并覆盖这次更改，因此 PzLauncher 将关闭 Steam、应用更改，然后重新启动 Steam。正在进行的下载会被中断。</value>
+  </data>
+  <data name="Steam_ConfirmApply" xml:space="preserve">
+    <value>关闭 Steam 并应用</value>
+  </data>
+  <data name="Steam_ReminderTitle" xml:space="preserve">
+    <value>从 Steam 打开 PzLauncher？</value>
+  </data>
+  <data name="Steam_ReminderMessage" xml:space="preserve">
+    <value>在 Steam 中点击“开始游戏”会绕过 PzLauncher 直接启动 Project Zomboid，你的 Java、内存、合集和 ZombieBuddy 设置都不会生效。要让 Steam 的“开始游戏”改为打开 PzLauncher 吗？之后可以在“设置 → Steam”中更改。</value>
+  </data>
+  <data name="Steam_ReminderEnable" xml:space="preserve">
+    <value>立即开启</value>
+  </data>
+  <data name="Steam_ReminderLater" xml:space="preserve">
+    <value>暂不</value>
+  </data>
+  <data name="Steam_ReminderDontRemind" xml:space="preserve">
+    <value>不再提醒</value>
   </data>
   <data name="Java_Title" xml:space="preserve">
     <value>Java 运行时</value>

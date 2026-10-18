@@ -47,7 +47,8 @@ public class MainViewModelTests : UiTextCultureTest
                 new FakeWindowPlacementService(),
                 java,
                 new UpdateSettingsViewModel(updates, Localization),
-                TestProxy.ViewModel(Localization, store)),
+                TestProxy.ViewModel(Localization, store),
+                TestSteam.ViewModel(Localization, store)),
             new LaunchSettingsViewModel(
                 installs, launcher, overrides, java, zombieBuddy, channels, runState, dialogs, new FakePlatformEnvironment(), Localization),
             new LanguageMenuViewModel(Localization, store),

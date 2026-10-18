@@ -6,4 +6,5 @@ public enum SettingsSection
     Updates,
     Proxy,
     Java,
+    Steam,
 }

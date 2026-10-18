@@ -33,6 +33,51 @@ internal sealed class ProcessRunner : IProcessRunner
         return new RunningProcess(process);
     }
 
+    public IReadOnlyList<IRunningProcess> FindByName(string name)
+    {
+        using var current = Process.GetCurrentProcess();
+        var found = new List<IRunningProcess>();
+        foreach (var process in Process.GetProcessesByName(name))
+        {
+            if (InSession(process, current.SessionId))
+            {
+                found.Add(new FoundProcess(process));
+            }
+            else
+            {
+                process.Dispose();
+            }
+        }
+
+        return found;
+    }
+
+    // Another user's processes, and ones that exited since the listing, aren't ours to wait for.
+    private static bool InSession(Process process, int sessionId)
+    {
+        try
+        {
+            return process.SessionId == sessionId;
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or System.ComponentModel.Win32Exception)
+        {
+            return false;
+        }
+    }
+
+    private sealed class FoundProcess(Process process) : IRunningProcess
+    {
+        public int Id { get; } = process.Id;
+
+        public int ExitCode => process.ExitCode;
+
+        public IReadOnlyList<string> ErrorOutputTail => [];
+
+        public Task WaitForExitAsync(CancellationToken ct) => process.WaitForExitAsync(ct);
+
+        public void Dispose() => process.Dispose();
+    }
+
     private sealed class RunningProcess : IRunningProcess
     {
         private readonly Process _process;

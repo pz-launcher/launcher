@@ -1,0 +1,10 @@
+{"file": ".trellis/spec/common/architecture.md", "reason": "Core vs Desktop boundary"}
+{"file": ".trellis/spec/common/coding-rules.md", "reason": "General coding rules, AOT, banned APIs"}
+{"file": ".trellis/spec/common/test-strategy.md", "reason": "Test levels and fixtures for the vdf editor"}
+{"file": ".trellis/spec/core/service-api.md", "reason": "ISteamLaunchHookService shape, DI, DTOs"}
+{"file": ".trellis/spec/core/error-handling.md", "reason": "New steam.* codes; writing files we don't own (localconfig.vdf)"}
+{"file": ".trellis/spec/core/directory-structure.md", "reason": "Core Steam/ and Platform/ placement"}
+{"file": ".trellis/spec/desktop/preferences.md", "reason": "steamHookReminder preference field"}
+{"file": ".trellis/spec/desktop/localization.md", "reason": "New UiText keys in every resx"}
+{"file": ".trellis/spec/desktop/shell-and-theming.md", "reason": "Settings Steam section layout"}
+{"file": ".trellis/spec/desktop/directory-structure.md", "reason": "Desktop services/VMs/views, dialogs, composition root"}

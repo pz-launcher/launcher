@@ -7,3 +7,6 @@ public sealed record ConfirmPrompt(string Title, string Message, string ConfirmT
 {
     public IReadOnlyList<string> Items { get; init; } = [];
 }
+
+/// <param name="Confirmed"><c>false</c> for cancel and for closing the window.</param>
+public sealed record ConfirmOptionResult(bool Confirmed, bool OptionChecked);

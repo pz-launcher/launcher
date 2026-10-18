@@ -8,6 +8,7 @@ using PzLauncher.Core.Mod.Collections;
 using PzLauncher.Core.Mod.ZombieBuddy;
 using PzLauncher.Core.Net;
 using PzLauncher.Core.Serialization;
+using PzLauncher.Core.Steam;
 using PzLauncher.Core.Update;
 
 namespace PzLauncher.Core.Tests.Serialization;
@@ -454,5 +455,22 @@ public class CoreJsonContextTests
         Assert.Contains("\"code\":\"network.timeout\"", json, StringComparison.Ordinal);
         Assert.NotNull(copy);
         Assert.Equal(original.Select(r => (r.Name, r.Url, r.Elapsed, r.Error?.Code)), copy.Select(r => (r.Name, r.Url, r.Elapsed, r.Error?.Code)));
+    }
+
+    [Fact]
+    public void SteamLaunchHookApplied_RoundTrips_WithStringEnums()
+    {
+        var original = new SteamLaunchHookApplied(
+            new SteamLaunchHookStatus(new SteamAccount(629668875, "Example Player"), SteamLaunchHookState.OtherLauncher, @"D:\Old\PzLauncher.exe", IsSteamRunning: true),
+            [new Error(ErrorCode.SteamStartFailed, "msg", ErrorKind.External)]);
+
+        var json = JsonSerializer.Serialize(original, CoreJsonContext.Default.SteamLaunchHookApplied);
+        var copy = JsonSerializer.Deserialize(json, CoreJsonContext.Default.SteamLaunchHookApplied);
+
+        Assert.Contains("\"state\":\"OtherLauncher\"", json, StringComparison.Ordinal);
+        Assert.Contains("\"code\":\"steam.start_failed\"", json, StringComparison.Ordinal);
+        Assert.NotNull(copy);
+        Assert.Equal(original.Status, copy.Status);
+        Assert.Equal(ErrorCode.SteamStartFailed, Assert.Single(copy.Warnings).Code);
     }
 }

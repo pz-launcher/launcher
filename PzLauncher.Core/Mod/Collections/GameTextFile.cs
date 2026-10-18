@@ -110,7 +110,7 @@ internal sealed class GameTextFile
                     await AtomicFile.WriteAsync(originalCopy, _original, ct, overwrite: false).ConfigureAwait(false);
                 }
 
-                await AtomicFile.WriteAsync(FilePath + ModCollectionFiles.BackupSuffix, _original, ct).ConfigureAwait(false);
+                await AtomicFile.WriteAsync(FilePath + AtomicFile.BackupSuffix, _original, ct).ConfigureAwait(false);
             }
 
             await AtomicFile.WriteAsync(FilePath, content, ct).ConfigureAwait(false);

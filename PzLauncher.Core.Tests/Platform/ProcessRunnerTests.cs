@@ -18,4 +18,28 @@ public sealed class ProcessRunnerTests
         Assert.Equal(3, process.ExitCode);
         Assert.Equal(Enumerable.Range(11, 50).Select(i => $"line{i}"), process.ErrorOutputTail);
     }
+
+    [Fact]
+    public void FindByName_ThisProcessName_IncludesThisProcess()
+    {
+        using var current = System.Diagnostics.Process.GetCurrentProcess();
+
+        var found = new ProcessRunner().FindByName(current.ProcessName);
+
+        try
+        {
+            Assert.Contains(found, process => process.Id == Environment.ProcessId);
+        }
+        finally
+        {
+            foreach (var process in found)
+            {
+                process.Dispose();
+            }
+        }
+    }
+
+    [Fact]
+    public void FindByName_NoSuchProcess_IsEmpty() =>
+        Assert.Empty(new ProcessRunner().FindByName("pzlauncher-no-such-process-" + Guid.NewGuid().ToString("N")));
 }

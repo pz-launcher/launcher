@@ -25,6 +25,7 @@
 | `defaultModCollections` | object: absolute install root → non-empty collection name (the current collection, applied before each launch); a non-string, empty or non-absolute entry is dropped, the rest kept | `UserPreferences.DefaultModCollections` |
 | `updateSource` | `auto`, `github`, `gitee`; anything else loads as null (Auto) | `UpdateSourcePreferences.PreferenceName` |
 | `autoCheckUpdates` | `true`, `false`; anything else loads as null (on) | `UserPreferences.AutoCheckUpdates` |
+| `steamHookReminder` | `true`, `false`; anything else loads as null (remind) | `UserPreferences.SteamHookReminder` |
 | `proxy` | `{mode, host, port, username, password}`; `mode`: `system`, `none`, `manual`; an unknown mode, a member of the wrong JSON type or a non-object loads the whole entry as null (System). `host`/`port` are kept outside manual mode; an invalid one is dropped, the rest kept. Empty members are omitted. `password`: `dpapi:<base64>` (Windows, current user) or `plain:<text>` (Linux, macOS), written by `ISecretProtector`; another scheme or an undecryptable value loads as null and is logged | `UserPreferences.Proxy` (`SavedProxy`), `ProxyModePreferences.PreferenceName` |
 | `window` | `{x, y, width, height, maximized}`: normal-state position (int, physical px), client size (number > 0, DIPs), maximized (bool); invalid if any member is missing | `WindowPlacement` |
 

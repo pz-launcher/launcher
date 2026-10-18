@@ -1,0 +1,102 @@
+"UserLocalConfigStore"
+{
+	"Broadcast"
+	{
+		"Permissions"		"1"
+	}
+	"streaming_v2"
+	{
+		"EnableStreaming"		"0"
+		"DefaultAudioDevice"		"0"
+	}
+	"friends"
+	{
+		"10000001"
+		{
+			"name"		"Example Friend"
+			"NameHistory"
+			{
+				"0"		"Example Friend"
+			}
+		}
+		"PersonaName"		"Example Player"
+		"communitypreferences"		"0a0b0c"
+	}
+	"apptickets"
+	{
+		"108600"		"0011223344556677"
+	}
+	"Software"
+	{
+		"Valve"
+		{
+			"Steam"
+			{
+				"apps"
+				{
+					"7"
+					{
+						"cloud"
+						{
+							"last_sync_state"		"synchronized"
+						}
+					}
+					"105600"
+					{
+						"LastPlayed"		"1700000000"
+						"Playtime"		"007"
+					}
+					"108600"
+					{
+						"LastPlayed"		"1700000100"
+						"Playtime"		"1234"
+						"108600_eula_1"		"0"
+						"cloud"
+						{
+							"last_sync_state"		"synchronized"
+						}
+						"BadgeData"		"02"
+						"Playtime2wks"		"0"
+						"LaunchOptions"		""
+					}
+					"108710"
+					{
+						"LastPlayed"		"1700000200"
+						"Playtime"		"5"
+					}
+				}
+				"LastPlayedTimesSyncTime"		"1700000300"
+			}
+		}
+	}
+	"WebStorage"
+	{
+		"CachedCommunityPreferences"		"{\"bParenthesizeNicknames\":true,\"url\":\"https://example.test/a\\b\"}"
+	}
+	"depots"
+	{
+		"108600"
+		{
+			"CDN"
+			{
+				"cdn.example.test"
+				{
+					"token"		"abc"
+					"Expires"		"1700000400"
+				}
+			}
+			"LaunchOptions"		"not the game's"
+		}
+	}
+	"UserAppConfig"
+	{
+		"108600"		"00696e7465726e616c0008"
+	}
+	"apps"
+	{
+		"108600"
+		{
+			"UseSteamControllerConfig"		"0"
+		}
+	}
+}

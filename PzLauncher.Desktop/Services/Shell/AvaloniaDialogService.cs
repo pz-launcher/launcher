@@ -67,6 +67,38 @@ public sealed class AvaloniaDialogService(Func<Window?> owner) : IDialogService
         return confirmed;
     }
 
+    public async Task<ConfirmOptionResult> ConfirmWithOptionAsync(ConfirmPrompt prompt, string optionText)
+    {
+        if (owner() is not { } window)
+        {
+            return new ConfirmOptionResult(false, false);
+        }
+
+        var confirm = new Button { Content = prompt.ConfirmText, Classes = { "accent" } };
+        var cancel = new Button { Content = prompt.CancelText, IsCancel = true };
+        var option = new CheckBox { Content = optionText };
+        var dialog = CreateDialog(prompt.Title, 460, new StackPanel
+        {
+            Margin = new Thickness(16),
+            Spacing = 12,
+            Children =
+            {
+                new TextBlock { Text = prompt.Message, TextWrapping = TextWrapping.Wrap },
+                option,
+                Buttons(confirm, cancel),
+            },
+        });
+        var confirmed = false;
+        confirm.Click += (_, _) =>
+        {
+            confirmed = true;
+            dialog.Close();
+        };
+        cancel.Click += (_, _) => dialog.Close();
+        await dialog.ShowDialog(window);
+        return new ConfirmOptionResult(confirmed, option.IsChecked == true);
+    }
+
     public async Task<TextPromptResult> PromptTextAsync(TextPrompt prompt)
     {
         if (owner() is not { } window)

@@ -18,7 +18,7 @@ PzLauncher.Desktop/
 
 `<Feature>` matches the Core feature folder (`Installs`, ...), or names a desktop-only page (`Home`, `Settings`, `Mods`, which spans Core's `Mod/` and `Mod/Collections/`).
 
-`<Group>` under `Services/` is a feature folder (`Launch`, `Mods`, `Net`, `Update`, `ZombieBuddy`), `Shell` (app lifetime, dialogs, prompts, clipboard, folder picker, theme, URLs, window placement, UI-thread progress) or `Preferences` (preference store, its JSON context and saved records, secret protection). Namespace `PzLauncher.Desktop.Services.<Group>`; no files directly under `Services/`.
+`<Group>` under `Services/` is a feature folder (`Launch`, `Mods`, `Net`, `Steam`, `Update`, `ZombieBuddy`), `Shell` (app lifetime, dialogs, prompts, clipboard, folder picker, theme, URLs, window placement, UI-thread progress) or `Preferences` (preference store, its JSON context and saved records, secret protection). Namespace `PzLauncher.Desktop.Services.<Group>`; no files directly under `Services/`.
 
 ## ViewModels
 
@@ -57,6 +57,22 @@ Reference: `PzLauncher.Desktop/Services/Net/ProxySettingsService.cs`, `PzLaunche
 - `ProxySettingsService` applies the saved proxy in its constructor; `App.axaml.cs` resolves it before anything that can send a request (the update coordinator's startup check included).
 - Mode changes apply and save at once; field edits validate per keystroke and apply + save after a 300 ms debounce (`TimeProvider`). An invalid edit shows the error and leaves the last valid setting in effect and saved. The close flush includes a pending proxy change.
 - Secrets in the preference file go through `ISecretProtector` (`WindowsDpapiSecretProtector`: hand-written `LibraryImport` of crypt32, hence `AllowUnsafeBlocks` in the csproj; `PlainSecretProtector` elsewhere), chosen by `IPlatformEnvironment.Os`.
+
+## Steam launch hook
+
+Reference: `PzLauncher.Desktop/Services/Steam/SteamLaunchHookFlow.cs`, `PzLauncher.Desktop/ViewModels/Settings/SteamSettingsViewModel.cs`; Core API `ISteamLaunchHookService`.
+
+- Windows only: the Settings section is hidden and the startup reminder skipped elsewhere.
+- The switch shows what Steam's file holds, re-read each time the section opens; a failed or cancelled change shows the real state again.
+- The switch and the startup reminder share `SteamLaunchHookFlow` (asks before closing a running Steam) and one `RemindAtStartup` state (`steamHookReminder`).
+
+## Single instance
+
+Reference: `PzLauncher.Desktop/Services/Shell/SingleInstanceGuard.cs`, run in `Program.Main` before Avalonia.
+
+- Windows only, one instance per install directory, so a release install and a dev build run side by side. A second start activates the running window and exits.
+- A start with `LauncherArguments.Restart` (the self-update restart) waits, bounded, for the closing instance instead of exiting.
+- Any failure to open the named mutex or event (e.g. created by an elevated instance) runs without the guard; the guard never blocks startup.
 
 ## Composition root
 

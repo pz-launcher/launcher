@@ -12,6 +12,7 @@ using PzLauncher.Core.Mod.Collections;
 using PzLauncher.Core.Mod.ZombieBuddy;
 using PzLauncher.Core.Net;
 using PzLauncher.Core.Platform;
+using PzLauncher.Core.Steam;
 using PzLauncher.Core.Update;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Services.Launch;
@@ -19,6 +20,7 @@ using PzLauncher.Desktop.Services.Mods;
 using PzLauncher.Desktop.Services.Net;
 using PzLauncher.Desktop.Services.Preferences;
 using PzLauncher.Desktop.Services.Shell;
+using PzLauncher.Desktop.Services.Steam;
 using PzLauncher.Desktop.Services.Update;
 using PzLauncher.Desktop.Services.ZombieBuddy;
 using PzLauncher.Desktop.Themes;
@@ -96,8 +98,10 @@ public static class DesignData
 
     public static ProxySettingsViewModel ProxySettings { get; } = new(new SampleProxySettings(), new SampleNetwork(), new SamplePlatform(), Localization);
 
+    public static SteamSettingsViewModel SteamSettings { get; } = CreateSteamSettings();
+
     public static SettingsViewModel Settings { get; } =
-        new(new LightThemeService(), Preferences, new NoWindowPlacement(), Java, UpdateSettings, ProxySettings);
+        new(new LightThemeService(), Preferences, new NoWindowPlacement(), Java, UpdateSettings, ProxySettings, SteamSettings);
 
     public static LaunchSettingsViewModel LaunchSettings { get; } = CreateLaunchSettings();
 
@@ -113,6 +117,22 @@ public static class DesignData
         // Completes synchronously: the sample has a staged package, so the banner and the Ready status show.
         _ = coordinator.StartAsync();
         return coordinator;
+    }
+
+    private static SteamSettingsViewModel CreateSteamSettings()
+    {
+        var launcher = OperatingSystem.IsWindows() ? @"C:\Games\PzLauncher\PzLauncher.exe" : Path.Combine(SampleHome, "PzLauncher", "PzLauncher");
+        var vm = new SteamSettingsViewModel(
+            new SteamLaunchHookFlow(new SampleSteamHooks(), new NoDialogs(), launcher),
+            Preferences,
+            new UserPreferences(null, null, null),
+            new NoDialogs(),
+            new SamplePlatform(),
+            Localization);
+
+        // Completes synchronously: the sample answers at once.
+        _ = vm.LoadAsync();
+        return vm;
     }
 
     private static string SampleAppPath(string installDir) =>
@@ -218,6 +238,9 @@ public static class DesignData
         public Task ShowErrorAsync(string message) => Task.CompletedTask;
 
         public Task<bool> ConfirmAsync(ConfirmPrompt prompt) => Task.FromResult(false);
+
+        public Task<ConfirmOptionResult> ConfirmWithOptionAsync(ConfirmPrompt prompt, string optionText) =>
+            Task.FromResult(new ConfirmOptionResult(false, false));
 
         public Task<TextPromptResult> PromptTextAsync(TextPrompt prompt) => Task.FromResult<TextPromptResult>(new TextPromptResult.Cancelled());
 
@@ -395,6 +418,24 @@ public static class DesignData
         public Task SaveAutoCheckUpdatesAsync(bool enabled, CancellationToken ct = default) => Task.CompletedTask;
 
         public Task SaveProxyAsync(SavedProxy proxy, CancellationToken ct = default) => Task.CompletedTask;
+
+        public Task SaveSteamHookReminderAsync(bool remind, CancellationToken ct = default) => Task.CompletedTask;
+    }
+
+    // Steam opens a launcher in another folder, so the account, the switch and the other path all show.
+    private sealed class SampleSteamHooks : ISteamLaunchHookService
+    {
+        private static readonly SteamLaunchHookStatus Status = new(
+            new SteamAccount(12345678, "Survivor"),
+            SteamLaunchHookState.OtherLauncher,
+            OperatingSystem.IsWindows() ? @"D:\Tools\PzLauncher\PzLauncher.exe" : "/opt/pzlauncher/PzLauncher",
+            IsSteamRunning: false);
+
+        public Task<Result<SteamLaunchHookStatus>> GetStatusAsync(string launcherExe, CancellationToken ct = default) =>
+            Task.FromResult<Result<SteamLaunchHookStatus>>(Status);
+
+        public Task<Result<SteamLaunchHookApplied>> SetAsync(string launcherExe, bool enabled, bool restartSteam, CancellationToken ct = default) =>
+            Task.FromResult<Result<SteamLaunchHookApplied>>(new SteamLaunchHookApplied(Status, []));
     }
 
     private sealed class SampleProxySettings : IProxySettingsService
