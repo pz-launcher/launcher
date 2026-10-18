@@ -193,10 +193,32 @@ public class SteamSettingsViewModelTests : UiTextCultureTest
         await vm.RemindAtStartupAsync();
 
         var (prompt, option) = Assert.Single(_dialogs.OptionConfirms);
-        Assert.Equal((UiText.Steam_ReminderEnable, UiText.Steam_ReminderLater, UiText.Steam_ReminderDontRemind), (prompt.ConfirmText, prompt.CancelText, option));
+        Assert.Equal((UiText.Steam_ReminderLater, UiText.Steam_ReminderDontRemind), (prompt.CancelText, option));
         Assert.Equal([(TestSteam.LauncherExe, true, false)], _hooks.Sets);
         Assert.True(vm.IsHookOn);
         Assert.Empty(_store.SavedSteamHookReminders);
+    }
+
+    [Fact]
+    public async Task RemindAtStartupAsync_HookOff_AsksToTurnItOn()
+    {
+        await Create().RemindAtStartupAsync();
+
+        var (prompt, _) = Assert.Single(_dialogs.OptionConfirms);
+        Assert.Equal((UiText.Steam_ReminderTitle, UiText.Steam_ReminderMessage, UiText.Steam_ReminderEnable), (prompt.Title, prompt.Message, prompt.ConfirmText));
+        Assert.Empty(prompt.Items);
+    }
+
+    [Fact]
+    public async Task RemindAtStartupAsync_OtherLauncher_AsksToSwitchAndShowsItsPath()
+    {
+        _hooks.Current = TestSteam.Status(SteamLaunchHookState.OtherLauncher);
+
+        await Create().RemindAtStartupAsync();
+
+        var (prompt, _) = Assert.Single(_dialogs.OptionConfirms);
+        Assert.Equal((UiText.Steam_ReminderOtherTitle, UiText.Steam_ReminderOtherMessage, UiText.Steam_ReminderSwitch), (prompt.Title, prompt.Message, prompt.ConfirmText));
+        Assert.Equal([TestSteam.OtherLauncherExe], prompt.Items);
     }
 
     [Theory]

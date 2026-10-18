@@ -458,6 +458,15 @@
   <data name="Steam_ReminderDontRemind" xml:space="preserve">
     <value>No volver a recordar</value>
   </data>
+  <data name="Steam_ReminderOtherTitle" xml:space="preserve">
+    <value>¿Abrir este PzLauncher desde Steam?</value>
+  </data>
+  <data name="Steam_ReminderOtherMessage" xml:space="preserve">
+    <value>Ahora, al hacer clic en Jugar en Steam se abre otro PzLauncher, ubicado aquí abajo. ¿Quieres que abra este? Puedes cambiarlo después en Configuración → Steam.</value>
+  </data>
+  <data name="Steam_ReminderSwitch" xml:space="preserve">
+    <value>Usar este</value>
+  </data>
   <data name="Java_Title" xml:space="preserve">
     <value>Entornos de ejecución de Java</value>
   </data>

@@ -458,6 +458,15 @@
   <data name="Steam_ReminderDontRemind" xml:space="preserve">
     <value>Don't remind me again</value>
   </data>
+  <data name="Steam_ReminderOtherTitle" xml:space="preserve">
+    <value>Open this PzLauncher from Steam?</value>
+  </data>
+  <data name="Steam_ReminderOtherMessage" xml:space="preserve">
+    <value>Clicking Play in Steam currently opens another PzLauncher, at the location below. Switch it to open this one? You can change this later in Settings → Steam.</value>
+  </data>
+  <data name="Steam_ReminderSwitch" xml:space="preserve">
+    <value>Switch to this one</value>
+  </data>
   <data name="Java_Title" xml:space="preserve">
     <value>Java runtimes</value>
   </data>

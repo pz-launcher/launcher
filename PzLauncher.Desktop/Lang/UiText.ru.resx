@@ -458,6 +458,15 @@
   <data name="Steam_ReminderDontRemind" xml:space="preserve">
     <value>Больше не напоминать</value>
   </data>
+  <data name="Steam_ReminderOtherTitle" xml:space="preserve">
+    <value>Открывать из Steam этот PzLauncher?</value>
+  </data>
+  <data name="Steam_ReminderOtherMessage" xml:space="preserve">
+    <value>Сейчас кнопка «Играть» в Steam открывает другой PzLauncher — он указан ниже. Открывать вместо него этот? Это можно изменить позже в разделе «Настройки → Steam».</value>
+  </data>
+  <data name="Steam_ReminderSwitch" xml:space="preserve">
+    <value>Открывать этот</value>
+  </data>
   <data name="Java_Title" xml:space="preserve">
     <value>Среды выполнения Java</value>
   </data>

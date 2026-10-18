@@ -458,6 +458,15 @@
   <data name="Steam_ReminderDontRemind" xml:space="preserve">
     <value>不再提醒</value>
   </data>
+  <data name="Steam_ReminderOtherTitle" xml:space="preserve">
+    <value>改为从 Steam 打开这个 PzLauncher？</value>
+  </data>
+  <data name="Steam_ReminderOtherMessage" xml:space="preserve">
+    <value>目前在 Steam 里点“开始游戏”会打开另一个 PzLauncher，位置如下。要改为打开这一个吗？之后可以在“设置 → Steam”里更改。</value>
+  </data>
+  <data name="Steam_ReminderSwitch" xml:space="preserve">
+    <value>改为这个</value>
+  </data>
   <data name="Java_Title" xml:space="preserve">
     <value>Java 运行时</value>
   </data>

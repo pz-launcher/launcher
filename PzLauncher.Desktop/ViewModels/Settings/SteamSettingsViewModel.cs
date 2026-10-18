@@ -114,9 +114,10 @@ public sealed partial class SteamSettingsViewModel : ViewModelBase
         }
 
         Show(status);
-        var answer = await _dialogs.ConfirmWithOptionAsync(
-            new ConfirmPrompt(UiText.Steam_ReminderTitle, UiText.Steam_ReminderMessage, UiText.Steam_ReminderEnable, UiText.Steam_ReminderLater),
-            UiText.Steam_ReminderDontRemind);
+        var prompt = status.Value is { State: SteamLaunchHookState.OtherLauncher, HookedPath: { } other }
+            ? new ConfirmPrompt(UiText.Steam_ReminderOtherTitle, UiText.Steam_ReminderOtherMessage, UiText.Steam_ReminderSwitch, UiText.Steam_ReminderLater) { Items = [other] }
+            : new ConfirmPrompt(UiText.Steam_ReminderTitle, UiText.Steam_ReminderMessage, UiText.Steam_ReminderEnable, UiText.Steam_ReminderLater);
+        var answer = await _dialogs.ConfirmWithOptionAsync(prompt, UiText.Steam_ReminderDontRemind);
         if (answer.OptionChecked)
         {
             RemindAtStartup = false;
