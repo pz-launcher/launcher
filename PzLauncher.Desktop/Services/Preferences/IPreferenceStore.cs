@@ -33,6 +33,9 @@ public sealed record UserPreferences(AppLanguage? Language, AppTheme? Theme, Win
 
     public SavedProxy? Proxy { get; init; }
 
+    /// <summary>Whether to remind at startup while Steam's Play button doesn't open the launcher.</summary>
+    public bool? SteamHookReminder { get; init; }
+
     // Compares the collections by content; the generated equality would compare references.
     public bool Equals(UserPreferences? other) =>
         other is not null
@@ -42,6 +45,7 @@ public sealed record UserPreferences(AppLanguage? Language, AppTheme? Theme, Win
         && UpdateSource == other.UpdateSource
         && AutoCheckUpdates == other.AutoCheckUpdates
         && Proxy == other.Proxy
+        && SteamHookReminder == other.SteamHookReminder
         && ManualJavaHomes.SequenceEqual(other.ManualJavaHomes, StringComparer.Ordinal)
         && InstallOverrides.Count == other.InstallOverrides.Count
         && InstallOverrides.All(entry => other.InstallOverrides.TryGetValue(entry.Key, out var value) && entry.Value == value)
@@ -52,7 +56,7 @@ public sealed record UserPreferences(AppLanguage? Language, AppTheme? Theme, Win
 
     public override int GetHashCode() =>
         HashCode.Combine(
-            HashCode.Combine(Language, Theme, Window, UpdateSource, AutoCheckUpdates, Proxy),
+            HashCode.Combine(Language, Theme, Window, UpdateSource, AutoCheckUpdates, Proxy, SteamHookReminder),
             ManualJavaHomes.Count,
             InstallOverrides.Count,
             ZombieBuddyChannels.Count,
@@ -93,4 +97,7 @@ public interface IPreferenceStore
 
     /// <summary>The password is saved through <see cref="ISecretProtector"/>. <inheritdoc cref="SaveLanguageAsync"/></summary>
     Task SaveProxyAsync(SavedProxy proxy, CancellationToken ct = default);
+
+    /// <inheritdoc cref="SaveLanguageAsync"/>
+    Task SaveSteamHookReminderAsync(bool remind, CancellationToken ct = default);
 }

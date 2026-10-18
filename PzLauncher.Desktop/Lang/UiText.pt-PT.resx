@@ -133,6 +133,33 @@
   <data name="Error_SteamVdfMalformed" xml:space="preserve">
     <value>Um ficheiro do Steam está danificado e não foi possível lê-lo.</value>
   </data>
+  <data name="Error_SteamPlatformUnsupported" xml:space="preserve">
+    <value>As opções de arranque do Steam só podem ser geridas no Windows.</value>
+  </data>
+  <data name="Error_SteamNoCurrentAccount" xml:space="preserve">
+    <value>Não foi possível determinar que conta Steam tem sessão iniciada ({0}). Inicie sessão no Steam uma vez e tente novamente.</value>
+  </data>
+  <data name="Error_SteamAppNotInLocalConfig" xml:space="preserve">
+    <value>A conta Steam atual ainda não tem definições do Project Zomboid ({0}). Inicie o jogo pelo Steam uma vez e tente novamente.</value>
+  </data>
+  <data name="Error_SteamLocalConfigMalformed" xml:space="preserve">
+    <value>O ficheiro de definições do Steam {0} não tem a estrutura esperada, pelo que não foi alterado. Defina as opções de arranque no próprio Steam.</value>
+  </data>
+  <data name="Error_SteamLocalConfigUnwritable" xml:space="preserve">
+    <value>Não foi possível ler ou escrever o ficheiro de definições do Steam {0}. Feche qualquer programa que o esteja a usar e tente novamente.</value>
+  </data>
+  <data name="Error_SteamClientRunning" xml:space="preserve">
+    <value>O Steam está em execução e anularia a alteração ao sair. Feche o Steam e tente novamente.</value>
+  </data>
+  <data name="Error_SteamShutdownTimedOut" xml:space="preserve">
+    <value>O Steam não fechou em {0} segundos, pelo que nada foi alterado. Feche o Steam manualmente e tente novamente.</value>
+  </data>
+  <data name="Error_SteamShutdownUnconfirmed" xml:space="preserve">
+    <value>Não foi possível verificar se o Steam fechou, pelo que nada foi alterado. Feche o Steam manualmente e tente novamente.</value>
+  </data>
+  <data name="Error_SteamStartFailed" xml:space="preserve">
+    <value>Não foi possível executar {0}. Se o Steam não estiver em execução, inicie-o manualmente.</value>
+  </data>
   <data name="Error_InstallFilesMissing" xml:space="preserve">
     <value>O Steam indica uma instalação em {0}, mas a pasta não existe. Experimente verificar a integridade dos ficheiros do jogo no Steam.</value>
   </data>
@@ -379,6 +406,66 @@
   </data>
   <data name="Settings_Java" xml:space="preserve">
     <value>Java</value>
+  </data>
+  <data name="Settings_Steam" xml:space="preserve">
+    <value>Steam</value>
+  </data>
+  <data name="Steam_Account" xml:space="preserve">
+    <value>Conta Steam: {0}</value>
+  </data>
+  <data name="Steam_Hook" xml:space="preserve">
+    <value>Abrir o PzLauncher pelo botão Jogar do Steam</value>
+  </data>
+  <data name="Steam_HookHint" xml:space="preserve">
+    <value>O botão Jogar do Project Zomboid no Steam passa a abrir este launcher em vez do jogo, para que as suas definições de Java, memória, coleção e ZombieBuddy sejam sempre usadas. Inicie o jogo aqui com Iniciar jogo.</value>
+  </data>
+  <data name="Steam_OtherLauncher" xml:space="preserve">
+    <value>O Steam abre atualmente outro PzLauncher: {0}. Ative para abrir este.</value>
+  </data>
+  <data name="Steam_LaunchOptionsHint" xml:space="preserve">
+    <value>As opções de arranque adicionadas no Steam chegam ao PzLauncher, não ao jogo. Coloque os argumentos do jogo em Definições de arranque.</value>
+  </data>
+  <data name="Steam_RemindAtStartup" xml:space="preserve">
+    <value>Lembrar ao iniciar enquanto estiver desativado</value>
+  </data>
+  <data name="Steam_Loading" xml:space="preserve">
+    <value>A ler as definições do Steam…</value>
+  </data>
+  <data name="Steam_Applying" xml:space="preserve">
+    <value>A aplicar… Se o Steam estiver em execução, será fechado e iniciado novamente, o que pode demorar até um minuto.</value>
+  </data>
+  <data name="Steam_ConfirmTitle" xml:space="preserve">
+    <value>Fechar o Steam?</value>
+  </data>
+  <data name="Steam_ConfirmMessage" xml:space="preserve">
+    <value>O Steam está em execução. Guarda as definições ao sair, o que anularia esta alteração, pelo que o PzLauncher vai fechar o Steam, aplicar a alteração e iniciá-lo novamente. As transferências em curso serão interrompidas.</value>
+  </data>
+  <data name="Steam_ConfirmApply" xml:space="preserve">
+    <value>Fechar o Steam e aplicar</value>
+  </data>
+  <data name="Steam_ReminderTitle" xml:space="preserve">
+    <value>Abrir o PzLauncher pelo Steam?</value>
+  </data>
+  <data name="Steam_ReminderMessage" xml:space="preserve">
+    <value>Com isto ativado, clicar em Jogar no Steam abre primeiro o PzLauncher e inicia o jogo a partir daqui. Pode desativar isto mais tarde em Definições → Steam.</value>
+  </data>
+  <data name="Steam_ReminderEnable" xml:space="preserve">
+    <value>Ativar agora</value>
+  </data>
+  <data name="Steam_ReminderLater" xml:space="preserve">
+    <value>Agora não</value>
+  </data>
+  <data name="Steam_ReminderDontRemind" xml:space="preserve">
+    <value>Não voltar a lembrar</value>
+  </data>
+  <data name="Steam_ReminderOtherTitle" xml:space="preserve">
+    <value>Abrir este PzLauncher pelo Steam?</value>
+  </data>
+  <data name="Steam_ReminderOtherMessage" xml:space="preserve">
+    <value>Neste momento, clicar em Jogar no Steam abre outro PzLauncher, na localização abaixo. Quer que abra este? Pode alterar isto mais tarde em Definições → Steam.</value>
+  </data>
+  <data name="Steam_ReminderSwitch" xml:space="preserve">
+    <value>Usar este</value>
   </data>
   <data name="Java_Title" xml:space="preserve">
     <value>Ambientes de execução Java</value>

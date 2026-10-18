@@ -29,6 +29,8 @@
                 <TextBlock Classes="sidebarHeader" Text="{x:Static lang:UiText.Settings_GameGroup}" />
                 <controls:NavItem Icon="DrinkCoffee" Content="{x:Static lang:UiText.Settings_Java}"
                                   IsChecked="{Binding Section, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:SettingsSection.Java}}" />
+                <controls:NavItem Icon="Games" Content="{x:Static lang:UiText.Settings_Steam}" IsVisible="{Binding Steam.IsSupported}"
+                                  IsChecked="{Binding Section, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:SettingsSection.Steam}}" />
             </StackPanel>
         </Border>
 
@@ -55,6 +57,9 @@
             </Panel>
             <Panel IsVisible="{Binding Section, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:SettingsSection.Java}}">
                 <settings:JavaSettingsView DataContext="{Binding Java}" />
+            </Panel>
+            <Panel IsVisible="{Binding Section, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:SettingsSection.Steam}}">
+                <settings:SteamSettingsView DataContext="{Binding Steam}" />
             </Panel>
         </Panel>
     </Grid>

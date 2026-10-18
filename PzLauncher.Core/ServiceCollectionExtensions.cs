@@ -30,6 +30,7 @@ public static class ServiceCollectionExtensions
         services.TryAddSingleton<SteamLocator>();
         services.TryAddSingleton<SteamLibraryReader>();
         services.TryAddSingleton<WorkshopLibraries>();
+        services.TryAddSingleton<ISteamLaunchHookService, SteamLaunchHookService>();
         services.TryAddSingleton<IInstallDetectionService, InstallDetectionService>();
         services.TryAddSingleton<IJavaDiscoveryService, JavaDiscoveryService>();
         services.TryAddSingleton<IGameLaunchService, GameLaunchService>();

@@ -20,6 +20,7 @@ internal sealed partial class DesktopJsonContext : JsonSerializerContext;
 /// <param name="UpdateSource"><see cref="UpdateSourcePreferences.PreferenceName"/>; an element for the same reason as <paramref name="JavaRuntimes"/>.</param>
 /// <param name="AutoCheckUpdates">A bool; an element for the same reason as <paramref name="JavaRuntimes"/>.</param>
 /// <param name="Proxy">A <see cref="ProxyFile"/>; an element for the same reason as <paramref name="JavaRuntimes"/>.</param>
+/// <param name="SteamHookReminder">A bool; an element for the same reason as <paramref name="JavaRuntimes"/>.</param>
 internal sealed record PreferencesFile(
     string? Language,
     string? Theme,
@@ -30,7 +31,8 @@ internal sealed record PreferencesFile(
     IReadOnlyDictionary<string, JsonElement>? DefaultModCollections,
     JsonElement? UpdateSource,
     JsonElement? AutoCheckUpdates,
-    JsonElement? Proxy);
+    JsonElement? Proxy,
+    JsonElement? SteamHookReminder);
 
 /// <summary>Nullable members, so a missing one is told apart from a zero.</summary>
 internal sealed record WindowFile(int? X, int? Y, double? Width, double? Height, bool? Maximized);

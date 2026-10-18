@@ -133,6 +133,33 @@
   <data name="Error_SteamVdfMalformed" xml:space="preserve">
     <value>A Steam file is damaged and couldn't be read.</value>
   </data>
+  <data name="Error_SteamPlatformUnsupported" xml:space="preserve">
+    <value>Steam launch options can only be managed on Windows.</value>
+  </data>
+  <data name="Error_SteamNoCurrentAccount" xml:space="preserve">
+    <value>Couldn't tell which Steam account is signed in ({0}). Sign in to Steam once, then try again.</value>
+  </data>
+  <data name="Error_SteamAppNotInLocalConfig" xml:space="preserve">
+    <value>The current Steam account has no settings for Project Zomboid yet ({0}). Start the game from Steam once, then try again.</value>
+  </data>
+  <data name="Error_SteamLocalConfigMalformed" xml:space="preserve">
+    <value>Steam's settings file {0} isn't laid out as expected, so it wasn't changed. Set the launch options in Steam instead.</value>
+  </data>
+  <data name="Error_SteamLocalConfigUnwritable" xml:space="preserve">
+    <value>Steam's settings file {0} couldn't be read or written. Close any program using it, then try again.</value>
+  </data>
+  <data name="Error_SteamClientRunning" xml:space="preserve">
+    <value>Steam is running and would undo the change when it exits. Close Steam, then try again.</value>
+  </data>
+  <data name="Error_SteamShutdownTimedOut" xml:space="preserve">
+    <value>Steam didn't close within {0} seconds, so nothing was changed. Close Steam yourself, then try again.</value>
+  </data>
+  <data name="Error_SteamShutdownUnconfirmed" xml:space="preserve">
+    <value>Couldn't check whether Steam has closed, so nothing was changed. Close Steam yourself, then try again.</value>
+  </data>
+  <data name="Error_SteamStartFailed" xml:space="preserve">
+    <value>Couldn't run {0}. If Steam isn't running, start it yourself.</value>
+  </data>
   <data name="Error_InstallFilesMissing" xml:space="preserve">
     <value>Steam lists an install at {0}, but the folder is missing. Try verifying the game files in Steam.</value>
   </data>
@@ -379,6 +406,66 @@
   </data>
   <data name="Settings_Java" xml:space="preserve">
     <value>Java</value>
+  </data>
+  <data name="Settings_Steam" xml:space="preserve">
+    <value>Steam</value>
+  </data>
+  <data name="Steam_Account" xml:space="preserve">
+    <value>Steam account: {0}</value>
+  </data>
+  <data name="Steam_Hook" xml:space="preserve">
+    <value>Open PzLauncher from Steam's Play button</value>
+  </data>
+  <data name="Steam_HookHint" xml:space="preserve">
+    <value>Steam's Play button for Project Zomboid then opens this launcher instead of the game, so your Java, memory, collection and ZombieBuddy settings are always used. Start the game here with Launch game.</value>
+  </data>
+  <data name="Steam_OtherLauncher" xml:space="preserve">
+    <value>Steam currently opens another PzLauncher: {0}. Turn this on to open this one instead.</value>
+  </data>
+  <data name="Steam_LaunchOptionsHint" xml:space="preserve">
+    <value>Launch options you add in Steam reach PzLauncher, not the game. Put game arguments in Launch settings instead.</value>
+  </data>
+  <data name="Steam_RemindAtStartup" xml:space="preserve">
+    <value>Remind me at startup while this is off</value>
+  </data>
+  <data name="Steam_Loading" xml:space="preserve">
+    <value>Reading Steam's settings…</value>
+  </data>
+  <data name="Steam_Applying" xml:space="preserve">
+    <value>Applying… If Steam is running, it is closed and started again, which can take up to a minute.</value>
+  </data>
+  <data name="Steam_ConfirmTitle" xml:space="preserve">
+    <value>Close Steam?</value>
+  </data>
+  <data name="Steam_ConfirmMessage" xml:space="preserve">
+    <value>Steam is running. It saves its settings when it exits, which would undo this change, so PzLauncher will close Steam, apply the change and start Steam again. Downloads in progress are interrupted.</value>
+  </data>
+  <data name="Steam_ConfirmApply" xml:space="preserve">
+    <value>Close Steam and apply</value>
+  </data>
+  <data name="Steam_ReminderTitle" xml:space="preserve">
+    <value>Open PzLauncher from Steam?</value>
+  </data>
+  <data name="Steam_ReminderMessage" xml:space="preserve">
+    <value>When this is on, clicking Play in Steam opens PzLauncher first, and you start the game from here. You can turn it off later in Settings → Steam.</value>
+  </data>
+  <data name="Steam_ReminderEnable" xml:space="preserve">
+    <value>Turn on now</value>
+  </data>
+  <data name="Steam_ReminderLater" xml:space="preserve">
+    <value>Not now</value>
+  </data>
+  <data name="Steam_ReminderDontRemind" xml:space="preserve">
+    <value>Don't remind me again</value>
+  </data>
+  <data name="Steam_ReminderOtherTitle" xml:space="preserve">
+    <value>Open this PzLauncher from Steam?</value>
+  </data>
+  <data name="Steam_ReminderOtherMessage" xml:space="preserve">
+    <value>Clicking Play in Steam currently opens another PzLauncher, at the location below. Switch it to open this one? You can change this later in Settings → Steam.</value>
+  </data>
+  <data name="Steam_ReminderSwitch" xml:space="preserve">
+    <value>Switch to this one</value>
   </data>
   <data name="Java_Title" xml:space="preserve">
     <value>Java runtimes</value>

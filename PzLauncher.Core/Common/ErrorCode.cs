@@ -19,6 +19,15 @@ public enum ErrorCode
     [JsonStringEnumMemberName("steam.library_unreadable")] SteamLibraryUnreadable,
     [JsonStringEnumMemberName("steam.manifest_unreadable")] SteamManifestUnreadable,
     [JsonStringEnumMemberName("steam.vdf_malformed")] SteamVdfMalformed,
+    [JsonStringEnumMemberName("steam.platform_unsupported")] SteamPlatformUnsupported,
+    [JsonStringEnumMemberName("steam.no_current_account")] SteamNoCurrentAccount,
+    [JsonStringEnumMemberName("steam.app_not_in_local_config")] SteamAppNotInLocalConfig,
+    [JsonStringEnumMemberName("steam.local_config_malformed")] SteamLocalConfigMalformed,
+    [JsonStringEnumMemberName("steam.local_config_unwritable")] SteamLocalConfigUnwritable,
+    [JsonStringEnumMemberName("steam.client_running")] SteamClientRunning,
+    [JsonStringEnumMemberName("steam.shutdown_timed_out")] SteamShutdownTimedOut,
+    [JsonStringEnumMemberName("steam.shutdown_unconfirmed")] SteamShutdownUnconfirmed,
+    [JsonStringEnumMemberName("steam.start_failed")] SteamStartFailed,
 
     // ── install ───────────────────────────────────────────────
     [JsonStringEnumMemberName("install.files_missing")] InstallFilesMissing,

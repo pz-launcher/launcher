@@ -11,6 +11,9 @@ public interface IDialogService
     /// <summary><c>true</c> only for the confirm button; closing the window is cancel.</summary>
     Task<bool> ConfirmAsync(ConfirmPrompt prompt);
 
+    /// <summary>Like <see cref="ConfirmAsync"/>, with a checkbox under the message whose state is returned however the dialog closes.</summary>
+    Task<ConfirmOptionResult> ConfirmWithOptionAsync(ConfirmPrompt prompt, string optionText);
+
     Task<TextPromptResult> PromptTextAsync(TextPrompt prompt);
 
     /// <summary>Starts the operation when it opens. <c>true</c> when the user chose to launch the game.</summary>

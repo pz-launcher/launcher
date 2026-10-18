@@ -25,6 +25,15 @@ public partial class ErrorCodeTests
         [ErrorCode.SteamLibraryUnreadable] = (SteamErrors.LibraryUnreadable("p", "r"), ErrorKind.External),
         [ErrorCode.SteamManifestUnreadable] = (SteamErrors.ManifestUnreadable("p", "r"), ErrorKind.External),
         [ErrorCode.SteamVdfMalformed] = (SteamErrors.VdfMalformed("r"), ErrorKind.Validation),
+        [ErrorCode.SteamPlatformUnsupported] = (SteamErrors.PlatformUnsupported(PlatformKind.Linux), ErrorKind.Validation),
+        [ErrorCode.SteamNoCurrentAccount] = (SteamErrors.NoCurrentAccount("p", "r"), ErrorKind.NotFound),
+        [ErrorCode.SteamAppNotInLocalConfig] = (SteamErrors.AppNotInLocalConfig("p", 1), ErrorKind.NotFound),
+        [ErrorCode.SteamLocalConfigMalformed] = (SteamErrors.LocalConfigMalformed("p", "r"), ErrorKind.External),
+        [ErrorCode.SteamLocalConfigUnwritable] = (SteamErrors.LocalConfigUnwritable("p", "r"), ErrorKind.External),
+        [ErrorCode.SteamClientRunning] = (SteamErrors.ClientRunning(), ErrorKind.Conflict),
+        [ErrorCode.SteamShutdownTimedOut] = (SteamErrors.ShutdownTimedOut(TimeSpan.FromSeconds(60)), ErrorKind.External),
+        [ErrorCode.SteamShutdownUnconfirmed] = (SteamErrors.ShutdownUnconfirmed("r"), ErrorKind.External),
+        [ErrorCode.SteamStartFailed] = (SteamErrors.StartFailed("p", "r"), ErrorKind.External),
         [ErrorCode.InstallFilesMissing] = (InstallErrors.FilesMissing("p", 1), ErrorKind.NotFound),
         [ErrorCode.InstallInvalidPath] = (InstallErrors.InvalidPath("p"), ErrorKind.Validation),
         [ErrorCode.InstallPathNotFound] = (InstallErrors.PathNotFound("p"), ErrorKind.NotFound),
@@ -111,6 +120,15 @@ public partial class ErrorCodeTests
     [InlineData(ErrorCode.SteamLibraryUnreadable, "steam.library_unreadable")]
     [InlineData(ErrorCode.SteamManifestUnreadable, "steam.manifest_unreadable")]
     [InlineData(ErrorCode.SteamVdfMalformed, "steam.vdf_malformed")]
+    [InlineData(ErrorCode.SteamPlatformUnsupported, "steam.platform_unsupported")]
+    [InlineData(ErrorCode.SteamNoCurrentAccount, "steam.no_current_account")]
+    [InlineData(ErrorCode.SteamAppNotInLocalConfig, "steam.app_not_in_local_config")]
+    [InlineData(ErrorCode.SteamLocalConfigMalformed, "steam.local_config_malformed")]
+    [InlineData(ErrorCode.SteamLocalConfigUnwritable, "steam.local_config_unwritable")]
+    [InlineData(ErrorCode.SteamClientRunning, "steam.client_running")]
+    [InlineData(ErrorCode.SteamShutdownTimedOut, "steam.shutdown_timed_out")]
+    [InlineData(ErrorCode.SteamShutdownUnconfirmed, "steam.shutdown_unconfirmed")]
+    [InlineData(ErrorCode.SteamStartFailed, "steam.start_failed")]
     [InlineData(ErrorCode.InstallFilesMissing, "install.files_missing")]
     [InlineData(ErrorCode.InstallInvalidPath, "install.invalid_path")]
     [InlineData(ErrorCode.InstallPathNotFound, "install.path_not_found")]

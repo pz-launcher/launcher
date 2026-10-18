@@ -59,8 +59,9 @@ Each hazard has a test that feeds bad input and asserts the code.
 ## Writing files we don't own
 
 Game files (`ProjectZomboid64.json`, files copied into the game folder, the cache folder's
-`Lua/pz_modlist_settings.cfg` and `mods/default.txt`) are the user's, and so is ZombieBuddy's `config.json`.
-Reference: `PzLauncher.Core/Launch/PzLaunchConfigEditor.cs`,
+`Lua/pz_modlist_settings.cfg` and `mods/default.txt`) are the user's, and so are ZombieBuddy's `config.json`
+and Steam's `userdata/<account>/config/localconfig.vdf`.
+Reference: `PzLauncher.Core/Launch/PzLaunchConfigEditor.cs`, `PzLauncher.Core/Steam/LocalConfigEditor.cs`,
 `PzLauncher.Core/Mod/ZombieBuddy/ZombieBuddyPreloadConfig.cs`, `PzLauncher.Core/Mod/ZombieBuddy/ZombieBuddyService.cs`,
 `PzLauncher.Core/Mod/Collections/ModListSettingsFile.cs`, `ActiveModsFile.cs`; atomic write in
 `PzLauncher.Core/Common/AtomicFile.cs` (`AtomicJsonFile.cs` for json).
@@ -74,7 +75,10 @@ Reference: `PzLauncher.Core/Launch/PzLaunchConfigEditor.cs`,
   right before each write, never written from a cached copy. Untouched lines keep
   their bytes, line terminators and BOM; invalid UTF-8 is `*.file_malformed`,
   never decoded with replacement characters. The previous content goes to a
-  rolling `<file>.pzlauncher.bak` first.
+  rolling `<file>.pzlauncher.bak` first (`AtomicFile.BackupSuffix`).
+- Steam `.vdf` files are edited at the byte offsets of the one value, never
+  re-serialised (ValveKeyValue loses number formatting). Steam rewrites
+  `localconfig.vdf` while running, so it is written only while Steam is closed.
 - Multi-step operations are idempotent per step, so a retry re-runs from the
   start instead of resuming.
 - Tests prove unrelated content survives a round trip, with a fixture copied

@@ -133,6 +133,33 @@
   <data name="Error_SteamVdfMalformed" xml:space="preserve">
     <value>某個 Steam 檔案已損毀，無法讀取。</value>
   </data>
+  <data name="Error_SteamPlatformUnsupported" xml:space="preserve">
+    <value>只有在 Windows 上才能管理 Steam 啟動選項。</value>
+  </data>
+  <data name="Error_SteamNoCurrentAccount" xml:space="preserve">
+    <value>無法確定目前登入的 Steam 帳戶（{0}）。請先登入一次 Steam，然後重試。</value>
+  </data>
+  <data name="Error_SteamAppNotInLocalConfig" xml:space="preserve">
+    <value>目前的 Steam 帳戶中還沒有 Project Zomboid 的設定（{0}）。請先從 Steam 啟動一次遊戲，然後重試。</value>
+  </data>
+  <data name="Error_SteamLocalConfigMalformed" xml:space="preserve">
+    <value>Steam 設定檔 {0} 的結構不符預期，因此未作變更。請改為在 Steam 中設定啟動選項。</value>
+  </data>
+  <data name="Error_SteamLocalConfigUnwritable" xml:space="preserve">
+    <value>無法讀取或寫入 Steam 設定檔 {0}。請關閉正在使用它的程式，然後重試。</value>
+  </data>
+  <data name="Error_SteamClientRunning" xml:space="preserve">
+    <value>Steam 正在執行，結束時會還原這次變更。請關閉 Steam 後重試。</value>
+  </data>
+  <data name="Error_SteamShutdownTimedOut" xml:space="preserve">
+    <value>Steam 未在 {0} 秒內關閉，因此未作任何變更。請手動關閉 Steam，然後重試。</value>
+  </data>
+  <data name="Error_SteamShutdownUnconfirmed" xml:space="preserve">
+    <value>無法確認 Steam 是否已關閉，因此未作任何變更。請手動關閉 Steam，然後重試。</value>
+  </data>
+  <data name="Error_SteamStartFailed" xml:space="preserve">
+    <value>無法執行 {0}。如果 Steam 沒有在執行，請手動啟動它。</value>
+  </data>
   <data name="Error_InstallFilesMissing" xml:space="preserve">
     <value>Steam 顯示 {0} 有一個安裝，但該資料夾不存在。請嘗試在 Steam 中驗證遊戲檔案的完整性。</value>
   </data>
@@ -379,6 +406,66 @@
   </data>
   <data name="Settings_Java" xml:space="preserve">
     <value>Java</value>
+  </data>
+  <data name="Settings_Steam" xml:space="preserve">
+    <value>Steam</value>
+  </data>
+  <data name="Steam_Account" xml:space="preserve">
+    <value>Steam 帳戶：{0}</value>
+  </data>
+  <data name="Steam_Hook" xml:space="preserve">
+    <value>在 Steam 中按下「開始遊戲」時開啟 PzLauncher</value>
+  </data>
+  <data name="Steam_HookHint" xml:space="preserve">
+    <value>開啟後，在 Steam 中按下 Project Zomboid 的「開始遊戲」會開啟本啟動器而非直接啟動遊戲，確保一律使用你的 Java、記憶體、合集和 ZombieBuddy 設定。請在這裡按「啟動遊戲」開始遊戲。</value>
+  </data>
+  <data name="Steam_OtherLauncher" xml:space="preserve">
+    <value>Steam 目前會開啟另一個 PzLauncher：{0}。開啟後改為開啟這一個。</value>
+  </data>
+  <data name="Steam_LaunchOptionsHint" xml:space="preserve">
+    <value>在 Steam 中加入的其他啟動選項會傳給 PzLauncher，而不是遊戲。遊戲參數請在「啟動設定」中填寫。</value>
+  </data>
+  <data name="Steam_RemindAtStartup" xml:space="preserve">
+    <value>啟動時提醒</value>
+  </data>
+  <data name="Steam_Loading" xml:space="preserve">
+    <value>正在讀取 Steam 設定…</value>
+  </data>
+  <data name="Steam_Applying" xml:space="preserve">
+    <value>正在套用… 如果 Steam 正在執行，會先關閉再重新啟動，最多可能需要一分鐘。</value>
+  </data>
+  <data name="Steam_ConfirmTitle" xml:space="preserve">
+    <value>關閉 Steam？</value>
+  </data>
+  <data name="Steam_ConfirmMessage" xml:space="preserve">
+    <value>Steam 正在執行。它會在結束時儲存設定並覆寫這次變更，因此 PzLauncher 將關閉 Steam、套用變更，然後重新啟動 Steam。進行中的下載會被中斷。</value>
+  </data>
+  <data name="Steam_ConfirmApply" xml:space="preserve">
+    <value>關閉 Steam 並套用</value>
+  </data>
+  <data name="Steam_ReminderTitle" xml:space="preserve">
+    <value>讓 Steam 先開啟 PzLauncher？</value>
+  </data>
+  <data name="Steam_ReminderMessage" xml:space="preserve">
+    <value>開啟後，在 Steam 按下「開始遊戲」會先開啟 PzLauncher，再從這裡進入遊戲。之後可以在「設定 → Steam」中關閉。</value>
+  </data>
+  <data name="Steam_ReminderEnable" xml:space="preserve">
+    <value>立即開啟</value>
+  </data>
+  <data name="Steam_ReminderLater" xml:space="preserve">
+    <value>暫不</value>
+  </data>
+  <data name="Steam_ReminderDontRemind" xml:space="preserve">
+    <value>不再提醒</value>
+  </data>
+  <data name="Steam_ReminderOtherTitle" xml:space="preserve">
+    <value>改為從 Steam 開啟這個 PzLauncher？</value>
+  </data>
+  <data name="Steam_ReminderOtherMessage" xml:space="preserve">
+    <value>目前在 Steam 按下「開始遊戲」會開啟另一個 PzLauncher，位置如下。要改為開啟這一個嗎？之後可以在「設定 → Steam」中變更。</value>
+  </data>
+  <data name="Steam_ReminderSwitch" xml:space="preserve">
+    <value>改為這個</value>
   </data>
   <data name="Java_Title" xml:space="preserve">
     <value>Java 執行環境</value>

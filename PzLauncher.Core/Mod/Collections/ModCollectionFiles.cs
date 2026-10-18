@@ -18,8 +18,6 @@ internal static class ModCollectionFiles
     public const string MapsBlock = "maps";
 
     // The launcher's own files next to the game's; the game ignores them.
-    public const string BackupSuffix = ".pzlauncher.bak";
-
     public const string OriginalSuffix = ".pzlauncher.orig";
 
     public static string SettingsFile(string cache) => Path.Combine(cache, "Lua", "pz_modlist_settings.cfg");

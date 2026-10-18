@@ -186,7 +186,7 @@ public sealed class UpdateServiceInstallTests : IDisposable
         var request = processes.LastRequest;
         Assert.Equal(Path.Combine(_install.Path, executable), request.FileName);
         Assert.Equal(_install.Path, request.WorkingDirectory);
-        Assert.Empty(request.Arguments);
+        Assert.Equal([LauncherArguments.Restart], request.Arguments);
         Assert.True(Assert.Single(processes.Processes).IsDisposed);
     }
 

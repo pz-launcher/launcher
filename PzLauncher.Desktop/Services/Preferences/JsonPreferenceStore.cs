@@ -18,7 +18,7 @@ namespace PzLauncher.Desktop.Services.Preferences;
 
 public sealed partial class JsonPreferenceStore(string filePath, ILogger logger, ISecretProtector secrets) : IPreferenceStore
 {
-    private static readonly PreferencesFile Empty = new(null, null, null, null, null, null, null, null, null, null);
+    private static readonly PreferencesFile Empty = new(null, null, null, null, null, null, null, null, null, null, null);
 
     // Saves are fire-and-forget; one at a time so the last choice is the one left on disk.
     private readonly SemaphoreSlim _saveGate = new(1, 1);
@@ -81,21 +81,23 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger,
             LogInvalidUpdateSource(logger, filePath);
         }
 
-        var autoCheckUpdates = file.AutoCheckUpdates?.ValueKind switch
-        {
-            JsonValueKind.True => true,
-            JsonValueKind.False => false,
-            _ => (bool?)null,
-        };
+        var autoCheckUpdates = ToBool(file.AutoCheckUpdates);
         if (autoCheckUpdates is null && file.AutoCheckUpdates is { ValueKind: not JsonValueKind.Null })
         {
             LogInvalidAutoCheckUpdates(logger, filePath);
+        }
+
+        var steamHookReminder = ToBool(file.SteamHookReminder);
+        if (steamHookReminder is null && file.SteamHookReminder is { ValueKind: not JsonValueKind.Null })
+        {
+            LogInvalidSteamHookReminder(logger, filePath);
         }
 
         return new UserPreferences(language, theme, window)
         {
             UpdateSource = updateSource,
             AutoCheckUpdates = autoCheckUpdates,
+            SteamHookReminder = steamHookReminder,
             Proxy = ToProxy(file.Proxy),
             ManualJavaHomes = javaHomes,
             InstallOverrides = installs,
@@ -190,6 +192,12 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger,
         return SaveAsync(file => file with { AutoCheckUpdates = entry }, ct);
     }
 
+    public Task SaveSteamHookReminderAsync(bool remind, CancellationToken ct = default)
+    {
+        var entry = JsonSerializer.SerializeToElement(remind, DesktopJsonContext.Default.Boolean);
+        return SaveAsync(file => file with { SteamHookReminder = entry }, ct);
+    }
+
     public Task SaveProxyAsync(SavedProxy proxy, CancellationToken ct = default)
     {
         string? password = null;
@@ -255,6 +263,14 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger,
 
         return new SavedProxy(mode, host, port, entry.Username is { Length: > 0 } username ? username : null, password);
     }
+
+    private static bool? ToBool(JsonElement? element) =>
+        element?.ValueKind switch
+        {
+            JsonValueKind.True => true,
+            JsonValueKind.False => false,
+            _ => null,
+        };
 
     private static List<string> ToManualJavaHomes(IReadOnlyList<JsonElement>? entries) =>
     [
@@ -442,6 +458,9 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger,
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Automatic update check preference {Path} is not true or false; checking automatically")]
     private static partial void LogInvalidAutoCheckUpdates(ILogger logger, string path);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Steam hook reminder preference {Path} is not true or false; reminding")]
+    private static partial void LogInvalidSteamHookReminder(ILogger logger, string path);
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Proxy preference {Path} is not valid; using the system proxy")]
     private static partial void LogInvalidProxy(ILogger logger, string path);

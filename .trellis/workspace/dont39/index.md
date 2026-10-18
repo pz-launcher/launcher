@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 14
+- **Total Sessions**: 15
 - **Last Active**: 2026-10-18
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~367 | Active |
+| `journal-1.md` | ~389 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 15 | 2026-10-18 | Steam launch hook setting | `f28b7f7` | `feat/steam-launch-hook` |
 | 14 | 2026-10-18 | Group Desktop Services into feature folders | `98cb239` | `claude/nifty-chaplygin-fa8c72` |
 | 13 | 2026-10-18 | Merge main into PR #10 | `d97d785` | `zb-skip-online-checks` |
 | 12 | 2026-10-18 | Launcher auto-update and proxy settings | `6d35946` | `main` |

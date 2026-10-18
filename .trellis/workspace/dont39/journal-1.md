@@ -365,3 +365,25 @@ Pure move: PzLauncher.Desktop/Services (41 flat files) into Shell, Preferences, 
 ### Status
 
 [OK] **Completed**
+
+
+## Session 15: Steam launch hook setting
+<!-- trellis-session: v=2 fp=db02343f1ab8d28c -->
+
+**Date**: 2026-10-18
+**Task**: Steam launch hook setting
+**Branch**: `feat/steam-launch-hook`
+
+### Summary
+
+Settings > Steam (Windows) hooks the current Steam account's PZ launch options with "<launcher>" %command% so Steam's Play opens PzLauncher; keeps existing options; closes/restarts a running Steam after confirm (exit polled via FindByName + TimeProvider); byte-preserving localconfig.vdf edit with .bak; startup reminder with don't-remind-again (steamHookReminder); single instance per install dir with --pzlauncher-restart for self-update. PR pz-launcher/launcher#13; manual Steam checks AC2-AC5 still pending.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `f28b7f7` | Hook Steam's Play to open the launcher first |
+
+### Status
+
+[OK] **Completed**

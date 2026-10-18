@@ -11,6 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using PzLauncher.Core;
 using PzLauncher.Core.Platform;
+using PzLauncher.Core.Steam;
 using PzLauncher.Desktop.Lang;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Services.Launch;
@@ -18,6 +19,7 @@ using PzLauncher.Desktop.Services.Mods;
 using PzLauncher.Desktop.Services.Net;
 using PzLauncher.Desktop.Services.Preferences;
 using PzLauncher.Desktop.Services.Shell;
+using PzLauncher.Desktop.Services.Steam;
 using PzLauncher.Desktop.Services.Update;
 using PzLauncher.Desktop.Services.ZombieBuddy;
 using PzLauncher.Desktop.Themes;
@@ -37,6 +39,9 @@ namespace PzLauncher.Desktop;
 public partial class App : Application
 {
     private bool _showingErrorDialog;
+
+    /// <summary>Set by <c>Program.Main</c>; the designer has none.</summary>
+    public SingleInstanceGuard? Instance { get; init; }
 
     public override void Initialize()
     {
@@ -77,6 +82,10 @@ public partial class App : Application
             services.AddSingleton<IModCollectionOrderWriter, ModCollectionOrderWriter>();
             services.AddSingleton<GameRunState>();
             services.AddSingleton<UpdateCoordinator>();
+            // The apphost's path; Steam starts the launcher through it.
+            var launcherExe = Environment.ProcessPath ?? Path.Combine(AppContext.BaseDirectory, "PzLauncher.exe");
+            services.AddSingleton(sp => new SteamLaunchHookFlow(
+                sp.GetRequiredService<ISteamLaunchHookService>(), sp.GetRequiredService<IDialogService>(), launcherExe));
             services.AddSingleton<ILocalizationService>(sp => new LocalizationService(
                 sp.GetRequiredService<UserPreferences>().Language ?? AppLanguages.FromCulture(CultureInfo.CurrentUICulture)));
             services.AddSingleton<IThemeService>(sp =>
@@ -89,6 +98,7 @@ public partial class App : Application
             services.AddSingleton<ModsViewModel>();
             services.AddSingleton<UpdateSettingsViewModel>();
             services.AddSingleton<ProxySettingsViewModel>();
+            services.AddSingleton<SteamSettingsViewModel>();
             services.AddSingleton<UpdateBannerViewModel>();
             services.AddSingleton<SettingsViewModel>();
             services.AddSingleton<LanguageMenuViewModel>();
@@ -124,9 +134,18 @@ public partial class App : Application
                 updates.InstallPendingOnCloseAsync,
                 provider.GetRequiredService<ILogger<WindowPlacementPersistence>>());
             desktop.MainWindow = mainWindow;
+            if (Instance is { } instance)
+            {
+                WindowActivation.Attach(mainWindow, instance);
+            }
 
-            // Once the window shows, so the check never delays the first frame; failures are only logged.
-            mainWindow.Opened += (_, _) => _ = updates.StartAsync();
+            // Once the window shows, so neither delays the first frame; failures are only logged.
+            var steam = provider.GetRequiredService<SteamSettingsViewModel>();
+            mainWindow.Opened += (_, _) =>
+            {
+                _ = updates.StartAsync();
+                _ = steam.RemindAtStartupAsync();
+            };
             desktop.Exit += (_, _) => provider.Dispose();
         }
 

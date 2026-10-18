@@ -7,6 +7,7 @@ using PzLauncher.Core.Mod;
 using PzLauncher.Core.Mod.Collections;
 using PzLauncher.Core.Mod.ZombieBuddy;
 using PzLauncher.Core.Net;
+using PzLauncher.Core.Steam;
 using PzLauncher.Core.Update;
 
 namespace PzLauncher.Core.Serialization;
@@ -54,4 +55,8 @@ namespace PzLauncher.Core.Serialization;
 [JsonSerializable(typeof(ProxySettings))]
 [JsonSerializable(typeof(ConnectionTestResult))]
 [JsonSerializable(typeof(IReadOnlyList<ConnectionTestResult>))]
+[JsonSerializable(typeof(SteamAccount))]
+[JsonSerializable(typeof(SteamLaunchHookState))]
+[JsonSerializable(typeof(SteamLaunchHookStatus))]
+[JsonSerializable(typeof(SteamLaunchHookApplied))]
 public sealed partial class CoreJsonContext : JsonSerializerContext;

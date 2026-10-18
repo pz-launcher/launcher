@@ -1,0 +1,23 @@
+"users"
+{
+	"76561190000000011"
+	{
+		"AccountName"		"example_login_a"
+		"PersonaName"		"Example Player"
+		"RememberPassword"		"1"
+		"WantsOfflineMode"		"0"
+		"SkipOfflineModeWarning"		"0"
+		"AutoLogin"		"1"
+		"timestamp"		"1700000900"
+	}
+	"76561190000000022"
+	{
+		"AccountName"		"example_login_b"
+		"PersonaName"		"Second Player"
+		"RememberPassword"		"1"
+		"WantsOfflineMode"		"0"
+		"SkipOfflineModeWarning"		"0"
+		"AutoLogin"		"0"
+		"timestamp"		"1700000500"
+	}
+}
