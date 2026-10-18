@@ -387,3 +387,25 @@ Settings > Steam (Windows) hooks the current Steam account's PZ launch options w
 ### Status
 
 [OK] **Completed**
+
+
+## Session 16: Extract shared code and split oversized files
+<!-- trellis-session: v=2 fp=415ed53a322403e0 -->
+
+**Date**: 2026-10-18
+**Task**: Extract shared code and split oversized files
+**Branch**: `refactor/extract-shared-code`
+
+### Summary
+
+Surveyed the repo for duplication and oversized folders (none needed moving; Fakes.cs and LaunchSettingsViewModel were oversized). Implemented C1-C5 and D1-D8: Core Utf8TextFile, AtomicFile.ReplaceWithBackupAsync, PzLaunchConfigFile, FileContent.TryEqualAsync, ErrorDetails; vmArgs write failure moved to launch.config_write_failed (old zombiebuddy code removed). Desktop LocalizedText/LocalizedErrorList, InstallKeyedMap, PreferenceNames.Parse, unified confirm dialog, TextBlock style classes, PageActivation, LaunchSettings ZombieBuddy child VM (plus a stale-load race fix with regression test), Fakes.cs split per service group. Build clean; Core 1363 passed/3 skipped, Desktop 1459 passed; every page pixel-identical to main in light and dark. Specs updated in 7 files.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `e14b8b4` | Extract shared code and split oversized files |
+
+### Status
+
+[OK] **Completed**
