@@ -99,4 +99,12 @@ public sealed class FakePreferenceStore : IPreferenceStore
         SavedSteamHookReminders.Add(remind);
         return Task.CompletedTask;
     }
+
+    public List<IReadOnlyList<SavedWorkshopCollection>> SavedWorkshopCollections { get; } = [];
+
+    public Task SaveWorkshopCollectionsAsync(IReadOnlyList<SavedWorkshopCollection> collections, CancellationToken ct = default)
+    {
+        SavedWorkshopCollections.Add(collections);
+        return Task.CompletedTask;
+    }
 }

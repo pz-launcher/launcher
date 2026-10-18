@@ -31,6 +31,8 @@ public sealed class JsonPreferenceStoreTests : IDisposable
 
     private static readonly GameLaunchOverrides Overrides = new(JavaA, 8192, 2048, "-Dzomboid.steam=1", "-debug", GarbageCollector.Shenandoah);
 
+    private static readonly SavedWorkshopCollection SteamCollection = new(18446744073709551615, "B42 \"必备\" pack");
+
     private static UserPreferences WithJava(params string[] homes) => new(null, null, null) { ManualJavaHomes = homes };
 
     private static UserPreferences WithChannels(params (string Root, ZombieBuddyChannel Channel)[] channels) =>
@@ -198,6 +200,7 @@ public sealed class JsonPreferenceStoreTests : IDisposable
     [InlineData(8)]
     [InlineData(9)]
     [InlineData(10)]
+    [InlineData(11)]
     public async Task SaveOneField_FileHoldsTheOthers_KeepsAll(int savedLast)
     {
         var ct = TestContext.Current.CancellationToken;
@@ -214,6 +217,7 @@ public sealed class JsonPreferenceStoreTests : IDisposable
             () => CreateStore().SaveAutoCheckUpdatesAsync(false, ct),
             () => CreateStore().SaveProxyAsync(ManualProxy, ct),
             () => CreateStore().SaveSteamHookReminderAsync(false, ct),
+            () => CreateStore().SaveWorkshopCollectionsAsync([SteamCollection], ct),
         ];
 
         // Separate stores, as across app runs.
@@ -233,6 +237,7 @@ public sealed class JsonPreferenceStoreTests : IDisposable
                 AutoCheckUpdates = false,
                 Proxy = ManualProxy,
                 SteamHookReminder = false,
+                WorkshopCollections = [SteamCollection],
             },
             CreateStore().Load());
     }
@@ -257,7 +262,8 @@ public sealed class JsonPreferenceStoreTests : IDisposable
             store.SaveUpdateSourceAsync(UpdateSource.GitHub, TestContext.Current.CancellationToken),
             store.SaveAutoCheckUpdatesAsync(false, TestContext.Current.CancellationToken),
             store.SaveProxyAsync(ManualProxy, TestContext.Current.CancellationToken),
-            store.SaveSteamHookReminderAsync(false, TestContext.Current.CancellationToken));
+            store.SaveSteamHookReminderAsync(false, TestContext.Current.CancellationToken),
+            store.SaveWorkshopCollectionsAsync([SteamCollection], TestContext.Current.CancellationToken));
 
         Assert.Equal(
             new UserPreferences(AppLanguage.PortugueseBrazil, AppTheme.Dark, Placement)
@@ -270,6 +276,7 @@ public sealed class JsonPreferenceStoreTests : IDisposable
                 AutoCheckUpdates = false,
                 Proxy = ManualProxy,
                 SteamHookReminder = false,
+                WorkshopCollections = [SteamCollection],
             },
             CreateStore().Load());
     }
@@ -290,6 +297,7 @@ public sealed class JsonPreferenceStoreTests : IDisposable
         await CreateStore().SaveAutoCheckUpdatesAsync(false, TestContext.Current.CancellationToken);
         await CreateStore().SaveProxyAsync(ManualProxy, TestContext.Current.CancellationToken);
         await CreateStore().SaveSteamHookReminderAsync(false, TestContext.Current.CancellationToken);
+        await CreateStore().SaveWorkshopCollectionsAsync([SteamCollection], TestContext.Current.CancellationToken);
 
         Assert.Equal(new UserPreferences(null, null, null), CreateStore().Load());
     }
@@ -656,6 +664,72 @@ public sealed class JsonPreferenceStoreTests : IDisposable
         WriteFile($$"""{"theme":"dark","steamHookReminder":{{value}},"autoCheckUpdates":false}""");
 
         Assert.Equal(new UserPreferences(null, AppTheme.Dark, null) { AutoCheckUpdates = false }, CreateStore().Load());
+    }
+
+    [Fact]
+    public async Task SaveWorkshopCollectionsAsync_ThenLoad_RoundTripsInOrder()
+    {
+        var untitled = new SavedWorkshopCollection(2002, null);
+
+        await CreateStore().SaveWorkshopCollectionsAsync([untitled, SteamCollection], TestContext.Current.CancellationToken);
+
+        Assert.Equal(new UserPreferences(null, null, null) { WorkshopCollections = [untitled, SteamCollection] }, CreateStore().Load());
+    }
+
+    [Fact]
+    public async Task SaveWorkshopCollectionsAsync_WritesIdsAsTextAndOmitsUnknownTitles()
+    {
+        await CreateStore().SaveWorkshopCollectionsAsync(
+            [new SavedWorkshopCollection(18446744073709551615, "B42 pack"), new SavedWorkshopCollection(2002, null)],
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal(
+            """{"workshopCollections":[{"id":"18446744073709551615","title":"B42 pack"},{"id":"2002"}]}""",
+            await File.ReadAllTextAsync(FilePath, TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
+    public void Load_NoWorkshopCollections_LoadsNone()
+    {
+        WriteFile("""{"theme":"dark"}""");
+
+        Assert.Empty(CreateStore().Load().WorkshopCollections);
+    }
+
+    [Fact]
+    public void Load_WorkshopCollectionsWithInvalidEntries_KeepsTheValidOnesAndOtherFields()
+    {
+        WriteFile("""
+            {"theme":"dark","workshopCollections":[
+              {"id":"1001","title":"First"},
+              {"id":"1002"},
+              {"id":"1002","title":"Repeated"},
+              {"id":1003,"title":"Number id"},
+              {"id":"0","title":"Zero"},
+              {"id":"-5","title":"Negative"},
+              {"id":"abc","title":"Text"},
+              {"title":"No id"},
+              {"id":"1004","title":7},
+              {"id":"1005","title":""},
+              "1006",
+              null
+            ]}
+            """);
+
+        Assert.Equal(
+            new UserPreferences(null, AppTheme.Dark, null) { WorkshopCollections = [new(1001, "First"), new(1002, null), new(1005, null)] },
+            CreateStore().Load());
+    }
+
+    [Theory]
+    [InlineData("\"1001\"")]
+    [InlineData("{}")]
+    [InlineData("5")]
+    public void Load_WorkshopCollectionsNotAnArray_KeepsOtherFieldsAndLoadsNone(string value)
+    {
+        WriteFile($$"""{"theme":"dark","workshopCollections":{{value}}}""");
+
+        Assert.Equal(new UserPreferences(null, AppTheme.Dark, null), CreateStore().Load());
     }
 
     public static TheoryData<SavedProxy> Proxies =>

@@ -11,6 +11,7 @@ using PzLauncher.Core.Mod.ZombieBuddy;
 using PzLauncher.Core.Net;
 using PzLauncher.Core.Platform;
 using PzLauncher.Core.Steam;
+using PzLauncher.Core.Steam.Workshop;
 using PzLauncher.Core.Update;
 
 namespace PzLauncher.Core;
@@ -44,6 +45,9 @@ public static class ServiceCollectionExtensions
         services.TryAddSingleton(_ => new SwitchableProxy(HttpClient.DefaultProxy));
         services.TryAddSingleton(provider => LauncherHttpClient.Create(currentVersion, provider.GetRequiredService<SwitchableProxy>()));
         services.TryAddSingleton<INetworkService, NetworkService>();
+        services.TryAddSingleton<WorkshopWebApi>();
+        services.TryAddSingleton<IWorkshopService, WorkshopService>();
+        services.TryAddSingleton<IWorkshopActionRunner, WorkshopActionRunner>();
         services.TryAddSingleton<IUpdateService>(provider => new UpdateService(
             currentVersion,
             provider.GetRequiredService<LauncherHttpClient>(),

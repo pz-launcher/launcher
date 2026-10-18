@@ -10,3 +10,14 @@ public sealed record ConfirmPrompt(string Title, string Message, string ConfirmT
 
 /// <param name="Confirmed"><c>false</c> for cancel and for closing the window.</param>
 public sealed record ConfirmOptionResult(bool Confirmed, bool OptionChecked);
+
+public enum ConfirmChoice
+{
+    Confirm,
+
+    /// <summary>The second button, between confirm and cancel.</summary>
+    Alternative,
+
+    /// <summary>Also closing the window.</summary>
+    Cancel,
+}

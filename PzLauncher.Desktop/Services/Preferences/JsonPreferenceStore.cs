@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
@@ -19,7 +20,7 @@ namespace PzLauncher.Desktop.Services.Preferences;
 
 public sealed partial class JsonPreferenceStore(string filePath, ILogger logger, ISecretProtector secrets) : IPreferenceStore
 {
-    private static readonly PreferencesFile Empty = new(null, null, null, null, null, null, null, null, null, null, null);
+    private static readonly PreferencesFile Empty = new(null, null, null, null, null, null, null, null, null, null, null, null);
 
     private delegate bool EntryReader<T>(JsonElement element, [MaybeNullWhen(false)] out T value);
 
@@ -96,6 +97,12 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger,
             LogInvalidSteamHookReminder(logger, filePath);
         }
 
+        var workshopCollections = ToWorkshopCollections(file.WorkshopCollections, out var workshopCollectionsValid);
+        if (!workshopCollectionsValid)
+        {
+            LogInvalidWorkshopCollections(logger, filePath);
+        }
+
         return new UserPreferences(language, theme, window)
         {
             UpdateSource = updateSource,
@@ -106,6 +113,7 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger,
             InstallOverrides = installs,
             ZombieBuddyChannels = channels,
             DefaultModCollections = collections,
+            WorkshopCollections = workshopCollections,
         };
     }
 
@@ -169,6 +177,14 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger,
     {
         var entry = JsonSerializer.SerializeToElement(remind, DesktopJsonContext.Default.Boolean);
         return SaveAsync(file => file with { SteamHookReminder = entry }, ct);
+    }
+
+    public Task SaveWorkshopCollectionsAsync(IReadOnlyList<SavedWorkshopCollection> collections, CancellationToken ct = default)
+    {
+        WorkshopCollectionFile[] entries =
+            [.. collections.Select(collection => new WorkshopCollectionFile(collection.Id.ToString(CultureInfo.InvariantCulture), collection.Title))];
+        var element = JsonSerializer.SerializeToElement(entries, DesktopJsonContext.Default.WorkshopCollectionFileArray);
+        return SaveAsync(file => file with { WorkshopCollections = element }, ct);
     }
 
     public Task SaveProxyAsync(SavedProxy proxy, CancellationToken ct = default)
@@ -252,6 +268,54 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger,
             .Select(entry => entry.GetString() ?? "")
             .Where(IsAbsolutePath),
     ];
+
+    // A later entry with an id already read is dropped.
+    private static List<SavedWorkshopCollection> ToWorkshopCollections(JsonElement? element, out bool valid)
+    {
+        var result = new List<SavedWorkshopCollection>();
+        if (element is not { ValueKind: JsonValueKind.Array } array)
+        {
+            valid = element is null or { ValueKind: JsonValueKind.Null };
+            return result;
+        }
+
+        valid = true;
+        foreach (var entry in array.EnumerateArray())
+        {
+            if (ToWorkshopCollection(entry) is { } collection && !result.Exists(saved => saved.Id == collection.Id))
+            {
+                result.Add(collection);
+            }
+            else
+            {
+                valid = false;
+            }
+        }
+
+        return result;
+    }
+
+    private static SavedWorkshopCollection? ToWorkshopCollection(JsonElement element)
+    {
+        if (element.ValueKind != JsonValueKind.Object)
+        {
+            return null;
+        }
+
+        WorkshopCollectionFile? entry;
+        try
+        {
+            entry = element.Deserialize(DesktopJsonContext.Default.WorkshopCollectionFile);
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+
+        return entry is not null && ulong.TryParse(entry.Id, NumberStyles.None, CultureInfo.InvariantCulture, out var id) && id != 0
+            ? new SavedWorkshopCollection(id, entry.Title is { Length: > 0 } title ? title : null)
+            : null;
+    }
 
     private static Dictionary<string, T> ReadPerInstall<T>(IReadOnlyDictionary<string, JsonElement>? entries, EntryReader<T> tryRead)
     {
@@ -437,6 +501,9 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger,
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Steam hook reminder preference {Path} is not true or false; reminding")]
     private static partial void LogInvalidSteamHookReminder(ILogger logger, string path);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Workshop collection list preference {Path} holds entries that aren't valid; ignoring them")]
+    private static partial void LogInvalidWorkshopCollections(ILogger logger, string path);
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Proxy preference {Path} is not valid; using the system proxy")]
     private static partial void LogInvalidProxy(ILogger logger, string path);

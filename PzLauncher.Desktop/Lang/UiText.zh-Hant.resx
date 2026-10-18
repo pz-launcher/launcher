@@ -314,6 +314,42 @@
   <data name="Error_NetworkTimeout" xml:space="preserve">
     <value>{0} 在 {1} 秒內沒有回應。</value>
   </data>
+  <data name="Error_WorkshopSubscriptionsUnreadable" xml:space="preserve">
+    <value>無法讀取 Steam 工作坊訂閱清單 {0}。請確認 Steam 已安裝並已登入，然後重新整理。</value>
+  </data>
+  <data name="Error_WorkshopManifestUnreadable" xml:space="preserve">
+    <value>無法讀取 Steam 已安裝的工作坊項目清單 {0}。該 Steam 收藏庫中的項目可能顯示為未安裝。</value>
+  </data>
+  <data name="Error_WorkshopNetworkFailed" xml:space="preserve">
+    <value>無法連線到 Steam Web API（{0}）。請檢查網路連線或代理設定，然後再試一次。</value>
+  </data>
+  <data name="Error_WorkshopResponseInvalid" xml:space="preserve">
+    <value>Steam Web API 傳回了無法讀取的回應。請稍後再試一次。</value>
+  </data>
+  <data name="Error_WorkshopCollectionNotFound" xml:space="preserve">
+    <value>工作坊項目 {0} 不是合輯，或已被隱藏或移除。</value>
+  </data>
+  <data name="Error_WorkshopSteamApiMissing" xml:space="preserve">
+    <value>在 {0} 中找不到遊戲的 Steam 程式庫（steam_api）。工作坊操作需要 Steam 版遊戲。</value>
+  </data>
+  <data name="Error_WorkshopSteamApiUnusable" xml:space="preserve">
+    <value>無法載入遊戲的 Steam 程式庫 {0}。請在 Steam 中更新遊戲，然後重試。</value>
+  </data>
+  <data name="Error_WorkshopSteamNotRunning" xml:space="preserve">
+    <value>Steam 沒有在執行。請啟動並登入 Steam，然後重試。</value>
+  </data>
+  <data name="Error_WorkshopSteamInitFailed" xml:space="preserve">
+    <value>Steam 拒絕了工作坊操作（{0}）。請確認 Steam 已是最新版本、登入的帳號擁有 Project Zomboid，且 Steam 與啟動器要嘛都以系統管理員身分執行，要嘛都不是。</value>
+  </data>
+  <data name="Error_WorkshopHelperStartFailed" xml:space="preserve">
+    <value>無法啟動啟動器的 Steam 輔助程序 {0}。</value>
+  </data>
+  <data name="Error_WorkshopHelperFailed" xml:space="preserve">
+    <value>啟動器的 Steam 輔助程序在完成前停止了（{0}）。請在 Steam 中檢查這些項目，然後重試。</value>
+  </data>
+  <data name="Error_WorkshopHelperTimedOut" xml:space="preserve">
+    <value>Steam 在 {0} 秒內沒有回報任何進度，工作坊操作已停止。請稍後再試一次。</value>
+  </data>
   <data name="Error_FolderNotLocal" xml:space="preserve">
     <value>{0} 不是這台電腦上的資料夾，啟動器無法開啟它。請選擇本機資料夾。</value>
   </data>
@@ -683,6 +719,12 @@
   <data name="Mods_SectionCollections" xml:space="preserve">
     <value>合集管理</value>
   </data>
+  <data name="Mods_SectionWorkshopSubscriptions" xml:space="preserve">
+    <value>工作坊訂閱</value>
+  </data>
+  <data name="Mods_SectionWorkshopCollections" xml:space="preserve">
+    <value>工作坊合輯</value>
+  </data>
   <data name="Mods_Refresh" xml:space="preserve">
     <value>重新整理</value>
   </data>
@@ -889,6 +931,237 @@
   </data>
   <data name="ModCollections_ImportNameInvalid" xml:space="preserve">
     <value>「{0}」不能用作合集名稱。</value>
+  </data>
+  <data name="Workshop_SearchPlaceholder" xml:space="preserve">
+    <value>依標題、項目 ID 或模組 ID 搜尋</value>
+  </data>
+  <data name="Workshop_FilterNeedsUpdate" xml:space="preserve">
+    <value>需要更新</value>
+  </data>
+  <data name="Workshop_FilterUnused" xml:space="preserve">
+    <value>未被任何合集使用</value>
+  </data>
+  <data name="Workshop_ColumnTitle" xml:space="preserve">
+    <value>標題</value>
+  </data>
+  <data name="Workshop_ColumnItemId" xml:space="preserve">
+    <value>項目 ID</value>
+  </data>
+  <data name="Workshop_ColumnMods" xml:space="preserve">
+    <value>模組 ID</value>
+  </data>
+  <data name="Workshop_ColumnSize" xml:space="preserve">
+    <value>大小</value>
+  </data>
+  <data name="Workshop_ColumnUpdated" xml:space="preserve">
+    <value>更新時間</value>
+  </data>
+  <data name="Workshop_ColumnState" xml:space="preserve">
+    <value>狀態</value>
+  </data>
+  <data name="Workshop_SizeFormat" xml:space="preserve">
+    <value>{0:N1} MB</value>
+  </data>
+  <data name="Workshop_Downloading" xml:space="preserve">
+    <value>下載中</value>
+  </data>
+  <data name="Workshop_DownloadingFormat" xml:space="preserve">
+    <value>下載中 {0}%</value>
+  </data>
+  <data name="Workshop_Empty" xml:space="preserve">
+    <value>目前的 Steam 帳號沒有訂閱 Project Zomboid 的工作坊項目。</value>
+  </data>
+  <data name="Workshop_FilterEmpty" xml:space="preserve">
+    <value>沒有符合搜尋或篩選條件的項目。</value>
+  </data>
+  <data name="Workshop_Subscribe" xml:space="preserve">
+    <value>訂閱…</value>
+  </data>
+  <data name="Workshop_Unsubscribe" xml:space="preserve">
+    <value>取消訂閱</value>
+  </data>
+  <data name="Workshop_CheckUpdates" xml:space="preserve">
+    <value>檢查更新</value>
+  </data>
+  <data name="Workshop_UpdateAll" xml:space="preserve">
+    <value>更新全部過期項目</value>
+  </data>
+  <data name="Workshop_UpdateSelected" xml:space="preserve">
+    <value>強制更新所選項目</value>
+  </data>
+  <data name="Workshop_OpenInSteam" xml:space="preserve">
+    <value>在 Steam 中開啟</value>
+  </data>
+  <data name="Workshop_OpenFailed" xml:space="preserve">
+    <value>無法開啟項目頁面。請確認已安裝 Steam。</value>
+  </data>
+  <data name="Workshop_SubscribeTitle" xml:space="preserve">
+    <value>訂閱工作坊項目</value>
+  </data>
+  <data name="Workshop_SubscribeMessage" xml:space="preserve">
+    <value>貼上項目的 Steam 工作坊連結或項目 ID：</value>
+  </data>
+  <data name="Workshop_SubscribeAccept" xml:space="preserve">
+    <value>訂閱</value>
+  </data>
+  <data name="Workshop_LinkInvalid" xml:space="preserve">
+    <value>請輸入 Steam 工作坊項目連結或數字項目 ID。</value>
+  </data>
+  <data name="Workshop_UnsubscribeTitle" xml:space="preserve">
+    <value>要取消訂閱工作坊項目嗎？</value>
+  </data>
+  <data name="Workshop_UnsubscribeMessage" xml:space="preserve">
+    <value>要取消訂閱這 {0} 個項目嗎？操作結束後 Steam 會刪除它們的檔案。</value>
+  </data>
+  <data name="Workshop_UnsubscribeUsedMessage" xml:space="preserve">
+    <value>要取消訂閱這 {0} 個項目嗎？以下模組合集使用了它們的模組：{1}。合集會保留這些模組，但它們將變為缺少。操作結束後 Steam 會刪除它們的檔案。</value>
+  </data>
+  <data name="Workshop_CheckedAllCurrent" xml:space="preserve">
+    <value>所有已安裝的項目都已是最新。</value>
+  </data>
+  <data name="Workshop_CheckedOutdated" xml:space="preserve">
+    <value>有 {0} 個項目需要更新。</value>
+  </data>
+  <data name="Workshop_ActionSubscribeTitle" xml:space="preserve">
+    <value>正在訂閱</value>
+  </data>
+  <data name="Workshop_ActionUnsubscribeTitle" xml:space="preserve">
+    <value>正在取消訂閱</value>
+  </data>
+  <data name="Workshop_ActionUpdateTitle" xml:space="preserve">
+    <value>正在更新工作坊項目</value>
+  </data>
+  <data name="Workshop_ActionPlayingHint" xml:space="preserve">
+    <value>操作進行期間，Steam 會顯示你正在玩 Project Zomboid。</value>
+  </data>
+  <data name="Workshop_WaitingForSteam" xml:space="preserve">
+    <value>正在等待 Steam…</value>
+  </data>
+  <data name="Workshop_ActionSummary" xml:space="preserve">
+    <value>已完成：{0} / {1}</value>
+  </data>
+  <data name="Workshop_StillOutdated" xml:space="preserve">
+    <value>Steam 已完成，但已安裝的版本仍不是最新版。請幾分鐘後再試一次。</value>
+  </data>
+  <data name="Workshop_SteamResultFormat" xml:space="preserve">
+    <value>Steam 結果代碼 {0}</value>
+  </data>
+  <data name="Workshop_Close" xml:space="preserve">
+    <value>關閉</value>
+  </data>
+  <data name="WorkshopItemState_UpToDate" xml:space="preserve">
+    <value>已是最新</value>
+  </data>
+  <data name="WorkshopItemState_NeedsUpdate" xml:space="preserve">
+    <value>需要更新</value>
+  </data>
+  <data name="WorkshopItemState_NotInstalled" xml:space="preserve">
+    <value>未安裝</value>
+  </data>
+  <data name="WorkshopItemState_DisabledLocally" xml:space="preserve">
+    <value>本機已停用</value>
+  </data>
+  <data name="WorkshopItemState_NotSubscribed" xml:space="preserve">
+    <value>未訂閱</value>
+  </data>
+  <data name="WorkshopItemFailure_SubscribeFailed" xml:space="preserve">
+    <value>Steam 無法訂閱該項目</value>
+  </data>
+  <data name="WorkshopItemFailure_UnsubscribeFailed" xml:space="preserve">
+    <value>Steam 無法取消訂閱該項目</value>
+  </data>
+  <data name="WorkshopItemFailure_DownloadNotStarted" xml:space="preserve">
+    <value>Steam 沒有開始下載</value>
+  </data>
+  <data name="WorkshopItemFailure_DownloadFailed" xml:space="preserve">
+    <value>下載失敗</value>
+  </data>
+  <data name="WorkshopItemFailure_TimedOut" xml:space="preserve">
+    <value>Steam 停止回報進度</value>
+  </data>
+  <data name="WorkshopItemFailure_NotReported" xml:space="preserve">
+    <value>Steam 沒有回報結果</value>
+  </data>
+  <data name="WorkshopCollections_LinkPlaceholder" xml:space="preserve">
+    <value>合輯連結或 ID</value>
+  </data>
+  <data name="WorkshopCollections_Open" xml:space="preserve">
+    <value>開啟</value>
+  </data>
+  <data name="WorkshopCollections_Remembered" xml:space="preserve">
+    <value>開啟過的合輯</value>
+  </data>
+  <data name="WorkshopCollections_RememberedEmpty" xml:space="preserve">
+    <value>開啟過的工作坊合輯會列在這裡。</value>
+  </data>
+  <data name="WorkshopCollections_Forget" xml:space="preserve">
+    <value>從清單中移除</value>
+  </data>
+  <data name="WorkshopCollections_NoneOpen" xml:space="preserve">
+    <value>貼上 Steam 工作坊合輯的連結或 ID，查看其中的項目和訂閱情況。</value>
+  </data>
+  <data name="WorkshopCollections_ItemCountFormat" xml:space="preserve">
+    <value>{0} 個項目</value>
+  </data>
+  <data name="WorkshopCollections_Empty" xml:space="preserve">
+    <value>這個合輯裡沒有項目。</value>
+  </data>
+  <data name="WorkshopCollections_SubscribeMissing" xml:space="preserve">
+    <value>訂閱缺少的項目</value>
+  </data>
+  <data name="WorkshopCollections_UnsubscribeAll" xml:space="preserve">
+    <value>取消訂閱全部</value>
+  </data>
+  <data name="WorkshopCollections_Generate" xml:space="preserve">
+    <value>建立本機合集</value>
+  </data>
+  <data name="WorkshopCollections_GenerateHint" xml:space="preserve">
+    <value>依此工作坊合輯的順序，用已安裝項目中的模組建立一個本機合集。</value>
+  </data>
+  <data name="WorkshopCollections_GenerateTitle" xml:space="preserve">
+    <value>從工作坊合輯新增合集</value>
+  </data>
+  <data name="WorkshopCollections_GenerateNothing" xml:space="preserve">
+    <value>這個合輯中已安裝的項目都沒有可加入的模組。請先訂閱缺少的項目，等 Steam 下載完成。</value>
+  </data>
+  <data name="WorkshopCollections_Generated" xml:space="preserve">
+    <value>已建立「{0}」，包含 {1} 個模組，可在合集管理中查看。</value>
+  </data>
+  <data name="WorkshopCollections_PickTitle" xml:space="preserve">
+    <value>選擇要加入的模組</value>
+  </data>
+  <data name="WorkshopCollections_PickMessage" xml:space="preserve">
+    <value>以下項目包含多個模組。取消勾選不要放入新合集的模組。</value>
+  </data>
+  <data name="WorkshopCollections_PickConflict" xml:space="preserve">
+    <value>與 {0} 不相容</value>
+  </data>
+  <data name="WorkshopCollections_SkippedMessage" xml:space="preserve">
+    <value>以下項目不會加入：</value>
+  </data>
+  <data name="WorkshopCollections_SkippedFormat" xml:space="preserve">
+    <value>{0}：{1}</value>
+  </data>
+  <data name="WorkshopCollections_SkippedNoMods" xml:space="preserve">
+    <value>不含模組</value>
+  </data>
+  <data name="WorkshopLaunch_Title" xml:space="preserve">
+    <value>工作坊有更新</value>
+  </data>
+  <data name="WorkshopLaunch_Message" xml:space="preserve">
+    <value>本次啟動要啟用的模組來自 {0} 個工作坊項目，它們有比 Steam 已安裝版本更新的版本。要先更新再啟動嗎？</value>
+  </data>
+  <data name="WorkshopLaunch_Update" xml:space="preserve">
+    <value>更新後啟動</value>
+  </data>
+  <data name="WorkshopLaunch_LaunchNow" xml:space="preserve">
+    <value>直接啟動</value>
+  </data>
+  <data name="WorkshopLaunch_FailedTitle" xml:space="preserve">
+    <value>部分項目未更新</value>
+  </data>
+  <data name="WorkshopLaunch_FailedMessage" xml:space="preserve">
+    <value>有 {0} 個工作坊項目仍未更新到最新版本。要用目前已安裝的版本啟動嗎？</value>
   </data>
   <data name="ModApply_KeepTitle" xml:space="preserve">
     <value>保留目前的啟用清單？</value>

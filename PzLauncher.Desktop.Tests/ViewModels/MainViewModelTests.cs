@@ -37,10 +37,12 @@ public class MainViewModelTests : UiTextCultureTest
         return new(
             new HomeViewModel(
                 installs, launcher, overrides, dialogs, zombieBuddy, channels, new FakeZombieBuddyModsService(),
-                collections, defaults, applier, orderWriter, runState),
+                collections, defaults, applier, orderWriter, TestWorkshop.LaunchCheck(new FakeWorkshopService(), collections),
+                new FakeWorkshopService(), new FakeWorkshopActionRunner(), runState),
             installs,
             new ModsViewModel(
-                installs, collections, overrides, defaults, applier, dialogs, new FakeClipboardService(), runState, orderWriter, Localization),
+                installs, collections, overrides, defaults, applier, dialogs, new FakeClipboardService(), runState, orderWriter,
+                new FakeWorkshopService(), new FakeWorkshopActionRunner(), new FakeUrlLauncher(), TestWorkshop.History(), Localization),
             new SettingsViewModel(
                 new FakeThemeService(AppTheme.Light),
                 store,

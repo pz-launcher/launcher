@@ -314,6 +314,42 @@
   <data name="Error_NetworkTimeout" xml:space="preserve">
     <value>{0} 在 {1} 秒内没有响应。</value>
   </data>
+  <data name="Error_WorkshopSubscriptionsUnreadable" xml:space="preserve">
+    <value>无法读取 Steam 创意工坊订阅列表 {0}。请确认 Steam 已安装并已登录，然后刷新。</value>
+  </data>
+  <data name="Error_WorkshopManifestUnreadable" xml:space="preserve">
+    <value>无法读取 Steam 已安装的创意工坊物品列表 {0}。该 Steam 库中的物品可能显示为未安装。</value>
+  </data>
+  <data name="Error_WorkshopNetworkFailed" xml:space="preserve">
+    <value>无法连接 Steam Web API（{0}）。请检查网络连接或代理设置，然后重试。</value>
+  </data>
+  <data name="Error_WorkshopResponseInvalid" xml:space="preserve">
+    <value>Steam Web API 返回了无法读取的响应。请稍后重试。</value>
+  </data>
+  <data name="Error_WorkshopCollectionNotFound" xml:space="preserve">
+    <value>创意工坊物品 {0} 不是合集，或已被隐藏或删除。</value>
+  </data>
+  <data name="Error_WorkshopSteamApiMissing" xml:space="preserve">
+    <value>在 {0} 中找不到游戏的 Steam 库（steam_api）。创意工坊操作需要 Steam 版游戏。</value>
+  </data>
+  <data name="Error_WorkshopSteamApiUnusable" xml:space="preserve">
+    <value>无法加载游戏的 Steam 库 {0}。请在 Steam 中更新游戏，然后重试。</value>
+  </data>
+  <data name="Error_WorkshopSteamNotRunning" xml:space="preserve">
+    <value>Steam 未运行。请启动并登录 Steam，然后重试。</value>
+  </data>
+  <data name="Error_WorkshopSteamInitFailed" xml:space="preserve">
+    <value>Steam 拒绝了创意工坊操作（{0}）。请确认 Steam 已是最新版本、登录的账号拥有 Project Zomboid，并且 Steam 和启动器要么都以管理员身份运行，要么都不是。</value>
+  </data>
+  <data name="Error_WorkshopHelperStartFailed" xml:space="preserve">
+    <value>无法启动启动器的 Steam 辅助进程 {0}。</value>
+  </data>
+  <data name="Error_WorkshopHelperFailed" xml:space="preserve">
+    <value>启动器的 Steam 辅助进程在完成前停止了（{0}）。请在 Steam 中检查这些物品，然后重试。</value>
+  </data>
+  <data name="Error_WorkshopHelperTimedOut" xml:space="preserve">
+    <value>Steam 在 {0} 秒内没有报告任何进度，创意工坊操作已停止。请稍后重试。</value>
+  </data>
   <data name="Error_FolderNotLocal" xml:space="preserve">
     <value>{0} 不是这台电脑上的文件夹，启动器无法打开它。请选择本地文件夹。</value>
   </data>
@@ -683,6 +719,12 @@
   <data name="Mods_SectionCollections" xml:space="preserve">
     <value>合集管理</value>
   </data>
+  <data name="Mods_SectionWorkshopSubscriptions" xml:space="preserve">
+    <value>工坊订阅</value>
+  </data>
+  <data name="Mods_SectionWorkshopCollections" xml:space="preserve">
+    <value>工坊合集</value>
+  </data>
   <data name="Mods_Refresh" xml:space="preserve">
     <value>刷新</value>
   </data>
@@ -889,6 +931,237 @@
   </data>
   <data name="ModCollections_ImportNameInvalid" xml:space="preserve">
     <value>“{0}”不能用作合集名称。</value>
+  </data>
+  <data name="Workshop_SearchPlaceholder" xml:space="preserve">
+    <value>按标题、物品 ID 或模组 ID 搜索</value>
+  </data>
+  <data name="Workshop_FilterNeedsUpdate" xml:space="preserve">
+    <value>需要更新</value>
+  </data>
+  <data name="Workshop_FilterUnused" xml:space="preserve">
+    <value>未被任何合集使用</value>
+  </data>
+  <data name="Workshop_ColumnTitle" xml:space="preserve">
+    <value>标题</value>
+  </data>
+  <data name="Workshop_ColumnItemId" xml:space="preserve">
+    <value>物品 ID</value>
+  </data>
+  <data name="Workshop_ColumnMods" xml:space="preserve">
+    <value>模组 ID</value>
+  </data>
+  <data name="Workshop_ColumnSize" xml:space="preserve">
+    <value>大小</value>
+  </data>
+  <data name="Workshop_ColumnUpdated" xml:space="preserve">
+    <value>更新时间</value>
+  </data>
+  <data name="Workshop_ColumnState" xml:space="preserve">
+    <value>状态</value>
+  </data>
+  <data name="Workshop_SizeFormat" xml:space="preserve">
+    <value>{0:N1} MB</value>
+  </data>
+  <data name="Workshop_Downloading" xml:space="preserve">
+    <value>下载中</value>
+  </data>
+  <data name="Workshop_DownloadingFormat" xml:space="preserve">
+    <value>下载中 {0}%</value>
+  </data>
+  <data name="Workshop_Empty" xml:space="preserve">
+    <value>当前 Steam 账号没有订阅 Project Zomboid 的创意工坊物品。</value>
+  </data>
+  <data name="Workshop_FilterEmpty" xml:space="preserve">
+    <value>没有符合搜索或筛选条件的物品。</value>
+  </data>
+  <data name="Workshop_Subscribe" xml:space="preserve">
+    <value>订阅…</value>
+  </data>
+  <data name="Workshop_Unsubscribe" xml:space="preserve">
+    <value>取消订阅</value>
+  </data>
+  <data name="Workshop_CheckUpdates" xml:space="preserve">
+    <value>检查更新</value>
+  </data>
+  <data name="Workshop_UpdateAll" xml:space="preserve">
+    <value>更新全部过期项</value>
+  </data>
+  <data name="Workshop_UpdateSelected" xml:space="preserve">
+    <value>强制更新所选</value>
+  </data>
+  <data name="Workshop_OpenInSteam" xml:space="preserve">
+    <value>在 Steam 中打开</value>
+  </data>
+  <data name="Workshop_OpenFailed" xml:space="preserve">
+    <value>无法打开物品页面。请确认已安装 Steam。</value>
+  </data>
+  <data name="Workshop_SubscribeTitle" xml:space="preserve">
+    <value>订阅创意工坊物品</value>
+  </data>
+  <data name="Workshop_SubscribeMessage" xml:space="preserve">
+    <value>粘贴物品的 Steam 创意工坊链接或物品 ID：</value>
+  </data>
+  <data name="Workshop_SubscribeAccept" xml:space="preserve">
+    <value>订阅</value>
+  </data>
+  <data name="Workshop_LinkInvalid" xml:space="preserve">
+    <value>请输入 Steam 创意工坊物品链接或数字物品 ID。</value>
+  </data>
+  <data name="Workshop_UnsubscribeTitle" xml:space="preserve">
+    <value>要取消订阅创意工坊物品吗？</value>
+  </data>
+  <data name="Workshop_UnsubscribeMessage" xml:space="preserve">
+    <value>要取消订阅这 {0} 个物品吗？操作结束后 Steam 会删除它们的文件。</value>
+  </data>
+  <data name="Workshop_UnsubscribeUsedMessage" xml:space="preserve">
+    <value>要取消订阅这 {0} 个物品吗？以下模组合集使用了它们的模组：{1}。合集会保留这些模组，但它们将变为缺失。操作结束后 Steam 会删除它们的文件。</value>
+  </data>
+  <data name="Workshop_CheckedAllCurrent" xml:space="preserve">
+    <value>所有已安装的物品都已是最新。</value>
+  </data>
+  <data name="Workshop_CheckedOutdated" xml:space="preserve">
+    <value>有 {0} 个物品需要更新。</value>
+  </data>
+  <data name="Workshop_ActionSubscribeTitle" xml:space="preserve">
+    <value>正在订阅</value>
+  </data>
+  <data name="Workshop_ActionUnsubscribeTitle" xml:space="preserve">
+    <value>正在取消订阅</value>
+  </data>
+  <data name="Workshop_ActionUpdateTitle" xml:space="preserve">
+    <value>正在更新创意工坊物品</value>
+  </data>
+  <data name="Workshop_ActionPlayingHint" xml:space="preserve">
+    <value>操作进行期间，Steam 会显示你正在玩 Project Zomboid。</value>
+  </data>
+  <data name="Workshop_WaitingForSteam" xml:space="preserve">
+    <value>正在等待 Steam…</value>
+  </data>
+  <data name="Workshop_ActionSummary" xml:space="preserve">
+    <value>已完成：{0} / {1}</value>
+  </data>
+  <data name="Workshop_StillOutdated" xml:space="preserve">
+    <value>Steam 已完成，但已安装的版本仍不是最新版。请几分钟后重试。</value>
+  </data>
+  <data name="Workshop_SteamResultFormat" xml:space="preserve">
+    <value>Steam 结果代码 {0}</value>
+  </data>
+  <data name="Workshop_Close" xml:space="preserve">
+    <value>关闭</value>
+  </data>
+  <data name="WorkshopItemState_UpToDate" xml:space="preserve">
+    <value>已是最新</value>
+  </data>
+  <data name="WorkshopItemState_NeedsUpdate" xml:space="preserve">
+    <value>需要更新</value>
+  </data>
+  <data name="WorkshopItemState_NotInstalled" xml:space="preserve">
+    <value>未安装</value>
+  </data>
+  <data name="WorkshopItemState_DisabledLocally" xml:space="preserve">
+    <value>本地已禁用</value>
+  </data>
+  <data name="WorkshopItemState_NotSubscribed" xml:space="preserve">
+    <value>未订阅</value>
+  </data>
+  <data name="WorkshopItemFailure_SubscribeFailed" xml:space="preserve">
+    <value>Steam 无法订阅该物品</value>
+  </data>
+  <data name="WorkshopItemFailure_UnsubscribeFailed" xml:space="preserve">
+    <value>Steam 无法取消订阅该物品</value>
+  </data>
+  <data name="WorkshopItemFailure_DownloadNotStarted" xml:space="preserve">
+    <value>Steam 没有开始下载</value>
+  </data>
+  <data name="WorkshopItemFailure_DownloadFailed" xml:space="preserve">
+    <value>下载失败</value>
+  </data>
+  <data name="WorkshopItemFailure_TimedOut" xml:space="preserve">
+    <value>Steam 停止报告进度</value>
+  </data>
+  <data name="WorkshopItemFailure_NotReported" xml:space="preserve">
+    <value>Steam 没有报告结果</value>
+  </data>
+  <data name="WorkshopCollections_LinkPlaceholder" xml:space="preserve">
+    <value>合集链接或 ID</value>
+  </data>
+  <data name="WorkshopCollections_Open" xml:space="preserve">
+    <value>打开</value>
+  </data>
+  <data name="WorkshopCollections_Remembered" xml:space="preserve">
+    <value>打开过的合集</value>
+  </data>
+  <data name="WorkshopCollections_RememberedEmpty" xml:space="preserve">
+    <value>打开过的工坊合集会列在这里。</value>
+  </data>
+  <data name="WorkshopCollections_Forget" xml:space="preserve">
+    <value>从列表中移除</value>
+  </data>
+  <data name="WorkshopCollections_NoneOpen" xml:space="preserve">
+    <value>粘贴 Steam 创意工坊合集的链接或 ID，查看其中的物品和订阅情况。</value>
+  </data>
+  <data name="WorkshopCollections_ItemCountFormat" xml:space="preserve">
+    <value>{0} 个物品</value>
+  </data>
+  <data name="WorkshopCollections_Empty" xml:space="preserve">
+    <value>这个合集里没有物品。</value>
+  </data>
+  <data name="WorkshopCollections_SubscribeMissing" xml:space="preserve">
+    <value>订阅缺失项</value>
+  </data>
+  <data name="WorkshopCollections_UnsubscribeAll" xml:space="preserve">
+    <value>取消订阅全部</value>
+  </data>
+  <data name="WorkshopCollections_Generate" xml:space="preserve">
+    <value>生成本地合集</value>
+  </data>
+  <data name="WorkshopCollections_GenerateHint" xml:space="preserve">
+    <value>按此工坊合集的顺序，用已安装物品中的模组创建一个本地合集。</value>
+  </data>
+  <data name="WorkshopCollections_GenerateTitle" xml:space="preserve">
+    <value>从工坊合集新建合集</value>
+  </data>
+  <data name="WorkshopCollections_GenerateNothing" xml:space="preserve">
+    <value>这个合集中已安装的物品都没有可加入的模组。请先订阅缺失项，等 Steam 下载完成。</value>
+  </data>
+  <data name="WorkshopCollections_Generated" xml:space="preserve">
+    <value>已创建“{0}”，包含 {1} 个模组，可在合集管理中查看。</value>
+  </data>
+  <data name="WorkshopCollections_PickTitle" xml:space="preserve">
+    <value>选择要加入的模组</value>
+  </data>
+  <data name="WorkshopCollections_PickMessage" xml:space="preserve">
+    <value>以下物品包含多个模组。取消勾选不想放入新合集的模组。</value>
+  </data>
+  <data name="WorkshopCollections_PickConflict" xml:space="preserve">
+    <value>与 {0} 不兼容</value>
+  </data>
+  <data name="WorkshopCollections_SkippedMessage" xml:space="preserve">
+    <value>以下物品不会加入：</value>
+  </data>
+  <data name="WorkshopCollections_SkippedFormat" xml:space="preserve">
+    <value>{0}：{1}</value>
+  </data>
+  <data name="WorkshopCollections_SkippedNoMods" xml:space="preserve">
+    <value>不含模组</value>
+  </data>
+  <data name="WorkshopLaunch_Title" xml:space="preserve">
+    <value>创意工坊有更新</value>
+  </data>
+  <data name="WorkshopLaunch_Message" xml:space="preserve">
+    <value>本次启动要启用的模组来自 {0} 个创意工坊物品，它们有比 Steam 已安装版本更新的版本。要先更新再启动吗？</value>
+  </data>
+  <data name="WorkshopLaunch_Update" xml:space="preserve">
+    <value>更新后启动</value>
+  </data>
+  <data name="WorkshopLaunch_LaunchNow" xml:space="preserve">
+    <value>直接启动</value>
+  </data>
+  <data name="WorkshopLaunch_FailedTitle" xml:space="preserve">
+    <value>部分物品未更新</value>
+  </data>
+  <data name="WorkshopLaunch_FailedMessage" xml:space="preserve">
+    <value>有 {0} 个创意工坊物品仍未更新到最新版本。要用当前已安装的版本启动吗？</value>
   </data>
   <data name="ModApply_KeepTitle" xml:space="preserve">
     <value>保留当前启用列表？</value>

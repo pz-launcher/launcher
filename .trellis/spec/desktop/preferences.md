@@ -27,6 +27,7 @@
 | `updateSource` | `auto`, `github`, `gitee`; anything else loads as null (Auto) | `UpdateSourcePreferences.PreferenceName` |
 | `autoCheckUpdates` | `true`, `false`; anything else loads as null (on) | `UserPreferences.AutoCheckUpdates` |
 | `steamHookReminder` | `true`, `false`; anything else loads as null (remind) | `UserPreferences.SteamHookReminder` |
+| `workshopCollections` | array of `{id, title}`, most recent first: `id` the Steam Workshop collection id as decimal text, `title` its Steam title (omitted when unknown); an entry that isn't an object, has a missing, zero or non-text id or a non-string title, or repeats an earlier id is dropped, the rest kept; a non-array loads as empty | `UserPreferences.WorkshopCollections` (`SavedWorkshopCollection`) |
 | `proxy` | `{mode, host, port, username, password}`; `mode`: `system`, `none`, `manual`; an unknown mode, a member of the wrong JSON type or a non-object loads the whole entry as null (System). `host`/`port` are kept outside manual mode; an invalid one is dropped, the rest kept. Empty members are omitted. `password`: `dpapi:<base64>` (Windows, current user) or `plain:<text>` (Linux, macOS), written by `ISecretProtector`; another scheme or an undecryptable value loads as null and is logged | `UserPreferences.Proxy` (`SavedProxy`), `ProxyModePreferences.PreferenceName` |
 | `window` | `{x, y, width, height, maximized}`: normal-state position (int, physical px), client size (number > 0, DIPs), maximized (bool); invalid if any member is missing | `WindowPlacement` |
 

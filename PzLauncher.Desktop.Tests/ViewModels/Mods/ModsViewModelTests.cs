@@ -52,7 +52,8 @@ public class ModsViewModelTests : UiTextCultureTest
         _detection.ScanResults.Enqueue(FakeInstallDetectionService.Found(installs.Length == 0 ? [SteamGame] : installs));
         await Installs.ActivateCommand.ExecuteAsync(null);
         var vm = new ModsViewModel(
-            Installs, _service, _overrides, _defaults, new ModCollectionApplier(_service, _dialogs), _dialogs, _clipboard, _runState, _orderWriter, Localization);
+            Installs, _service, _overrides, _defaults, new ModCollectionApplier(_service, _dialogs), _dialogs, _clipboard, _runState, _orderWriter,
+            new FakeWorkshopService(), new FakeWorkshopActionRunner(), new FakeUrlLauncher(), TestWorkshop.History(), Localization);
         await vm.ActivateCommand.ExecuteAsync(null);
         return vm;
     }

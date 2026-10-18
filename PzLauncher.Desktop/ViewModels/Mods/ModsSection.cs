@@ -4,4 +4,6 @@ public enum ModsSection
 {
     Mods,
     Collections,
+    WorkshopSubscriptions,
+    WorkshopCollections,
 }

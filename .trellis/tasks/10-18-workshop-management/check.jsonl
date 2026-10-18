@@ -1,0 +1,7 @@
+{"file": ".trellis/spec/common/test-strategy.md", "reason": "what to test in Core vs Desktop, fakes, fixtures"}
+{"file": ".trellis/spec/common/coding-rules.md", "reason": "review against comment, async and AOT rules"}
+{"file": ".trellis/spec/common/formatting.md", "reason": "formatting rules"}
+{"file": ".trellis/spec/core/error-handling.md", "reason": "Result/error code usage at boundaries"}
+{"file": ".trellis/spec/desktop/localization.md", "reason": "every new key in every resx"}
+{"file": ".trellis/spec/desktop/preferences.md", "reason": "preferences contract for the new field"}
+{"file": ".trellis/tasks/10-18-workshop-management/research/steam-workshop-integration.md", "reason": "verify binding and file parsing against the researched facts"}

@@ -24,6 +24,10 @@
                                   IsChecked="{Binding Section, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:ModsSection.Mods}}" />
                 <controls:NavItem Icon="Collections" Content="{x:Static lang:UiText.Mods_SectionCollections}"
                                   IsChecked="{Binding Section, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:ModsSection.Collections}}" />
+                <controls:NavItem Icon="CloudArrowDown" Content="{x:Static lang:UiText.Mods_SectionWorkshopSubscriptions}"
+                                  IsChecked="{Binding Section, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:ModsSection.WorkshopSubscriptions}}" />
+                <controls:NavItem Icon="Library" Content="{x:Static lang:UiText.Mods_SectionWorkshopCollections}"
+                                  IsChecked="{Binding Section, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:ModsSection.WorkshopCollections}}" />
             </StackPanel>
         </Border>
 
@@ -34,12 +38,19 @@
                                IsVisible="{Binding Section, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:ModsSection.Mods}}" />
                     <TextBlock Grid.Column="0" Text="{x:Static lang:UiText.Mods_SectionCollections}" Classes="pageTitle" VerticalAlignment="Center"
                                IsVisible="{Binding Section, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:ModsSection.Collections}}" />
+                    <TextBlock Grid.Column="0" Text="{x:Static lang:UiText.Mods_SectionWorkshopSubscriptions}" Classes="pageTitle" VerticalAlignment="Center"
+                               IsVisible="{Binding Section, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:ModsSection.WorkshopSubscriptions}}" />
+                    <TextBlock Grid.Column="0" Text="{x:Static lang:UiText.Mods_SectionWorkshopCollections}" Classes="pageTitle" VerticalAlignment="Center"
+                               IsVisible="{Binding Section, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:ModsSection.WorkshopCollections}}" />
                     <Button Grid.Column="1" Content="{x:Static lang:UiText.Mods_Refresh}" Command="{Binding RefreshCommand}" />
                 </Grid>
 
-                <ProgressBar DockPanel.Dock="Top" IsIndeterminate="True" IsVisible="{Binding IsLoading}" Margin="0,0,0,8" />
-                <TextBlock DockPanel.Dock="Top" Text="{Binding ErrorText}" Classes="error" TextWrapping="Wrap"
-                           IsVisible="{Binding ErrorText, Converter={x:Static ObjectConverters.IsNotNull}}" Margin="0,0,0,8" />
+                <!-- The Workshop sections show their own load state. -->
+                <StackPanel DockPanel.Dock="Top" IsVisible="{Binding ShowsGameFiles}">
+                    <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsLoading}" Margin="0,0,0,8" />
+                    <TextBlock Text="{Binding ErrorText}" Classes="error" TextWrapping="Wrap"
+                               IsVisible="{Binding ErrorText, Converter={x:Static ObjectConverters.IsNotNull}}" Margin="0,0,0,8" />
+                </StackPanel>
                 <TextBlock DockPanel.Dock="Top" Text="{x:Static lang:UiText.Mods_GameRunning}" Classes="warning"
                            TextWrapping="Wrap" IsVisible="{Binding IsGameRunning}" Margin="0,0,0,8" />
 
@@ -55,6 +66,12 @@
                         </Panel>
                         <Panel IsVisible="{Binding Section, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:ModsSection.Collections}}">
                             <mods:ModCollectionsView DataContext="{Binding Collections}" />
+                        </Panel>
+                        <Panel IsVisible="{Binding Section, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:ModsSection.WorkshopSubscriptions}}">
+                            <mods:WorkshopSubscriptionsView DataContext="{Binding WorkshopSubscriptions}" />
+                        </Panel>
+                        <Panel IsVisible="{Binding Section, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:ModsSection.WorkshopCollections}}">
+                            <mods:WorkshopCollectionsView DataContext="{Binding WorkshopCollections}" />
                         </Panel>
                     </Panel>
                 </Panel>

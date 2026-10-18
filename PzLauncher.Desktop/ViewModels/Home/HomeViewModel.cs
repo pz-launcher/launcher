@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -10,6 +11,8 @@ using PzLauncher.Core.Installs;
 using PzLauncher.Core.Launch;
 using PzLauncher.Core.Mod.Collections;
 using PzLauncher.Core.Mod.ZombieBuddy;
+using PzLauncher.Core.Steam.Workshop;
+using PzLauncher.Desktop.Lang;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Services.Launch;
 using PzLauncher.Desktop.Services.Mods;
@@ -34,6 +37,9 @@ public partial class HomeViewModel : ViewModelBase
     private readonly IModCollectionDefaultsService _defaultCollections;
     private readonly ModCollectionApplier _applier;
     private readonly IModCollectionOrderWriter _orderWriter;
+    private readonly WorkshopLaunchCheck _workshopCheck;
+    private readonly IWorkshopService _workshop;
+    private readonly IWorkshopActionRunner _workshopActions;
     private readonly GameRunState _runState;
 
     private CollectionChoice _selectedCollection = CollectionChoice.None;
@@ -54,6 +60,9 @@ public partial class HomeViewModel : ViewModelBase
         IModCollectionDefaultsService defaultCollections,
         ModCollectionApplier applier,
         IModCollectionOrderWriter orderWriter,
+        WorkshopLaunchCheck workshopCheck,
+        IWorkshopService workshop,
+        IWorkshopActionRunner workshopActions,
         GameRunState runState)
     {
         _installs = installs;
@@ -67,6 +76,9 @@ public partial class HomeViewModel : ViewModelBase
         _defaultCollections = defaultCollections;
         _applier = applier;
         _orderWriter = orderWriter;
+        _workshopCheck = workshopCheck;
+        _workshop = workshop;
+        _workshopActions = workshopActions;
         _runState = runState;
         CollectionChoices = [CollectionChoice.None];
 
@@ -164,10 +176,15 @@ public partial class HomeViewModel : ViewModelBase
         }
 
         var overrides = _overrides.Get(install.RootPath);
+        var collection = _defaultCollections.Get(install.RootPath);
+        if (!await UpdateWorkshopItemsAsync(install.RootPath, overrides.ExtraGameArgs, collection))
+        {
+            return;
+        }
 
         // A failed apply is reported, then the game starts with the enabled list it already has.
         var removeZombieBuddy = false;
-        if (_defaultCollections.Get(install.RootPath) is { } collection)
+        if (collection is not null)
         {
             switch (await _applier.ApplyAsync(install.RootPath, overrides.ExtraGameArgs, collection))
             {
@@ -218,6 +235,53 @@ public partial class HomeViewModel : ViewModelBase
         {
             await _dialogs.ShowErrorAsync(ErrorMessages.ToUserText(exit.Error));
         }
+    }
+
+    // False when the user cancelled the launch. Runs before the apply, so a cancel leaves the enabled list as it was.
+    private async Task<bool> UpdateWorkshopItemsAsync(string installRoot, string extraGameArgs, string? collection)
+    {
+        var outdated = await _workshopCheck.FindOutdatedAsync(installRoot, extraGameArgs, collection);
+        if (outdated.Count == 0)
+        {
+            return true;
+        }
+
+        List<WorkshopItemRow> rows = [.. outdated.Select(item => new WorkshopItemRow(item, isSelected: false, _ => { }))];
+        var prompt = new ConfirmPrompt(
+            UiText.WorkshopLaunch_Title,
+            string.Format(CultureInfo.CurrentCulture, UiText.WorkshopLaunch_Message, rows.Count),
+            UiText.WorkshopLaunch_Update,
+            UiText.Dialog_Cancel)
+        {
+            Items = [.. rows.Select(WorkshopActionFlow.NameWithId)],
+        };
+        switch (await _dialogs.ChooseAsync(prompt, UiText.WorkshopLaunch_LaunchNow))
+        {
+            case ConfirmChoice.Confirm:
+                break;
+            case ConfirmChoice.Alternative:
+                return true;
+            case ConfirmChoice.Cancel:
+                return false;
+        }
+
+        // The items are on no page here, so no row shows their download.
+        var items = WorkshopActionFlow.ActionItems(rows);
+        await WorkshopActionFlow.RunAsync(
+            _workshopActions, _workshop, _dialogs, installRoot, extraGameArgs, WorkshopAction.Update, items, () => []);
+
+        // Closing the progress dialog early leaves the unfinished items short of Done too.
+        var names = rows.ToDictionary(row => row.Id, WorkshopActionFlow.NameWithId);
+        List<string> notUpdated = [.. items.Where(item => item.State != WorkshopActionItemState.Done).Select(item => names[item.Id])];
+        return notUpdated.Count == 0 || await _dialogs.ConfirmAsync(
+            new ConfirmPrompt(
+                UiText.WorkshopLaunch_FailedTitle,
+                string.Format(CultureInfo.CurrentCulture, UiText.WorkshopLaunch_FailedMessage, notUpdated.Count),
+                UiText.WorkshopLaunch_LaunchNow,
+                UiText.Dialog_Cancel)
+            {
+                Items = notUpdated,
+            });
     }
 
     // False when the user cancelled the setup dialog. A status error falls through: the launch reports the same config problem.

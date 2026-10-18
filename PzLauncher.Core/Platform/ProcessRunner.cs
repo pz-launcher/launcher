@@ -1,4 +1,6 @@
+using System.ComponentModel;
 using System.Diagnostics;
+using System.Text;
 
 namespace PzLauncher.Core.Platform;
 
@@ -9,9 +11,23 @@ internal sealed class ProcessRunner : IProcessRunner
     // A child that inherited the stderr pipe can keep it open after the process exits.
     private static readonly TimeSpan DrainTimeout = TimeSpan.FromSeconds(2);
 
-    public IRunningProcess Start(ProcessStartRequest request)
+    private static readonly UTF8Encoding Utf8NoBom = new(encoderShouldEmitUTF8Identifier: false);
+
+    // stdout stays inherited: only stderr is read, for the JVM's start-up errors.
+    public IRunningProcess Start(ProcessStartRequest request) => new RunningProcess(StartProcess(CreateInfo(request)));
+
+    public IPipedProcess StartPiped(ProcessStartRequest request)
     {
-        // stdout stays inherited: only stderr is read, for the JVM's start-up errors.
+        var info = CreateInfo(request);
+        info.RedirectStandardInput = true;
+        info.RedirectStandardOutput = true;
+        info.StandardInputEncoding = Utf8NoBom;
+        info.StandardOutputEncoding = Utf8NoBom;
+        return new PipedProcess(StartProcess(info));
+    }
+
+    private static ProcessStartInfo CreateInfo(ProcessStartRequest request)
+    {
         var info = new ProcessStartInfo(request.FileName)
         {
             UseShellExecute = false,
@@ -28,10 +44,12 @@ internal sealed class ProcessRunner : IProcessRunner
             info.Environment[name] = value;
         }
 
-        // Only a shell-executed start can return null (when it reuses a running process).
-        var process = Process.Start(info) ?? throw new UnreachableException("Process.Start returned null without shell execute.");
-        return new RunningProcess(process);
+        return info;
     }
+
+    // Only a shell-executed start can return null (when it reuses a running process).
+    private static Process StartProcess(ProcessStartInfo info) =>
+        Process.Start(info) ?? throw new UnreachableException("Process.Start returned null without shell execute.");
 
     public IReadOnlyList<IRunningProcess> FindByName(string name)
     {
@@ -76,6 +94,44 @@ internal sealed class ProcessRunner : IProcessRunner
         public Task WaitForExitAsync(CancellationToken ct) => process.WaitForExitAsync(ct);
 
         public void Dispose() => process.Dispose();
+    }
+
+    private sealed class PipedProcess(Process process) : IPipedProcess
+    {
+        private readonly RunningProcess _running = new(process);
+
+        public int Id => _running.Id;
+
+        public int ExitCode => _running.ExitCode;
+
+        public IReadOnlyList<string> ErrorOutputTail => _running.ErrorOutputTail;
+
+        public async Task SendInputAsync(string text, CancellationToken ct)
+        {
+            var input = process.StandardInput;
+            await input.WriteAsync(text.AsMemory(), ct).ConfigureAwait(false);
+            await input.FlushAsync(ct).ConfigureAwait(false);
+            input.Close();
+        }
+
+        public async Task<string?> ReadLineAsync(CancellationToken ct) =>
+            await process.StandardOutput.ReadLineAsync(ct).ConfigureAwait(false);
+
+        public void Kill()
+        {
+            try
+            {
+                process.Kill(entireProcessTree: true);
+            }
+            catch (Exception ex) when (ex is InvalidOperationException or Win32Exception)
+            {
+                // Already exited, or exiting: either way it is gone.
+            }
+        }
+
+        public Task WaitForExitAsync(CancellationToken ct) => _running.WaitForExitAsync(ct);
+
+        public void Dispose() => _running.Dispose();
     }
 
     private sealed class RunningProcess : IRunningProcess

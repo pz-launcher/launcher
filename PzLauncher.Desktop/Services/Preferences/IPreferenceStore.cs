@@ -36,6 +36,9 @@ public sealed record UserPreferences(AppLanguage? Language, AppTheme? Theme, Win
     /// <summary>Whether to remind at startup while Steam's Play button doesn't open the launcher.</summary>
     public bool? SteamHookReminder { get; init; }
 
+    /// <summary>Most recent first; empty when none are saved.</summary>
+    public IReadOnlyList<SavedWorkshopCollection> WorkshopCollections { get; init; } = [];
+
     // Compares the collections by content; the generated equality would compare references.
     public bool Equals(UserPreferences? other) =>
         other is not null
@@ -47,6 +50,7 @@ public sealed record UserPreferences(AppLanguage? Language, AppTheme? Theme, Win
         && Proxy == other.Proxy
         && SteamHookReminder == other.SteamHookReminder
         && ManualJavaHomes.SequenceEqual(other.ManualJavaHomes, StringComparer.Ordinal)
+        && WorkshopCollections.SequenceEqual(other.WorkshopCollections)
         && InstallOverrides.Count == other.InstallOverrides.Count
         && InstallOverrides.All(entry => other.InstallOverrides.TryGetValue(entry.Key, out var value) && entry.Value == value)
         && ZombieBuddyChannels.Count == other.ZombieBuddyChannels.Count
@@ -58,6 +62,7 @@ public sealed record UserPreferences(AppLanguage? Language, AppTheme? Theme, Win
         HashCode.Combine(
             HashCode.Combine(Language, Theme, Window, UpdateSource, AutoCheckUpdates, Proxy, SteamHookReminder),
             ManualJavaHomes.Count,
+            WorkshopCollections.Count,
             InstallOverrides.Count,
             ZombieBuddyChannels.Count,
             DefaultModCollections.Count);
@@ -100,4 +105,7 @@ public interface IPreferenceStore
 
     /// <inheritdoc cref="SaveLanguageAsync"/>
     Task SaveSteamHookReminderAsync(bool remind, CancellationToken ct = default);
+
+    /// <inheritdoc cref="SaveLanguageAsync"/>
+    Task SaveWorkshopCollectionsAsync(IReadOnlyList<SavedWorkshopCollection> collections, CancellationToken ct = default);
 }

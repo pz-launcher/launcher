@@ -5,6 +5,7 @@ using PzLauncher.Core.Launch;
 using PzLauncher.Core.Mod;
 using PzLauncher.Core.Mod.ZombieBuddy;
 using PzLauncher.Core.Net;
+using PzLauncher.Core.Steam.Workshop;
 using PzLauncher.Core.Update;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Tests.TestSupport;
@@ -28,6 +29,8 @@ public class DisplayNamesTests : UiTextCultureTest
         AssertDistinctNonEmpty([.. Enum.GetValues<ZombieBuddyStep>().Select(DisplayNames.Of)]);
         AssertDistinctNonEmpty([.. Enum.GetValues<UpdateSource>().Select(DisplayNames.Of)]);
         AssertDistinctNonEmpty([.. Enum.GetValues<ProxyMode>().Select(DisplayNames.Of)]);
+        AssertDistinctNonEmpty([.. Enum.GetValues<WorkshopItemState>().Select(DisplayNames.Of)]);
+        AssertDistinctNonEmpty([.. Enum.GetValues<WorkshopItemFailure>().Select(DisplayNames.Of)]);
     }
 
     [Theory]
@@ -64,6 +67,12 @@ public class DisplayNamesTests : UiTextCultureTest
         Assert.Equal(
             DisplayNames.Of(ZombieBuddyStep.CopyAgentJar),
             DisplayNames.ZombieBuddyStepName.Convert(ZombieBuddyStep.CopyAgentJar, typeof(string), null, CultureInfo.InvariantCulture));
+        Assert.Equal(
+            DisplayNames.Of(WorkshopItemState.DisabledLocally),
+            DisplayNames.WorkshopItemStateName.Convert(WorkshopItemState.DisabledLocally, typeof(string), null, CultureInfo.InvariantCulture));
+        Assert.Equal(
+            DisplayNames.Of(WorkshopItemFailure.TimedOut),
+            DisplayNames.WorkshopItemFailureName.Convert(WorkshopItemFailure.TimedOut, typeof(string), null, CultureInfo.InvariantCulture));
     }
 
     private static void AssertDistinctNonEmpty(string[] names)

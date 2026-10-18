@@ -1,11 +1,14 @@
 using PzLauncher.Desktop.Services.Shell;
 using PzLauncher.Desktop.Themes;
+using PzLauncher.Desktop.ViewModels.Mods;
 using PzLauncher.Desktop.ViewModels.ZombieBuddy;
 
 namespace PzLauncher.Desktop.Tests.TestSupport;
 
 /// <summary>
+/// The Workshop action dialog runs its action, as the real dialog does on open, unless <see cref="WorkshopActionHandler"/> says otherwise.
 /// The setup dialog returns <see cref="SetupResult"/>'s answer without running the operation unless the handler starts it.
+/// The mod pick dialog answers with <see cref="ModPickResult"/>, which may change the choices first.
 /// Prompts and confirms take their answers from the queues in order; an empty queue cancels.
 /// </summary>
 public sealed class FakeDialogService : IDialogService
@@ -25,9 +28,22 @@ public sealed class FakeDialogService : IDialogService
     /// <summary>An empty queue cancels with the option unchecked.</summary>
     public Queue<ConfirmOptionResult> OptionAnswers { get; } = new();
 
+    public List<(ConfirmPrompt Prompt, string AlternativeText)> Choices { get; } = [];
+
+    /// <summary>An empty queue cancels.</summary>
+    public Queue<ConfirmChoice> ChoiceAnswers { get; } = new();
+
     public List<ZombieBuddySetupViewModel> Setups { get; } = [];
 
     public Func<ZombieBuddySetupViewModel, Task<bool>> SetupResult { get; set; } = _ => Task.FromResult(true);
+
+    public List<WorkshopActionViewModel> WorkshopActions { get; } = [];
+
+    public Func<WorkshopActionViewModel, Task> WorkshopActionHandler { get; set; } = action => action.StartAsync();
+
+    public List<WorkshopModPickViewModel> ModPicks { get; } = [];
+
+    public Func<WorkshopModPickViewModel, bool> ModPickResult { get; set; } = _ => true;
 
     public event Action? Shown;
 
@@ -52,6 +68,13 @@ public sealed class FakeDialogService : IDialogService
         return Task.FromResult(OptionAnswers.Count > 0 ? OptionAnswers.Dequeue() : new ConfirmOptionResult(false, false));
     }
 
+    public Task<ConfirmChoice> ChooseAsync(ConfirmPrompt prompt, string alternativeText)
+    {
+        Choices.Add((prompt, alternativeText));
+        Shown?.Invoke();
+        return Task.FromResult(ChoiceAnswers.Count > 0 ? ChoiceAnswers.Dequeue() : ConfirmChoice.Cancel);
+    }
+
     public Task<TextPromptResult> PromptTextAsync(TextPrompt prompt)
     {
         Prompts.Add(prompt);
@@ -65,6 +88,19 @@ public sealed class FakeDialogService : IDialogService
     {
         Setups.Add(setup);
         return SetupResult(setup);
+    }
+
+    public Task ShowWorkshopActionAsync(WorkshopActionViewModel action)
+    {
+        WorkshopActions.Add(action);
+        return WorkshopActionHandler(action);
+    }
+
+    public Task<bool> PickWorkshopModsAsync(WorkshopModPickViewModel pick)
+    {
+        ModPicks.Add(pick);
+        Shown?.Invoke();
+        return Task.FromResult(ModPickResult(pick));
     }
 
     /// <summary>Runs the operation as the real dialog does on open, then answers.</summary>

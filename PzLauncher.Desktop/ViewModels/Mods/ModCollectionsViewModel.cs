@@ -113,7 +113,7 @@ public partial class ModCollectionsViewModel : ViewModelBase
     [RelayCommand(CanExecute = nameof(CanWrite))]
     private async Task NewAsync()
     {
-        var prompt = NamePrompt(UiText.ModCollections_NewTitle, "", UiText.ModCollections_Create);
+        var prompt = ModCollectionPrompts.NamePrompt(UiText.ModCollections_NewTitle, "", UiText.ModCollections_Create);
         if (await AskNameAsync(prompt, original: null) is { } name)
         {
             await SaveAndSelectAsync(name, []);
@@ -130,7 +130,7 @@ public partial class ModCollectionsViewModel : ViewModelBase
             return;
         }
 
-        var prompt = NamePrompt(UiText.ModCollections_NewFromEnabledTitle, "", UiText.ModCollections_Create);
+        var prompt = ModCollectionPrompts.NamePrompt(UiText.ModCollections_NewFromEnabledTitle, "", UiText.ModCollections_Create);
         if (await AskNameAsync(prompt, original: null) is { } name)
         {
             await SaveAndSelectAsync(name, state.ActiveIds);
@@ -193,7 +193,7 @@ public partial class ModCollectionsViewModel : ViewModelBase
         }
 
         var original = row.Name;
-        var prompt = NamePrompt(UiText.ModCollections_RenameTitle, original, UiText.ModCollections_Rename);
+        var prompt = ModCollectionPrompts.NamePrompt(UiText.ModCollections_RenameTitle, original, UiText.ModCollections_Rename);
         if (await AskNameAsync(prompt, original) is not { } name || name == original)
         {
             return;
@@ -392,9 +392,6 @@ public partial class ModCollectionsViewModel : ViewModelBase
             ? accepted.Text
             : null;
 
-    private static TextPrompt NamePrompt(string title, string initial, string accept) =>
-        new(title, UiText.ModCollections_NameMessage, initial, accept, ModCollectionPrompts.ValidateName);
-
     private static string? ValidateImport(string text)
     {
         var collections = ModCollectionShareText.Parse(text);
@@ -408,9 +405,9 @@ public partial class ModCollectionsViewModel : ViewModelBase
             : null;
     }
 
-    private bool Exists(string name) => _page.State?.Collections.Any(collection => collection.Name == name) ?? false;
+    internal bool Exists(string name) => _page.State?.Collections.Any(collection => collection.Name == name) ?? false;
 
-    private void SelectByName(string? name)
+    internal void SelectByName(string? name)
     {
         _selectedName = name;
         Rebuild(_page.State);

@@ -29,6 +29,20 @@ public enum ErrorCode
     [JsonStringEnumMemberName("steam.shutdown_unconfirmed")] SteamShutdownUnconfirmed,
     [JsonStringEnumMemberName("steam.start_failed")] SteamStartFailed,
 
+    // ── workshop ──────────────────────────────────────────────
+    [JsonStringEnumMemberName("workshop.subscriptions_unreadable")] WorkshopSubscriptionsUnreadable,
+    [JsonStringEnumMemberName("workshop.manifest_unreadable")] WorkshopManifestUnreadable,
+    [JsonStringEnumMemberName("workshop.network_failed")] WorkshopNetworkFailed,
+    [JsonStringEnumMemberName("workshop.response_invalid")] WorkshopResponseInvalid,
+    [JsonStringEnumMemberName("workshop.collection_not_found")] WorkshopCollectionNotFound,
+    [JsonStringEnumMemberName("workshop.steam_api_missing")] WorkshopSteamApiMissing,
+    [JsonStringEnumMemberName("workshop.steam_api_unusable")] WorkshopSteamApiUnusable,
+    [JsonStringEnumMemberName("workshop.steam_not_running")] WorkshopSteamNotRunning,
+    [JsonStringEnumMemberName("workshop.steam_init_failed")] WorkshopSteamInitFailed,
+    [JsonStringEnumMemberName("workshop.helper_start_failed")] WorkshopHelperStartFailed,
+    [JsonStringEnumMemberName("workshop.helper_failed")] WorkshopHelperFailed,
+    [JsonStringEnumMemberName("workshop.helper_timed_out")] WorkshopHelperTimedOut,
+
     // ── install ───────────────────────────────────────────────
     [JsonStringEnumMemberName("install.files_missing")] InstallFilesMissing,
     [JsonStringEnumMemberName("install.invalid_path")] InstallInvalidPath,

@@ -8,6 +8,8 @@ namespace PzLauncher.Desktop.Services.Preferences;
 [JsonSerializable(typeof(PreferencesFile))]
 [JsonSerializable(typeof(InstallOverridesFile))]
 [JsonSerializable(typeof(ProxyFile))]
+[JsonSerializable(typeof(WorkshopCollectionFile))]
+[JsonSerializable(typeof(WorkshopCollectionFile[]))]
 [JsonSerializable(typeof(string))]
 [JsonSerializable(typeof(bool))]
 internal sealed partial class DesktopJsonContext : JsonSerializerContext;
@@ -21,6 +23,7 @@ internal sealed partial class DesktopJsonContext : JsonSerializerContext;
 /// <param name="AutoCheckUpdates">A bool; an element for the same reason as <paramref name="JavaRuntimes"/>.</param>
 /// <param name="Proxy">A <see cref="ProxyFile"/>; an element for the same reason as <paramref name="JavaRuntimes"/>.</param>
 /// <param name="SteamHookReminder">A bool; an element for the same reason as <paramref name="JavaRuntimes"/>.</param>
+/// <param name="WorkshopCollections">An array of <see cref="WorkshopCollectionFile"/> objects; an element, so neither a non-array nor one bad entry makes the whole file unreadable.</param>
 internal sealed record PreferencesFile(
     string? Language,
     string? Theme,
@@ -32,7 +35,8 @@ internal sealed record PreferencesFile(
     JsonElement? UpdateSource,
     JsonElement? AutoCheckUpdates,
     JsonElement? Proxy,
-    JsonElement? SteamHookReminder);
+    JsonElement? SteamHookReminder,
+    JsonElement? WorkshopCollections);
 
 /// <summary>Nullable members, so a missing one is told apart from a zero.</summary>
 internal sealed record WindowFile(int? X, int? Y, double? Width, double? Height, bool? Maximized);
@@ -43,3 +47,6 @@ internal sealed record InstallOverridesFile(string? JavaHome, int? MaxMemoryMb, 
 /// <param name="Mode"><see cref="ProxyModePreferences.PreferenceName"/>.</param>
 /// <param name="Password"><see cref="ISecretProtector"/> output, prefixed with its scheme.</param>
 internal sealed record ProxyFile(string? Mode, string? Host, int? Port, string? Username, string? Password);
+
+/// <param name="Id">Decimal text: a JSON number can't hold every 64-bit id exactly in other readers.</param>
+internal sealed record WorkshopCollectionFile(string? Id, string? Title);
