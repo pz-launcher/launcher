@@ -299,3 +299,25 @@ Refactor in PR #10: Home calls IZombieBuddyModsService.PrepareLaunchAsync once; 
 ### Status
 
 [OK] **Completed**
+
+
+## Session 12: Launcher auto-update and proxy settings
+<!-- trellis-session: v=2 fp=1c2021dd93fd94d9 -->
+
+**Date**: 2026-10-18
+**Task**: Launcher auto-update and proxy settings
+**Branch**: `main`
+
+### Summary
+
+Auto-update: races GitHub and Gitee release APIs, downloads the platform package into .update/, verifies it (SHA-256 from GitHub, archive layout), installs by renaming packaged files with rollback; banner Restart and update / Later (installs on close); Settings > Updates (source Auto/GitHub/Gitee, auto-check toggle, Check now); dev/CI builds never update. Proxy: one shared Core HttpClient (Net/LauncherHttpClient) with a switchable IWebProxy (System default / None / Manual HTTP with optional credentials, DPAPI on Windows), Settings > Proxy with Test connection, applied before the startup check. Smoke-tested on Windows (0.1.0 -> 0.2.0 via close and via restart; v2rayN system proxy, manual and closed-port proxy). Shipped as PR #11 (squash 6d35946).
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `6d35946` | Update the launcher itself from GitHub or Gitee, with proxy settings (#11) |
+
+### Status
+
+[OK] **Completed**

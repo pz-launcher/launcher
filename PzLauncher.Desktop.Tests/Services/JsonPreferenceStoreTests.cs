@@ -2,6 +2,8 @@ using System.Text.Json;
 using Microsoft.Extensions.Logging.Abstractions;
 using PzLauncher.Core.Launch;
 using PzLauncher.Core.Mod.ZombieBuddy;
+using PzLauncher.Core.Net;
+using PzLauncher.Core.Update;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Services;
 using PzLauncher.Desktop.Tests.TestSupport;
@@ -23,6 +25,8 @@ public sealed class JsonPreferenceStoreTests : IDisposable
         OperatingSystem.IsWindows() ? @"E:\SteamLibrary\steamapps\common\ProjectZomboid" : "/home/player/.local/share/Steam/steamapps/common/ProjectZomboid";
 
     private static readonly string OtherRoot = OperatingSystem.IsWindows() ? @"D:\Games\Project Zomboid" : "/opt/games/Project Zomboid";
+
+    private static readonly SavedProxy ManualProxy = new(ProxyMode.Manual, "127.0.0.1", 7890, "alice", "s3cret: pässword");
 
     private static readonly GameLaunchOverrides Overrides = new(JavaA, 8192, 2048, "-Dzomboid.steam=1", "-debug", GarbageCollector.Shenandoah);
 
@@ -48,7 +52,7 @@ public sealed class JsonPreferenceStoreTests : IDisposable
     // In a folder that doesn't exist yet, as on first launch.
     private string FilePath => Path.Combine(_temp.Path, "PzLauncher", "preferences.json");
 
-    private JsonPreferenceStore CreateStore() => new(FilePath, NullLogger.Instance);
+    private JsonPreferenceStore CreateStore(ISecretProtector? secrets = null) => new(FilePath, NullLogger.Instance, secrets ?? new PlainSecretProtector());
 
     private void WriteFile(string content)
     {
@@ -189,6 +193,9 @@ public sealed class JsonPreferenceStoreTests : IDisposable
     [InlineData(4)]
     [InlineData(5)]
     [InlineData(6)]
+    [InlineData(7)]
+    [InlineData(8)]
+    [InlineData(9)]
     public async Task SaveOneField_FileHoldsTheOthers_KeepsAll(int savedLast)
     {
         var ct = TestContext.Current.CancellationToken;
@@ -201,6 +208,9 @@ public sealed class JsonPreferenceStoreTests : IDisposable
             () => CreateStore().SaveInstallOverridesAsync(GameRoot, Overrides, ct),
             () => CreateStore().SaveZombieBuddyChannelAsync(GameRoot, ZombieBuddyChannel.Beta, ct),
             () => CreateStore().SaveDefaultModCollectionAsync(GameRoot, "B42 pack", ct),
+            () => CreateStore().SaveUpdateSourceAsync(UpdateSource.Gitee, ct),
+            () => CreateStore().SaveAutoCheckUpdatesAsync(false, ct),
+            () => CreateStore().SaveProxyAsync(ManualProxy, ct),
         ];
 
         // Separate stores, as across app runs.
@@ -216,6 +226,9 @@ public sealed class JsonPreferenceStoreTests : IDisposable
                 InstallOverrides = WithInstalls((GameRoot, Overrides)).InstallOverrides,
                 ZombieBuddyChannels = WithChannels((GameRoot, ZombieBuddyChannel.Beta)).ZombieBuddyChannels,
                 DefaultModCollections = WithDefaultCollections((GameRoot, "B42 pack")).DefaultModCollections,
+                UpdateSource = UpdateSource.Gitee,
+                AutoCheckUpdates = false,
+                Proxy = ManualProxy,
             },
             CreateStore().Load());
     }
@@ -236,7 +249,10 @@ public sealed class JsonPreferenceStoreTests : IDisposable
             store.SaveZombieBuddyChannelAsync(GameRoot, ZombieBuddyChannel.Beta, TestContext.Current.CancellationToken),
             store.SaveZombieBuddyChannelAsync(OtherRoot, ZombieBuddyChannel.Stable, TestContext.Current.CancellationToken),
             store.SaveDefaultModCollectionAsync(GameRoot, "B42 pack", TestContext.Current.CancellationToken),
-            store.SaveDefaultModCollectionAsync(OtherRoot, "my collection", TestContext.Current.CancellationToken));
+            store.SaveDefaultModCollectionAsync(OtherRoot, "my collection", TestContext.Current.CancellationToken),
+            store.SaveUpdateSourceAsync(UpdateSource.GitHub, TestContext.Current.CancellationToken),
+            store.SaveAutoCheckUpdatesAsync(false, TestContext.Current.CancellationToken),
+            store.SaveProxyAsync(ManualProxy, TestContext.Current.CancellationToken));
 
         Assert.Equal(
             new UserPreferences(AppLanguage.PortugueseBrazil, AppTheme.Dark, Placement)
@@ -245,6 +261,9 @@ public sealed class JsonPreferenceStoreTests : IDisposable
                 InstallOverrides = WithInstalls((GameRoot, Overrides), (OtherRoot, GameLaunchOverrides.Empty)).InstallOverrides,
                 ZombieBuddyChannels = WithChannels((GameRoot, ZombieBuddyChannel.Beta), (OtherRoot, ZombieBuddyChannel.Stable)).ZombieBuddyChannels,
                 DefaultModCollections = WithDefaultCollections((GameRoot, "B42 pack"), (OtherRoot, "my collection")).DefaultModCollections,
+                UpdateSource = UpdateSource.GitHub,
+                AutoCheckUpdates = false,
+                Proxy = ManualProxy,
             },
             CreateStore().Load());
     }
@@ -261,6 +280,9 @@ public sealed class JsonPreferenceStoreTests : IDisposable
         await CreateStore().SaveInstallOverridesAsync(GameRoot, Overrides, TestContext.Current.CancellationToken);
         await CreateStore().SaveZombieBuddyChannelAsync(GameRoot, ZombieBuddyChannel.Beta, TestContext.Current.CancellationToken);
         await CreateStore().SaveDefaultModCollectionAsync(GameRoot, "B42 pack", TestContext.Current.CancellationToken);
+        await CreateStore().SaveUpdateSourceAsync(UpdateSource.Gitee, TestContext.Current.CancellationToken);
+        await CreateStore().SaveAutoCheckUpdatesAsync(false, TestContext.Current.CancellationToken);
+        await CreateStore().SaveProxyAsync(ManualProxy, TestContext.Current.CancellationToken);
 
         Assert.Equal(new UserPreferences(null, null, null), CreateStore().Load());
     }
@@ -511,5 +533,203 @@ public sealed class JsonPreferenceStoreTests : IDisposable
                 DefaultModCollections = WithDefaultCollections((GameRoot, "B42 pack"), (OtherRoot, "my collection")).DefaultModCollections,
             },
             CreateStore().Load());
+    }
+
+    public static TheoryData<UpdateSource> UpdateSources => [.. Enum.GetValues<UpdateSource>()];
+
+    [Theory]
+    [MemberData(nameof(UpdateSources))]
+    public async Task SaveUpdateSourceAsync_ThenLoad_RoundTrips(UpdateSource source)
+    {
+        await CreateStore().SaveUpdateSourceAsync(source, TestContext.Current.CancellationToken);
+
+        Assert.Equal(new UserPreferences(null, null, null) { UpdateSource = source }, CreateStore().Load());
+    }
+
+    [Theory]
+    [InlineData(UpdateSource.Auto, "auto")]
+    [InlineData(UpdateSource.GitHub, "github")]
+    [InlineData(UpdateSource.Gitee, "gitee")]
+    public async Task SaveUpdateSourceAsync_WritesStableName(UpdateSource source, string expected)
+    {
+        await CreateStore().SaveUpdateSourceAsync(source, TestContext.Current.CancellationToken);
+
+        Assert.Equal($$"""{"updateSource":"{{expected}}"}""", await File.ReadAllTextAsync(FilePath, TestContext.Current.CancellationToken));
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task SaveAutoCheckUpdatesAsync_ThenLoad_RoundTrips(bool enabled)
+    {
+        await CreateStore().SaveAutoCheckUpdatesAsync(enabled, TestContext.Current.CancellationToken);
+
+        Assert.Equal(new UserPreferences(null, null, null) { AutoCheckUpdates = enabled }, CreateStore().Load());
+    }
+
+    [Fact]
+    public async Task SaveAutoCheckUpdatesAsync_WritesBool()
+    {
+        await CreateStore().SaveAutoCheckUpdatesAsync(false, TestContext.Current.CancellationToken);
+
+        Assert.Equal("""{"autoCheckUpdates":false}""", await File.ReadAllTextAsync(FilePath, TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
+    public void Load_NoUpdateFields_LoadsNullForBoth()
+    {
+        WriteFile("""{"theme":"dark"}""");
+
+        var loaded = CreateStore().Load();
+
+        Assert.Null(loaded.UpdateSource);
+        Assert.Null(loaded.AutoCheckUpdates);
+    }
+
+    [Theory]
+    [InlineData("\"bitbucket\"")]
+    [InlineData("\"\"")]
+    [InlineData("1")]
+    [InlineData("null")]
+    [InlineData("[\"gitee\"]")]
+    public void Load_UnknownUpdateSource_KeepsOtherFieldsAndReturnsNoSource(string value)
+    {
+        WriteFile($$"""{"theme":"dark","updateSource":{{value}},"autoCheckUpdates":false}""");
+
+        Assert.Equal(new UserPreferences(null, AppTheme.Dark, null) { AutoCheckUpdates = false }, CreateStore().Load());
+    }
+
+    [Theory]
+    [InlineData("\"yes\"")]
+    [InlineData("\"false\"")]
+    [InlineData("0")]
+    [InlineData("null")]
+    [InlineData("{}")]
+    public void Load_NonBoolAutoCheckUpdates_KeepsOtherFieldsAndReturnsNoChoice(string value)
+    {
+        WriteFile($$"""{"theme":"dark","updateSource":"gitee","autoCheckUpdates":{{value}}}""");
+
+        Assert.Equal(new UserPreferences(null, AppTheme.Dark, null) { UpdateSource = UpdateSource.Gitee }, CreateStore().Load());
+    }
+
+    public static TheoryData<SavedProxy> Proxies =>
+    [
+        ManualProxy,
+        new SavedProxy(ProxyMode.System, null, null, null, null),
+        new SavedProxy(ProxyMode.None, "proxy.example.test", 3128, null, null),
+        new SavedProxy(ProxyMode.Manual, "::1", 1, "bob", null),
+    ];
+
+    [Theory]
+    [MemberData(nameof(Proxies))]
+    public async Task SaveProxyAsync_ThenLoad_RoundTrips(SavedProxy proxy)
+    {
+        await CreateStore().SaveProxyAsync(proxy, TestContext.Current.CancellationToken);
+
+        Assert.Equal(new UserPreferences(null, null, null) { Proxy = proxy }, CreateStore().Load());
+    }
+
+    [Theory]
+    [InlineData(ProxyMode.System, "system")]
+    [InlineData(ProxyMode.None, "none")]
+    [InlineData(ProxyMode.Manual, "manual")]
+    public async Task SaveProxyAsync_WritesStableModeNames(ProxyMode mode, string expected)
+    {
+        await CreateStore().SaveProxyAsync(new SavedProxy(mode, null, null, null, null), TestContext.Current.CancellationToken);
+
+        Assert.Equal($$$"""{"proxy":{"mode":"{{{expected}}}"}}""", await File.ReadAllTextAsync(FilePath, TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
+    public async Task SaveProxyAsync_PlainProtector_StoresThePasswordAsPlainText()
+    {
+        await CreateStore().SaveProxyAsync(ManualProxy with { Password = "secret" }, TestContext.Current.CancellationToken);
+
+        Assert.Equal(
+            """{"proxy":{"mode":"manual","host":"127.0.0.1","port":7890,"username":"alice","password":"plain:secret"}}""",
+            await File.ReadAllTextAsync(FilePath, TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
+    public async Task SaveProxyAsync_EmptyFields_AreOmitted()
+    {
+        await CreateStore().SaveProxyAsync(new SavedProxy(ProxyMode.Manual, "", 8080, "", ""), TestContext.Current.CancellationToken);
+
+        Assert.Equal("""{"proxy":{"mode":"manual","port":8080}}""", await File.ReadAllTextAsync(FilePath, TestContext.Current.CancellationToken));
+        Assert.Equal(new SavedProxy(ProxyMode.Manual, null, 8080, null, null), CreateStore().Load().Proxy);
+    }
+
+    [Fact]
+    public async Task SaveProxyAsync_Dpapi_RoundTripsWithoutThePlainTextInTheFile()
+    {
+        Assert.SkipUnless(OperatingSystem.IsWindows(), "DPAPI is Windows-only.");
+        var dpapi = new WindowsDpapiSecretProtector();
+
+        await CreateStore(dpapi).SaveProxyAsync(ManualProxy, TestContext.Current.CancellationToken);
+
+        var text = await File.ReadAllTextAsync(FilePath, TestContext.Current.CancellationToken);
+        Assert.Contains("\"password\":\"dpapi:", text, StringComparison.Ordinal);
+        Assert.DoesNotContain("s3cret", text, StringComparison.Ordinal);
+        Assert.Equal(ManualProxy, CreateStore(dpapi).Load().Proxy);
+    }
+
+    [Fact]
+    public void Load_NoProxy_LoadsNull()
+    {
+        WriteFile("""{"theme":"dark"}""");
+
+        Assert.Null(CreateStore().Load().Proxy);
+    }
+
+    [Theory]
+    [InlineData("\"manual\"")]
+    [InlineData("1")]
+    [InlineData("null")]
+    [InlineData("[]")]
+    [InlineData("{}")]
+    [InlineData("""{"mode":"socks5","host":"127.0.0.1","port":1080}""")]
+    [InlineData("""{"mode":"","host":"127.0.0.1","port":1080}""")]
+    [InlineData("""{"mode":5}""")]
+    [InlineData("""{"mode":"manual","port":"7890"}""")]
+    public void Load_UnknownProxy_KeepsOtherFieldsAndReturnsNoProxy(string value)
+    {
+        WriteFile($$"""{"theme":"dark","proxy":{{value}},"autoCheckUpdates":false}""");
+
+        Assert.Equal(new UserPreferences(null, AppTheme.Dark, null) { AutoCheckUpdates = false }, CreateStore().Load());
+    }
+
+    [Theory]
+    [InlineData("bad host", 7890, null, 7890)]
+    [InlineData("127.0.0.1", 0, "127.0.0.1", null)]
+    [InlineData("127.0.0.1", 65536, "127.0.0.1", null)]
+    public void Load_InvalidHostOrPort_DropsOnlyThat(string host, int port, string? expectedHost, int? expectedPort)
+    {
+        WriteFile($$$"""{"proxy":{"mode":"none","host":"{{{host}}}","port":{{{port}}},"username":"alice"}}""");
+
+        Assert.Equal(new SavedProxy(ProxyMode.None, expectedHost, expectedPort, "alice", null), CreateStore().Load().Proxy);
+    }
+
+    [Theory]
+    [InlineData("dpapi:AQAAANCMnd8BFdERjHoAwE")]
+    [InlineData("secret")]
+    public void Load_PasswordOfAnotherScheme_LoadsAsEmptyAndKeepsTheRest(string password)
+    {
+        WriteFile($$$"""{"proxy":{"mode":"manual","host":"127.0.0.1","port":7890,"username":"alice","password":"{{{password}}}"}}""");
+
+        Assert.Equal(new SavedProxy(ProxyMode.Manual, "127.0.0.1", 7890, "alice", null), CreateStore().Load().Proxy);
+    }
+
+    [Theory]
+    [InlineData("dpapi:AQAAANCMnd8BFdERjHoAwE/Cl+sBAAAA")]
+    [InlineData("dpapi:not base64!")]
+    [InlineData("plain:secret")]
+    public void Load_UndecryptablePassword_LoadsAsEmptyAndKeepsTheRest(string password)
+    {
+        Assert.SkipUnless(OperatingSystem.IsWindows(), "DPAPI is Windows-only.");
+        WriteFile($$$"""{"proxy":{"mode":"manual","host":"127.0.0.1","port":7890,"username":"alice","password":"{{{password}}}"}}""");
+
+        Assert.Equal(
+            new SavedProxy(ProxyMode.Manual, "127.0.0.1", 7890, "alice", null),
+            CreateStore(new WindowsDpapiSecretProtector()).Load().Proxy);
     }
 }

@@ -1,6 +1,7 @@
 using PzLauncher.Desktop.Tests.TestSupport;
 using PzLauncher.Desktop.Themes;
 using PzLauncher.Desktop.ViewModels.Settings;
+using PzLauncher.Desktop.ViewModels.Update;
 
 namespace PzLauncher.Desktop.Tests.ViewModels.Settings;
 
@@ -12,7 +13,13 @@ public class SettingsViewModelTests : UiTextCultureTest
     private readonly FakeJavaDiscoveryService _java = new();
 
     private SettingsViewModel CreateViewModel(FakeThemeService theme) =>
-        new(theme, _store, _windowPlacement, TestJava.ViewModel(Localization, _java, _store));
+        new(
+            theme,
+            _store,
+            _windowPlacement,
+            TestJava.ViewModel(Localization, _java, _store),
+            new UpdateSettingsViewModel(TestUpdates.Coordinator(new FakeUpdateService(), _store), Localization),
+            TestProxy.ViewModel(Localization, _store));
 
     [Theory]
     [InlineData(AppTheme.Light)]

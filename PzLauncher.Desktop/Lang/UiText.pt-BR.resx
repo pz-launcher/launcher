@@ -254,6 +254,39 @@
   <data name="Error_ModCollectionFileWriteFailed" xml:space="preserve">
     <value>Não foi possível salvar o arquivo de lista de mods {0}. Se o jogo estiver aberto, feche-o e tente novamente.</value>
   </data>
+  <data name="Error_UpdateNetworkFailed" xml:space="preserve">
+    <value>Não foi possível conectar ao servidor de atualizações ({0}). Verifique sua conexão com a internet ou escolha outra fonte de atualizações e tente novamente.</value>
+  </data>
+  <data name="Error_UpdateReleaseInfoInvalid" xml:space="preserve">
+    <value>O servidor de atualizações ({0}) enviou informações da versão que o launcher não consegue ler. Tente novamente mais tarde ou escolha outra fonte de atualizações.</value>
+  </data>
+  <data name="Error_UpdatePackageInvalid" xml:space="preserve">
+    <value>A atualização baixada {0} está corrompida ou incompleta e foi descartada. Tente novamente mais tarde.</value>
+  </data>
+  <data name="Error_UpdateInstallFolderNotWritable" xml:space="preserve">
+    <value>O launcher não consegue gravar na pasta {0}, então não pode se atualizar sozinho. Baixe a nova versão na página de lançamento.</value>
+  </data>
+  <data name="Error_UpdateInstallFailed" xml:space="preserve">
+    <value>Não foi possível instalar a atualização em {0}, então a versão atual foi mantida. Feche qualquer programa que esteja usando os arquivos do launcher e tente novamente.</value>
+  </data>
+  <data name="Error_UpdateDevelopmentBuild" xml:space="preserve">
+    <value>Atualizações não estão disponíveis para versões de desenvolvimento.</value>
+  </data>
+  <data name="Error_UpdateRestartFailed" xml:space="preserve">
+    <value>A atualização foi instalada, mas não foi possível iniciar {0}. Abra o PzLauncher novamente por conta própria.</value>
+  </data>
+  <data name="Error_NetworkProxyHostInvalid" xml:space="preserve">
+    <value>Digite o nome do host ou o endereço IP do proxy, por exemplo 127.0.0.1. O prefixo http:// é aceito; proxies https:// e SOCKS não são compatíveis.</value>
+  </data>
+  <data name="Error_NetworkProxyPortInvalid" xml:space="preserve">
+    <value>Digite uma porta de proxy entre 1 e 65535.</value>
+  </data>
+  <data name="Error_NetworkUnreachable" xml:space="preserve">
+    <value>Não foi possível conectar a {0}: {1}</value>
+  </data>
+  <data name="Error_NetworkTimeout" xml:space="preserve">
+    <value>{0} não respondeu em {1} segundos.</value>
+  </data>
   <data name="Error_FolderNotLocal" xml:space="preserve">
     <value>{0} não é uma pasta deste computador, então o launcher não pode abri-la. Escolha uma pasta local.</value>
   </data>
@@ -277,6 +310,69 @@
   </data>
   <data name="Settings_ResetWindowSize" xml:space="preserve">
     <value>Redefinir tamanho da janela</value>
+  </data>
+  <data name="Settings_Updates" xml:space="preserve">
+    <value>Atualizações</value>
+  </data>
+  <data name="Settings_UpdatesCurrentVersion" xml:space="preserve">
+    <value>Versão atual: {0}</value>
+  </data>
+  <data name="Settings_UpdateSource" xml:space="preserve">
+    <value>Fonte de atualizações</value>
+  </data>
+  <data name="Settings_UpdateSourceHint" xml:space="preserve">
+    <value>Automático usa o que responder primeiro entre GitHub e Gitee. Na China continental, o Gitee costuma ser mais rápido.</value>
+  </data>
+  <data name="Settings_AutoCheckUpdates" xml:space="preserve">
+    <value>Verificar atualizações ao iniciar o PzLauncher</value>
+  </data>
+  <data name="Settings_CheckNow" xml:space="preserve">
+    <value>Verificar agora</value>
+  </data>
+  <data name="Settings_Proxy" xml:space="preserve">
+    <value>Proxy</value>
+  </data>
+  <data name="ProxyMode_System" xml:space="preserve">
+    <value>Usar o proxy do sistema</value>
+  </data>
+  <data name="ProxyMode_None" xml:space="preserve">
+    <value>Sem proxy</value>
+  </data>
+  <data name="ProxyMode_Manual" xml:space="preserve">
+    <value>Proxy HTTP manual</value>
+  </data>
+  <data name="Proxy_SystemHintWindows" xml:space="preserve">
+    <value>Segue as configurações de proxy do Windows (Configurações &gt; Rede e Internet &gt; Proxy), que ferramentas como Clash ou v2rayN alteram. Se as variáveis de ambiente HTTP_PROXY, HTTPS_PROXY ou ALL_PROXY estiverem definidas, elas têm prioridade.</value>
+  </data>
+  <data name="Proxy_SystemHintMacOS" xml:space="preserve">
+    <value>Segue as configurações de proxy de rede do macOS. Se as variáveis de ambiente http_proxy, https_proxy ou all_proxy estiverem definidas, elas têm prioridade.</value>
+  </data>
+  <data name="Proxy_SystemHintLinux" xml:space="preserve">
+    <value>Usa as variáveis de ambiente http_proxy, https_proxy, all_proxy e no_proxy. As configurações de proxy da área de trabalho (GNOME, KDE) não são lidas.</value>
+  </data>
+  <data name="Proxy_Address" xml:space="preserve">
+    <value>Endereço</value>
+  </data>
+  <data name="Proxy_Port" xml:space="preserve">
+    <value>Porta</value>
+  </data>
+  <data name="Proxy_Username" xml:space="preserve">
+    <value>Usuário (opcional)</value>
+  </data>
+  <data name="Proxy_Password" xml:space="preserve">
+    <value>Senha (opcional)</value>
+  </data>
+  <data name="Proxy_ManualHint" xml:space="preserve">
+    <value>Apenas proxies HTTP. Endereços locais, como localhost e 127.0.0.1, são acessados diretamente.</value>
+  </data>
+  <data name="Proxy_PasswordPlainText" xml:space="preserve">
+    <value>Neste sistema, a senha é salva sem criptografia no arquivo de preferências do PzLauncher.</value>
+  </data>
+  <data name="Proxy_TestConnection" xml:space="preserve">
+    <value>Testar conexão</value>
+  </data>
+  <data name="Proxy_TestOk" xml:space="preserve">
+    <value>OK ({0} ms)</value>
   </data>
   <data name="Settings_GameGroup" xml:space="preserve">
     <value>Jogo</value>
@@ -736,5 +832,56 @@
   </data>
   <data name="ModApply_DropIncompatible" xml:space="preserve">
     <value>{0}: incompatível com {1}</value>
+  </data>
+  <data name="Update_BannerReady" xml:space="preserve">
+    <value>A versão {0} foi baixada.</value>
+  </data>
+  <data name="Update_BannerAvailable" xml:space="preserve">
+    <value>A versão {0} está disponível.</value>
+  </data>
+  <data name="Update_Restart" xml:space="preserve">
+    <value>Reiniciar e atualizar</value>
+  </data>
+  <data name="Update_RestartBlocked" xml:space="preserve">
+    <value>Feche o jogo primeiro: reiniciar agora faria o launcher deixar de acompanhá-lo. Com "Mais tarde", a atualização ainda é instalada quando você fechar o PzLauncher.</value>
+  </data>
+  <data name="Update_Later" xml:space="preserve">
+    <value>Mais tarde</value>
+  </data>
+  <data name="Update_OpenDownloadPage" xml:space="preserve">
+    <value>Abrir página de download</value>
+  </data>
+  <data name="Update_Dismiss" xml:space="preserve">
+    <value>Dispensar</value>
+  </data>
+  <data name="Update_StatusChecking" xml:space="preserve">
+    <value>Verificando atualizações…</value>
+  </data>
+  <data name="Update_StatusUpToDate" xml:space="preserve">
+    <value>O PzLauncher está atualizado.</value>
+  </data>
+  <data name="Update_StatusDownloading" xml:space="preserve">
+    <value>Baixando a versão {0} de {1}…</value>
+  </data>
+  <data name="Update_StatusDownloadingPercent" xml:space="preserve">
+    <value>Baixando a versão {0} de {1}… {2}%</value>
+  </data>
+  <data name="Update_StatusReady" xml:space="preserve">
+    <value>A versão {0} foi baixada. Ela será instalada quando você reiniciar ou fechar o PzLauncher.</value>
+  </data>
+  <data name="Update_StatusAvailable" xml:space="preserve">
+    <value>A versão {0} está disponível. O launcher não consegue gravar na própria pasta, então baixe-a na página de lançamento.</value>
+  </data>
+  <data name="Update_StatusInstalled" xml:space="preserve">
+    <value>A versão {0} foi instalada. Abra o PzLauncher novamente para usá-la.</value>
+  </data>
+  <data name="UpdateSource_Auto" xml:space="preserve">
+    <value>Automático</value>
+  </data>
+  <data name="UpdateSource_GitHub" xml:space="preserve">
+    <value>GitHub</value>
+  </data>
+  <data name="UpdateSource_Gitee" xml:space="preserve">
+    <value>Gitee</value>
   </data>
 </root>

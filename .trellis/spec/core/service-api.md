@@ -36,6 +36,7 @@ Reference: `PzLauncher.Core/ServiceCollectionExtensions.cs`.
 - Registry reads are generic (`IPlatformEnvironment.GetRegistrySubKeyNames` / `ReadRegistryString`, 64-bit view): empty/`null` off Windows or for a missing key, but they **throw** `IOException` / `UnauthorizedAccessException` for an existing key that can't be read, so the service can report it as a warning at its boundary. Fakes must model all three cases.
 - Path comparison uses `IPlatformEnvironment.PathComparison`. Install list logic lives in `PzLauncher.Core/Installs/PzInstallList.cs`, not in hosts.
 - Plain `System.IO`; no file system abstraction library.
+- HTTP goes through the one `LauncherHttpClient` (`PzLauncher.Core/Net/`); never construct another `HttpClient`. Its handler's proxy is `SwitchableProxy`, so `INetworkService.ApplyProxy` switches the route without rebuilding the client. Timeouts are per request, set by the caller. Tests pass a fake `HttpMessageHandler` to `LauncherHttpClient` and stay offline.
 
 ## Future HTTP mapping (design for it, don't build it)
 

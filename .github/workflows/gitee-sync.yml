@@ -69,6 +69,15 @@ jobs:
           gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json name,body,isPrerelease > github-release.json
           gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --dir dist
 
+      # Gitee takes each asset in one request, so speed has to come from the single connection: cubic
+      # backs off hard on the lossy, high-latency path to China, BBR does not. Best effort only.
+      - name: Tune TCP for uploads
+        continue-on-error: true
+        run: |
+          sudo modprobe tcp_bbr
+          sudo sysctl -w net.core.default_qdisc=fq net.ipv4.tcp_congestion_control=bbr
+          sudo sysctl -w net.core.wmem_max=67108864 net.ipv4.tcp_wmem="4096 65536 67108864"
+
       - name: Create or update Gitee release
         timeout-minutes: 60
         run: |
@@ -115,33 +124,67 @@ jobs:
             printf '%s' "$line"
           }
 
-          attached=$(attached_names)
+          # Parallel uploads share one log, so tag every line with its asset.
+          prefix() {
+            local line
+            while IFS= read -r line || [[ -n "$line" ]]; do
+              printf '[%s] %s\n' "$1" "$line"
+            done
+          }
+
+          upload() {
+            local file=$1 asset response attempt
+            asset=$(basename "$file")
+            response="response-$asset.json"
+            for attempt in 1 2 3; do
+              echo "Uploading ($(du -h "$file" | cut -f1)), attempt $attempt"
+              rm -f "$response"
+              # Uploads from GitHub runners to Gitee can stall indefinitely; give up below 10 KB/s for a minute.
+              if curl -S --fail-with-body -o "$response" \
+                --speed-limit 10240 --speed-time 60 \
+                --form-string "access_token=$GITEE_TOKEN" \
+                -F "file=@$file" \
+                "$api/releases/$id/attach_files" 2>&1 | throttle_progress; then
+                echo "Attached"
+                return 0
+              fi
+              cat "$response" 2> /dev/null || true
+              echo
+              # The upload may have completed on Gitee even though curl gave up waiting for the response.
+              if grep -qxF "$asset" <<< "$(attached_names)"; then
+                echo "Attached"
+                return 0
+              fi
+            done
+            return 1
+          }
+
+          # Uploads start in this order: Windows, then Linux, then anything else.
+          shopt -s nullglob
+          files=(dist/*-win-* dist/*-linux-*)
           for file in dist/*; do
+            [[ "$file" == *-win-* || "$file" == *-linux-* ]] || files+=("$file")
+          done
+
+          attached=$(attached_names)
+          pids=()
+          assets=()
+          for file in "${files[@]}"; do
             asset=$(basename "$file")
             if grep -qxF "$asset" <<< "$attached"; then
               echo "Already attached: $asset"
               continue
             fi
-            for attempt in 1 2 3; do
-              echo "Uploading $asset ($(du -h "$file" | cut -f1)), attempt $attempt"
-              rm -f response.json
-              # Uploads from GitHub runners to Gitee can stall indefinitely; give up below 10 KB/s for a minute.
-              if curl -S --fail-with-body -o response.json \
-                --speed-limit 10240 --speed-time 60 \
-                --form-string "access_token=$GITEE_TOKEN" \
-                -F "file=@$file" \
-                "$api/releases/$id/attach_files" 2>&1 | throttle_progress; then
-                echo "Attached: $asset"
-                continue 2
-              fi
-              cat response.json 2> /dev/null || true
-              echo
-              # The upload may have completed on Gitee even though curl gave up waiting for the response.
-              if grep -qxF "$asset" <<< "$(attached_names)"; then
-                echo "Attached: $asset"
-                continue 2
-              fi
-            done
-            echo "::error::Could not attach $asset after 3 attempts"
-            exit 1
+            ( upload "$file" 2>&1 | prefix "$asset" ) &
+            pids+=("$!")
+            assets+=("$asset")
           done
+
+          failed=0
+          for i in "${!pids[@]}"; do
+            if ! wait "${pids[$i]}"; then
+              echo "::error::Could not attach ${assets[$i]} after 3 attempts"
+              failed=1
+            fi
+          done
+          exit "$failed"

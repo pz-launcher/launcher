@@ -15,6 +15,8 @@ PzLauncher.Core/
 │   ├── ZombieBuddy/ # ZombieBuddy setup in a game install; Java mod preload check and preload list; launch entry point running each mod's launch step
 │   ├── Zabric/      # launch step: Zabric's entry in ZombieBuddy's preload list
 │   └── ZBSkipOnlineChecks/ # launch step: ZB Skip Online Checks' preload entry and patches_jar agent start
+├── Update/          # launcher self-update: GitHub/Gitee release feeds, download + verify + stage, install with rollback
+├── Net/             # the one shared HttpClient (LauncherHttpClient), runtime-switchable proxy, proxy settings, connection test
 ├── Serialization/   # CoreJsonContext (source-gen JSON)
 └── ServiceCollectionExtensions.cs   # AddPzLauncherCore()
 ```
@@ -24,5 +26,5 @@ Rules:
 - One folder per feature; namespace `PzLauncher.Core.<Feature>`. A feature holds its interface, implementation, DTOs, and `<Feature>Errors`. No cross-cutting `Models/`, `Services/`, `Interfaces/` folders.
 - Mod features nest under `Mod/` (`PzLauncher.Core.Mod.<Mod>`). What any mod needs lives in `Mod/` itself, what any ZombieBuddy Java mod needs in `Mod/ZombieBuddy/`; a mod's own folder keeps only its launch step and facts. `Mod/ZombieBuddy/` names no specific mod; launch steps run in their registration order in `ServiceCollectionExtensions`.
 - OS-specific code lives in `Platform/` or OS-guarded files; everything else is portable.
-- Domain constants (Steam app ids, install markers, Java locations, game launch files, GC flags, mod folders and `mod.info` keys, ZombieBuddy files, agent args, config location and preload keys, Zabric's mod and item id, ZB Skip Online Checks' mod id, item id, package and game-folder jar, collection and active-list file names and syntax) live in one place each: `Steam/PzSteamApps.cs`, `Installs/PzInstallMarkers.cs`, `Java/JavaLocations.cs`, `Launch/PzLaunchFiles.cs`, `Launch/GarbageCollectors.cs`, `Mod/ModFolders.cs`, `Mod/ZombieBuddy/ZombieBuddyFiles.cs`, `Mod/Zabric/ZabricFiles.cs`, `Mod/ZBSkipOnlineChecks/ZBSkipOnlineChecksFiles.cs`, `Mod/Collections/ModCollectionFiles.cs`.
+- Domain constants (Steam app ids, install markers, Java locations, game launch files, GC flags, mod folders and `mod.info` keys, ZombieBuddy files, agent args, config location and preload keys, Zabric's mod and item id, ZB Skip Online Checks' mod id, item id, package and game-folder jar, collection and active-list file names and syntax, release feed URLs and update package/staging names) live in one place each: `Steam/PzSteamApps.cs`, `Installs/PzInstallMarkers.cs`, `Java/JavaLocations.cs`, `Launch/PzLaunchFiles.cs`, `Launch/GarbageCollectors.cs`, `Mod/ModFolders.cs`, `Mod/ZombieBuddy/ZombieBuddyFiles.cs`, `Mod/Zabric/ZabricFiles.cs`, `Mod/ZBSkipOnlineChecks/ZBSkipOnlineChecksFiles.cs`, `Mod/Collections/ModCollectionFiles.cs`, `Update/LauncherReleases.cs`.
 - Behaviour for another OS is chosen from `IPlatformEnvironment.Os` (executable names, path-list separators), never from the host OS, so Linux paths are testable on Windows. Reference: `Java/JavaDiscoveryService.cs`.

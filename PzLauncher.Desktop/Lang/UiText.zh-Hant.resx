@@ -254,6 +254,39 @@
   <data name="Error_ModCollectionFileWriteFailed" xml:space="preserve">
     <value>無法儲存模組清單檔案 {0}。如果遊戲正在執行，請先關閉遊戲，然後再試一次。</value>
   </data>
+  <data name="Error_UpdateNetworkFailed" xml:space="preserve">
+    <value>無法連線到更新伺服器（{0}）。請檢查網路連線或選擇其他更新來源，然後再試一次。</value>
+  </data>
+  <data name="Error_UpdateReleaseInfoInvalid" xml:space="preserve">
+    <value>更新伺服器（{0}）傳回的版本資訊無法讀取。請稍後再試或選擇其他更新來源。</value>
+  </data>
+  <data name="Error_UpdatePackageInvalid" xml:space="preserve">
+    <value>下載的更新 {0} 已損毀或不完整，已被捨棄。請稍後再試。</value>
+  </data>
+  <data name="Error_UpdateInstallFolderNotWritable" xml:space="preserve">
+    <value>啟動器無法寫入其所在資料夾 {0}，因此無法自行更新。請從發佈頁面下載新版本。</value>
+  </data>
+  <data name="Error_UpdateInstallFailed" xml:space="preserve">
+    <value>無法在 {0} 中安裝更新，已保留目前版本。請關閉正在使用啟動器檔案的程式，然後再試一次。</value>
+  </data>
+  <data name="Error_UpdateDevelopmentBuild" xml:space="preserve">
+    <value>開發版本無法使用更新。</value>
+  </data>
+  <data name="Error_UpdateRestartFailed" xml:space="preserve">
+    <value>更新已安裝，但無法啟動 {0}。請手動重新啟動 PzLauncher。</value>
+  </data>
+  <data name="Error_NetworkProxyHostInvalid" xml:space="preserve">
+    <value>請輸入代理伺服器的主機名稱或 IP 位址，例如 127.0.0.1。可以加上 http:// 前綴；不支援 https:// 與 SOCKS 代理伺服器。</value>
+  </data>
+  <data name="Error_NetworkProxyPortInvalid" xml:space="preserve">
+    <value>請輸入 1 到 65535 之間的代理伺服器連接埠。</value>
+  </data>
+  <data name="Error_NetworkUnreachable" xml:space="preserve">
+    <value>無法連線到 {0}：{1}</value>
+  </data>
+  <data name="Error_NetworkTimeout" xml:space="preserve">
+    <value>{0} 在 {1} 秒內沒有回應。</value>
+  </data>
   <data name="Error_FolderNotLocal" xml:space="preserve">
     <value>{0} 不是這台電腦上的資料夾，啟動器無法開啟它。請選擇本機資料夾。</value>
   </data>
@@ -277,6 +310,69 @@
   </data>
   <data name="Settings_ResetWindowSize" xml:space="preserve">
     <value>重設視窗大小</value>
+  </data>
+  <data name="Settings_Updates" xml:space="preserve">
+    <value>更新</value>
+  </data>
+  <data name="Settings_UpdatesCurrentVersion" xml:space="preserve">
+    <value>目前版本：{0}</value>
+  </data>
+  <data name="Settings_UpdateSource" xml:space="preserve">
+    <value>更新來源</value>
+  </data>
+  <data name="Settings_UpdateSourceHint" xml:space="preserve">
+    <value>自動：使用 GitHub 與 Gitee 中最先回應的一個。在中國大陸，Gitee 通常較快。</value>
+  </data>
+  <data name="Settings_AutoCheckUpdates" xml:space="preserve">
+    <value>啟動 PzLauncher 時檢查更新</value>
+  </data>
+  <data name="Settings_CheckNow" xml:space="preserve">
+    <value>立即檢查</value>
+  </data>
+  <data name="Settings_Proxy" xml:space="preserve">
+    <value>代理伺服器</value>
+  </data>
+  <data name="ProxyMode_System" xml:space="preserve">
+    <value>使用系統代理伺服器</value>
+  </data>
+  <data name="ProxyMode_None" xml:space="preserve">
+    <value>不使用代理伺服器</value>
+  </data>
+  <data name="ProxyMode_Manual" xml:space="preserve">
+    <value>手動 HTTP 代理伺服器</value>
+  </data>
+  <data name="Proxy_SystemHintWindows" xml:space="preserve">
+    <value>依照 Windows 的 Proxy 設定（設定 &gt; 網路和網際網路 &gt; Proxy），Clash、v2rayN 等代理工具會修改這裡。若設定了 HTTP_PROXY、HTTPS_PROXY 或 ALL_PROXY 環境變數，則以環境變數為準。</value>
+  </data>
+  <data name="Proxy_SystemHintMacOS" xml:space="preserve">
+    <value>依照 macOS 的網路代理伺服器設定。若設定了 http_proxy、https_proxy 或 all_proxy 環境變數，則以環境變數為準。</value>
+  </data>
+  <data name="Proxy_SystemHintLinux" xml:space="preserve">
+    <value>使用 http_proxy、https_proxy、all_proxy 與 no_proxy 環境變數。不會讀取桌面環境（GNOME、KDE）的代理伺服器設定。</value>
+  </data>
+  <data name="Proxy_Address" xml:space="preserve">
+    <value>位址</value>
+  </data>
+  <data name="Proxy_Port" xml:space="preserve">
+    <value>連接埠</value>
+  </data>
+  <data name="Proxy_Username" xml:space="preserve">
+    <value>使用者名稱（選填）</value>
+  </data>
+  <data name="Proxy_Password" xml:space="preserve">
+    <value>密碼（選填）</value>
+  </data>
+  <data name="Proxy_ManualHint" xml:space="preserve">
+    <value>僅支援 HTTP 代理伺服器。localhost、127.0.0.1 等本機位址會直接連線。</value>
+  </data>
+  <data name="Proxy_PasswordPlainText" xml:space="preserve">
+    <value>在此系統上，密碼會以未加密的形式儲存在 PzLauncher 的偏好設定檔中。</value>
+  </data>
+  <data name="Proxy_TestConnection" xml:space="preserve">
+    <value>測試連線</value>
+  </data>
+  <data name="Proxy_TestOk" xml:space="preserve">
+    <value>正常（{0} 毫秒）</value>
   </data>
   <data name="Settings_GameGroup" xml:space="preserve">
     <value>遊戲</value>
@@ -736,5 +832,56 @@
   </data>
   <data name="ModApply_DropIncompatible" xml:space="preserve">
     <value>{0}：與 {1} 不相容</value>
+  </data>
+  <data name="Update_BannerReady" xml:space="preserve">
+    <value>版本 {0} 已下載。</value>
+  </data>
+  <data name="Update_BannerAvailable" xml:space="preserve">
+    <value>版本 {0} 已發佈。</value>
+  </data>
+  <data name="Update_Restart" xml:space="preserve">
+    <value>重新啟動並更新</value>
+  </data>
+  <data name="Update_RestartBlocked" xml:space="preserve">
+    <value>請先關閉遊戲：現在重新啟動會讓啟動器無法繼續追蹤遊戲。選擇「稍後」時，更新仍會在關閉 PzLauncher 時安裝。</value>
+  </data>
+  <data name="Update_Later" xml:space="preserve">
+    <value>稍後</value>
+  </data>
+  <data name="Update_OpenDownloadPage" xml:space="preserve">
+    <value>開啟下載頁面</value>
+  </data>
+  <data name="Update_Dismiss" xml:space="preserve">
+    <value>關閉提示</value>
+  </data>
+  <data name="Update_StatusChecking" xml:space="preserve">
+    <value>正在檢查更新…</value>
+  </data>
+  <data name="Update_StatusUpToDate" xml:space="preserve">
+    <value>PzLauncher 已是最新版本。</value>
+  </data>
+  <data name="Update_StatusDownloading" xml:space="preserve">
+    <value>正在從 {1} 下載版本 {0}…</value>
+  </data>
+  <data name="Update_StatusDownloadingPercent" xml:space="preserve">
+    <value>正在從 {1} 下載版本 {0}… {2}%</value>
+  </data>
+  <data name="Update_StatusReady" xml:space="preserve">
+    <value>版本 {0} 已下載，將在重新啟動或關閉 PzLauncher 時安裝。</value>
+  </data>
+  <data name="Update_StatusAvailable" xml:space="preserve">
+    <value>版本 {0} 已發佈。啟動器無法寫入其所在資料夾，請從發佈頁面下載。</value>
+  </data>
+  <data name="Update_StatusInstalled" xml:space="preserve">
+    <value>版本 {0} 已安裝。請重新啟動 PzLauncher 以使用新版本。</value>
+  </data>
+  <data name="UpdateSource_Auto" xml:space="preserve">
+    <value>自動</value>
+  </data>
+  <data name="UpdateSource_GitHub" xml:space="preserve">
+    <value>GitHub</value>
+  </data>
+  <data name="UpdateSource_Gitee" xml:space="preserve">
+    <value>Gitee</value>
   </data>
 </root>

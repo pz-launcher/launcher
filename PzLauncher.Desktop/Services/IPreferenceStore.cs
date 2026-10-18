@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using PzLauncher.Core.Launch;
 using PzLauncher.Core.Mod.ZombieBuddy;
+using PzLauncher.Core.Update;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Themes;
 
@@ -25,12 +26,21 @@ public sealed record UserPreferences(AppLanguage? Language, AppTheme? Theme, Win
     /// <summary>Collection name per install root as saved (ordinal); empty when none are saved.</summary>
     public IReadOnlyDictionary<string, string> DefaultModCollections { get; init; } = new Dictionary<string, string>();
 
+    public UpdateSource? UpdateSource { get; init; }
+
+    public bool? AutoCheckUpdates { get; init; }
+
+    public SavedProxy? Proxy { get; init; }
+
     // Compares the collections by content; the generated equality would compare references.
     public bool Equals(UserPreferences? other) =>
         other is not null
         && Language == other.Language
         && Theme == other.Theme
         && Window == other.Window
+        && UpdateSource == other.UpdateSource
+        && AutoCheckUpdates == other.AutoCheckUpdates
+        && Proxy == other.Proxy
         && ManualJavaHomes.SequenceEqual(other.ManualJavaHomes, StringComparer.Ordinal)
         && InstallOverrides.Count == other.InstallOverrides.Count
         && InstallOverrides.All(entry => other.InstallOverrides.TryGetValue(entry.Key, out var value) && entry.Value == value)
@@ -40,7 +50,12 @@ public sealed record UserPreferences(AppLanguage? Language, AppTheme? Theme, Win
         && DefaultModCollections.All(entry => other.DefaultModCollections.TryGetValue(entry.Key, out var value) && entry.Value == value);
 
     public override int GetHashCode() =>
-        HashCode.Combine(Language, Theme, Window, ManualJavaHomes.Count, InstallOverrides.Count, ZombieBuddyChannels.Count, DefaultModCollections.Count);
+        HashCode.Combine(
+            HashCode.Combine(Language, Theme, Window, UpdateSource, AutoCheckUpdates, Proxy),
+            ManualJavaHomes.Count,
+            InstallOverrides.Count,
+            ZombieBuddyChannels.Count,
+            DefaultModCollections.Count);
 }
 
 public interface IPreferenceStore
@@ -68,4 +83,13 @@ public interface IPreferenceStore
 
     /// <summary><c>null</c> removes this install's entry. <inheritdoc cref="SaveInstallOverridesAsync"/></summary>
     Task SaveDefaultModCollectionAsync(string installRoot, string? name, CancellationToken ct = default);
+
+    /// <inheritdoc cref="SaveLanguageAsync"/>
+    Task SaveUpdateSourceAsync(UpdateSource source, CancellationToken ct = default);
+
+    /// <inheritdoc cref="SaveLanguageAsync"/>
+    Task SaveAutoCheckUpdatesAsync(bool enabled, CancellationToken ct = default);
+
+    /// <summary>The password is saved through <see cref="ISecretProtector"/>. <inheritdoc cref="SaveLanguageAsync"/></summary>
+    Task SaveProxyAsync(SavedProxy proxy, CancellationToken ct = default);
 }

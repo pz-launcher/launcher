@@ -3,6 +3,8 @@ using CommunityToolkit.Mvvm.Input;
 using PzLauncher.Desktop.Services;
 using PzLauncher.Desktop.Themes;
 using PzLauncher.Desktop.ViewModels.Java;
+using PzLauncher.Desktop.ViewModels.Net;
+using PzLauncher.Desktop.ViewModels.Update;
 
 namespace PzLauncher.Desktop.ViewModels.Settings;
 
@@ -10,9 +12,15 @@ public partial class SettingsViewModel(
     IThemeService themeService,
     IPreferenceStore preferences,
     IWindowPlacementService windowPlacement,
-    JavaRuntimesViewModel java) : ViewModelBase
+    JavaRuntimesViewModel java,
+    UpdateSettingsViewModel updates,
+    ProxySettingsViewModel proxy) : ViewModelBase
 {
     public JavaRuntimesViewModel Java { get; } = java;
+
+    public UpdateSettingsViewModel Updates { get; } = updates;
+
+    public ProxySettingsViewModel Proxy { get; } = proxy;
 
     [ObservableProperty] public partial SettingsSection Section { get; set; }
 
