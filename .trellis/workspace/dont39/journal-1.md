@@ -409,3 +409,25 @@ Surveyed the repo for duplication and oversized folders (none needed moving; Fak
 ### Status
 
 [OK] **Completed**
+
+
+## Session 17: Steam Workshop management
+<!-- trellis-session: v=2 fp=9a42dbe67997efc2 -->
+
+**Date**: 2026-10-19
+**Task**: Steam Workshop management
+**Branch**: `feat/workshop-management`
+
+### Summary
+
+Added 工坊订阅 and 工坊合集 sections to the Mods tab: subscriptions from Steam's local files plus the keyless Web API; subscribe/unsubscribe/force update via a short-lived helper process loading PZ's own steam_api (Native AOT, no Valve binaries shipped); Steam collection open/subscribe-missing/generate launcher collection; pre-launch outdated-item check. Spike and live smoke test confirmed force update fetches items Steam hadn't noticed and RunningAppID returns to 0 after the helper exits. Tests: Core 1534, Desktop 1680 passing; AOT publish 0 warnings.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `ce67881` | Manage Steam Workshop subscriptions and collections in the launcher |
+
+### Status
+
+[OK] **Completed**

@@ -8,8 +8,8 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 16
-- **Last Active**: 2026-10-18
+- **Total Sessions**: 17
+- **Last Active**: 2026-10-19
 <!-- @@@/auto:current-status -->
 
 ---
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~411 | Active |
+| `journal-1.md` | ~433 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 17 | 2026-10-19 | Steam Workshop management | `ce67881` | `feat/workshop-management` |
 | 16 | 2026-10-18 | Extract shared code and split oversized files | `e14b8b4` | `refactor/extract-shared-code` |
 | 15 | 2026-10-18 | Steam launch hook setting | `f28b7f7` | `feat/steam-launch-hook` |
 | 14 | 2026-10-18 | Group Desktop Services into feature folders | `98cb239` | `claude/nifty-chaplygin-fa8c72` |
