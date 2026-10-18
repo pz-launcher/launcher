@@ -1,7 +1,8 @@
 using PzLauncher.Core.Common;
 using PzLauncher.Core.Update;
 using PzLauncher.Desktop.Localization;
-using PzLauncher.Desktop.Services;
+using PzLauncher.Desktop.Services.Preferences;
+using PzLauncher.Desktop.Services.Update;
 using PzLauncher.Desktop.Tests.TestSupport;
 using PzLauncher.Desktop.ViewModels.Update;
 using static PzLauncher.Desktop.Tests.TestSupport.TestUpdates;

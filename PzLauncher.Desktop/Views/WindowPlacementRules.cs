@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Avalonia;
-using PzLauncher.Desktop.Services;
+using PzLauncher.Desktop.Services.Shell;
 
 namespace PzLauncher.Desktop.Views;
 

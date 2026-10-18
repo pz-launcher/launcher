@@ -10,7 +10,8 @@ using PzLauncher.Core.Net;
 using PzLauncher.Core.Platform;
 using PzLauncher.Desktop.Lang;
 using PzLauncher.Desktop.Localization;
-using PzLauncher.Desktop.Services;
+using PzLauncher.Desktop.Services.Net;
+using PzLauncher.Desktop.Services.Preferences;
 
 namespace PzLauncher.Desktop.ViewModels.Net;
 

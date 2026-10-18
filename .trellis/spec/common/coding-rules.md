@@ -38,7 +38,7 @@ validated yet" or "error".
 | Fields that are null together | One nullable sub-record; derive flags from it | `PzInstall` |
 | Collections on DTOs | Non-null, empty by default | `Error.Details` |
 | Value set at startup and used right away | Local or constructor parameter, not a nullable field | `PzLauncher.Desktop/App.axaml.cs` |
-| Service with several outcomes | Explicit result type; `null` at most means "cancelled" | `PzLauncher.Desktop/Services/FolderPickResult.cs` |
+| Service with several outcomes | Explicit result type; `null` at most means "cancelled" | `PzLauncher.Desktop/Services/Shell/FolderPickResult.cs` |
 
 - No `!` in production code. Tests use it only on genuinely nullable APIs.
 
