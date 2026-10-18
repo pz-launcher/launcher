@@ -27,7 +27,7 @@ public sealed class UpdateServiceDownloadTests : IDisposable
         var staged = ResultAssert.Ok(await service.DownloadAsync(Release(package), progress, TestContext.Current.CancellationToken));
 
         Assert.Equal(V("0.3.0"), staged.Version);
-        Assert.Equal(Path.Combine(UpdateRoot, "staged", "0.3.0"), staged.StagingDirectory);
+        Assert.Equal(Path.Combine(UpdateRoot, "staged", "0.3.0", "PzLauncher"), staged.StagingDirectory);
         Assert.Equal("new exe", ReadText(Path.Combine(staged.StagingDirectory, "PzLauncher.exe")));
         Assert.Equal("new dll", ReadText(Path.Combine(staged.StagingDirectory, "lib", "native.dll")));
         Assert.True(File.Exists(Path.Combine(UpdateRoot, "staged", "0.3.0.ready")));
@@ -81,7 +81,7 @@ public sealed class UpdateServiceDownloadTests : IDisposable
     [Fact]
     public async Task ArchiveWithoutExecutable_DiscardedAsPackageInvalid()
     {
-        var package = Zip(("README.txt", "no launcher here"), ("sub/PzLauncher.exe", "not at the root"));
+        var package = Zip(("README.txt", "no launcher here"), ("sub/PzLauncher.exe", "not at the folder root"));
         _handler.RespondBytes(PackageUrl, package);
 
         ResultAssert.Failed(await Service().DownloadAsync(Release(package), ct: TestContext.Current.CancellationToken), ErrorCode.UpdatePackageInvalid);

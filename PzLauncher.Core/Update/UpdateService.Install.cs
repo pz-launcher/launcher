@@ -21,7 +21,7 @@ internal sealed partial class UpdateService
         {
             // Trust only the layout we wrote, never the folder named in the DTO.
             var paths = Paths;
-            var source = paths.StagedDirectory(staged.Version);
+            var source = paths.StagedContent(staged.Version);
             var marker = paths.ReadyMarker(staged.Version);
             if (!File.Exists(marker) || !Directory.Exists(source))
             {
@@ -69,7 +69,7 @@ internal sealed partial class UpdateService
 
             // The marker goes first so a folder that can't be deleted now is never offered again.
             TryDeleteFile(marker);
-            TryDeleteDirectory(source);
+            TryDeleteDirectory(paths.StagedDirectory(staged.Version));
             return Result.Ok();
         }
         finally

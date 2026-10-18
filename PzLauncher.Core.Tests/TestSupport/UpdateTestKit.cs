@@ -58,6 +58,7 @@ internal static class UpdateTestKit
             withChecksum ? Convert.ToHexStringLower(SHA256.HashData(package)) : null,
             new Uri($"https://github.com/pz-launcher/launcher/releases/tag/v{version}"));
 
+    /// <summary>Entries go under the package folder, as <c>release.yml</c> packs them; <c>..</c> names stay as given.</summary>
     public static byte[] Zip(params (string Name, string Content)[] entries)
     {
         using var stream = new MemoryStream();
@@ -65,7 +66,7 @@ internal static class UpdateTestKit
         {
             foreach (var (name, content) in entries)
             {
-                using var entry = archive.CreateEntry(name).Open();
+                using var entry = archive.CreateEntry(InPackage(name)).Open();
                 entry.Write(Encoding.UTF8.GetBytes(content));
             }
         }
@@ -73,17 +74,17 @@ internal static class UpdateTestKit
         return stream.ToArray();
     }
 
-    /// <summary>Entry names as <c>tar -C publish .</c> writes them, with a <c>./</c> prefix.</summary>
+    /// <summary>Entry names as <c>tar -C publish PzLauncher</c> writes them; <c>..</c> names stay as given.</summary>
     public static byte[] TarGz(params (string Name, string Content)[] entries)
     {
         using var stream = new MemoryStream();
         using (var gzip = new GZipStream(stream, CompressionLevel.Fastest, leaveOpen: true))
         using (var tar = new TarWriter(gzip, TarEntryFormat.Pax))
         {
-            tar.WriteEntry(new PaxTarEntry(TarEntryType.Directory, "./"));
+            tar.WriteEntry(new PaxTarEntry(TarEntryType.Directory, LauncherReleases.PackageFolder + "/"));
             foreach (var (name, content) in entries)
             {
-                var entry = new PaxTarEntry(TarEntryType.RegularFile, name.StartsWith("..", StringComparison.Ordinal) ? name : "./" + name)
+                var entry = new PaxTarEntry(TarEntryType.RegularFile, InPackage(name))
                 {
                     DataStream = new MemoryStream(Encoding.UTF8.GetBytes(content)),
                     Mode = UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute,
@@ -94,6 +95,9 @@ internal static class UpdateTestKit
 
         return stream.ToArray();
     }
+
+    private static string InPackage(string name) =>
+        name.StartsWith("..", StringComparison.Ordinal) ? name : LauncherReleases.PackageFolder + "/" + name;
 
     /// <summary>Every file (relative path → content) and directory below <paramref name="root"/>.</summary>
     public static (SortedDictionary<string, string> Files, SortedSet<string> Directories) Snapshot(string root) =>

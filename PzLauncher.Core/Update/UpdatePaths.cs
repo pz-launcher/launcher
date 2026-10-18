@@ -13,6 +13,9 @@ internal sealed record UpdatePaths(string InstallDirectory)
 
     public string StagedDirectory(SemVersion version) => Path.Combine(Staged, version.ToString());
 
+    /// <summary>The files to install, inside the extracted package.</summary>
+    public string StagedContent(SemVersion version) => Path.Combine(StagedDirectory(version), LauncherReleases.PackageFolder);
+
     // Written last: a staged folder without it is an interrupted extraction.
     public string ReadyMarker(SemVersion version) => StagedDirectory(version) + LauncherReleases.ReadyMarkerSuffix;
 }

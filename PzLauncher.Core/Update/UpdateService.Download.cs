@@ -191,10 +191,12 @@ internal sealed partial class UpdateService
                 await TarFile.ExtractToDirectoryAsync(gzip, dir, overwriteFiles: false, ct).ConfigureAwait(false);
             }
 
-            var executable = Path.Combine(dir, LauncherReleases.ExecutableName(platform.Os));
+            var content = paths.StagedContent(version);
+            var executable = Path.Combine(content, LauncherReleases.ExecutableName(platform.Os));
             if (!File.Exists(executable))
             {
-                return UpdateErrors.PackageInvalid(release.PackageName, $"no {Path.GetFileName(executable)} at the package root");
+                return UpdateErrors.PackageInvalid(
+                    release.PackageName, $"no {LauncherReleases.PackageFolder}/{Path.GetFileName(executable)} in the package");
             }
 
             if (platform.Os != PlatformKind.Windows)
@@ -219,7 +221,7 @@ internal sealed partial class UpdateService
                 }
             }
 
-            return new StagedUpdate(version, dir, release.ReleasePageUrl);
+            return new StagedUpdate(version, content, release.ReleasePageUrl);
         }
         catch (Exception ex) when (ex is IOException or InvalidDataException or NotSupportedException)
         {

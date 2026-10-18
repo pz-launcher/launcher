@@ -19,6 +19,9 @@ internal static class LauncherReleases
 
     public const string ProductName = "PzLauncher";
 
+    /// <summary>The one top-level folder of a package (<c>release.yml</c>); its contents mirror the install folder.</summary>
+    public const string PackageFolder = ProductName;
+
     public const string Sha256DigestPrefix = "sha256:";
 
     // All under the install folder, so moves between them and the install are renames on one volume.

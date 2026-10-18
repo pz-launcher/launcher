@@ -209,7 +209,7 @@ internal sealed partial class UpdateService(
             var json = JsonSerializer.Deserialize(bytes, UpdateJsonContext.Default.StagedMarkerJson);
             if (json is not null && Uri.TryCreate(json.ReleasePageUrl, UriKind.Absolute, out var page))
             {
-                return new StagedUpdate(version, paths.StagedDirectory(version), page);
+                return new StagedUpdate(version, paths.StagedContent(version), page);
             }
         }
         catch (Exception ex) when (ex is JsonException or IOException or UnauthorizedAccessException)
