@@ -1,4 +1,3 @@
-using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using PzLauncher.Core.Common;
@@ -19,6 +18,64 @@ internal static class ZombieBuddyPreloadConfig
         string configFolder, string modId, ZombieBuddyPreloadEntry entry, bool first, StringComparison pathComparison, CancellationToken ct)
     {
         var path = Path.Combine(configFolder, ZombieBuddyFiles.ConfigFile);
+        var config = await ReadAsync(path, modId, ct).ConfigureAwait(false);
+        if (!config.IsSuccess)
+        {
+            return config.Error;
+        }
+
+        var (root, preload) = config.Value;
+        if (preload is null)
+        {
+            preload = [];
+            root[ZombieBuddyFiles.PreloadModsKey] = preload;
+        }
+
+        var stored = preload[modId];
+        var current = stored is not null && await IsCurrentAsync(stored, entry, pathComparison, ct).ConfigureAwait(false);
+        if (current && (!first || preload.IndexOf(modId) == 0))
+        {
+            return ZombieBuddyPreload.Current;
+        }
+
+        var value = current ? stored : new JsonObject { [ZombieBuddyFiles.InfPathKey] = entry.InfPath, [ZombieBuddyFiles.JarPathKey] = entry.JarPath };
+        if (first)
+        {
+            preload.Remove(modId);
+            preload.Insert(0, modId, value);
+        }
+        else
+        {
+            preload[modId] = value;
+        }
+
+        var written = await WriteAsync(configFolder, path, root, modId, ct).ConfigureAwait(false);
+        return written.IsSuccess ? ZombieBuddyPreload.Written : written.Error;
+    }
+
+    /// <summary>The other entries keep their order; writes nothing when the file or the entry is missing.</summary>
+    public static async Task<Result<ZombieBuddyPreload>> RemoveAsync(string configFolder, string modId, CancellationToken ct)
+    {
+        var path = Path.Combine(configFolder, ZombieBuddyFiles.ConfigFile);
+        var config = await ReadAsync(path, modId, ct).ConfigureAwait(false);
+        if (!config.IsSuccess)
+        {
+            return config.Error;
+        }
+
+        var (root, preload) = config.Value;
+        if (preload is null || !preload.Remove(modId))
+        {
+            return ZombieBuddyPreload.NotApplicable;
+        }
+
+        var written = await WriteAsync(configFolder, path, root, modId, ct).ConfigureAwait(false);
+        return written.IsSuccess ? ZombieBuddyPreload.Removed : written.Error;
+    }
+
+    // A missing file reads as an empty root; Preload is null when the file has no preload_mods object.
+    private static async Task<Result<Config>> ReadAsync(string path, string modId, CancellationToken ct)
+    {
         string json;
         try
         {
@@ -44,41 +101,21 @@ internal static class ZombieBuddyPreloadConfig
             return ZombieBuddyErrors.PreloadConfigInvalid(modId, path, "preload_mods is not a JSON object.");
         }
 
-        if (mods is not JsonObject preload)
-        {
-            preload = [];
-            root.Value[ZombieBuddyFiles.PreloadModsKey] = preload;
-        }
+        return new Config(root.Value, mods as JsonObject);
+    }
 
-        var stored = preload[modId];
-        var current = stored is not null && await IsCurrentAsync(stored, entry, pathComparison, ct).ConfigureAwait(false);
-        if (current && (!first || preload.IndexOf(modId) == 0))
-        {
-            return ZombieBuddyPreload.Current;
-        }
-
-        var value = current ? stored : new JsonObject { [ZombieBuddyFiles.InfPathKey] = entry.InfPath, [ZombieBuddyFiles.JarPathKey] = entry.JarPath };
-        if (first)
-        {
-            preload.Remove(modId);
-            preload.Insert(0, modId, value);
-        }
-        else
-        {
-            preload[modId] = value;
-        }
-
+    private static async Task<Result> WriteAsync(string configFolder, string path, JsonObject root, string modId, CancellationToken ct)
+    {
         try
         {
             Directory.CreateDirectory(configFolder);
-            await AtomicJsonFile.WriteAsync(path, root.Value, ct).ConfigureAwait(false);
+            await AtomicJsonFile.WriteAsync(path, root, ct).ConfigureAwait(false);
+            return Result.Ok();
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
             return ZombieBuddyErrors.PreloadConfigIoFailed(modId, path, ex.Message);
         }
-
-        return ZombieBuddyPreload.Written;
     }
 
     // ZombieBuddy reads a blank file as the default config.
@@ -125,9 +162,7 @@ internal static class ZombieBuddyPreloadConfig
 
         try
         {
-            var storedHash = await HashAsync(jar, ct).ConfigureAwait(false);
-            var hash = await HashAsync(entry.JarPath, ct).ConfigureAwait(false);
-            return storedHash.AsSpan().SequenceEqual(hash);
+            return await FileContent.EqualAsync(jar, entry.JarPath, ct).ConfigureAwait(false);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
@@ -138,12 +173,5 @@ internal static class ZombieBuddyPreloadConfig
     private static string? Text(JsonNode? node) =>
         node is JsonValue value && value.TryGetValue<string>(out var text) ? text : null;
 
-    private static async Task<byte[]> HashAsync(string path, CancellationToken ct)
-    {
-        var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, bufferSize: 81920, useAsync: true);
-        await using (stream.ConfigureAwait(false))
-        {
-            return await SHA256.HashDataAsync(stream, ct).ConfigureAwait(false);
-        }
-    }
+    private sealed record Config(JsonObject Root, JsonObject? Preload);
 }

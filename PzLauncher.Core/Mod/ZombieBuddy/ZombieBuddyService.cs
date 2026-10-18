@@ -139,6 +139,106 @@ internal sealed partial class ZombieBuddyService(
         }
     }
 
+    public async Task<Result> EnsurePatchesJarAsync(
+        string installRoot, string sourceJar, string jarFile, string packageName, CancellationToken ct = default)
+    {
+        ct.ThrowIfCancellationRequested();
+        var target = await ResolveAsync(installRoot, ct).ConfigureAwait(false);
+        if (!target.IsSuccess)
+        {
+            return target.Error;
+        }
+
+        var game = target.Value.GameFolder;
+        var os = platform.Os;
+        await _gate.WaitAsync(ct).ConfigureAwait(false);
+        try
+        {
+            var config = await PzLaunchConfigEditor.LoadAsync(Path.Combine(game, PzLaunchFiles.ConfigFile), ct).ConfigureAwait(false);
+            if (!config.IsSuccess)
+            {
+                return Logged(config.Error);
+            }
+
+            // Nothing would load the jar; the launch reports the missing setup.
+            if (!ZombieBuddyAgentArgs.Has(config.Value.VmArgs, os))
+            {
+                return Result.Ok();
+            }
+
+            // Copied first, so the entry never names a jar that isn't there.
+            var jar = Path.Combine(game, jarFile);
+            if (!await SameContentAsync(sourceJar, jar, ct).ConfigureAwait(false))
+            {
+                var copied = Copy(sourceJar, jar);
+                if (!copied.IsSuccess)
+                {
+                    return Logged(copied.Error);
+                }
+
+                LogCopied(logger, sourceJar, jar);
+            }
+
+            return await SavePatchesJarAsync(
+                config.Value, ZombieBuddyAgentArgs.WithPatchesJar(config.Value.VmArgs, os, jarFile, packageName), packageName, ct).ConfigureAwait(false);
+        }
+        finally
+        {
+            _gate.Release();
+        }
+    }
+
+    public async Task<Result> RemovePatchesJarAsync(string installRoot, string jarFile, string packageName, CancellationToken ct = default)
+    {
+        ct.ThrowIfCancellationRequested();
+        var target = await ResolveAsync(installRoot, ct).ConfigureAwait(false);
+        if (!target.IsSuccess)
+        {
+            return target.Error;
+        }
+
+        var game = target.Value.GameFolder;
+        await _gate.WaitAsync(ct).ConfigureAwait(false);
+        try
+        {
+            var config = await PzLaunchConfigEditor.LoadAsync(Path.Combine(game, PzLaunchFiles.ConfigFile), ct).ConfigureAwait(false);
+            if (!config.IsSuccess)
+            {
+                return Logged(config.Error);
+            }
+
+            // The entry goes first, so it never names a jar that isn't there.
+            var saved = await SavePatchesJarAsync(
+                config.Value, ZombieBuddyAgentArgs.WithoutPatchesJar(config.Value.VmArgs, platform.Os, packageName), packageName, ct).ConfigureAwait(false);
+            if (!saved.IsSuccess)
+            {
+                return saved;
+            }
+
+            var jar = Path.Combine(game, jarFile);
+            if (!File.Exists(jar))
+            {
+                return Result.Ok();
+            }
+
+            try
+            {
+                File.Delete(jar);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                return Logged(ZombieBuddyErrors.DeleteFailed(jar, ex.Message));
+            }
+
+            LogDeleted(logger, jar);
+            return Result.Ok();
+        }
+        finally
+        {
+            _gate.Release();
+        }
+    }
+
     private static ZombieBuddyStep CopyStep(string file) => file switch
     {
         ZombieBuddyFiles.NativeLoader => ZombieBuddyStep.CopyNativeLoader,
@@ -236,6 +336,41 @@ internal sealed partial class ZombieBuddyService(
         }
     }
 
+    // An unreadable copy counts as different: the copy then reports why it can't be replaced.
+    private static async Task<bool> SameContentAsync(string source, string destination, CancellationToken ct)
+    {
+        if (!File.Exists(destination))
+        {
+            return false;
+        }
+
+        try
+        {
+            return await FileContent.EqualAsync(source, destination, ct).ConfigureAwait(false);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            return false;
+        }
+    }
+
+    private async Task<Result> SavePatchesJarAsync(PzLaunchConfigEditor config, IReadOnlyList<string> vmArgs, string packageName, CancellationToken ct)
+    {
+        if (ReferenceEquals(vmArgs, config.VmArgs))
+        {
+            return Result.Ok();
+        }
+
+        var saved = await config.SaveVmArgsAsync(vmArgs, ct).ConfigureAwait(false);
+        if (!saved.IsSuccess)
+        {
+            return Logged(saved.Error);
+        }
+
+        LogPatchesJarSaved(logger, packageName, config.FilePath);
+        return saved;
+    }
+
     private static Result DeleteLeftovers(string game)
     {
         foreach (var file in ZombieBuddyFiles.LeftoverFiles)
@@ -285,6 +420,15 @@ internal sealed partial class ZombieBuddyService(
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "ZombieBuddy: {Code}: {Detail}")]
     private static partial void LogWarning(ILogger logger, string code, string detail);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "ZombieBuddy: copied {SourcePath} to {Path}")]
+    private static partial void LogCopied(ILogger logger, string sourcePath, string path);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "ZombieBuddy: deleted {Path}")]
+    private static partial void LogDeleted(ILogger logger, string path);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "ZombieBuddy: patches_jar for {PackageName} updated in {ConfigPath}")]
+    private static partial void LogPatchesJarSaved(ILogger logger, string packageName, string configPath);
 
     /// <param name="GameFolder">The folder that holds the json; Linux nests it below the root.</param>
     private sealed record Target(string RootPath, string GameFolder);

@@ -257,6 +257,50 @@ Planned and built mod collection management (PR #9): Core IModCollectionService 
 [OK] **Completed**
 
 
+## Session 10: ZB Skip Online Checks setup at launch
+<!-- trellis-session: v=2 fp=d8fa6d8682c4f779 -->
+
+**Date**: 2026-10-17
+**Task**: ZB Skip Online Checks setup at launch
+**Branch**: `main`
+
+### Summary
+
+On Home launch the launcher keeps ZBSkipOnlineChecks in step with the enabled mod list: enabled under allow-all registers it in ZombieBuddy preload_mods after Zabric and adds its patches_jar agent start (jar copied to the game folder, entry in ProjectZomboid64.json); not enabled removes both. Check fixed two WithoutPatchesJar edge cases. Build and tests pass; in-game check not done yet.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `dd48a76` | Set up ZB Skip Online Checks at launch |
+
+### Status
+
+[OK] **Completed**
+
+
+## Session 11: Unify ZombieBuddy Java mod launch setup
+<!-- trellis-session: v=2 fp=6a6525ed4a8c29d5 -->
+
+**Date**: 2026-10-17
+**Task**: Unify ZombieBuddy Java mod launch setup
+**Branch**: `zb-skip-online-checks`
+
+### Summary
+
+Refactor in PR #10: Home calls IZombieBuddyModsService.PrepareLaunchAsync once; ZombieBuddyLaunch resolves status/root/cache/libraries once and finds preloadable copies; Zabric and ZB Skip Online Checks are internal launch steps run in registration order, and the Zabric dependency moved from Home into Core. Behaviour unchanged; IReadOnlyList<Error> registered in CoreJsonContext. Build and tests pass (Core 978/3 skipped, Desktop 1075).
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `651578e` | Run ZombieBuddy Java mod setups through one Core entry point |
+
+### Status
+
+[OK] **Completed**
+
+
 ## Session 12: Launcher auto-update and proxy settings
 <!-- trellis-session: v=2 fp=1c2021dd93fd94d9 -->
 
@@ -273,6 +317,28 @@ Auto-update: races GitHub and Gitee release APIs, downloads the platform package
 | Hash | Message |
 |------|---------|
 | `6d35946` | Update the launcher itself from GitHub or Gitee, with proxy settings (#11) |
+
+### Status
+
+[OK] **Completed**
+
+
+## Session 13: Merge main into PR #10
+<!-- trellis-session: v=2 fp=0e67bf58283c4706 -->
+
+**Date**: 2026-10-18
+**Task**: Merge main into PR #10
+**Branch**: `zb-skip-online-checks`
+
+### Summary
+
+Merged origin/main (launcher auto-update and proxy settings, #11) into zb-skip-online-checks. Resolved directory-structure.md by keeping both sides (mod launch-step lines plus Update/ and Net/; both constants files), rebuilt journal-1.md and index.md in chronological order (sessions 10, 11 then 12) after git interleaved them. Merged tree builds with 0 warnings; tests pass (Core 1197/3 skipped, Desktop 1326).
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `d97d785` | Merge remote-tracking branch 'origin/main' into zb-skip-online-checks |
 
 ### Status
 

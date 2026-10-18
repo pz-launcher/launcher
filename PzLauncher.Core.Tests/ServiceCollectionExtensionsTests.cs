@@ -27,6 +27,7 @@ public class ServiceCollectionExtensionsTests
         Assert.Same(provider.GetRequiredService<IJavaDiscoveryService>(), provider.GetRequiredService<IJavaDiscoveryService>());
         Assert.Same(provider.GetRequiredService<IGameLaunchService>(), provider.GetRequiredService<IGameLaunchService>());
         Assert.Same(provider.GetRequiredService<IZombieBuddyService>(), provider.GetRequiredService<IZombieBuddyService>());
+        Assert.Same(provider.GetRequiredService<IZombieBuddyModsService>(), provider.GetRequiredService<IZombieBuddyModsService>());
         Assert.Same(provider.GetRequiredService<IModCollectionService>(), provider.GetRequiredService<IModCollectionService>());
         Assert.Same(provider.GetRequiredService<IUpdateService>(), provider.GetRequiredService<IUpdateService>());
         Assert.Same(provider.GetRequiredService<INetworkService>(), provider.GetRequiredService<INetworkService>());

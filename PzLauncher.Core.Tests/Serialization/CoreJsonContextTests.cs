@@ -75,6 +75,24 @@ public class CoreJsonContextTests
     }
 
     [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ErrorList_RoundTrips(bool withErrors)
+    {
+        IReadOnlyList<Error> original = withErrors
+            ? [new Error(ErrorCode.ZombieBuddyPreloadConfigInvalid, "msg", ErrorKind.Validation) { Details = new Dictionary<string, string> { ["path"] = "p" } },
+                new Error(ErrorCode.ZombieBuddyCopyFailed, "copy", ErrorKind.External)]
+            : [];
+
+        var copy = JsonSerializer.Deserialize(
+            JsonSerializer.Serialize(original, CoreJsonContext.Default.IReadOnlyListError), CoreJsonContext.Default.IReadOnlyListError);
+
+        Assert.NotNull(copy);
+        Assert.Equal(original.Select(error => (error.Code, error.Message, error.Kind)), copy.Select(error => (error.Code, error.Message, error.Kind)));
+        Assert.Equal(original.Select(error => error.Details.ToArray()), copy.Select(error => error.Details.ToArray()));
+    }
+
+    [Theory]
     [InlineData("""{"code":"steam.not_installed","message":"msg","kind":"NotFound","details":null}""")]
     [InlineData("""{"code":"steam.not_installed","message":null,"kind":"NotFound"}""")]
     [InlineData("""{"code":"steam.not_installed","kind":"NotFound"}""")]

@@ -1,0 +1,7 @@
+{"file": ".trellis/spec/common/architecture.md", "reason": "Core owns mod ordering and setup; Desktop calls one entry point"}
+{"file": ".trellis/spec/common/coding-rules.md", "reason": "comments, naming, async, nullability"}
+{"file": ".trellis/spec/common/test-strategy.md", "reason": "moving tests without losing scenarios; fakes; test naming"}
+{"file": ".trellis/spec/core/directory-structure.md", "reason": "Mod/ZombieBuddy holds what any ZombieBuddy Java mod needs; mod folders keep only their own step and facts"}
+{"file": ".trellis/spec/core/service-api.md", "reason": "public service interface shape, DI registration, internal types"}
+{"file": ".trellis/spec/guides/code-reuse-thinking-guide.md", "reason": "the shared helpers this refactor extracts"}
+{"file": ".trellis/tasks/archive/2026-10/10-17-zb-skip-online-checks-preload/design.md", "reason": "behaviour of the ZB Skip Online Checks setup that must stay unchanged"}

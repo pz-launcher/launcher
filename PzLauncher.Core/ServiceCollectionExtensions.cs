@@ -6,6 +6,7 @@ using PzLauncher.Core.Java;
 using PzLauncher.Core.Launch;
 using PzLauncher.Core.Mod.Collections;
 using PzLauncher.Core.Mod.Zabric;
+using PzLauncher.Core.Mod.ZBSkipOnlineChecks;
 using PzLauncher.Core.Mod.ZombieBuddy;
 using PzLauncher.Core.Net;
 using PzLauncher.Core.Platform;
@@ -33,7 +34,11 @@ public static class ServiceCollectionExtensions
         services.TryAddSingleton<IJavaDiscoveryService, JavaDiscoveryService>();
         services.TryAddSingleton<IGameLaunchService, GameLaunchService>();
         services.TryAddSingleton<IZombieBuddyService, ZombieBuddyService>();
-        services.TryAddSingleton<IZabricService, ZabricService>();
+        services.TryAddSingleton<IZombieBuddyModsService, ZombieBuddyModsService>();
+
+        // Steps run in this order and a later one may read an earlier one's outcome.
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<IZombieBuddyLaunchStep, ZabricLaunchStep>());
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<IZombieBuddyLaunchStep, ZBSkipOnlineChecksLaunchStep>());
         services.TryAddSingleton<IModCollectionService, ModCollectionService>();
         services.TryAddSingleton(_ => new SwitchableProxy(HttpClient.DefaultProxy));
         services.TryAddSingleton(provider => LauncherHttpClient.Create(currentVersion, provider.GetRequiredService<SwitchableProxy>()));
