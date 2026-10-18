@@ -343,3 +343,25 @@ Merged origin/main (launcher auto-update and proxy settings, #11) into zb-skip-o
 ### Status
 
 [OK] **Completed**
+
+
+## Session 14: Group Desktop Services into feature folders
+<!-- trellis-session: v=2 fp=f567d743d3dc6e97 -->
+
+**Date**: 2026-10-18
+**Task**: Group Desktop Services into feature folders
+**Branch**: `claude/nifty-chaplygin-fa8c72`
+
+### Summary
+
+Pure move: PzLauncher.Desktop/Services (41 flat files) into Shell, Preferences, Launch, Mods, ZombieBuddy, Update, Net with namespaces following folders; tests mirrored; desktop/common spec paths updated and Services/<Group> documented. Release build 0 warnings, tests 1197 + 1326 passed (built in a worktree outside the main repo: the nested .claude/worktrees checkout loads the parent repo's .globalconfig as well, which unsets RS0030 scoping and fails the build).
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `98cb239` | Group Desktop Services into feature folders |
+
+### Status
+
+[OK] **Completed**
