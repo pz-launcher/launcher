@@ -447,7 +447,7 @@
     <value>Open PzLauncher from Steam?</value>
   </data>
   <data name="Steam_ReminderMessage" xml:space="preserve">
-    <value>Steam's Play button starts Project Zomboid without PzLauncher, so your Java, memory, collection and ZombieBuddy settings are skipped. Let Steam's Play button open PzLauncher instead? You can change this later in Settings → Steam.</value>
+    <value>When this is on, clicking Play in Steam opens PzLauncher first, and you start the game from here. You can turn it off later in Settings → Steam.</value>
   </data>
   <data name="Steam_ReminderEnable" xml:space="preserve">
     <value>Turn on now</value>

@@ -444,10 +444,10 @@
     <value>关闭 Steam 并应用</value>
   </data>
   <data name="Steam_ReminderTitle" xml:space="preserve">
-    <value>从 Steam 打开 PzLauncher？</value>
+    <value>让 Steam 先打开 PzLauncher？</value>
   </data>
   <data name="Steam_ReminderMessage" xml:space="preserve">
-    <value>在 Steam 中点击“开始游戏”会绕过 PzLauncher 直接启动 Project Zomboid，你的 Java、内存、合集和 ZombieBuddy 设置都不会生效。要让 Steam 的“开始游戏”改为打开 PzLauncher 吗？之后可以在“设置 → Steam”中更改。</value>
+    <value>开启后，在 Steam 里点“开始游戏”会先打开 PzLauncher，再从这里进入游戏。之后可以在“设置 → Steam”里关闭。</value>
   </data>
   <data name="Steam_ReminderEnable" xml:space="preserve">
     <value>立即开启</value>

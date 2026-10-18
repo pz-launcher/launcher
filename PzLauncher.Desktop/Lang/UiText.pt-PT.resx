@@ -447,7 +447,7 @@
     <value>Abrir o PzLauncher pelo Steam?</value>
   </data>
   <data name="Steam_ReminderMessage" xml:space="preserve">
-    <value>O botão Jogar do Steam inicia o Project Zomboid sem o PzLauncher, pelo que as suas definições de Java, memória, coleção e ZombieBuddy são ignoradas. Fazer com que o botão Jogar do Steam abra o PzLauncher? Pode alterar isto mais tarde em Definições → Steam.</value>
+    <value>Com isto ativado, clicar em Jogar no Steam abre primeiro o PzLauncher e inicia o jogo a partir daqui. Pode desativar isto mais tarde em Definições → Steam.</value>
   </data>
   <data name="Steam_ReminderEnable" xml:space="preserve">
     <value>Ativar agora</value>

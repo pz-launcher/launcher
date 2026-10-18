@@ -447,7 +447,7 @@
     <value>Открывать PzLauncher из Steam?</value>
   </data>
   <data name="Steam_ReminderMessage" xml:space="preserve">
-    <value>Кнопка «Играть» в Steam запускает Project Zomboid без PzLauncher, поэтому ваши настройки Java, памяти, сборки и ZombieBuddy не применяются. Открывать вместо этого PzLauncher? Это можно изменить позже в разделе «Настройки → Steam».</value>
+    <value>Если включить, кнопка «Играть» в Steam сначала откроет PzLauncher, а игру вы запустите отсюда. Отключить это можно позже в разделе «Настройки → Steam».</value>
   </data>
   <data name="Steam_ReminderEnable" xml:space="preserve">
     <value>Включить сейчас</value>
