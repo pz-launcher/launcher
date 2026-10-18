@@ -7,7 +7,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using PzLauncher.Core.Common;
 using PzLauncher.Core.Java;
 using PzLauncher.Core.Platform;
 using PzLauncher.Desktop.Lang;
@@ -30,9 +29,8 @@ public partial class JavaRuntimesViewModel : ViewModelBase
     private readonly Dictionary<string, JavaRuntime?> _manualRuntimes;
     private IReadOnlyList<JavaRuntime> _scanned = [];
 
-    // Sources of the shown texts, kept so a language switch can re-render them.
-    private readonly List<Error> _warningSources = [];
-    private Func<string>? _errorSource;
+    private readonly LocalizedErrorList _warnings = new();
+    private readonly LocalizedText _error;
 
     private Task? _firstScan;
 
@@ -50,6 +48,7 @@ public partial class JavaRuntimesViewModel : ViewModelBase
         _pathComparer = StringComparer.FromComparison(platform.PathComparison);
         _manualHomes = [.. savedPreferences.ManualJavaHomes.Distinct(_pathComparer)];
         _manualRuntimes = new Dictionary<string, JavaRuntime?>(_pathComparer);
+        _error = new LocalizedText(text => ErrorText = text);
 
         // Never unsubscribed: this view model is an app-lifetime singleton.
         localization.LanguageChanged += (_, _) => RenderTexts();
@@ -57,7 +56,7 @@ public partial class JavaRuntimesViewModel : ViewModelBase
 
     public ObservableCollection<JavaRuntimeRow> Runtimes { get; } = [];
 
-    public ObservableCollection<string> Warnings { get; } = [];
+    public ObservableCollection<string> Warnings => _warnings.Items;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsEmpty))]
@@ -82,16 +81,14 @@ public partial class JavaRuntimesViewModel : ViewModelBase
     private async Task ScanAsync(CancellationToken ct)
     {
         IsScanning = true;
-        ShowError(null);
+        _error.Clear();
         try
         {
             var result = await _discovery.ScanAsync(ct);
-            _warningSources.Clear();
-            Warnings.Clear();
+            _warnings.Clear();
             if (!result.IsSuccess)
             {
-                var error = result.Error;
-                ShowError(() => ErrorMessages.ToUserText(error));
+                _error.Show(result.Error);
                 return;
             }
 
@@ -104,8 +101,7 @@ public partial class JavaRuntimesViewModel : ViewModelBase
             _scanned = result.Value.Runtimes;
             foreach (var warning in result.Value.Warnings)
             {
-                _warningSources.Add(warning);
-                Warnings.Add(ErrorMessages.ToUserText(warning));
+                _warnings.Add(warning);
             }
 
             RebuildRows();
@@ -136,18 +132,17 @@ public partial class JavaRuntimesViewModel : ViewModelBase
                 case FolderPickResult.Cancelled:
                     return;
                 case FolderPickResult.NotLocal notLocal:
-                    ShowError(() => ErrorMessages.FolderNotLocal(notLocal.Location));
+                    _error.Show(() => ErrorMessages.FolderNotLocal(notLocal.Location));
                     return;
                 case var other:
                     throw new UnreachableException($"Unhandled {nameof(FolderPickResult)}: {other}");
             }
 
-            ShowError(null);
+            _error.Clear();
             var result = await _discovery.InspectAsync(path, ct);
             if (!result.IsSuccess)
             {
-                var error = result.Error;
-                ShowError(() => ErrorMessages.ToUserText(error));
+                _error.Show(result.Error);
                 return;
             }
 
@@ -226,18 +221,9 @@ public partial class JavaRuntimesViewModel : ViewModelBase
         return new JavaRuntimeRow(home, runtime is null ? null : runtime with { Source = JavaRuntimeSource.Manual }, isManual: true, Remove);
     }
 
-    private void ShowError(Func<string>? source)
-    {
-        _errorSource = source;
-        ErrorText = source?.Invoke();
-    }
-
     private void RenderTexts()
     {
-        ErrorText = _errorSource?.Invoke();
-        for (var i = 0; i < _warningSources.Count; i++)
-        {
-            Warnings[i] = ErrorMessages.ToUserText(_warningSources[i]);
-        }
+        _error.Render();
+        _warnings.Render();
     }
 }

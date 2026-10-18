@@ -5,12 +5,14 @@
              xmlns:vm="using:PzLauncher.Desktop.ViewModels.Home"
              xmlns:design="using:PzLauncher.Desktop.ViewModels.Design"
              xmlns:installs="using:PzLauncher.Core.Installs"
+             xmlns:controls="using:PzLauncher.Desktop.Views.Controls"
              xmlns:loc="using:PzLauncher.Desktop.Localization"
              xmlns:lang="using:PzLauncher.Desktop.Lang"
              xmlns:ic="using:FluentIcons.Avalonia"
              mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="560"
              x:Class="PzLauncher.Desktop.Views.Home.HomeView"
-             x:DataType="vm:HomeViewModel">
+             x:DataType="vm:HomeViewModel"
+             controls:PageActivation.Command="{Binding ActivateCommand}">
 
     <Design.DataContext>
         <x:Static Member="design:DesignData.Home" />
@@ -79,7 +81,7 @@
                                     <TextBlock Text="{x:Static lang:UiText.Home_CurrentInstall}" FontSize="12"
                                                Foreground="{DynamicResource Shell.TextMuted}" HorizontalAlignment="Center" />
                                     <TextBlock Text="{Binding Kind, Converter={x:Static loc:DisplayNames.InstallKind}}"
-                                               FontSize="22" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                                               Classes="pageTitle" HorizontalAlignment="Center" />
                                     <ContentControl Content="{Binding Steam}" HorizontalAlignment="Center"
                                                     IsVisible="{Binding Steam, Converter={x:Static ObjectConverters.IsNotNull}}">
                                         <ContentControl.ContentTemplate>

@@ -25,19 +25,19 @@ internal static class UpdateErrors
     public static Error InstallFolderNotWritable(string path, string reason) =>
         new(ErrorCode.UpdateInstallFolderNotWritable, $"Launcher folder is not writable: {path} ({reason})", ErrorKind.Conflict)
         {
-            Details = new Dictionary<string, string> { ["path"] = path, ["reason"] = reason },
+            Details = ErrorDetails.Path(path, reason),
         };
 
     public static Error InstallFailed(string path, string reason) =>
         new(ErrorCode.UpdateInstallFailed, $"Update could not be installed in {path}; previous files restored ({reason})", ErrorKind.External)
         {
-            Details = new Dictionary<string, string> { ["path"] = path, ["reason"] = reason },
+            Details = ErrorDetails.Path(path, reason),
         };
 
     public static Error RestartFailed(string path, string reason) =>
         new(ErrorCode.UpdateRestartFailed, $"Updated launcher {path} could not be started ({reason})", ErrorKind.External)
         {
-            Details = new Dictionary<string, string> { ["path"] = path, ["reason"] = reason },
+            Details = ErrorDetails.Path(path, reason),
         };
 
     public static Error DevelopmentBuild(SemVersion current) =>

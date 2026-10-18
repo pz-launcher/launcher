@@ -12,13 +12,13 @@ internal static class SteamErrors
     public static Error LibraryUnreadable(string path, string reason) =>
         new(ErrorCode.SteamLibraryUnreadable, $"Steam library file could not be read: {path} ({reason})", ErrorKind.External)
         {
-            Details = new Dictionary<string, string> { ["path"] = path, ["reason"] = reason },
+            Details = ErrorDetails.Path(path, reason),
         };
 
     public static Error ManifestUnreadable(string path, string reason) =>
         new(ErrorCode.SteamManifestUnreadable, $"Steam app manifest could not be read: {path} ({reason})", ErrorKind.External)
         {
-            Details = new Dictionary<string, string> { ["path"] = path, ["reason"] = reason },
+            Details = ErrorDetails.Path(path, reason),
         };
 
     public static Error VdfMalformed(string reason) =>
@@ -33,7 +33,7 @@ internal static class SteamErrors
     public static Error NoCurrentAccount(string path, string reason) =>
         new(ErrorCode.SteamNoCurrentAccount, $"No current Steam account in {path} ({reason})", ErrorKind.NotFound)
         {
-            Details = new Dictionary<string, string> { ["path"] = path, ["reason"] = reason },
+            Details = ErrorDetails.Path(path, reason),
         };
 
     public static Error AppNotInLocalConfig(string path, int appId) =>
@@ -45,13 +45,13 @@ internal static class SteamErrors
     public static Error LocalConfigMalformed(string path, string reason) =>
         new(ErrorCode.SteamLocalConfigMalformed, $"Steam local config can't be edited safely: {path} ({reason})", ErrorKind.External)
         {
-            Details = new Dictionary<string, string> { ["path"] = path, ["reason"] = reason },
+            Details = ErrorDetails.Path(path, reason),
         };
 
     public static Error LocalConfigUnwritable(string path, string reason) =>
         new(ErrorCode.SteamLocalConfigUnwritable, $"Steam local config could not be read or written: {path} ({reason})", ErrorKind.External)
         {
-            Details = new Dictionary<string, string> { ["path"] = path, ["reason"] = reason },
+            Details = ErrorDetails.Path(path, reason),
         };
 
     public static Error ClientRunning() =>
@@ -72,6 +72,6 @@ internal static class SteamErrors
     public static Error StartFailed(string path, string reason) =>
         new(ErrorCode.SteamStartFailed, $"Steam could not be run: {path} ({reason})", ErrorKind.External)
         {
-            Details = new Dictionary<string, string> { ["path"] = path, ["reason"] = reason },
+            Details = ErrorDetails.Path(path, reason),
         };
 }

@@ -27,6 +27,13 @@ internal static class AtomicFile
         }
     }
 
+    /// <summary>Keeps <paramref name="original"/>, the file's current bytes, as the rolling backup before writing <paramref name="content"/>.</summary>
+    public static async Task ReplaceWithBackupAsync(string path, byte[] original, byte[] content, CancellationToken ct)
+    {
+        await WriteAsync(path + BackupSuffix, original, ct).ConfigureAwait(false);
+        await WriteAsync(path, content, ct).ConfigureAwait(false);
+    }
+
     private static void TryDelete(string path)
     {
         try

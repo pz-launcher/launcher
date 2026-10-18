@@ -24,7 +24,7 @@ Reference: `PzLauncher.Desktop/Lang/` → `UiText.resx` (English) and one `UiTex
 | XAML format | `StringFormat={x:Static lang:UiText.Key}` | same |
 | Enum shown to users | `DisplayNames.Of` / its `FuncValueConverter`, exhaustive switch | `PzLauncher.Desktop/Localization/DisplayNames.cs` |
 | `Error` | `ErrorMessages.ToUserText` | `PzLauncher.Desktop/Localization/ErrorMessages.cs` |
-| ViewModel text | Read `UiText` when needed; keep the source (`Error`, a `Func<string>`) of shown text and re-render on `ILocalizationService.LanguageChanged` | `PzLauncher.Desktop/ViewModels/Installs/InstallsViewModel.cs` |
+| ViewModel text | Read `UiText` when needed; hold shown text in a `LocalizedText` (one message) or `LocalizedErrorList` (warnings), which keep its source, and call their `Render()` on `ILocalizationService.LanguageChanged` | `PzLauncher.Desktop/Localization/LocalizedText.cs`, `PzLauncher.Desktop/ViewModels/Installs/InstallsViewModel.cs` |
 
 `{x:Static}` is read once per view instance: a language switch replaces the
 main window's content (`App.RebuildMainView` → new `MainView`) around the same

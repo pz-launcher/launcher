@@ -6,7 +6,8 @@
 PzLauncher.Desktop/
 ├── App.axaml(.cs)       # composition root, VM→View DataTemplates
 ├── Views/<Feature>/     # one UserControl per page
-├── Views/Controls/      # shared controls and converters (NavItem, EnumMatchConverter)
+├── PreferenceNames.cs   # enum ↔ preference-name parse, shared by Services/Preferences and Themes
+├── Views/Controls/      # shared controls, converters and attached properties (NavItem, EnumMatchConverter, PageActivation)
 ├── ViewModels/<Feature>/
 ├── ViewModels/Design/   # previewer-only sample data
 ├── Services/<Group>/    # UI-only services (interface + Avalonia implementation)
@@ -27,6 +28,7 @@ Reference: `PzLauncher.Desktop/ViewModels/Installs/InstallsViewModel.cs`.
 - CommunityToolkit source generators; dependencies via constructor (DI).
 - Page state is explicit (busy, loaded, empty, error). Don't infer it from item counts.
 - Bind to Core DTOs directly unless a row needs its own commands or state.
+- A page section with its own state, commands and loads is a child ViewModel the page creates and exposes as a property; the page forwards clear, load and re-render to it. Reference: `ModsViewModel`, `LaunchSettingsViewModel.ZombieBuddy`.
 - State several pages observe (e.g. whether a game from this session runs) is an app-lifetime `ObservableObject` service, not a property one page owns. Reference: `PzLauncher.Desktop/Services/Launch/GameRunState.cs`.
 - Core `IProgress<T>` reports are consumed in report order on the UI thread: report inline when already on the captured context, post otherwise. Not `Progress<T>`, which uses the thread pool without a context (tests) and can reorder or report after the result. Reference: `PzLauncher.Desktop/Services/Shell/ContextProgress.cs`.
 
@@ -35,7 +37,7 @@ Reference: `PzLauncher.Desktop/ViewModels/Installs/InstallsViewModel.cs`.
 Reference: `PzLauncher.Desktop/Views/Installs/`.
 
 - Every `.axaml` sets a `Design.DataContext`.
-- Code-behind: view concerns only. Page activation calls the ViewModel's `ActivateCommand` from `OnLoaded`; the run-once rule lives in the ViewModel.
+- Code-behind: view concerns only. Page activation: the view root sets `controls:PageActivation.Command="{Binding ActivateCommand}"` (`PzLauncher.Desktop/Views/Controls/PageActivation.cs`, runs it on `Loaded`), never an `OnLoaded` override; the run-once rule lives in the ViewModel.
 - VM→View mapping: explicit `DataTemplate`s in `PzLauncher.Desktop/App.axaml`, never a reflection `ViewLocator`.
 - Previewer data: `PzLauncher.Desktop/ViewModels/Design/DesignData.cs`. Fictional, portable values only, never data from a real machine.
 - Range controls (`Slider`, ...) bind `Minimum`/`Maximum` before `Value`, with a range that includes the loaded value, or the control rewrites the saved value. Reference: `PzLauncher.Desktop/Views/LaunchSettings/LaunchSettingsView.axaml`.

@@ -13,19 +13,13 @@
         <x:Static Member="design:DesignData.SteamSettings" />
     </Design.DataContext>
 
-    <UserControl.Styles>
-        <Style Selector="TextBlock.error">
-            <Setter Property="Foreground" Value="{DynamicResource Shell.ErrorForeground}" />
-        </Style>
-    </UserControl.Styles>
-
     <StackPanel Margin="24,16" Spacing="12">
-        <TextBlock Text="{x:Static lang:UiText.Settings_Steam}" FontSize="22" FontWeight="SemiBold" />
+        <TextBlock Text="{x:Static lang:UiText.Settings_Steam}" Classes="pageTitle" />
         <TextBlock Text="{Binding AccountText}" IsVisible="{Binding AccountText, Converter={x:Static ObjectConverters.IsNotNull}}" />
 
         <ToggleSwitch Content="{x:Static lang:UiText.Steam_Hook}" OnContent="{x:Null}" OffContent="{x:Null}"
                       IsChecked="{Binding IsHookOn}" IsEnabled="{Binding CanToggle}" />
-        <TextBlock Text="{x:Static lang:UiText.Steam_HookHint}" Foreground="{DynamicResource Shell.TextMuted}" TextWrapping="Wrap" />
+        <TextBlock Text="{x:Static lang:UiText.Steam_HookHint}" Classes="hint" />
         <TextBlock Text="{Binding OtherLauncherText}" TextWrapping="Wrap"
                    IsVisible="{Binding OtherLauncherText, Converter={x:Static ObjectConverters.IsNotNull}}" />
 
@@ -33,7 +27,7 @@
         <TextBlock Text="{Binding StatusText}" TextWrapping="Wrap" Classes.error="{Binding IsStatusError}"
                    IsVisible="{Binding StatusText, Converter={x:Static ObjectConverters.IsNotNull}}" />
 
-        <TextBlock Text="{x:Static lang:UiText.Steam_LaunchOptionsHint}" Foreground="{DynamicResource Shell.TextMuted}" TextWrapping="Wrap" />
+        <TextBlock Text="{x:Static lang:UiText.Steam_LaunchOptionsHint}" Classes="hint" />
         <CheckBox Content="{x:Static lang:UiText.Steam_RemindAtStartup}" IsChecked="{Binding RemindAtStartup}" />
     </StackPanel>
 </UserControl>

@@ -1,0 +1,8 @@
+{"file": ".trellis/spec/common/architecture.md", "reason": "Project boundaries: Core vs Desktop"}
+{"file": ".trellis/spec/common/coding-rules.md", "reason": "Language-level rules, comments, AOT, naming"}
+{"file": ".trellis/spec/core/directory-structure.md", "reason": "Where Common/ and Launch/ helpers go"}
+{"file": ".trellis/spec/core/error-handling.md", "reason": "Result/Error/ErrorCode contract for R3 and R5"}
+{"file": ".trellis/spec/desktop/directory-structure.md", "reason": "VM, view, Services/<Group> and activation conventions"}
+{"file": ".trellis/spec/desktop/localization.md", "reason": "resx key rules for R3 and re-render behaviour for R6"}
+{"file": ".trellis/spec/desktop/shell-and-theming.md", "reason": "ShellStyles and Shell.* colours for R7"}
+{"file": ".trellis/spec/desktop/preferences.md", "reason": "preferences.json contract for R8 and R11"}

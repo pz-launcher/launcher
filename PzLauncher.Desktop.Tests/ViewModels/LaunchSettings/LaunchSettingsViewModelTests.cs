@@ -624,7 +624,7 @@ public class LaunchSettingsViewModelTests : UiTextCultureTest
 
         Assert.True(_vm.HasSettings);
         Assert.Equal([SteamGame.RootPath], _zombieBuddy.StatusRequests);
-        Assert.False(_vm.ShowZombieBuddy);
+        Assert.False(_vm.ZombieBuddy.IsShown);
     }
 
     [Fact]
@@ -635,8 +635,8 @@ public class LaunchSettingsViewModelTests : UiTextCultureTest
         await ActivateAsync();
 
         Assert.True(_vm.HasSettings);
-        Assert.False(_vm.ShowZombieBuddy);
-        Assert.Null(_vm.ZombieBuddyErrorText);
+        Assert.False(_vm.ZombieBuddy.IsShown);
+        Assert.Null(_vm.ZombieBuddy.ErrorText);
     }
 
     [Fact]
@@ -645,7 +645,7 @@ public class LaunchSettingsViewModelTests : UiTextCultureTest
         await ActivateAsync(SteamServer);
 
         Assert.Empty(_zombieBuddy.StatusRequests);
-        Assert.False(_vm.ShowZombieBuddy);
+        Assert.False(_vm.ZombieBuddy.IsShown);
     }
 
     public static TheoryData<ZombieBuddyStatus, ZombieBuddyState, bool, bool> ZombieBuddyStates => new()
@@ -663,15 +663,15 @@ public class LaunchSettingsViewModelTests : UiTextCultureTest
 
         await ActivateAsync();
 
-        Assert.True(_vm.ShowZombieBuddy);
-        Assert.Equal(state, _vm.ZombieBuddyState);
-        Assert.Equal(offersInitialize, _vm.IsZombieBuddySubscribed);
-        Assert.Equal(offersRemove, _vm.CanOfferZombieBuddyRemove);
-        Assert.Equal(state == ZombieBuddyState.Initialized, _vm.IsZombieBuddyInitialized);
-        Assert.Equal(offersInitialize ? StableItem : null, _vm.ZombieBuddySource);
-        Assert.False(_vm.HasZombieBuddyChannelChoice);
-        Assert.True(_vm.InitializeZombieBuddyCommand.CanExecute(null));
-        Assert.True(_vm.RemoveZombieBuddyCommand.CanExecute(null));
+        Assert.True(_vm.ZombieBuddy.IsShown);
+        Assert.Equal(state, _vm.ZombieBuddy.State);
+        Assert.Equal(offersInitialize, _vm.ZombieBuddy.IsSubscribed);
+        Assert.Equal(offersRemove, _vm.ZombieBuddy.CanOfferRemove);
+        Assert.Equal(state == ZombieBuddyState.Initialized, _vm.ZombieBuddy.IsInitialized);
+        Assert.Equal(offersInitialize ? StableItem : null, _vm.ZombieBuddy.Source);
+        Assert.False(_vm.ZombieBuddy.HasChannelChoice);
+        Assert.True(_vm.ZombieBuddy.InitializeCommand.CanExecute(null));
+        Assert.True(_vm.ZombieBuddy.RemoveCommand.CanExecute(null));
     }
 
     [Fact]
@@ -681,14 +681,14 @@ public class LaunchSettingsViewModelTests : UiTextCultureTest
 
         await ActivateAsync();
 
-        Assert.True(_vm.HasZombieBuddyChannelChoice);
-        Assert.Equal(ZombieBuddyChannel.Stable, _vm.SelectedZombieBuddyChannel);
-        Assert.Equal(StableItem, _vm.ZombieBuddySource);
+        Assert.True(_vm.ZombieBuddy.HasChannelChoice);
+        Assert.Equal(ZombieBuddyChannel.Stable, _vm.ZombieBuddy.SelectedChannel);
+        Assert.Equal(StableItem, _vm.ZombieBuddy.Source);
         Assert.Empty(_channels.Saved);
 
-        _vm.SelectedZombieBuddyChannel = ZombieBuddyChannel.Beta;
+        _vm.ZombieBuddy.SelectedChannel = ZombieBuddyChannel.Beta;
 
-        Assert.Equal(BetaItem, _vm.ZombieBuddySource);
+        Assert.Equal(BetaItem, _vm.ZombieBuddy.Source);
         Assert.Equal([(SteamGame.RootPath, ZombieBuddyChannel.Beta)], _channels.Saved);
     }
 
@@ -703,8 +703,8 @@ public class LaunchSettingsViewModelTests : UiTextCultureTest
 
         await ActivateAsync();
 
-        Assert.Equal(shown, _vm.SelectedZombieBuddyChannel);
-        Assert.Equal(shown, _vm.ZombieBuddySource?.Channel);
+        Assert.Equal(shown, _vm.ZombieBuddy.SelectedChannel);
+        Assert.Equal(shown, _vm.ZombieBuddy.Source?.Channel);
         Assert.Empty(_channels.Saved);
     }
 
@@ -715,8 +715,8 @@ public class LaunchSettingsViewModelTests : UiTextCultureTest
 
         await ActivateAsync();
 
-        Assert.False(_vm.HasZombieBuddyChannelChoice);
-        Assert.Equal(BetaItem, _vm.ZombieBuddySource);
+        Assert.False(_vm.ZombieBuddy.HasChannelChoice);
+        Assert.Equal(BetaItem, _vm.ZombieBuddy.Source);
     }
 
     [Fact]
@@ -732,12 +732,12 @@ public class LaunchSettingsViewModelTests : UiTextCultureTest
             return false;
         };
 
-        await _vm.InitializeZombieBuddyCommand.ExecuteAsync(null);
+        await _vm.ZombieBuddy.InitializeCommand.ExecuteAsync(null);
 
         var setup = Assert.Single(_dialogs.Setups);
         Assert.Equal((ZombieBuddySetupMode.Initialize, false), (setup.Mode, setup.OffersLaunch));
         Assert.Equal([(SteamGame.RootPath, ZombieBuddyChannel.Beta)], _zombieBuddy.Initializations);
-        Assert.Equal(ZombieBuddyState.Initialized, _vm.ZombieBuddyState);
+        Assert.Equal(ZombieBuddyState.Initialized, _vm.ZombieBuddy.State);
     }
 
     [Fact]
@@ -752,12 +752,12 @@ public class LaunchSettingsViewModelTests : UiTextCultureTest
             return false;
         };
 
-        await _vm.RemoveZombieBuddyCommand.ExecuteAsync(null);
+        await _vm.ZombieBuddy.RemoveCommand.ExecuteAsync(null);
 
         var setup = Assert.Single(_dialogs.Setups);
         Assert.Equal((ZombieBuddySetupMode.Remove, false), (setup.Mode, setup.OffersLaunch));
         Assert.Equal([SteamGame.RootPath], _zombieBuddy.Removals);
-        Assert.False(_vm.ShowZombieBuddy);
+        Assert.False(_vm.ZombieBuddy.IsShown);
     }
 
     [Fact]
@@ -766,20 +766,20 @@ public class LaunchSettingsViewModelTests : UiTextCultureTest
         _zombieBuddy.Status = _ => Initialized();
         await ActivateAsync();
         var raised = 0;
-        _vm.InitializeZombieBuddyCommand.CanExecuteChanged += (_, _) => raised++;
+        _vm.ZombieBuddy.InitializeCommand.CanExecuteChanged += (_, _) => raised++;
 
         _runState.IsGameRunning = true;
 
-        Assert.True(_vm.IsGameRunning);
-        Assert.False(_vm.CanEditZombieBuddy);
-        Assert.False(_vm.InitializeZombieBuddyCommand.CanExecute(null));
-        Assert.False(_vm.RemoveZombieBuddyCommand.CanExecute(null));
+        Assert.True(_vm.ZombieBuddy.IsGameRunning);
+        Assert.False(_vm.ZombieBuddy.CanEdit);
+        Assert.False(_vm.ZombieBuddy.InitializeCommand.CanExecute(null));
+        Assert.False(_vm.ZombieBuddy.RemoveCommand.CanExecute(null));
         Assert.True(raised > 0);
 
         _runState.IsGameRunning = false;
 
-        Assert.True(_vm.CanEditZombieBuddy);
-        Assert.True(_vm.InitializeZombieBuddyCommand.CanExecute(null));
+        Assert.True(_vm.ZombieBuddy.CanEdit);
+        Assert.True(_vm.ZombieBuddy.InitializeCommand.CanExecute(null));
     }
 
     [Fact]
@@ -816,7 +816,7 @@ public class LaunchSettingsViewModelTests : UiTextCultureTest
 
         await ActivateAsync();
 
-        Assert.Equal(allowAll, _vm.IsZombieBuddyAllowAll);
+        Assert.Equal(allowAll, _vm.ZombieBuddy.IsAllowAll);
         Assert.Empty(_zombieBuddy.AllowAllChanges);
     }
 
@@ -828,18 +828,18 @@ public class LaunchSettingsViewModelTests : UiTextCultureTest
         var write = new TaskCompletionSource<Result>();
         _zombieBuddy.SetAllowAll = _ => write.Task;
 
-        _vm.IsZombieBuddyAllowAll = true;
+        _vm.ZombieBuddy.IsAllowAll = true;
 
         Assert.Equal([(SteamGame.RootPath, true)], _zombieBuddy.AllowAllChanges);
-        Assert.False(_vm.CanEditZombieBuddy);
-        Assert.False(_vm.InitializeZombieBuddyCommand.CanExecute(null));
+        Assert.False(_vm.ZombieBuddy.CanEdit);
+        Assert.False(_vm.ZombieBuddy.InitializeCommand.CanExecute(null));
 
         write.SetResult(Result.Ok());
         await Task.Yield();
 
-        Assert.True(_vm.CanEditZombieBuddy);
-        Assert.True(_vm.IsZombieBuddyAllowAll);
-        Assert.Null(_vm.ZombieBuddyErrorText);
+        Assert.True(_vm.ZombieBuddy.CanEdit);
+        Assert.True(_vm.ZombieBuddy.IsAllowAll);
+        Assert.Null(_vm.ZombieBuddy.ErrorText);
     }
 
     [Fact]
@@ -847,14 +847,14 @@ public class LaunchSettingsViewModelTests : UiTextCultureTest
     {
         _zombieBuddy.Status = _ => Initialized(allowAll: true);
         await ActivateAsync();
-        var error = TestErrors.Create(ErrorCode.ZombieBuddyConfigWriteFailed, "ProjectZomboid64.json");
+        var error = TestErrors.Create(ErrorCode.LaunchConfigWriteFailed, "ProjectZomboid64.json");
         _zombieBuddy.SetAllowAll = _ => Task.FromResult<Result>(error);
 
-        _vm.IsZombieBuddyAllowAll = false;
+        _vm.ZombieBuddy.IsAllowAll = false;
 
-        Assert.True(_vm.IsZombieBuddyAllowAll);
-        Assert.Equal(ErrorMessages.ToUserText(error), _vm.ZombieBuddyErrorText);
-        Assert.True(_vm.CanEditZombieBuddy);
+        Assert.True(_vm.ZombieBuddy.IsAllowAll);
+        Assert.Equal(ErrorMessages.ToUserText(error), _vm.ZombieBuddy.ErrorText);
+        Assert.True(_vm.ZombieBuddy.CanEdit);
         Assert.Equal(2, _zombieBuddy.StatusRequests.Count);
     }
 
@@ -863,15 +863,35 @@ public class LaunchSettingsViewModelTests : UiTextCultureTest
     {
         _zombieBuddy.Status = root => root == SteamGame.RootPath ? Initialized() : NotSubscribed;
         await ActivateAsync();
-        Assert.True(_vm.ShowZombieBuddy);
+        Assert.True(_vm.ZombieBuddy.IsShown);
 
         _vm.Open(ManualGame);
 
-        Assert.False(_vm.ShowZombieBuddy);
+        Assert.False(_vm.ZombieBuddy.IsShown);
 
         await _vm.ActivateCommand.ExecuteAsync(null);
 
-        Assert.False(_vm.ShowZombieBuddy);
+        Assert.False(_vm.ZombieBuddy.IsShown);
         Assert.Equal([SteamGame.RootPath, ManualGame.RootPath], _zombieBuddy.StatusRequests);
+    }
+
+    [Fact]
+    public async Task ZombieBuddy_OpenAnotherInstallWhileThePreviousStillValidates_SectionStaysOnTheNewOne()
+    {
+        _zombieBuddy.Status = _ => Initialized();
+        var validation = new TaskCompletionSource<Result>();
+        _launcher.Validate = request => request.InstallRoot == ManualGame.RootPath ? validation.Task : Task.FromResult(Result.Ok());
+        await _installs.ActivateCommand.ExecuteAsync(null);
+        _vm.Open(ManualGame);
+        var load = _vm.ActivateCommand.ExecuteAsync(null);
+
+        _vm.Open(SteamGame);
+        await _vm.ActivateCommand.ExecuteAsync(null);
+        validation.SetResult(Result.Ok());
+        await load;
+        _vm.ZombieBuddy.IsAllowAll = true;
+
+        Assert.Equal([SteamGame.RootPath], _zombieBuddy.StatusRequests);
+        Assert.Equal([(SteamGame.RootPath, true)], _zombieBuddy.AllowAllChanges);
     }
 }

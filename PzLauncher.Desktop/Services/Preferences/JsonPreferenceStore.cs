@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
@@ -19,6 +20,8 @@ namespace PzLauncher.Desktop.Services.Preferences;
 public sealed partial class JsonPreferenceStore(string filePath, ILogger logger, ISecretProtector secrets) : IPreferenceStore
 {
     private static readonly PreferencesFile Empty = new(null, null, null, null, null, null, null, null, null, null, null);
+
+    private delegate bool EntryReader<T>(JsonElement element, [MaybeNullWhen(false)] out T value);
 
     // Saves are fire-and-forget; one at a time so the last choice is the one left on disk.
     private readonly SemaphoreSlim _saveGate = new(1, 1);
@@ -55,19 +58,19 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger,
             LogInvalidJavaRuntimes(logger, filePath);
         }
 
-        var installs = ToInstallOverrides(file.Installs);
+        var installs = ReadPerInstall<GameLaunchOverrides>(file.Installs, TryReadOverrides);
         if (installs.Count != (file.Installs?.Count ?? 0))
         {
             LogInvalidInstallOverrides(logger, filePath);
         }
 
-        var channels = ToZombieBuddyChannels(file.ZombieBuddyChannels);
+        var channels = ReadPerInstall<ZombieBuddyChannel>(file.ZombieBuddyChannels, TryReadChannel);
         if (channels.Count != (file.ZombieBuddyChannels?.Count ?? 0))
         {
             LogInvalidZombieBuddyChannels(logger, filePath);
         }
 
-        var collections = ToDefaultModCollections(file.DefaultModCollections);
+        var collections = ReadPerInstall<string>(file.DefaultModCollections, TryReadCollectionName);
         if (collections.Count != (file.DefaultModCollections?.Count ?? 0))
         {
             LogInvalidDefaultModCollections(logger, filePath);
@@ -135,50 +138,20 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger,
                 overrides.ExtraGameArgs,
                 overrides.GarbageCollector?.PreferenceName()),
             DesktopJsonContext.Default.InstallOverridesFile);
-        return SaveAsync(
-            file => file with
-            {
-                Installs = new Dictionary<string, JsonElement>(file.Installs ?? new Dictionary<string, JsonElement>(), StringComparer.Ordinal)
-                {
-                    [installRoot] = entry,
-                },
-            },
-            ct);
+        return SaveAsync(file => file with { Installs = WithPerInstall(file.Installs, installRoot, entry) }, ct);
     }
 
     public Task SaveZombieBuddyChannelAsync(string installRoot, ZombieBuddyChannel channel, CancellationToken ct = default)
     {
         var entry = JsonSerializer.SerializeToElement(channel.PreferenceName(), DesktopJsonContext.Default.String);
-        return SaveAsync(
-            file => file with
-            {
-                ZombieBuddyChannels = new Dictionary<string, JsonElement>(
-                    file.ZombieBuddyChannels ?? new Dictionary<string, JsonElement>(), StringComparer.Ordinal)
-                {
-                    [installRoot] = entry,
-                },
-            },
-            ct);
+        return SaveAsync(file => file with { ZombieBuddyChannels = WithPerInstall(file.ZombieBuddyChannels, installRoot, entry) }, ct);
     }
 
-    public Task SaveDefaultModCollectionAsync(string installRoot, string? name, CancellationToken ct = default) =>
-        SaveAsync(
-            file =>
-            {
-                var entries = new Dictionary<string, JsonElement>(
-                    file.DefaultModCollections ?? new Dictionary<string, JsonElement>(), StringComparer.Ordinal);
-                if (name is null)
-                {
-                    entries.Remove(installRoot);
-                }
-                else
-                {
-                    entries[installRoot] = JsonSerializer.SerializeToElement(name, DesktopJsonContext.Default.String);
-                }
-
-                return file with { DefaultModCollections = entries };
-            },
-            ct);
+    public Task SaveDefaultModCollectionAsync(string installRoot, string? name, CancellationToken ct = default)
+    {
+        JsonElement? entry = name is null ? null : JsonSerializer.SerializeToElement(name, DesktopJsonContext.Default.String);
+        return SaveAsync(file => file with { DefaultModCollections = WithPerInstall(file.DefaultModCollections, installRoot, entry) }, ct);
+    }
 
     public Task SaveUpdateSourceAsync(UpdateSource source, CancellationToken ct = default)
     {
@@ -280,48 +253,51 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger,
             .Where(IsAbsolutePath),
     ];
 
-    private static Dictionary<string, GameLaunchOverrides> ToInstallOverrides(IReadOnlyDictionary<string, JsonElement>? entries)
+    private static Dictionary<string, T> ReadPerInstall<T>(IReadOnlyDictionary<string, JsonElement>? entries, EntryReader<T> tryRead)
     {
-        var result = new Dictionary<string, GameLaunchOverrides>(StringComparer.Ordinal);
+        var result = new Dictionary<string, T>(StringComparer.Ordinal);
         foreach (var (root, element) in entries ?? new Dictionary<string, JsonElement>())
         {
-            if (IsAbsolutePath(root) && ToOverrides(element) is { } overrides)
+            if (IsAbsolutePath(root) && tryRead(element, out var value))
             {
-                result[root] = overrides;
+                result[root] = value;
             }
         }
 
         return result;
     }
 
-    private static Dictionary<string, ZombieBuddyChannel> ToZombieBuddyChannels(IReadOnlyDictionary<string, JsonElement>? entries)
+    // A null entry removes the install's value.
+    private static Dictionary<string, JsonElement> WithPerInstall(
+        IReadOnlyDictionary<string, JsonElement>? entries, string installRoot, JsonElement? entry)
     {
-        var result = new Dictionary<string, ZombieBuddyChannel>(StringComparer.Ordinal);
-        foreach (var (root, element) in entries ?? new Dictionary<string, JsonElement>())
+        var result = new Dictionary<string, JsonElement>(entries ?? new Dictionary<string, JsonElement>(), StringComparer.Ordinal);
+        if (entry is { } value)
         {
-            if (IsAbsolutePath(root)
-                && element.ValueKind == JsonValueKind.String
-                && ZombieBuddyChannelPreferences.FromPreferenceName(element.GetString()) is { } channel)
-            {
-                result[root] = channel;
-            }
+            result[installRoot] = value;
+        }
+        else
+        {
+            result.Remove(installRoot);
         }
 
         return result;
     }
 
-    private static Dictionary<string, string> ToDefaultModCollections(IReadOnlyDictionary<string, JsonElement>? entries)
-    {
-        var result = new Dictionary<string, string>(StringComparer.Ordinal);
-        foreach (var (root, element) in entries ?? new Dictionary<string, JsonElement>())
-        {
-            if (IsAbsolutePath(root) && element.ValueKind == JsonValueKind.String && element.GetString() is { Length: > 0 } name)
-            {
-                result[root] = name;
-            }
-        }
+    private static bool TryReadOverrides(JsonElement element, [MaybeNullWhen(false)] out GameLaunchOverrides overrides) =>
+        (overrides = ToOverrides(element)) is not null;
 
-        return result;
+    private static bool TryReadChannel(JsonElement element, out ZombieBuddyChannel channel)
+    {
+        var read = element.ValueKind == JsonValueKind.String ? ZombieBuddyChannelPreferences.FromPreferenceName(element.GetString()) : null;
+        channel = read.GetValueOrDefault();
+        return read is not null;
+    }
+
+    private static bool TryReadCollectionName(JsonElement element, [MaybeNullWhen(false)] out string name)
+    {
+        name = element.ValueKind == JsonValueKind.String && element.GetString() is { Length: > 0 } read ? read : null;
+        return name is not null;
     }
 
     private static GameLaunchOverrides? ToOverrides(JsonElement element)

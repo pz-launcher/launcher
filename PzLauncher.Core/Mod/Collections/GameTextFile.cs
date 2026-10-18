@@ -11,10 +11,6 @@ internal readonly record struct TextLine(string Content, string Terminator);
 /// </summary>
 internal sealed class GameTextFile
 {
-    private static readonly UTF8Encoding StrictUtf8 = new(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
-
-    private static readonly byte[] Bom = [0xEF, 0xBB, 0xBF];
-
     private readonly byte[]? _original;
     private readonly bool _hasBom;
 
@@ -53,21 +49,15 @@ internal sealed class GameTextFile
             return ModCollectionErrors.FileUnreadable(path, ex.Message);
         }
 
-        var hasBom = bytes.AsSpan().StartsWith(Bom);
-        string text;
-        try
+        var decoded = Utf8TextFile.Decode(bytes, reason => ModCollectionErrors.FileMalformed(path, reason));
+        if (!decoded.IsSuccess)
         {
-            text = hasBom ? StrictUtf8.GetString(bytes, Bom.Length, bytes.Length - Bom.Length) : StrictUtf8.GetString(bytes);
-        }
-        catch (DecoderFallbackException ex)
-        {
-            // Replacement characters would change the bytes of lines the edit doesn't touch.
-            return ModCollectionErrors.FileMalformed(path, ex.Message);
+            return decoded.Error;
         }
 
-        var lines = Split(text);
+        var lines = Split(decoded.Value.Text);
         var own = lines.Select(line => line.Terminator).FirstOrDefault(terminator => terminator.Length > 0);
-        return new GameTextFile(path, bytes, hasBom, lines, own ?? newline);
+        return new GameTextFile(path, bytes, decoded.Value.HasBom, lines, own ?? newline);
     }
 
     public void Add(string content) => Insert(Lines.Count, content);
@@ -102,7 +92,11 @@ internal sealed class GameTextFile
                 Directory.CreateDirectory(folder);
             }
 
-            if (_original is not null)
+            if (_original is null)
+            {
+                await AtomicFile.WriteAsync(FilePath, content, ct).ConfigureAwait(false);
+            }
+            else
             {
                 var originalCopy = FilePath + ModCollectionFiles.OriginalSuffix;
                 if (keepOriginal && !File.Exists(originalCopy))
@@ -110,10 +104,8 @@ internal sealed class GameTextFile
                     await AtomicFile.WriteAsync(originalCopy, _original, ct, overwrite: false).ConfigureAwait(false);
                 }
 
-                await AtomicFile.WriteAsync(FilePath + AtomicFile.BackupSuffix, _original, ct).ConfigureAwait(false);
+                await AtomicFile.ReplaceWithBackupAsync(FilePath, _original, content, ct).ConfigureAwait(false);
             }
-
-            await AtomicFile.WriteAsync(FilePath, content, ct).ConfigureAwait(false);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
@@ -131,8 +123,7 @@ internal sealed class GameTextFile
             text.Append(line.Content).Append(line.Terminator);
         }
 
-        var body = StrictUtf8.GetBytes(text.ToString());
-        return _hasBom ? [.. Bom, .. body] : body;
+        return Utf8TextFile.Encode(text.ToString(), _hasBom);
     }
 
     private static List<TextLine> Split(string text)

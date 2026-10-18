@@ -24,7 +24,7 @@ public partial class ModsViewModel : ViewModelBase
     private readonly GameRunState _runState;
     private readonly IModCollectionOrderWriter _orderWriter;
 
-    private Func<string>? _errorSource;
+    private readonly LocalizedText _error;
     private bool _activated;
 
     // A newer load supersedes one still in flight.
@@ -50,6 +50,7 @@ public partial class ModsViewModel : ViewModelBase
         _orderWriter = orderWriter;
         Mods = new InstalledModsViewModel(this);
         Collections = new ModCollectionsViewModel(this, defaults, applier, dialogs, clipboard);
+        _error = new LocalizedText(text => ErrorText = text);
 
         // Never unsubscribed: these are app-lifetime singletons.
         localization.LanguageChanged += (_, _) => RenderTexts();
@@ -114,7 +115,7 @@ public partial class ModsViewModel : ViewModelBase
         if (Install is not { } install)
         {
             State = null;
-            ShowError(null);
+            _error.Clear();
             IsLoading = false;
             return;
         }
@@ -130,13 +131,12 @@ public partial class ModsViewModel : ViewModelBase
 
             if (!result.IsSuccess)
             {
-                var error = result.Error;
                 State = null;
-                ShowError(() => ErrorMessages.ToUserText(error));
+                _error.Show(result.Error);
                 return;
             }
 
-            ShowError(null);
+            _error.Clear();
             State = result.Value;
         }
         finally
@@ -219,15 +219,9 @@ public partial class ModsViewModel : ViewModelBase
 
     private string ExtraGameArgs(PzInstall install) => _overrides.Get(install.RootPath).ExtraGameArgs;
 
-    private void ShowError(Func<string>? source)
-    {
-        _errorSource = source;
-        ErrorText = source?.Invoke();
-    }
-
     private void RenderTexts()
     {
-        ErrorText = _errorSource?.Invoke();
+        _error.Render();
         Collections.RenderTexts();
     }
 
@@ -239,7 +233,7 @@ public partial class ModsViewModel : ViewModelBase
         }
 
         State = null;
-        ShowError(null);
+        _error.Clear();
         OnPropertyChanged(nameof(Install));
         OnPropertyChanged(nameof(HasNoGameInstall));
         OnPropertyChanged(nameof(CanWrite));

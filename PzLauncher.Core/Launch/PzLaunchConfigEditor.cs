@@ -1,7 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using PzLauncher.Core.Common;
-using PzLauncher.Core.Mod.ZombieBuddy;
 
 namespace PzLauncher.Core.Launch;
 
@@ -36,21 +35,8 @@ internal sealed class PzLaunchConfigEditor
 
     public static async Task<Result<PzLaunchConfigEditor>> LoadAsync(string path, CancellationToken ct)
     {
-        string json;
-        try
-        {
-            json = await File.ReadAllTextAsync(path, ct).ConfigureAwait(false);
-        }
-        catch (Exception ex) when (ex is FileNotFoundException or DirectoryNotFoundException)
-        {
-            return LaunchErrors.ConfigMissing(path);
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-        {
-            return LaunchErrors.ConfigMalformed(path, ex.Message);
-        }
-
-        return Parse(json, path);
+        var json = await PzLaunchConfigFile.ReadAsync(path, ct).ConfigureAwait(false);
+        return json.IsSuccess ? Parse(json.Value, path) : json.Error;
     }
 
     public static Result<PzLaunchConfigEditor> Parse(string json, string path)
@@ -108,7 +94,7 @@ internal sealed class PzLaunchConfigEditor
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            return ZombieBuddyErrors.ConfigWriteFailed(FilePath, ex.Message);
+            return LaunchErrors.ConfigWriteFailed(FilePath, ex.Message);
         }
 
         VmArgs = vmArgs;

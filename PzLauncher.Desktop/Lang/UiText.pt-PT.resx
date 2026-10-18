@@ -211,6 +211,9 @@
   <data name="Error_LaunchConfigMalformed" xml:space="preserve">
     <value>Não foi possível ler a configuração de arranque {0}. Experimente verificar a integridade dos ficheiros do jogo no Steam.</value>
   </data>
+  <data name="Error_LaunchConfigWriteFailed" xml:space="preserve">
+    <value>Não foi possível guardar a configuração de arranque {0}. Verifique se o ficheiro não é só de leitura nem está aberto noutro programa e tente novamente.</value>
+  </data>
   <data name="Error_LaunchJavaMissing" xml:space="preserve">
     <value>O programa Java {0} não existe. Escolha outro Java para esta instalação nas Definições de arranque.</value>
   </data>
@@ -244,9 +247,6 @@
   </data>
   <data name="Error_ZombieBuddyDeleteFailed" xml:space="preserve">
     <value>Não foi possível eliminar {0}. Se o jogo estiver aberto, feche-o e tente novamente.</value>
-  </data>
-  <data name="Error_ZombieBuddyConfigWriteFailed" xml:space="preserve">
-    <value>Não foi possível guardar a configuração de arranque {0}. Verifique se o ficheiro não é só de leitura nem está aberto noutro programa e tente novamente.</value>
   </data>
   <data name="Error_ZombieBuddyNotInitialized" xml:space="preserve">
     <value>O ZombieBuddy não está inicializado nesta instalação. Execute primeiro Inicializar nas Definições de arranque.</value>

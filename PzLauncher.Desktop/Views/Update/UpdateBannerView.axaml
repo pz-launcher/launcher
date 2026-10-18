@@ -25,7 +25,7 @@
                 <TextBlock Text="{Binding Text}" FontWeight="SemiBold" TextWrapping="Wrap" />
                 <TextBlock Text="{Binding RestartBlockedText}" Foreground="{DynamicResource Shell.TextMuted}" TextWrapping="Wrap"
                            IsVisible="{Binding RestartBlockedText, Converter={x:Static ObjectConverters.IsNotNull}}" />
-                <TextBlock Text="{Binding ErrorText}" Foreground="{DynamicResource Shell.ErrorForeground}" TextWrapping="Wrap"
+                <TextBlock Text="{Binding ErrorText}" Classes="error" TextWrapping="Wrap"
                            IsVisible="{Binding ErrorText, Converter={x:Static ObjectConverters.IsNotNull}}" />
             </StackPanel>
 

@@ -1,5 +1,3 @@
-using System;
-
 namespace PzLauncher.Desktop.Themes;
 
 public enum AppTheme
@@ -17,16 +15,5 @@ public static class AppThemes
         AppTheme.Dark => "dark",
     };
 
-    public static AppTheme? FromPreferenceName(string? name)
-    {
-        foreach (var theme in Enum.GetValues<AppTheme>())
-        {
-            if (string.Equals(theme.PreferenceName(), name, StringComparison.OrdinalIgnoreCase))
-            {
-                return theme;
-            }
-        }
-
-        return null;
-    }
+    public static AppTheme? FromPreferenceName(string? name) => PreferenceNames.Parse<AppTheme>(name, PreferenceName);
 }

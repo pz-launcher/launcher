@@ -166,9 +166,10 @@ internal sealed partial class ZombieBuddyService(
                 return Result.Ok();
             }
 
-            // Copied first, so the entry never names a jar that isn't there.
+            // Copied first, so the entry never names a jar that isn't there. An unreadable copy counts as different:
+            // the copy then reports why it can't be replaced.
             var jar = Path.Combine(game, jarFile);
-            if (!await SameContentAsync(sourceJar, jar, ct).ConfigureAwait(false))
+            if (!await FileContent.TryEqualAsync(sourceJar, jar, ct).ConfigureAwait(false))
             {
                 var copied = Copy(sourceJar, jar);
                 if (!copied.IsSuccess)
@@ -333,24 +334,6 @@ internal sealed partial class ZombieBuddyService(
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
             return ZombieBuddyErrors.CopyFailed(destination, ex.Message);
-        }
-    }
-
-    // An unreadable copy counts as different: the copy then reports why it can't be replaced.
-    private static async Task<bool> SameContentAsync(string source, string destination, CancellationToken ct)
-    {
-        if (!File.Exists(destination))
-        {
-            return false;
-        }
-
-        try
-        {
-            return await FileContent.EqualAsync(source, destination, ct).ConfigureAwait(false);
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-        {
-            return false;
         }
     }
 

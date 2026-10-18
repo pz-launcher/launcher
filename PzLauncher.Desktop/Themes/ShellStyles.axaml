@@ -215,4 +215,24 @@
         <Setter Property="Foreground" Value="{DynamicResource Shell.SidebarGroupHeaderForeground}" />
         <Setter Property="Margin" Value="14,14,14,4" />
     </Style>
+
+    <!-- error and warning leave wrapping to each site: not every one wraps. -->
+    <Style Selector="TextBlock.pageTitle">
+        <Setter Property="FontSize" Value="22" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+    <Style Selector="TextBlock.sectionTitle">
+        <Setter Property="FontSize" Value="16" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+    <Style Selector="TextBlock.error">
+        <Setter Property="Foreground" Value="{DynamicResource Shell.ErrorForeground}" />
+    </Style>
+    <Style Selector="TextBlock.warning">
+        <Setter Property="Foreground" Value="{DynamicResource Shell.WarningForeground}" />
+    </Style>
+    <Style Selector="TextBlock.hint">
+        <Setter Property="Foreground" Value="{DynamicResource Shell.TextMuted}" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
 </Styles>

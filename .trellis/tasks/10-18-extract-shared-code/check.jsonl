@@ -1,0 +1,6 @@
+{"file": ".trellis/spec/common/coding-rules.md", "reason": "Review rules for changed code"}
+{"file": ".trellis/spec/common/test-strategy.md", "reason": "Test layout and the Fakes.cs split"}
+{"file": ".trellis/spec/common/formatting.md", "reason": "dotnet format scope"}
+{"file": ".trellis/spec/core/error-handling.md", "reason": "Verify the wire code and details-key contract"}
+{"file": ".trellis/spec/desktop/localization.md", "reason": "Verify resx key parity for the R3 key"}
+{"file": ".trellis/spec/desktop/preferences.md", "reason": "Verify preferences.json is unchanged"}
