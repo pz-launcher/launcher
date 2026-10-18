@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using PzLauncher.Desktop.Localization;
-using PzLauncher.Desktop.Services;
+using PzLauncher.Desktop.Services.Preferences;
 
 namespace PzLauncher.Desktop.ViewModels;
 

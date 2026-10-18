@@ -8,7 +8,7 @@ using PzLauncher.Core.Common;
 using PzLauncher.Core.Mod.ZombieBuddy;
 using PzLauncher.Desktop.Lang;
 using PzLauncher.Desktop.Localization;
-using PzLauncher.Desktop.Services;
+using PzLauncher.Desktop.Services.Shell;
 
 namespace PzLauncher.Desktop.ViewModels.ZombieBuddy;
 

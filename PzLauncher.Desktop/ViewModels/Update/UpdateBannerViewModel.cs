@@ -6,7 +6,9 @@ using CommunityToolkit.Mvvm.Input;
 using PzLauncher.Core.Update;
 using PzLauncher.Desktop.Lang;
 using PzLauncher.Desktop.Localization;
-using PzLauncher.Desktop.Services;
+using PzLauncher.Desktop.Services.Launch;
+using PzLauncher.Desktop.Services.Shell;
+using PzLauncher.Desktop.Services.Update;
 
 namespace PzLauncher.Desktop.ViewModels.Update;
 

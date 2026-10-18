@@ -7,7 +7,8 @@ using Avalonia.Controls;
 using Avalonia.Platform;
 using Avalonia.Threading;
 using Microsoft.Extensions.Logging;
-using PzLauncher.Desktop.Services;
+using PzLauncher.Desktop.Services.Preferences;
+using PzLauncher.Desktop.Services.Shell;
 
 namespace PzLauncher.Desktop.Views;
 

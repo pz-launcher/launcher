@@ -1,7 +1,7 @@
 using PzLauncher.Core.Common;
 using PzLauncher.Core.Installs;
 using PzLauncher.Desktop.Localization;
-using PzLauncher.Desktop.Services;
+using PzLauncher.Desktop.Services.Shell;
 using PzLauncher.Desktop.Tests.TestSupport;
 using PzLauncher.Desktop.ViewModels.Installs;
 using static PzLauncher.Desktop.Tests.TestSupport.TestInstalls;

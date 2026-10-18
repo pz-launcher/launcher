@@ -1,6 +1,6 @@
 using PzLauncher.Core.Common;
 using PzLauncher.Desktop.Lang;
-using PzLauncher.Desktop.Services;
+using PzLauncher.Desktop.Services.Shell;
 using PzLauncher.Desktop.Tests.TestSupport;
 using PzLauncher.Desktop.ViewModels.Mods;
 using static PzLauncher.Desktop.Tests.TestSupport.TestMods;

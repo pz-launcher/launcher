@@ -1,6 +1,6 @@
 # Preferences
 
-> Choices saved across restarts. Reference: `PzLauncher.Desktop/Services/IPreferenceStore.cs`, `JsonPreferenceStore.cs`.
+> Choices saved across restarts. Reference: `PzLauncher.Desktop/Services/Preferences/IPreferenceStore.cs`, `JsonPreferenceStore.cs`.
 
 ---
 
@@ -9,8 +9,8 @@
 - `<ApplicationData>/PzLauncher/preferences.json` is read and written only through `IPreferenceStore`.
 - A missing or unknown value loads as `null`; the caller picks the fallback (`App.axaml.cs`).
 - Callers fire and forget saves; a failed save never undoes the applied choice.
-- Exception: the window placement is saved when the main window closes, so the close waits for that save, for pending install-override, collection-order and proxy writes, and for a staged launcher update to install (bounded, never during OS shutdown). Reference: `PzLauncher.Desktop/Views/WindowPlacementPersistence.cs`, `PzLauncher.Desktop/Services/ModCollectionOrderWriter.cs`.
-- A value that changes per slider step or keystroke debounces its file write. Reference: `PzLauncher.Desktop/Services/InstallOverridesService.cs`.
+- Exception: the window placement is saved when the main window closes, so the close waits for that save, for pending install-override, collection-order and proxy writes, and for a staged launcher update to install (bounded, never during OS shutdown). Reference: `PzLauncher.Desktop/Views/WindowPlacementPersistence.cs`, `PzLauncher.Desktop/Services/Mods/ModCollectionOrderWriter.cs`.
+- A value that changes per slider step or keystroke debounces its file write. Reference: `PzLauncher.Desktop/Services/Launch/InstallOverridesService.cs`.
 - Restoring a saved placement goes through `WindowPlacementRules` (`PzLauncher.Desktop/Views/WindowPlacementRules.cs`): off-screen bounds open centered on the primary screen, the size is clamped to the minimum and the screen.
 
 ## File contract (persisted: never change an existing value)
@@ -32,4 +32,4 @@ A new preference gets a nullable field, its own save method and a stable string 
 
 ## Tests
 
-Reference: `PzLauncher.Desktop.Tests/Services/JsonPreferenceStoreTests.cs`. Each field: round-trip, missing, unknown value, saving it keeps the other fields, unwritable file.
+Reference: `PzLauncher.Desktop.Tests/Services/Preferences/JsonPreferenceStoreTests.cs`. Each field: round-trip, missing, unknown value, saving it keeps the other fields, unwritable file.

@@ -1,5 +1,5 @@
 using Avalonia;
-using PzLauncher.Desktop.Services;
+using PzLauncher.Desktop.Services.Shell;
 using PzLauncher.Desktop.Views;
 
 namespace PzLauncher.Desktop.Tests.Views;

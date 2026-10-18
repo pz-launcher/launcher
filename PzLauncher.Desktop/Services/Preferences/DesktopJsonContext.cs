@@ -1,0 +1,43 @@
+using System.Collections.Generic;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+
+namespace PzLauncher.Desktop.Services.Preferences;
+
+[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
+[JsonSerializable(typeof(PreferencesFile))]
+[JsonSerializable(typeof(InstallOverridesFile))]
+[JsonSerializable(typeof(ProxyFile))]
+[JsonSerializable(typeof(string))]
+[JsonSerializable(typeof(bool))]
+internal sealed partial class DesktopJsonContext : JsonSerializerContext;
+
+/// <summary>Stable strings, not enum names (<see cref="Localization.AppLanguages.CultureName"/>, <see cref="Themes.AppThemes.PreferenceName"/>), so renaming an enum keeps saved files valid.</summary>
+/// <param name="JavaRuntimes">Elements, not strings, so one non-string entry doesn't make the whole file unreadable.</param>
+/// <param name="Installs">Keyed by install root; elements for the same reason as <paramref name="JavaRuntimes"/>.</param>
+/// <param name="ZombieBuddyChannels">Keyed by install root; <see cref="ZombieBuddyChannelPreferences.PreferenceName"/> values, elements for the same reason as <paramref name="JavaRuntimes"/>.</param>
+/// <param name="DefaultModCollections">Keyed by install root; collection names, elements for the same reason as <paramref name="JavaRuntimes"/>.</param>
+/// <param name="UpdateSource"><see cref="UpdateSourcePreferences.PreferenceName"/>; an element for the same reason as <paramref name="JavaRuntimes"/>.</param>
+/// <param name="AutoCheckUpdates">A bool; an element for the same reason as <paramref name="JavaRuntimes"/>.</param>
+/// <param name="Proxy">A <see cref="ProxyFile"/>; an element for the same reason as <paramref name="JavaRuntimes"/>.</param>
+internal sealed record PreferencesFile(
+    string? Language,
+    string? Theme,
+    WindowFile? Window,
+    IReadOnlyList<JsonElement>? JavaRuntimes,
+    IReadOnlyDictionary<string, JsonElement>? Installs,
+    IReadOnlyDictionary<string, JsonElement>? ZombieBuddyChannels,
+    IReadOnlyDictionary<string, JsonElement>? DefaultModCollections,
+    JsonElement? UpdateSource,
+    JsonElement? AutoCheckUpdates,
+    JsonElement? Proxy);
+
+/// <summary>Nullable members, so a missing one is told apart from a zero.</summary>
+internal sealed record WindowFile(int? X, int? Y, double? Width, double? Height, bool? Maximized);
+
+/// <param name="Gc"><see cref="GarbageCollectorPreferences.PreferenceName"/>; an unknown value follows the json.</param>
+internal sealed record InstallOverridesFile(string? JavaHome, int? MaxMemoryMb, int? MinMemoryMb, string? JvmArgs, string? GameArgs, string? Gc);
+
+/// <param name="Mode"><see cref="ProxyModePreferences.PreferenceName"/>.</param>
+/// <param name="Password"><see cref="ISecretProtector"/> output, prefixed with its scheme.</param>
+internal sealed record ProxyFile(string? Mode, string? Host, int? Port, string? Username, string? Password);
