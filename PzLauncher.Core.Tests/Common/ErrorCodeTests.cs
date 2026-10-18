@@ -51,6 +51,7 @@ public partial class ErrorCodeTests
         [ErrorCode.LaunchNotAGame] = (LaunchErrors.NotAGame("p"), ErrorKind.Validation),
         [ErrorCode.LaunchConfigMissing] = (LaunchErrors.ConfigMissing("p"), ErrorKind.NotFound),
         [ErrorCode.LaunchConfigMalformed] = (LaunchErrors.ConfigMalformed("p", "r"), ErrorKind.External),
+        [ErrorCode.LaunchConfigWriteFailed] = (LaunchErrors.ConfigWriteFailed("p", "r"), ErrorKind.External),
         [ErrorCode.LaunchJavaMissing] = (LaunchErrors.JavaMissing("p"), ErrorKind.NotFound),
         [ErrorCode.LaunchStartFailed] = (LaunchErrors.StartFailed("p", "r"), ErrorKind.External),
         [ErrorCode.LaunchGcIncompatible] = (LaunchErrors.GcIncompatible("p"), ErrorKind.Validation),
@@ -62,7 +63,6 @@ public partial class ErrorCodeTests
         [ErrorCode.ZombieBuddySourceFileMissing] = (ZombieBuddyErrors.SourceFileMissing("p"), ErrorKind.NotFound),
         [ErrorCode.ZombieBuddyCopyFailed] = (ZombieBuddyErrors.CopyFailed("p", "r"), ErrorKind.External),
         [ErrorCode.ZombieBuddyDeleteFailed] = (ZombieBuddyErrors.DeleteFailed("p", "r"), ErrorKind.External),
-        [ErrorCode.ZombieBuddyConfigWriteFailed] = (ZombieBuddyErrors.ConfigWriteFailed("p", "r"), ErrorKind.External),
         [ErrorCode.ZombieBuddyNotInitialized] = (ZombieBuddyErrors.NotInitialized("p"), ErrorKind.Conflict),
         [ErrorCode.ZombieBuddyModNotPreloadable] = (ZombieBuddyErrors.ModNotPreloadable("m", "p", "r"), ErrorKind.Validation),
         [ErrorCode.ZombieBuddyPreloadConfigInvalid] = (ZombieBuddyErrors.PreloadConfigInvalid("m", "p", "r"), ErrorKind.Validation),
@@ -146,6 +146,7 @@ public partial class ErrorCodeTests
     [InlineData(ErrorCode.LaunchNotAGame, "launch.not_a_game")]
     [InlineData(ErrorCode.LaunchConfigMissing, "launch.config_missing")]
     [InlineData(ErrorCode.LaunchConfigMalformed, "launch.config_malformed")]
+    [InlineData(ErrorCode.LaunchConfigWriteFailed, "launch.config_write_failed")]
     [InlineData(ErrorCode.LaunchJavaMissing, "launch.java_missing")]
     [InlineData(ErrorCode.LaunchStartFailed, "launch.start_failed")]
     [InlineData(ErrorCode.LaunchGcIncompatible, "launch.gc_incompatible")]
@@ -157,7 +158,6 @@ public partial class ErrorCodeTests
     [InlineData(ErrorCode.ZombieBuddySourceFileMissing, "zombiebuddy.source_file_missing")]
     [InlineData(ErrorCode.ZombieBuddyCopyFailed, "zombiebuddy.copy_failed")]
     [InlineData(ErrorCode.ZombieBuddyDeleteFailed, "zombiebuddy.delete_failed")]
-    [InlineData(ErrorCode.ZombieBuddyConfigWriteFailed, "zombiebuddy.config_write_failed")]
     [InlineData(ErrorCode.ZombieBuddyNotInitialized, "zombiebuddy.not_initialized")]
     [InlineData(ErrorCode.ZombieBuddyModNotPreloadable, "zombiebuddy.mod_not_preloadable")]
     [InlineData(ErrorCode.ZombieBuddyPreloadConfigInvalid, "zombiebuddy.preload_config_invalid")]
@@ -191,4 +191,47 @@ public partial class ErrorCodeTests
         Assert.Equal(code, entry.Error.Code);
         Assert.Equal(entry.Kind, entry.Error.Kind);
     }
+
+    [Theory]
+    [InlineData(ErrorCode.InstallInvalidPath)]
+    [InlineData(ErrorCode.InstallPathNotFound)]
+    [InlineData(ErrorCode.InstallNotAPzInstall)]
+    [InlineData(ErrorCode.JavaInvalidPath)]
+    [InlineData(ErrorCode.JavaPathNotFound)]
+    [InlineData(ErrorCode.JavaNotAJavaHome)]
+    [InlineData(ErrorCode.JavaNot64Bit)]
+    [InlineData(ErrorCode.LaunchNotAGame)]
+    [InlineData(ErrorCode.LaunchConfigMissing)]
+    [InlineData(ErrorCode.LaunchJavaMissing)]
+    [InlineData(ErrorCode.LaunchGcIncompatible)]
+    [InlineData(ErrorCode.LaunchGcIncompatibleViewpoint)]
+    [InlineData(ErrorCode.ModCollectionCacheFolderUnresolved)]
+    [InlineData(ErrorCode.ZombieBuddySourceFileMissing)]
+    [InlineData(ErrorCode.ZombieBuddyNotInitialized)]
+    public void Factory_PathDetails_HoldOnlyThePath(ErrorCode code) =>
+        Assert.Equal(new Dictionary<string, string> { ["path"] = "p" }, Factories[code].Error.Details);
+
+    [Theory]
+    [InlineData(ErrorCode.SteamLibraryUnreadable)]
+    [InlineData(ErrorCode.SteamManifestUnreadable)]
+    [InlineData(ErrorCode.SteamNoCurrentAccount)]
+    [InlineData(ErrorCode.SteamLocalConfigMalformed)]
+    [InlineData(ErrorCode.SteamLocalConfigUnwritable)]
+    [InlineData(ErrorCode.SteamStartFailed)]
+    [InlineData(ErrorCode.InstallPathUnreadable)]
+    [InlineData(ErrorCode.JavaSourceUnreadable)]
+    [InlineData(ErrorCode.JavaReleaseUnreadable)]
+    [InlineData(ErrorCode.LaunchConfigMalformed)]
+    [InlineData(ErrorCode.LaunchConfigWriteFailed)]
+    [InlineData(ErrorCode.LaunchStartFailed)]
+    [InlineData(ErrorCode.ZombieBuddyCopyFailed)]
+    [InlineData(ErrorCode.ZombieBuddyDeleteFailed)]
+    [InlineData(ErrorCode.ModCollectionFileUnreadable)]
+    [InlineData(ErrorCode.ModCollectionFileMalformed)]
+    [InlineData(ErrorCode.ModCollectionFileWriteFailed)]
+    [InlineData(ErrorCode.UpdateInstallFolderNotWritable)]
+    [InlineData(ErrorCode.UpdateInstallFailed)]
+    [InlineData(ErrorCode.UpdateRestartFailed)]
+    public void Factory_PathReasonDetails_HoldThePathAndReason(ErrorCode code) =>
+        Assert.Equal(new Dictionary<string, string> { ["path"] = "p", ["reason"] = "r" }, Factories[code].Error.Details);
 }

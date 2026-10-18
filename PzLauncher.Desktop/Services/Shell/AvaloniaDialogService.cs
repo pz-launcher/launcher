@@ -30,57 +30,14 @@ public sealed class AvaloniaDialogService(Func<Window?> owner) : IDialogService
                 ok,
             },
         });
-        ok.Click += (_, _) => dialog.Close();
+        CloseOnClick(ok, dialog);
         await dialog.ShowDialog(window);
     }
 
-    public async Task<bool> ConfirmAsync(ConfirmPrompt prompt)
-    {
-        if (owner() is not { } window)
-        {
-            return false;
-        }
+    public async Task<bool> ConfirmAsync(ConfirmPrompt prompt) => (await ShowConfirmAsync(prompt, optionText: null)).Confirmed;
 
-        var confirm = new Button { Content = prompt.ConfirmText, Classes = { "accent" } };
-        var cancel = new Button { Content = prompt.CancelText, IsCancel = true };
-        var content = MessageContent(prompt);
-        content.Children.Add(Buttons(confirm, cancel));
-        var dialog = CreateDialog(prompt.Title, 460, content);
-        var confirmed = false;
-        confirm.Click += (_, _) =>
-        {
-            confirmed = true;
-            dialog.Close();
-        };
-        cancel.Click += (_, _) => dialog.Close();
-        await dialog.ShowDialog(window);
-        return confirmed;
-    }
-
-    public async Task<ConfirmOptionResult> ConfirmWithOptionAsync(ConfirmPrompt prompt, string optionText)
-    {
-        if (owner() is not { } window)
-        {
-            return new ConfirmOptionResult(false, false);
-        }
-
-        var confirm = new Button { Content = prompt.ConfirmText, Classes = { "accent" } };
-        var cancel = new Button { Content = prompt.CancelText, IsCancel = true };
-        var option = new CheckBox { Content = optionText };
-        var content = MessageContent(prompt);
-        content.Children.Add(option);
-        content.Children.Add(Buttons(confirm, cancel));
-        var dialog = CreateDialog(prompt.Title, 460, content);
-        var confirmed = false;
-        confirm.Click += (_, _) =>
-        {
-            confirmed = true;
-            dialog.Close();
-        };
-        cancel.Click += (_, _) => dialog.Close();
-        await dialog.ShowDialog(window);
-        return new ConfirmOptionResult(confirmed, option.IsChecked == true);
-    }
+    public Task<ConfirmOptionResult> ConfirmWithOptionAsync(ConfirmPrompt prompt, string optionText) =>
+        ShowConfirmAsync(prompt, optionText);
 
     public async Task<TextPromptResult> PromptTextAsync(TextPrompt prompt)
     {
@@ -130,21 +87,13 @@ public sealed class AvaloniaDialogService(Func<Window?> owner) : IDialogService
             },
         });
         TextPromptResult result = new TextPromptResult.Cancelled();
-        accept.Click += (_, _) =>
-        {
-            result = new TextPromptResult.Accepted(input.Text ?? "");
-            dialog.Close();
-        };
+        CloseOnClick(accept, dialog, () => result = new TextPromptResult.Accepted(input.Text ?? ""));
         if (buttons.Length == 3)
         {
-            buttons[1].Click += (_, _) =>
-            {
-                result = new TextPromptResult.Skipped();
-                dialog.Close();
-            };
+            CloseOnClick(buttons[1], dialog, () => result = new TextPromptResult.Skipped());
         }
 
-        cancel.Click += (_, _) => dialog.Close();
+        CloseOnClick(cancel, dialog);
         dialog.Opened += (_, _) =>
         {
             input.Focus();
@@ -176,8 +125,16 @@ public sealed class AvaloniaDialogService(Func<Window?> owner) : IDialogService
         return launch;
     }
 
-    private static StackPanel MessageContent(ConfirmPrompt prompt)
+    // Without option text, no option is shown and OptionChecked is false.
+    private async Task<ConfirmOptionResult> ShowConfirmAsync(ConfirmPrompt prompt, string? optionText)
     {
+        if (owner() is not { } window)
+        {
+            return new ConfirmOptionResult(false, false);
+        }
+
+        var confirm = new Button { Content = prompt.ConfirmText, Classes = { "accent" } };
+        var cancel = new Button { Content = prompt.CancelText, IsCancel = true };
         var content = new StackPanel { Margin = new Thickness(16), Spacing = 12 };
         content.Children.Add(new TextBlock { Text = prompt.Message, TextWrapping = TextWrapping.Wrap });
         if (prompt.Items.Count > 0)
@@ -189,8 +146,27 @@ public sealed class AvaloniaDialogService(Func<Window?> owner) : IDialogService
             });
         }
 
-        return content;
+        var option = optionText is null ? null : new CheckBox { Content = optionText };
+        if (option is not null)
+        {
+            content.Children.Add(option);
+        }
+
+        content.Children.Add(Buttons(confirm, cancel));
+        var dialog = CreateDialog(prompt.Title, 460, content);
+        var confirmed = false;
+        CloseOnClick(confirm, dialog, () => confirmed = true);
+        CloseOnClick(cancel, dialog);
+        await dialog.ShowDialog(window);
+        return new ConfirmOptionResult(confirmed, option?.IsChecked == true);
     }
+
+    private static void CloseOnClick(Button button, Window dialog, Action? setResult = null) =>
+        button.Click += (_, _) =>
+        {
+            setResult?.Invoke();
+            dialog.Close();
+        };
 
     private static Window CreateDialog(string title, double width, Control content) => new()
     {

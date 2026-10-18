@@ -64,7 +64,7 @@
                         </DockPanel>
                         <Border Grid.Column="3" Classes="badge" IsVisible="{Binding IsMissing}" Margin="8,0"
                                 ToolTip.Tip="{x:Static lang:UiText.ModCollections_MissingTip}">
-                            <TextBlock Text="{x:Static lang:UiText.ModCollections_Missing}" Foreground="{DynamicResource Shell.WarningForeground}" />
+                            <TextBlock Text="{x:Static lang:UiText.ModCollections_Missing}" Classes="warning" />
                         </Border>
                         <StackPanel Grid.Column="4" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
                             <Button Command="{Binding $parent[UserControl].((vm:ModCollectionsViewModel)DataContext).MoveToTopCommand}" CommandParameter="{Binding}"
@@ -137,7 +137,7 @@
                                                 <TextBlock Text="{Binding ModCount, StringFormat={x:Static lang:UiText.ModCollections_CountFormat}}" FontSize="12"
                                                            Foreground="{DynamicResource Shell.TextMuted}" />
                                                 <TextBlock Text="{Binding MissingCount, StringFormat={x:Static lang:UiText.ModCollections_MissingCountFormat}}" FontSize="12"
-                                                           Foreground="{DynamicResource Shell.WarningForeground}" IsVisible="{Binding HasMissing}"
+                                                           Classes="warning" IsVisible="{Binding HasMissing}"
                                                            ToolTip.Tip="{x:Static lang:UiText.ModCollections_MissingTip}" />
                                             </StackPanel>
                                         </StackPanel>

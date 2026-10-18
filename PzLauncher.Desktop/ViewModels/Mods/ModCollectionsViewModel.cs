@@ -31,7 +31,7 @@ public partial class ModCollectionsViewModel : ViewModelBase
     // The selected collection's ids in the shown order, ahead of the file while a reorder waits.
     private List<string> _ids = [];
     private string? _selectedName;
-    private Func<string>? _statusSource;
+    private readonly LocalizedText _status;
 
     internal ModCollectionsViewModel(
         ModsViewModel page,
@@ -47,6 +47,7 @@ public partial class ModCollectionsViewModel : ViewModelBase
         _clipboard = clipboard;
         Rows = [];
         AddCandidates = [];
+        _status = new LocalizedText(text => StatusText = text);
         page.PropertyChanged += OnPagePropertyChanged;
     }
 
@@ -103,7 +104,7 @@ public partial class ModCollectionsViewModel : ViewModelBase
 
         _selectedName = row.Name;
         AddSearchText = "";
-        ShowStatus(null);
+        _status.Clear();
         Rebuild(_page.State);
     }
 
@@ -264,7 +265,7 @@ public partial class ModCollectionsViewModel : ViewModelBase
         {
             case ModCollectionApplyOutcome.Applied applied:
                 var count = applied.Result.EnabledIds.Count;
-                ShowStatus(() => Format(UiText.ModCollections_Applied, name, count));
+                _status.Show(() => Format(UiText.ModCollections_Applied, name, count));
                 break;
             case ModCollectionApplyOutcome.Failed failed:
                 await _dialogs.ShowErrorAsync(ErrorMessages.ToUserText(failed.Error));
@@ -302,7 +303,7 @@ public partial class ModCollectionsViewModel : ViewModelBase
 
         await _clipboard.SetTextAsync(ModCollectionShareText.Format(row.Name, _ids));
         var name = row.Name;
-        ShowStatus(() => Format(UiText.ModCollections_Shared, name));
+        _status.Show(() => Format(UiText.ModCollections_Shared, name));
     }
 
     [RelayCommand(CanExecute = nameof(CanWriteSelected))]
@@ -359,7 +360,7 @@ public partial class ModCollectionsViewModel : ViewModelBase
 
     internal void RenderTexts()
     {
-        StatusText = _statusSource?.Invoke();
+        _status.Render();
         OnPropertyChanged(nameof(UseText));
         OnPropertyChanged(nameof(UseHint));
     }
@@ -427,7 +428,7 @@ public partial class ModCollectionsViewModel : ViewModelBase
                 OnPropertyChanged(nameof(CanReorder));
                 break;
             case nameof(ModsViewModel.Install):
-                ShowStatus(null);
+                _status.Clear();
                 break;
         }
     }
@@ -536,12 +537,6 @@ public partial class ModCollectionsViewModel : ViewModelBase
                 .OrderBy(mod => mod.Name, StringComparer.CurrentCultureIgnoreCase)
                 .Take(MaxAddCandidates),
         ];
-    }
-
-    private void ShowStatus(Func<string>? source)
-    {
-        _statusSource = source;
-        StatusText = source?.Invoke();
     }
 
     private static string Format(string format, params object[] args) => string.Format(CultureInfo.CurrentCulture, format, args);

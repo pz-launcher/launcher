@@ -7,7 +7,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using PzLauncher.Core.Common;
 using PzLauncher.Core.Installs;
 using PzLauncher.Core.Platform;
 using PzLauncher.Desktop.Lang;
@@ -24,9 +23,8 @@ public partial class InstallsViewModel : ViewModelBase
     private readonly IPlatformEnvironment _platform;
     private readonly List<PzInstall> _manualInstalls = [];
 
-    // Sources of the shown texts, kept so a language switch can re-render them.
-    private readonly List<Error> _warningSources = [];
-    private Func<string>? _errorSource;
+    private readonly LocalizedErrorList _warnings = new();
+    private readonly LocalizedText _error;
 
     private bool _activated;
 
@@ -40,6 +38,7 @@ public partial class InstallsViewModel : ViewModelBase
         _folderPicker = folderPicker;
         _platform = platform;
         VisibleInstalls = [];
+        _error = new LocalizedText(text => ErrorText = text);
 
         // Never unsubscribed: this view model is an app-lifetime singleton.
         localization.LanguageChanged += (_, _) => RenderTexts();
@@ -60,7 +59,7 @@ public partial class InstallsViewModel : ViewModelBase
     /// <summary>The install in use, session only. Only a scan and <see cref="Use"/> change it; the list never does.</summary>
     [ObservableProperty] public partial PzInstall? SelectedInstall { get; private set; }
 
-    public ObservableCollection<string> Warnings { get; } = [];
+    public ObservableCollection<string> Warnings => _warnings.Items;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsEmpty), nameof(IsFilterEmpty))]
@@ -93,16 +92,14 @@ public partial class InstallsViewModel : ViewModelBase
     private async Task ScanAsync(CancellationToken ct)
     {
         IsScanning = true;
-        ShowError(null);
+        _error.Clear();
         try
         {
             var result = await _installDetection.ScanAsync(ct);
-            _warningSources.Clear();
-            Warnings.Clear();
+            _warnings.Clear();
             if (!result.IsSuccess)
             {
-                var error = result.Error;
-                ShowError(() => ErrorMessages.ToUserText(error));
+                _error.Show(result.Error);
                 return;
             }
 
@@ -118,8 +115,7 @@ public partial class InstallsViewModel : ViewModelBase
 
             foreach (var warning in result.Value.Warnings)
             {
-                _warningSources.Add(warning);
-                Warnings.Add(ErrorMessages.ToUserText(warning));
+                _warnings.Add(warning);
             }
 
             HasScanned = true;
@@ -149,18 +145,17 @@ public partial class InstallsViewModel : ViewModelBase
                 case FolderPickResult.Cancelled:
                     return;
                 case FolderPickResult.NotLocal notLocal:
-                    ShowError(() => ErrorMessages.FolderNotLocal(notLocal.Location));
+                    _error.Show(() => ErrorMessages.FolderNotLocal(notLocal.Location));
                     return;
                 case var other:
                     throw new UnreachableException($"Unhandled {nameof(FolderPickResult)}: {other}");
             }
 
-            ShowError(null);
+            _error.Clear();
             var result = await _installDetection.InspectAsync(path, ct);
             if (!result.IsSuccess)
             {
-                var error = result.Error;
-                ShowError(() => ErrorMessages.ToUserText(error));
+                _error.Show(result.Error);
                 return;
             }
 
@@ -220,18 +215,9 @@ public partial class InstallsViewModel : ViewModelBase
         InstallsFilter.DedicatedServer => install.Kind == PzInstallKind.DedicatedServer,
     };
 
-    private void ShowError(Func<string>? source)
-    {
-        _errorSource = source;
-        ErrorText = source?.Invoke();
-    }
-
     private void RenderTexts()
     {
-        ErrorText = _errorSource?.Invoke();
-        for (var i = 0; i < _warningSources.Count; i++)
-        {
-            Warnings[i] = ErrorMessages.ToUserText(_warningSources[i]);
-        }
+        _error.Render();
+        _warnings.Render();
     }
 }

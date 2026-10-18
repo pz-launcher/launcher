@@ -211,6 +211,9 @@
   <data name="Error_LaunchConfigMalformed" xml:space="preserve">
     <value>無法讀取啟動設定檔 {0}。請嘗試在 Steam 中驗證遊戲檔案的完整性。</value>
   </data>
+  <data name="Error_LaunchConfigWriteFailed" xml:space="preserve">
+    <value>無法儲存啟動設定檔 {0}。請確認該檔案不是唯讀的，也沒有被其他程式開啟，然後重試。</value>
+  </data>
   <data name="Error_LaunchJavaMissing" xml:space="preserve">
     <value>Java 程式 {0} 不存在。請在「啟動設定」中為此安裝選擇其他 Java。</value>
   </data>
@@ -244,9 +247,6 @@
   </data>
   <data name="Error_ZombieBuddyDeleteFailed" xml:space="preserve">
     <value>無法刪除 {0}。如果遊戲正在執行，請先關閉遊戲，然後重試。</value>
-  </data>
-  <data name="Error_ZombieBuddyConfigWriteFailed" xml:space="preserve">
-    <value>無法儲存啟動設定檔 {0}。請確認該檔案不是唯讀的，也沒有被其他程式開啟，然後重試。</value>
   </data>
   <data name="Error_ZombieBuddyNotInitialized" xml:space="preserve">
     <value>此安裝尚未初始化 ZombieBuddy。請先在「啟動設定」中執行「初始化」。</value>

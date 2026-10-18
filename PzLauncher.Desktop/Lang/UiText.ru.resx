@@ -211,6 +211,9 @@
   <data name="Error_LaunchConfigMalformed" xml:space="preserve">
     <value>Не удалось прочитать файл настроек запуска {0}. Попробуйте проверить целостность файлов игры в Steam.</value>
   </data>
+  <data name="Error_LaunchConfigWriteFailed" xml:space="preserve">
+    <value>Не удалось сохранить файл настроек запуска {0}. Убедитесь, что файл не доступен только для чтения и не открыт в другой программе, затем повторите попытку.</value>
+  </data>
   <data name="Error_LaunchJavaMissing" xml:space="preserve">
     <value>Программа Java {0} не существует. Выберите для этой установки другую Java в «Настройках запуска».</value>
   </data>
@@ -244,9 +247,6 @@
   </data>
   <data name="Error_ZombieBuddyDeleteFailed" xml:space="preserve">
     <value>Не удалось удалить {0}. Если игра запущена, закройте её и повторите попытку.</value>
-  </data>
-  <data name="Error_ZombieBuddyConfigWriteFailed" xml:space="preserve">
-    <value>Не удалось сохранить файл настроек запуска {0}. Убедитесь, что файл не доступен только для чтения и не открыт в другой программе, затем повторите попытку.</value>
   </data>
   <data name="Error_ZombieBuddyNotInitialized" xml:space="preserve">
     <value>ZombieBuddy не инициализирован для этой установки. Сначала выполните «Инициализировать» в «Настройках запуска».</value>

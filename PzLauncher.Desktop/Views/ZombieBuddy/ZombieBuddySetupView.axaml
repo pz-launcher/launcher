@@ -41,7 +41,7 @@
 
         <ProgressBar Minimum="0" Maximum="1" Value="{Binding Progress}" />
 
-        <TextBlock Text="{Binding ErrorText}" Foreground="{DynamicResource Shell.ErrorForeground}" TextWrapping="Wrap"
+        <TextBlock Text="{Binding ErrorText}" Classes="error" TextWrapping="Wrap"
                    IsVisible="{Binding ErrorText, Converter={x:Static ObjectConverters.IsNotNull}}" />
 
         <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">

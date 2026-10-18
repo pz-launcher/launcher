@@ -155,7 +155,7 @@ public sealed class PzLaunchConfigEditorTests : IDisposable
         Error error;
         using (File.Open(path, FileMode.Open, FileAccess.Read, FileShare.Read))
         {
-            error = ResultAssert.Failed(await editor.SaveVmArgsAsync(["-agentlib:zbNative"], Ct), ErrorCode.ZombieBuddyConfigWriteFailed);
+            error = ResultAssert.Failed(await editor.SaveVmArgsAsync(["-agentlib:zbNative"], Ct), ErrorCode.LaunchConfigWriteFailed);
         }
 
         Assert.Equal(path, error.Details["path"]);

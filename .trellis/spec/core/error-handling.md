@@ -25,7 +25,8 @@ All codes are members of `ErrorCode` (`PzLauncher.Core/Common/ErrorCode.cs`).
 
 - Wire name `<feature>.<snake_case_reason>` is a **public contract**: never change one.
 - Logs use the wire name (`ToWireName()`), never `ToString()`.
-- Each feature builds errors in one factory class, e.g. `PzLauncher.Core/Installs/InstallErrors.cs`.
+- Each feature builds errors in one factory class, e.g. `PzLauncher.Core/Installs/InstallErrors.cs`. A code belongs to the feature whose code produces it, not to its caller: `Launch/PzLaunchConfigEditor` returns `launch.*` codes although only ZombieBuddy calls it.
+- `Details` with exactly `path`, or `path` + `reason`, come from `ErrorDetails.Path` (`PzLauncher.Core/Common/ErrorDetails.cs`), which owns those key names; other key sets are written inline.
 - `Message` is for developers and logs. Users see text from `Code` + `Details` via the desktop `ErrorMessages`.
 
 Adding a code:
@@ -33,7 +34,7 @@ Adding a code:
 1. Add the member to `ErrorCode` with its wire name.
 2. Add a factory method in `<Feature>Errors`.
 3. Add user text: an `Error_<Member>` key in every `UiText` resx and its arm in `PzLauncher.Desktop/Localization/ErrorMessages.cs` (the build fails until you do; see `.trellis/spec/desktop/localization.md`).
-4. Pin the wire name and the factory's `Kind` in `PzLauncher.Core.Tests/Common/ErrorCodeTests.cs`.
+4. Pin the wire name and the factory's `Kind` in `PzLauncher.Core.Tests/Common/ErrorCodeTests.cs`, and its `Details` there when the factory uses `ErrorDetails`.
 
 ## Where exceptions are caught
 
@@ -74,8 +75,9 @@ Reference: `PzLauncher.Core/Launch/PzLaunchConfigEditor.cs`, `PzLauncher.Core/St
 - A file the game also rewrites while running (the text files above) is re-read
   right before each write, never written from a cached copy. Untouched lines keep
   their bytes, line terminators and BOM; invalid UTF-8 is `*.file_malformed`,
-  never decoded with replacement characters. The previous content goes to a
-  rolling `<file>.pzlauncher.bak` first (`AtomicFile.BackupSuffix`).
+  never decoded with replacement characters (decode and encode through
+  `PzLauncher.Core/Common/Utf8TextFile.cs`). The previous content goes to a
+  rolling `<file>.pzlauncher.bak` first (`AtomicFile.ReplaceWithBackupAsync`).
 - Steam `.vdf` files are edited at the byte offsets of the one value, never
   re-serialised (ValveKeyValue loses number formatting). Steam rewrites
   `localconfig.vdf` while running, so it is written only while Steam is closed.

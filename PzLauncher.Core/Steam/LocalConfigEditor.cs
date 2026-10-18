@@ -12,10 +12,6 @@ internal sealed class LocalConfigEditor
     // localconfig.vdf nests about seven levels; the limit only stops hostile input.
     private const int MaxDepth = 64;
 
-    private static readonly UTF8Encoding StrictUtf8 = new(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
-
-    private static readonly byte[] Bom = [0xEF, 0xBB, 0xBF];
-
     private readonly byte[] _original;
     private readonly bool _hasBom;
     private readonly string _text;
@@ -52,18 +48,13 @@ internal sealed class LocalConfigEditor
             return SteamErrors.LocalConfigUnwritable(path, ex.Message);
         }
 
-        var hasBom = bytes.AsSpan().StartsWith(Bom);
-        string text;
-        try
+        var decoded = Utf8TextFile.Decode(bytes, reason => SteamErrors.LocalConfigMalformed(path, reason));
+        if (!decoded.IsSuccess)
         {
-            text = hasBom ? StrictUtf8.GetString(bytes, Bom.Length, bytes.Length - Bom.Length) : StrictUtf8.GetString(bytes);
-        }
-        catch (DecoderFallbackException ex)
-        {
-            // Replacement characters would change bytes the edit doesn't touch.
-            return SteamErrors.LocalConfigMalformed(path, ex.Message);
+            return decoded.Error;
         }
 
+        var (text, hasBom) = decoded.Value;
         var apps = new List<AppBlock>();
         if (Scan(text, SteamClientFiles.AppBlockPath(appId), apps) is { } problem)
         {
@@ -90,12 +81,9 @@ internal sealed class LocalConfigEditor
         var text = _app.Value is { } value
             ? string.Concat(_text.AsSpan(0, value.Start), Quote(launchOptions), _text.AsSpan(value.End))
             : Insert(launchOptions);
-        var body = StrictUtf8.GetBytes(text);
-        byte[] content = _hasBom ? [.. Bom, .. body] : body;
         try
         {
-            await AtomicFile.WriteAsync(FilePath + AtomicFile.BackupSuffix, _original, ct).ConfigureAwait(false);
-            await AtomicFile.WriteAsync(FilePath, content, ct).ConfigureAwait(false);
+            await AtomicFile.ReplaceWithBackupAsync(FilePath, _original, Utf8TextFile.Encode(text, _hasBom), ct).ConfigureAwait(false);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {

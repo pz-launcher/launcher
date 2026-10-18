@@ -15,17 +15,11 @@
         <x:Static Member="design:DesignData.UpdateSettings" />
     </Design.DataContext>
 
-    <UserControl.Styles>
-        <Style Selector="TextBlock.error">
-            <Setter Property="Foreground" Value="{DynamicResource Shell.ErrorForeground}" />
-        </Style>
-    </UserControl.Styles>
-
     <StackPanel Margin="24,16" Spacing="12">
-        <TextBlock Text="{x:Static lang:UiText.Settings_Updates}" FontSize="22" FontWeight="SemiBold" />
+        <TextBlock Text="{x:Static lang:UiText.Settings_Updates}" Classes="pageTitle" />
         <TextBlock Text="{Binding CurrentVersionText}" />
 
-        <TextBlock Text="{x:Static lang:UiText.Settings_UpdateSource}" FontSize="16" FontWeight="SemiBold" />
+        <TextBlock Text="{x:Static lang:UiText.Settings_UpdateSource}" Classes="sectionTitle" />
         <StackPanel Orientation="Horizontal" Spacing="24">
             <RadioButton Content="{x:Static lang:UiText.UpdateSource_Auto}"
                          IsChecked="{Binding Source, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static update:UpdateSource.Auto}}" />
@@ -34,7 +28,7 @@
             <RadioButton Content="{x:Static lang:UiText.UpdateSource_Gitee}"
                          IsChecked="{Binding Source, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static update:UpdateSource.Gitee}}" />
         </StackPanel>
-        <TextBlock Text="{x:Static lang:UiText.Settings_UpdateSourceHint}" Foreground="{DynamicResource Shell.TextMuted}" TextWrapping="Wrap" />
+        <TextBlock Text="{x:Static lang:UiText.Settings_UpdateSourceHint}" Classes="hint" />
 
         <ToggleSwitch Content="{x:Static lang:UiText.Settings_AutoCheckUpdates}" OnContent="{x:Null}" OffContent="{x:Null}"
                       IsChecked="{Binding AutoCheck}" />

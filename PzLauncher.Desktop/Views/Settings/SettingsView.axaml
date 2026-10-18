@@ -37,15 +37,15 @@
         <Panel Grid.Column="1" Background="{DynamicResource Shell.ContentBackground}">
             <StackPanel Margin="24,16" Spacing="12"
                         IsVisible="{Binding Section, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:SettingsSection.Appearance}}">
-                <TextBlock Text="{x:Static lang:UiText.Settings_Appearance}" FontSize="22" FontWeight="SemiBold" />
-                <TextBlock Text="{x:Static lang:UiText.Settings_Theme}" FontSize="16" FontWeight="SemiBold" />
+                <TextBlock Text="{x:Static lang:UiText.Settings_Appearance}" Classes="pageTitle" />
+                <TextBlock Text="{x:Static lang:UiText.Settings_Theme}" Classes="sectionTitle" />
                 <StackPanel Orientation="Horizontal" Spacing="24">
                     <RadioButton Content="{x:Static lang:UiText.Settings_ThemeLight}"
                                  IsChecked="{Binding Theme, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static themes:AppTheme.Light}}" />
                     <RadioButton Content="{x:Static lang:UiText.Settings_ThemeDark}"
                                  IsChecked="{Binding Theme, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static themes:AppTheme.Dark}}" />
                 </StackPanel>
-                <TextBlock Text="{x:Static lang:UiText.Settings_Window}" FontSize="16" FontWeight="SemiBold" />
+                <TextBlock Text="{x:Static lang:UiText.Settings_Window}" Classes="sectionTitle" />
                 <Button Content="{x:Static lang:UiText.Settings_ResetWindowSize}" Command="{Binding ResetWindowSizeCommand}" />
             </StackPanel>
             <!-- Wrapped: each section view's own DataContext is its view model, so it can't bind Section itself. -->

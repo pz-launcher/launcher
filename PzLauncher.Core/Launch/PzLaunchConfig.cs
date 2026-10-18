@@ -36,21 +36,8 @@ internal sealed record PzLaunchConfig(
 
     public static async Task<Result<PzLaunchConfig>> ReadAsync(string path, CancellationToken ct)
     {
-        string json;
-        try
-        {
-            json = await File.ReadAllTextAsync(path, ct).ConfigureAwait(false);
-        }
-        catch (Exception ex) when (ex is FileNotFoundException or DirectoryNotFoundException)
-        {
-            return LaunchErrors.ConfigMissing(path);
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-        {
-            return LaunchErrors.ConfigMalformed(path, ex.Message);
-        }
-
-        return Parse(json, path);
+        var json = await PzLaunchConfigFile.ReadAsync(path, ct).ConfigureAwait(false);
+        return json.IsSuccess ? Parse(json.Value, path) : json.Error;
     }
 
     public static Result<PzLaunchConfig> Parse(string json, string path)

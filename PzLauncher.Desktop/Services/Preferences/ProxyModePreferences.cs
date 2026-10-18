@@ -1,4 +1,3 @@
-using System;
 using PzLauncher.Core.Net;
 
 namespace PzLauncher.Desktop.Services.Preferences;
@@ -13,16 +12,5 @@ public static class ProxyModePreferences
         ProxyMode.Manual => "manual",
     };
 
-    public static ProxyMode? FromPreferenceName(string? name)
-    {
-        foreach (var mode in Enum.GetValues<ProxyMode>())
-        {
-            if (string.Equals(mode.PreferenceName(), name, StringComparison.OrdinalIgnoreCase))
-            {
-                return mode;
-            }
-        }
-
-        return null;
-    }
+    public static ProxyMode? FromPreferenceName(string? name) => PreferenceNames.Parse<ProxyMode>(name, PreferenceName);
 }

@@ -211,6 +211,9 @@
   <data name="Error_LaunchConfigMalformed" xml:space="preserve">
     <value>Couldn't read the launch configuration {0}. Try verifying the game files in Steam.</value>
   </data>
+  <data name="Error_LaunchConfigWriteFailed" xml:space="preserve">
+    <value>Couldn't save the launch configuration {0}. Make sure the file isn't read-only or open in another program, then try again.</value>
+  </data>
   <data name="Error_LaunchJavaMissing" xml:space="preserve">
     <value>The Java program {0} doesn't exist. Choose another Java for this install in Launch settings.</value>
   </data>
@@ -244,9 +247,6 @@
   </data>
   <data name="Error_ZombieBuddyDeleteFailed" xml:space="preserve">
     <value>Couldn't delete {0}. If the game is running, close it, then try again.</value>
-  </data>
-  <data name="Error_ZombieBuddyConfigWriteFailed" xml:space="preserve">
-    <value>Couldn't save the launch configuration {0}. Make sure the file isn't read-only or open in another program, then try again.</value>
   </data>
   <data name="Error_ZombieBuddyNotInitialized" xml:space="preserve">
     <value>ZombieBuddy isn't initialized for this install. Run Initialize in Launch settings first.</value>

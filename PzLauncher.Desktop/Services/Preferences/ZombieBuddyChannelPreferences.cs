@@ -1,4 +1,3 @@
-using System;
 using PzLauncher.Core.Mod.ZombieBuddy;
 
 namespace PzLauncher.Desktop.Services.Preferences;
@@ -12,16 +11,5 @@ public static class ZombieBuddyChannelPreferences
         ZombieBuddyChannel.Beta => "beta",
     };
 
-    public static ZombieBuddyChannel? FromPreferenceName(string? name)
-    {
-        foreach (var channel in Enum.GetValues<ZombieBuddyChannel>())
-        {
-            if (string.Equals(channel.PreferenceName(), name, StringComparison.OrdinalIgnoreCase))
-            {
-                return channel;
-            }
-        }
-
-        return null;
-    }
+    public static ZombieBuddyChannel? FromPreferenceName(string? name) => PreferenceNames.Parse<ZombieBuddyChannel>(name, PreferenceName);
 }

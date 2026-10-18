@@ -1,34 +1,19 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using PzLauncher.Core.Mod.ZombieBuddy;
 using PzLauncher.Core.Platform;
 using PzLauncher.Desktop.Services.Preferences;
 
 namespace PzLauncher.Desktop.Services.ZombieBuddy;
 
-public sealed class ZombieBuddyChannelService : IZombieBuddyChannelService
+public sealed class ZombieBuddyChannelService(IPreferenceStore store, UserPreferences saved, IPlatformEnvironment platform) : IZombieBuddyChannelService
 {
-    private readonly IPreferenceStore _store;
-    private readonly Dictionary<string, ZombieBuddyChannel> _channels;
-
-    public ZombieBuddyChannelService(IPreferenceStore store, UserPreferences saved, IPlatformEnvironment platform)
-    {
-        _store = store;
-        _channels = new Dictionary<string, ZombieBuddyChannel>(StringComparer.FromComparison(platform.PathComparison));
-        foreach (var (root, channel) in saved.ZombieBuddyChannels)
-        {
-            _channels.TryAdd(root, channel);
-        }
-    }
+    private readonly IPreferenceStore _store = store;
+    private readonly InstallKeyedMap<ZombieBuddyChannel> _channels = new InstallKeyedMap<ZombieBuddyChannel>(saved.ZombieBuddyChannels, platform.PathComparison);
 
     public ZombieBuddyChannel Get(string installRoot) => _channels.GetValueOrDefault(installRoot, ZombieBuddyChannel.Stable);
 
     public void Save(string installRoot, ZombieBuddyChannel channel)
     {
-        // Write under the saved spelling of the path, so a differently cased root replaces its entry instead of adding one.
-        var key = _channels.Keys.FirstOrDefault(root => _channels.Comparer.Equals(root, installRoot)) ?? installRoot;
-        _channels[key] = channel;
+        var key = _channels.Set(installRoot, channel);
 
         // SaveZombieBuddyChannelAsync never throws for I/O, and a failed save must not undo the change.
         _ = _store.SaveZombieBuddyChannelAsync(key, channel);

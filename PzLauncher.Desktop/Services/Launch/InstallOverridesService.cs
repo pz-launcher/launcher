@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using PzLauncher.Core.Launch;
@@ -9,32 +8,18 @@ using PzLauncher.Desktop.Services.Preferences;
 
 namespace PzLauncher.Desktop.Services.Launch;
 
-public sealed class InstallOverridesService : IInstallOverridesService
+public sealed class InstallOverridesService(IPreferenceStore store, UserPreferences saved, IPlatformEnvironment platform, TimeProvider time) : IInstallOverridesService
 {
     private static readonly TimeSpan SaveDelay = TimeSpan.FromMilliseconds(300);
 
-    private readonly IPreferenceStore _store;
-    private readonly TimeProvider _time;
+    private readonly IPreferenceStore _store = store;
+    private readonly TimeProvider _time = time;
 
     // Timer callbacks run on the thread pool.
     private readonly Lock _gate = new();
-    private readonly Dictionary<string, GameLaunchOverrides> _overrides;
-    private readonly Dictionary<string, ITimer> _pendingWrites;
+    private readonly InstallKeyedMap<GameLaunchOverrides> _overrides = new InstallKeyedMap<GameLaunchOverrides>(saved.InstallOverrides, platform.PathComparison);
+    private readonly Dictionary<string, ITimer> _pendingWrites = new Dictionary<string, ITimer>(StringComparer.FromComparison(platform.PathComparison));
     private readonly List<Task> _writesInFlight = [];
-
-    public InstallOverridesService(IPreferenceStore store, UserPreferences saved, IPlatformEnvironment platform, TimeProvider time)
-    {
-        _store = store;
-        _time = time;
-        var comparer = StringComparer.FromComparison(platform.PathComparison);
-        _overrides = new Dictionary<string, GameLaunchOverrides>(comparer);
-        foreach (var (root, overrides) in saved.InstallOverrides)
-        {
-            _overrides.TryAdd(root, overrides);
-        }
-
-        _pendingWrites = new Dictionary<string, ITimer>(comparer);
-    }
 
     public GameLaunchOverrides Get(string installRoot)
     {
@@ -48,9 +33,7 @@ public sealed class InstallOverridesService : IInstallOverridesService
     {
         lock (_gate)
         {
-            // Write under the saved spelling of the path, so a differently cased root replaces its entry instead of adding one.
-            var key = _overrides.Keys.FirstOrDefault(root => _overrides.Comparer.Equals(root, installRoot)) ?? installRoot;
-            _overrides[key] = overrides;
+            var key = _overrides.Set(installRoot, overrides);
             if (_pendingWrites.TryGetValue(key, out var timer))
             {
                 timer.Change(SaveDelay, Timeout.InfiniteTimeSpan);

@@ -13,31 +13,25 @@ internal static class ZombieBuddyErrors
     public static Error SourceFileMissing(string path) =>
         new(ErrorCode.ZombieBuddySourceFileMissing, $"ZombieBuddy file is missing from the Workshop item: {path}", ErrorKind.NotFound)
         {
-            Details = new Dictionary<string, string> { ["path"] = path },
+            Details = ErrorDetails.Path(path),
         };
 
     public static Error CopyFailed(string path, string reason) =>
         new(ErrorCode.ZombieBuddyCopyFailed, $"ZombieBuddy file could not be copied to {path} ({reason})", ErrorKind.External)
         {
-            Details = new Dictionary<string, string> { ["path"] = path, ["reason"] = reason },
+            Details = ErrorDetails.Path(path, reason),
         };
 
     public static Error DeleteFailed(string path, string reason) =>
         new(ErrorCode.ZombieBuddyDeleteFailed, $"ZombieBuddy file could not be deleted: {path} ({reason})", ErrorKind.External)
         {
-            Details = new Dictionary<string, string> { ["path"] = path, ["reason"] = reason },
-        };
-
-    public static Error ConfigWriteFailed(string path, string reason) =>
-        new(ErrorCode.ZombieBuddyConfigWriteFailed, $"Launch configuration could not be written: {path} ({reason})", ErrorKind.External)
-        {
-            Details = new Dictionary<string, string> { ["path"] = path, ["reason"] = reason },
+            Details = ErrorDetails.Path(path, reason),
         };
 
     public static Error NotInitialized(string path) =>
         new(ErrorCode.ZombieBuddyNotInitialized, $"Launch configuration has no ZombieBuddy agent argument: {path}", ErrorKind.Conflict)
         {
-            Details = new Dictionary<string, string> { ["path"] = path },
+            Details = ErrorDetails.Path(path),
         };
 
     // reason: one of the ZombieBuddyJavaMod reason constants; path: the mod.info or jar that fails it.

@@ -1,4 +1,3 @@
-using System;
 using PzLauncher.Core.Launch;
 
 namespace PzLauncher.Desktop.Services.Preferences;
@@ -15,16 +14,5 @@ public static class GarbageCollectorPreferences
         GarbageCollector.Serial => "serial",
     };
 
-    public static GarbageCollector? FromPreferenceName(string? name)
-    {
-        foreach (var gc in Enum.GetValues<GarbageCollector>())
-        {
-            if (string.Equals(gc.PreferenceName(), name, StringComparison.OrdinalIgnoreCase))
-            {
-                return gc;
-            }
-        }
-
-        return null;
-    }
+    public static GarbageCollector? FromPreferenceName(string? name) => PreferenceNames.Parse<GarbageCollector>(name, PreferenceName);
 }

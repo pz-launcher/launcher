@@ -155,19 +155,7 @@ internal static class ZombieBuddyPreloadConfig
             return true;
         }
 
-        if (!File.Exists(inf) || !File.Exists(jar))
-        {
-            return false;
-        }
-
-        try
-        {
-            return await FileContent.EqualAsync(jar, entry.JarPath, ct).ConfigureAwait(false);
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-        {
-            return false;
-        }
+        return File.Exists(inf) && await FileContent.TryEqualAsync(jar, entry.JarPath, ct).ConfigureAwait(false);
     }
 
     private static string? Text(JsonNode? node) =>

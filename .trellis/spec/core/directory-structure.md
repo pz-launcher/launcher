@@ -4,7 +4,7 @@
 
 ```
 PzLauncher.Core/
-├── Common/          # Result, Error, ErrorCode, path helpers
+├── Common/          # Result, Error, ErrorCode, ErrorDetails, path helpers, atomic writes, strict UTF-8 text (Utf8TextFile), file comparison
 ├── Platform/        # IPlatformEnvironment + real implementation (OS seam)
 ├── Steam/           # Steam root/library discovery, Workshop library order, KeyValues parsing, launch hook in the current account's launch options
 ├── Installs/        # PZ game + dedicated server install detection

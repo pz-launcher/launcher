@@ -40,6 +40,7 @@ Reference: `PzLauncher.Desktop/Themes/ShellTheme.axaml`, `PzLauncher.Desktop/App
 
 - Shell colors are `Shell.*` brushes with a `Light` and a `Dark` value each (shadows: `Shell.*` `BoxShadows`, e.g. `Shell.LiftedShadow`). Views use `{DynamicResource}`; no color literals in views.
 - The Fluent accent in `App.axaml` equals `Shell.Accent`.
+- Page titles, section titles, error and warning text and hints use the `TextBlock` classes `pageTitle`, `sectionTitle`, `error`, `warning`, `hint` (`PzLauncher.Desktop/Themes/ShellStyles.axaml`). Never repeat their size, weight or color inline or in a view's local styles; a local style may only add a property (LaunchSettings' 12 px `hint`). `error`/`warning` don't wrap: each site sets `TextWrapping`.
 - ViewModels change the theme only through `IThemeService`.
 
 ## Motion
