@@ -1,0 +1,6 @@
+{"file": ".trellis/tasks/10-18-http-proxy/research/dotnet-proxy.md", "reason": "Verify SwitchableProxy never throws and forwards stable credentials"}
+{"file": ".trellis/spec/common/test-strategy.md", "reason": "Offline tests, fakes, error-code coverage"}
+{"file": ".trellis/spec/core/error-handling.md", "reason": "Error code wire names and ErrorCodeTests"}
+{"file": ".trellis/spec/desktop/preferences.md", "reason": "Preference field test matrix"}
+{"file": ".trellis/spec/desktop/localization.md", "reason": "Resx parity"}
+{"file": ".trellis/spec/common/coding-rules.md", "reason": "Banned APIs and style"}

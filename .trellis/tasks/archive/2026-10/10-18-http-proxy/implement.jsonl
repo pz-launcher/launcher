@@ -1,0 +1,10 @@
+{"file": ".trellis/tasks/10-18-http-proxy/research/dotnet-proxy.md", "reason": ".NET proxy behavior and the switchable IWebProxy constraints"}
+{"file": ".trellis/spec/common/architecture.md", "reason": "Core vs Desktop boundary"}
+{"file": ".trellis/spec/common/coding-rules.md", "reason": "General coding rules and banned APIs"}
+{"file": ".trellis/spec/core/service-api.md", "reason": "INetworkService shape, DI, DTOs"}
+{"file": ".trellis/spec/core/error-handling.md", "reason": "network.* error codes"}
+{"file": ".trellis/spec/core/directory-structure.md", "reason": "New Core Net/ folder"}
+{"file": ".trellis/spec/desktop/preferences.md", "reason": "proxy preference field and debounce rules"}
+{"file": ".trellis/spec/desktop/localization.md", "reason": "New UiText keys in every resx"}
+{"file": ".trellis/spec/desktop/shell-and-theming.md", "reason": "Settings section layout"}
+{"file": ".trellis/spec/desktop/directory-structure.md", "reason": "Where Desktop services/VMs/views go"}

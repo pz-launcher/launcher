@@ -6,9 +6,11 @@ using PzLauncher.Core.Java;
 using PzLauncher.Core.Launch;
 using PzLauncher.Core.Mod.Collections;
 using PzLauncher.Core.Mod.ZombieBuddy;
+using PzLauncher.Core.Net;
 using PzLauncher.Core.Platform;
 using PzLauncher.Core.Serialization;
 using PzLauncher.Core.Steam;
+using PzLauncher.Core.Update;
 
 namespace PzLauncher.Core.Tests.Common;
 
@@ -63,6 +65,17 @@ public partial class ErrorCodeTests
         [ErrorCode.ModCollectionFileUnreadable] = (ModCollectionErrors.FileUnreadable("p", "r"), ErrorKind.External),
         [ErrorCode.ModCollectionFileMalformed] = (ModCollectionErrors.FileMalformed("p", "r"), ErrorKind.External),
         [ErrorCode.ModCollectionFileWriteFailed] = (ModCollectionErrors.FileWriteFailed("p", "r"), ErrorKind.External),
+        [ErrorCode.UpdateNetworkFailed] = (UpdateErrors.NetworkFailed(UpdateSource.GitHub, "r"), ErrorKind.External),
+        [ErrorCode.UpdateReleaseInfoInvalid] = (UpdateErrors.ReleaseInfoInvalid(UpdateSource.Gitee, "r"), ErrorKind.External),
+        [ErrorCode.UpdatePackageInvalid] = (UpdateErrors.PackageInvalid("p", "r"), ErrorKind.External),
+        [ErrorCode.UpdateInstallFolderNotWritable] = (UpdateErrors.InstallFolderNotWritable("p", "r"), ErrorKind.Conflict),
+        [ErrorCode.UpdateInstallFailed] = (UpdateErrors.InstallFailed("p", "r"), ErrorKind.External),
+        [ErrorCode.UpdateDevelopmentBuild] = (UpdateErrors.DevelopmentBuild(SemVersion.Development), ErrorKind.Conflict),
+        [ErrorCode.UpdateRestartFailed] = (UpdateErrors.RestartFailed("p", "r"), ErrorKind.External),
+        [ErrorCode.NetworkProxyHostInvalid] = (NetworkErrors.ProxyHostInvalid("h"), ErrorKind.Validation),
+        [ErrorCode.NetworkProxyPortInvalid] = (NetworkErrors.ProxyPortInvalid(0), ErrorKind.Validation),
+        [ErrorCode.NetworkUnreachable] = (NetworkErrors.Unreachable("t", "r"), ErrorKind.External),
+        [ErrorCode.NetworkTimeout] = (NetworkErrors.Timeout("t", TimeSpan.FromSeconds(15)), ErrorKind.External),
     };
 
     [GeneratedRegex(@"^[a-z]+\.[a-z0-9]+(_[a-z0-9]+)*$")]
@@ -138,6 +151,17 @@ public partial class ErrorCodeTests
     [InlineData(ErrorCode.ModCollectionFileUnreadable, "modcollection.file_unreadable")]
     [InlineData(ErrorCode.ModCollectionFileMalformed, "modcollection.file_malformed")]
     [InlineData(ErrorCode.ModCollectionFileWriteFailed, "modcollection.file_write_failed")]
+    [InlineData(ErrorCode.UpdateNetworkFailed, "update.network_failed")]
+    [InlineData(ErrorCode.UpdateReleaseInfoInvalid, "update.release_info_invalid")]
+    [InlineData(ErrorCode.UpdatePackageInvalid, "update.package_invalid")]
+    [InlineData(ErrorCode.UpdateInstallFolderNotWritable, "update.install_folder_not_writable")]
+    [InlineData(ErrorCode.UpdateInstallFailed, "update.install_failed")]
+    [InlineData(ErrorCode.UpdateDevelopmentBuild, "update.development_build")]
+    [InlineData(ErrorCode.UpdateRestartFailed, "update.restart_failed")]
+    [InlineData(ErrorCode.NetworkProxyHostInvalid, "network.proxy_host_invalid")]
+    [InlineData(ErrorCode.NetworkProxyPortInvalid, "network.proxy_port_invalid")]
+    [InlineData(ErrorCode.NetworkUnreachable, "network.unreachable")]
+    [InlineData(ErrorCode.NetworkTimeout, "network.timeout")]
     public void ToWireName_ExistingCodes_AreStable(ErrorCode code, string wireName) =>
         Assert.Equal(wireName, code.ToWireName());
 

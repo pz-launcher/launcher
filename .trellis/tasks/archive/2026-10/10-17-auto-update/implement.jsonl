@@ -1,0 +1,9 @@
+{"file": ".trellis/spec/common/architecture.md", "reason": "Core vs Desktop boundary for the Update feature"}
+{"file": ".trellis/spec/common/coding-rules.md", "reason": "General coding rules"}
+{"file": ".trellis/spec/core/service-api.md", "reason": "IUpdateService shape, DI, test seams"}
+{"file": ".trellis/spec/core/error-handling.md", "reason": "New update.* error codes and exception boundaries"}
+{"file": ".trellis/spec/core/directory-structure.md", "reason": "Where Core/Update files go"}
+{"file": ".trellis/spec/desktop/preferences.md", "reason": "updateSource / autoCheckUpdates preference fields"}
+{"file": ".trellis/spec/desktop/localization.md", "reason": "New UiText keys in every resx"}
+{"file": ".trellis/spec/desktop/shell-and-theming.md", "reason": "Banner in MainView and Settings section"}
+{"file": ".trellis/spec/desktop/directory-structure.md", "reason": "Where Desktop services/VMs/views go"}

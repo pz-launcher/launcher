@@ -8,14 +8,16 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using PzLauncher.Core.Launch;
 using PzLauncher.Core.Mod.ZombieBuddy;
+using PzLauncher.Core.Net;
+using PzLauncher.Core.Update;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Themes;
 
 namespace PzLauncher.Desktop.Services;
 
-public sealed partial class JsonPreferenceStore(string filePath, ILogger logger) : IPreferenceStore
+public sealed partial class JsonPreferenceStore(string filePath, ILogger logger, ISecretProtector secrets) : IPreferenceStore
 {
-    private static readonly PreferencesFile Empty = new(null, null, null, null, null, null, null);
+    private static readonly PreferencesFile Empty = new(null, null, null, null, null, null, null, null, null, null);
 
     // Saves are fire-and-forget; one at a time so the last choice is the one left on disk.
     private readonly SemaphoreSlim _saveGate = new(1, 1);
@@ -70,8 +72,30 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger)
             LogInvalidDefaultModCollections(logger, filePath);
         }
 
+        var updateSource = file.UpdateSource is { ValueKind: JsonValueKind.String } source
+            ? UpdateSourcePreferences.FromPreferenceName(source.GetString())
+            : null;
+        if (updateSource is null && file.UpdateSource is { ValueKind: not JsonValueKind.Null })
+        {
+            LogInvalidUpdateSource(logger, filePath);
+        }
+
+        var autoCheckUpdates = file.AutoCheckUpdates?.ValueKind switch
+        {
+            JsonValueKind.True => true,
+            JsonValueKind.False => false,
+            _ => (bool?)null,
+        };
+        if (autoCheckUpdates is null && file.AutoCheckUpdates is { ValueKind: not JsonValueKind.Null })
+        {
+            LogInvalidAutoCheckUpdates(logger, filePath);
+        }
+
         return new UserPreferences(language, theme, window)
         {
+            UpdateSource = updateSource,
+            AutoCheckUpdates = autoCheckUpdates,
+            Proxy = ToProxy(file.Proxy),
             ManualJavaHomes = javaHomes,
             InstallOverrides = installs,
             ZombieBuddyChannels = channels,
@@ -152,6 +176,84 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger)
                 return file with { DefaultModCollections = entries };
             },
             ct);
+
+    public Task SaveUpdateSourceAsync(UpdateSource source, CancellationToken ct = default)
+    {
+        var entry = JsonSerializer.SerializeToElement(source.PreferenceName(), DesktopJsonContext.Default.String);
+        return SaveAsync(file => file with { UpdateSource = entry }, ct);
+    }
+
+    public Task SaveAutoCheckUpdatesAsync(bool enabled, CancellationToken ct = default)
+    {
+        var entry = JsonSerializer.SerializeToElement(enabled, DesktopJsonContext.Default.Boolean);
+        return SaveAsync(file => file with { AutoCheckUpdates = entry }, ct);
+    }
+
+    public Task SaveProxyAsync(SavedProxy proxy, CancellationToken ct = default)
+    {
+        string? password = null;
+        if (proxy.Password is { Length: > 0 } secret)
+        {
+            password = secrets.Protect(secret);
+            if (password is null)
+            {
+                LogProxyPasswordNotProtected(logger, filePath);
+            }
+        }
+
+        var entry = JsonSerializer.SerializeToElement(
+            new ProxyFile(
+                proxy.Mode.PreferenceName(),
+                proxy.Host is { Length: > 0 } host ? host : null,
+                proxy.Port,
+                proxy.Username is { Length: > 0 } username ? username : null,
+                password),
+            DesktopJsonContext.Default.ProxyFile);
+        return SaveAsync(file => file with { Proxy = entry }, ct);
+    }
+
+    private SavedProxy? ToProxy(JsonElement? element)
+    {
+        if (element is not { ValueKind: not JsonValueKind.Null } value)
+        {
+            return null;
+        }
+
+        ProxyFile? entry;
+        try
+        {
+            entry = value.Deserialize(DesktopJsonContext.Default.ProxyFile);
+        }
+        catch (JsonException)
+        {
+            entry = null;
+        }
+
+        if (entry is null || ProxyModePreferences.FromPreferenceName(entry.Mode) is not { } mode)
+        {
+            LogInvalidProxy(logger, filePath);
+            return null;
+        }
+
+        var host = entry.Host is { } savedHost && ProxySettingsValidation.NormalizeHost(savedHost) is not null ? savedHost : null;
+        var port = entry.Port is { } savedPort && ProxySettingsValidation.IsValidPort(savedPort) ? savedPort : (int?)null;
+        if ((host is null && entry.Host is not null) || (port is null && entry.Port is not null))
+        {
+            LogInvalidProxyAddress(logger, filePath);
+        }
+
+        string? password = null;
+        if (entry.Password is { } stored)
+        {
+            password = secrets.Unprotect(stored);
+            if (password is null)
+            {
+                LogProxyPasswordUnreadable(logger, filePath);
+            }
+        }
+
+        return new SavedProxy(mode, host, port, entry.Username is { Length: > 0 } username ? username : null, password);
+    }
 
     private static List<string> ToManualJavaHomes(IReadOnlyList<JsonElement>? entries) =>
     [
@@ -333,6 +435,24 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger)
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Default mod collection preference {Path} holds entries that aren't valid; ignoring them")]
     private static partial void LogInvalidDefaultModCollections(ILogger logger, string path);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Update source preference {Path} holds an unsupported value; using automatic")]
+    private static partial void LogInvalidUpdateSource(ILogger logger, string path);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Automatic update check preference {Path} is not true or false; checking automatically")]
+    private static partial void LogInvalidAutoCheckUpdates(ILogger logger, string path);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Proxy preference {Path} is not valid; using the system proxy")]
+    private static partial void LogInvalidProxy(ILogger logger, string path);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Proxy preference {Path} holds an invalid host or port; ignoring it")]
+    private static partial void LogInvalidProxyAddress(ILogger logger, string path);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Proxy password in {Path} could not be decrypted (another user, machine or OS); it must be entered again")]
+    private static partial void LogProxyPasswordUnreadable(ILogger logger, string path);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Proxy password could not be encrypted; saving {Path} without it")]
+    private static partial void LogProxyPasswordNotProtected(ILogger logger, string path);
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Preferences {Path} could not be saved")]
     private static partial void LogSaveFailed(ILogger logger, string path, Exception exception);

@@ -1,0 +1,77 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:PzLauncher.Desktop.ViewModels.Net"
+             xmlns:net="using:PzLauncher.Core.Net"
+             xmlns:design="using:PzLauncher.Desktop.ViewModels.Design"
+             xmlns:controls="using:PzLauncher.Desktop.Views.Controls"
+             xmlns:lang="using:PzLauncher.Desktop.Lang"
+             mc:Ignorable="d" d:DesignWidth="700" d:DesignHeight="640"
+             x:Class="PzLauncher.Desktop.Views.Settings.ProxySettingsView"
+             x:DataType="vm:ProxySettingsViewModel">
+
+    <Design.DataContext>
+        <x:Static Member="design:DesignData.ProxySettings" />
+    </Design.DataContext>
+
+    <UserControl.Styles>
+        <Style Selector="TextBlock.error">
+            <Setter Property="Foreground" Value="{DynamicResource Shell.ErrorForeground}" />
+        </Style>
+        <Style Selector="TextBlock.hint">
+            <Setter Property="Foreground" Value="{DynamicResource Shell.TextMuted}" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+        <Style Selector="TextBlock.fieldLabel">
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Margin" Value="0,0,12,0" />
+        </Style>
+    </UserControl.Styles>
+
+    <StackPanel Margin="24,16" Spacing="12">
+        <TextBlock Text="{x:Static lang:UiText.Settings_Proxy}" FontSize="22" FontWeight="SemiBold" />
+
+        <StackPanel Spacing="4">
+            <RadioButton Content="{x:Static lang:UiText.ProxyMode_System}"
+                         IsChecked="{Binding Mode, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static net:ProxyMode.System}}" />
+            <TextBlock Classes="hint" Text="{Binding SystemHint}" Margin="28,0,0,4" />
+            <RadioButton Content="{x:Static lang:UiText.ProxyMode_None}"
+                         IsChecked="{Binding Mode, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static net:ProxyMode.None}}" />
+            <RadioButton Content="{x:Static lang:UiText.ProxyMode_Manual}"
+                         IsChecked="{Binding Mode, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static net:ProxyMode.Manual}}" />
+        </StackPanel>
+
+        <StackPanel Spacing="8" Margin="28,0,0,0" IsEnabled="{Binding IsManual}">
+            <Grid ColumnDefinitions="Auto,Auto" RowDefinitions="Auto,8,Auto,8,Auto,8,Auto" HorizontalAlignment="Left">
+                <TextBlock Grid.Row="0" Grid.Column="0" Classes="fieldLabel" Text="{x:Static lang:UiText.Proxy_Address}" />
+                <TextBox Grid.Row="0" Grid.Column="1" Width="280" Text="{Binding Host}" />
+                <TextBlock Grid.Row="2" Grid.Column="0" Classes="fieldLabel" Text="{x:Static lang:UiText.Proxy_Port}" />
+                <TextBox Grid.Row="2" Grid.Column="1" Width="120" HorizontalAlignment="Left" Text="{Binding Port}" />
+                <TextBlock Grid.Row="4" Grid.Column="0" Classes="fieldLabel" Text="{x:Static lang:UiText.Proxy_Username}" />
+                <TextBox Grid.Row="4" Grid.Column="1" Width="280" Text="{Binding Username}" />
+                <TextBlock Grid.Row="6" Grid.Column="0" Classes="fieldLabel" Text="{x:Static lang:UiText.Proxy_Password}" />
+                <TextBox Grid.Row="6" Grid.Column="1" Width="280" Text="{Binding Password}" PasswordChar="•" />
+            </Grid>
+            <TextBlock Classes="hint" Text="{x:Static lang:UiText.Proxy_ManualHint}" MaxWidth="560" HorizontalAlignment="Left" />
+            <TextBlock Classes="hint" Text="{x:Static lang:UiText.Proxy_PasswordPlainText}" MaxWidth="560" HorizontalAlignment="Left"
+                       IsVisible="{Binding IsPasswordStoredInPlainText}" />
+        </StackPanel>
+
+        <TextBlock Classes="error" Text="{Binding ErrorText}" TextWrapping="Wrap"
+                   IsVisible="{Binding ErrorText, Converter={x:Static ObjectConverters.IsNotNull}}" />
+
+        <Button Content="{x:Static lang:UiText.Proxy_TestConnection}" Command="{Binding TestConnectionCommand}" />
+        <ProgressBar IsIndeterminate="True" Width="480" HorizontalAlignment="Left" IsVisible="{Binding TestConnectionCommand.IsRunning}" />
+        <ItemsControl ItemsSource="{Binding TestResults}">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:ConnectionTestRow">
+                    <Grid ColumnDefinitions="80,*" Margin="0,2">
+                        <TextBlock Grid.Column="0" Text="{Binding Name}" FontWeight="SemiBold" />
+                        <TextBlock Grid.Column="1" Text="{Binding Text}" TextWrapping="Wrap" Classes.error="{Binding IsError}" />
+                    </Grid>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </StackPanel>
+</UserControl>

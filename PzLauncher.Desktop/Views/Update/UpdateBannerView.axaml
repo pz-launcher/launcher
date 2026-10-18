@@ -1,0 +1,44 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:PzLauncher.Desktop.ViewModels.Update"
+             xmlns:design="using:PzLauncher.Desktop.ViewModels.Design"
+             xmlns:lang="using:PzLauncher.Desktop.Lang"
+             xmlns:ic="using:FluentIcons.Avalonia"
+             mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="60"
+             x:Class="PzLauncher.Desktop.Views.Update.UpdateBannerView"
+             x:DataType="vm:UpdateBannerViewModel"
+             IsVisible="{Binding IsVisible}">
+
+    <Design.DataContext>
+        <x:Static Member="design:DesignData.UpdateBanner" />
+    </Design.DataContext>
+
+    <Border Background="{DynamicResource Shell.BannerBackground}" BorderBrush="{DynamicResource Shell.Border}" BorderThickness="0,0,0,1"
+            Padding="16,8">
+        <Grid ColumnDefinitions="Auto,*,Auto">
+            <ic:FluentIcon Grid.Column="0" Icon="ArrowDownload" IconVariant="Regular" FontSize="18" VerticalAlignment="Center"
+                           Foreground="{DynamicResource Shell.BannerIcon}" Margin="0,0,10,0" />
+
+            <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                <TextBlock Text="{Binding Text}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                <TextBlock Text="{Binding RestartBlockedText}" Foreground="{DynamicResource Shell.TextMuted}" TextWrapping="Wrap"
+                           IsVisible="{Binding RestartBlockedText, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                <TextBlock Text="{Binding ErrorText}" Foreground="{DynamicResource Shell.ErrorForeground}" TextWrapping="Wrap"
+                           IsVisible="{Binding ErrorText, Converter={x:Static ObjectConverters.IsNotNull}}" />
+            </StackPanel>
+
+            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" Margin="12,0,0,0">
+                <Button Classes="accent" Content="{x:Static lang:UiText.Update_Restart}" Command="{Binding RestartCommand}"
+                        IsVisible="{Binding OffersRestart}" />
+                <Button Classes="accent" Content="{x:Static lang:UiText.Update_OpenDownloadPage}" Command="{Binding OpenDownloadPageCommand}"
+                        IsVisible="{Binding OffersDownloadPage}" />
+                <Button Content="{x:Static lang:UiText.Update_Later}" Command="{Binding LaterCommand}"
+                        IsVisible="{Binding !OffersDismissOnly}" />
+                <Button Content="{x:Static lang:UiText.Update_Dismiss}" Command="{Binding LaterCommand}"
+                        IsVisible="{Binding OffersDismissOnly}" />
+            </StackPanel>
+        </Grid>
+    </Border>
+</UserControl>

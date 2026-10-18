@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging.Abstractions;
 using PzLauncher.Core.Common;
 using PzLauncher.Core.Installs;
 using PzLauncher.Core.Java;
@@ -6,11 +7,14 @@ using PzLauncher.Core.Mod;
 using PzLauncher.Core.Mod.Collections;
 using PzLauncher.Core.Mod.Zabric;
 using PzLauncher.Core.Mod.ZombieBuddy;
+using PzLauncher.Core.Net;
 using PzLauncher.Core.Platform;
+using PzLauncher.Core.Update;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Services;
 using PzLauncher.Desktop.Themes;
 using PzLauncher.Desktop.ViewModels.Java;
+using PzLauncher.Desktop.ViewModels.Net;
 using PzLauncher.Desktop.ViewModels.ZombieBuddy;
 
 namespace PzLauncher.Desktop.Tests.TestSupport;
@@ -186,6 +190,33 @@ public sealed class FakePreferenceStore : IPreferenceStore
     {
         SavedDefaultModCollections.Add((installRoot, name));
         return Task.CompletedTask;
+    }
+
+    public List<UpdateSource> SavedUpdateSources { get; } = [];
+
+    public Task SaveUpdateSourceAsync(UpdateSource source, CancellationToken ct = default)
+    {
+        SavedUpdateSources.Add(source);
+        return Task.CompletedTask;
+    }
+
+    public List<bool> SavedAutoCheckUpdates { get; } = [];
+
+    public Task SaveAutoCheckUpdatesAsync(bool enabled, CancellationToken ct = default)
+    {
+        SavedAutoCheckUpdates.Add(enabled);
+        return Task.CompletedTask;
+    }
+
+    public List<SavedProxy> SavedProxies { get; } = [];
+
+    /// <summary>Holds proxy saves open until completed.</summary>
+    public TaskCompletionSource? ProxySaveGate { get; set; }
+
+    public Task SaveProxyAsync(SavedProxy proxy, CancellationToken ct = default)
+    {
+        SavedProxies.Add(proxy);
+        return ProxySaveGate?.Task ?? Task.CompletedTask;
     }
 }
 
@@ -695,4 +726,197 @@ public sealed class FakePlatformEnvironment : IPlatformEnvironment
     public IReadOnlyList<string> GetRegistrySubKeyNames(RegistryHiveKind hive, string path) => [];
 
     public string? ReadRegistryString(RegistryHiveKind hive, string path, string name) => null;
+}
+
+/// <summary>Records every call; <see cref="Checks"/> and <see cref="Downloads"/> stand for network requests.</summary>
+public sealed class FakeUpdateService : IUpdateService
+{
+    public SemVersion CurrentVersion { get; set; } = TestUpdates.Current;
+
+    public bool IsDevelopmentBuild => CurrentVersion.IsDevelopment;
+
+    public bool CanInstallInPlace { get; set; } = true;
+
+    /// <summary>Default: up to date, or <c>update.development_build</c> on a development build.</summary>
+    public Func<UpdateSource, Result<UpdateCheck>>? Check { get; set; }
+
+    public Func<ReleaseInfo, Result<StagedUpdate>> Download { get; set; } = release => TestUpdates.Staged(release.Version);
+
+    /// <summary>Reported in order before <see cref="DownloadGate"/> is awaited.</summary>
+    public IReadOnlyList<DownloadProgress> DownloadReports { get; set; } = [];
+
+    public TaskCompletionSource? DownloadGate { get; set; }
+
+    public StagedUpdate? StagedAtStart { get; set; }
+
+    public Func<StagedUpdate, Result> Install { get; set; } = _ => Result.Ok();
+
+    public Func<Result> StartInstalled { get; set; } = Result.Ok;
+
+    public List<UpdateSource> Checks { get; } = [];
+
+    public List<ReleaseInfo> Downloads { get; } = [];
+
+    public List<StagedUpdate> Installs { get; } = [];
+
+    public int StartCalls { get; private set; }
+
+    public int GetStagedCalls { get; private set; }
+
+    public int CleanUpCalls { get; private set; }
+
+    public int RequestCount => Checks.Count + Downloads.Count;
+
+    public Task<Result<UpdateCheck>> CheckAsync(UpdateSource source, CancellationToken ct = default)
+    {
+        Checks.Add(source);
+        Result<UpdateCheck> result = Check is { } check ? check(source)
+            : IsDevelopmentBuild ? TestErrors.Create(ErrorCode.UpdateDevelopmentBuild)
+            : new UpdateCheck(CurrentVersion, null);
+        return Task.FromResult(result);
+    }
+
+    public async Task<Result<StagedUpdate>> DownloadAsync(
+        ReleaseInfo release, IProgress<DownloadProgress>? progress = null, CancellationToken ct = default)
+    {
+        Downloads.Add(release);
+        foreach (var report in DownloadReports)
+        {
+            progress?.Report(report);
+        }
+
+        if (DownloadGate is { } gate)
+        {
+            await gate.Task.WaitAsync(ct);
+        }
+
+        return Download(release);
+    }
+
+    public Task<StagedUpdate?> GetStagedAsync(CancellationToken ct = default)
+    {
+        GetStagedCalls++;
+        return Task.FromResult(StagedAtStart);
+    }
+
+    public Task<Result> InstallAsync(StagedUpdate staged, CancellationToken ct = default)
+    {
+        Installs.Add(staged);
+        return Task.FromResult(Install(staged));
+    }
+
+    public Task<Result> StartInstalledAsync(CancellationToken ct = default)
+    {
+        StartCalls++;
+        return Task.FromResult(StartInstalled());
+    }
+
+    public Task CleanUpLeftoversAsync(CancellationToken ct = default)
+    {
+        CleanUpCalls++;
+        return Task.CompletedTask;
+    }
+}
+
+public sealed class FakeAppLifetime : IAppLifetime
+{
+    public int CloseCalls { get; private set; }
+
+    public void Close() => CloseCalls++;
+}
+
+public sealed class FakeUrlLauncher : IUrlLauncher
+{
+    public List<Uri> Opened { get; } = [];
+
+    public Task<bool> OpenAsync(Uri url)
+    {
+        Opened.Add(url);
+        return Task.FromResult(true);
+    }
+}
+
+public static class TestUpdates
+{
+    public static readonly SemVersion Current = Version("0.2.0");
+
+    public static SemVersion Version(string text) =>
+        SemVersion.TryParse(text, out var version) ? version : throw new ArgumentException($"Not a version: {text}", nameof(text));
+
+    public static ReleaseInfo Release(string version = "0.3.0", UpdateSource source = UpdateSource.GitHub, long? size = 1000) =>
+        new(
+            Version(version),
+            source,
+            $"PzLauncher-{version}-win-x64.zip",
+            new Uri($"https://example.test/download/PzLauncher-{version}-win-x64.zip"),
+            size,
+            null,
+            new Uri($"https://example.test/releases/v{version}"));
+
+    public static StagedUpdate Staged(SemVersion version) =>
+        new(version, $@"C:\Games\PzLauncher\.update\staged\{version}", new Uri($"https://example.test/releases/v{version}"));
+
+    public static Result<UpdateCheck> Found(string version = "0.3.0", UpdateSource source = UpdateSource.GitHub) =>
+        new UpdateCheck(Current, Release(version, source));
+
+    public static UpdateCoordinator Coordinator(
+        FakeUpdateService updates,
+        IPreferenceStore? preferences = null,
+        UserPreferences? saved = null,
+        GameRunState? runState = null,
+        IAppLifetime? app = null) =>
+        new(updates, preferences ?? new FakePreferenceStore(), saved ?? new UserPreferences(null, null, null), runState ?? new GameRunState(), app ?? new FakeAppLifetime());
+}
+
+/// <summary>Validates like Core; <see cref="Applied"/> stands for every route switch.</summary>
+public sealed class FakeNetworkService : INetworkService
+{
+    public ProxySettings Proxy { get; private set; } = ProxySettings.Default;
+
+    public List<ProxySettings> Applied { get; } = [];
+
+    public Func<IReadOnlyList<ConnectionTestResult>> Results { get; set; } = () => [];
+
+    /// <summary>Holds a test open until completed.</summary>
+    public TaskCompletionSource? TestGate { get; set; }
+
+    /// <summary>The settings in effect when each test started.</summary>
+    public List<ProxySettings> Tests { get; } = [];
+
+    public Result ApplyProxy(ProxySettings settings)
+    {
+        var validated = ProxySettingsValidation.Validate(settings);
+        if (!validated.IsSuccess)
+        {
+            return validated.Error;
+        }
+
+        Proxy = validated.Value;
+        Applied.Add(validated.Value);
+        return Result.Ok();
+    }
+
+    public async Task<IReadOnlyList<ConnectionTestResult>> TestConnectionAsync(CancellationToken ct = default)
+    {
+        Tests.Add(Proxy);
+        if (TestGate is { } gate)
+        {
+            await gate.Task.WaitAsync(ct);
+        }
+
+        return Results();
+    }
+}
+
+public static class TestProxy
+{
+    public static ProxySettingsService Service(
+        FakeNetworkService network, IPreferenceStore store, SavedProxy? saved = null, TimeProvider? time = null) =>
+        new(network, store, new UserPreferences(null, null, null) { Proxy = saved }, time ?? new ManualTimeProvider(), NullLogger<ProxySettingsService>.Instance);
+
+    public static ProxySettingsViewModel ViewModel(ILocalizationService localization, IPreferenceStore store)
+    {
+        var network = new FakeNetworkService();
+        return new ProxySettingsViewModel(Service(network, store), network, new FakePlatformEnvironment(), localization);
+    }
 }

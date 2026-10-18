@@ -6,11 +6,15 @@
         <ApplicationManifest>app.manifest</ApplicationManifest>
         <IsAotCompatible>true</IsAotCompatible>
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+        <!-- LibraryImport-generated marshalling code (WindowsDpapiSecretProtector). -->
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <!-- A binding without x:DataType in scope fails the build. -->
         <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
         <AssemblyName>PzLauncher</AssemblyName>
         <RootNamespace>PzLauncher.Desktop</RootNamespace>
         <NeutralLanguage>en</NeutralLanguage>
+        <!-- Local builds are development builds that never update themselves; release.yml passes -p:Version from the tag. -->
+        <Version>0.0.0-dev</Version>
     </PropertyGroup>
 
     <ItemGroup>

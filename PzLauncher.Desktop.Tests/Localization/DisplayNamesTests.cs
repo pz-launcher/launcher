@@ -4,6 +4,8 @@ using PzLauncher.Core.Java;
 using PzLauncher.Core.Launch;
 using PzLauncher.Core.Mod;
 using PzLauncher.Core.Mod.ZombieBuddy;
+using PzLauncher.Core.Net;
+using PzLauncher.Core.Update;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Tests.TestSupport;
 
@@ -24,6 +26,8 @@ public class DisplayNamesTests : UiTextCultureTest
         AssertDistinctNonEmpty([.. Enum.GetValues<InstalledModSource>().Select(DisplayNames.Of)]);
         AssertDistinctNonEmpty([.. Enum.GetValues<ZombieBuddyChannel>().Select(DisplayNames.Of)]);
         AssertDistinctNonEmpty([.. Enum.GetValues<ZombieBuddyStep>().Select(DisplayNames.Of)]);
+        AssertDistinctNonEmpty([.. Enum.GetValues<UpdateSource>().Select(DisplayNames.Of)]);
+        AssertDistinctNonEmpty([.. Enum.GetValues<ProxyMode>().Select(DisplayNames.Of)]);
     }
 
     [Theory]

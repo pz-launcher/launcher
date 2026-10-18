@@ -19,6 +19,7 @@ public sealed partial class WindowPlacementPersistence
     private readonly Window _window;
     private readonly IPreferenceStore _store;
     private readonly Func<CancellationToken, Task> _flushPendingSaves;
+    private readonly Func<CancellationToken, Task> _finishOnClose;
     private readonly ILogger _logger;
     private readonly Size _defaultSize;
 
@@ -30,11 +31,17 @@ public sealed partial class WindowPlacementPersistence
     private bool _saved;
 
     private WindowPlacementPersistence(
-        Window window, IPreferenceStore store, WindowPlacement? saved, Func<CancellationToken, Task> flushPendingSaves, ILogger logger)
+        Window window,
+        IPreferenceStore store,
+        WindowPlacement? saved,
+        Func<CancellationToken, Task> flushPendingSaves,
+        Func<CancellationToken, Task> finishOnClose,
+        ILogger logger)
     {
         _window = window;
         _store = store;
         _flushPendingSaves = flushPendingSaves;
+        _finishOnClose = finishOnClose;
         _logger = logger;
         _defaultSize = new Size(window.Width, window.Height);
 
@@ -50,10 +57,16 @@ public sealed partial class WindowPlacementPersistence
     }
 
     /// <summary>Call before the window is shown.</summary>
+    /// <param name="finishOnClose">Runs with the saves, but never during an OS shutdown, which may cut it off halfway.</param>
     public static WindowPlacementPersistence Attach(
-        Window window, IPreferenceStore store, WindowPlacement? saved, Func<CancellationToken, Task> flushPendingSaves, ILogger logger)
+        Window window,
+        IPreferenceStore store,
+        WindowPlacement? saved,
+        Func<CancellationToken, Task> flushPendingSaves,
+        Func<CancellationToken, Task> finishOnClose,
+        ILogger logger)
     {
-        return new WindowPlacementPersistence(window, store, saved, flushPendingSaves, logger);
+        return new WindowPlacementPersistence(window, store, saved, flushPendingSaves, finishOnClose, logger);
     }
 
     /// <summary>The XAML default size, centered on the screen the window is on.</summary>
@@ -181,7 +194,8 @@ public sealed partial class WindowPlacementPersistence
         try
         {
             using var timeout = new CancellationTokenSource(SaveTimeout);
-            await Task.WhenAll(_store.SaveWindowPlacementAsync(placement, timeout.Token), _flushPendingSaves(timeout.Token));
+            await Task.WhenAll(
+                _store.SaveWindowPlacementAsync(placement, timeout.Token), _flushPendingSaves(timeout.Token), _finishOnClose(timeout.Token));
         }
         catch (OperationCanceledException)
         {
