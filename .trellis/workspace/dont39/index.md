@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 12
+- **Total Sessions**: 13
 - **Last Active**: 2026-10-18
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~323 | Active |
+| `journal-1.md` | ~345 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 13 | 2026-10-18 | Merge main into PR #10 | `d97d785` | `zb-skip-online-checks` |
 | 12 | 2026-10-18 | Launcher auto-update and proxy settings | `6d35946` | `main` |
 | 11 | 2026-10-17 | Unify ZombieBuddy Java mod launch setup | `651578e` | `zb-skip-online-checks` |
 | 10 | 2026-10-17 | ZB Skip Online Checks setup at launch | `dd48a76` | `main` |

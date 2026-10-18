@@ -321,3 +321,25 @@ Auto-update: races GitHub and Gitee release APIs, downloads the platform package
 ### Status
 
 [OK] **Completed**
+
+
+## Session 13: Merge main into PR #10
+<!-- trellis-session: v=2 fp=0e67bf58283c4706 -->
+
+**Date**: 2026-10-18
+**Task**: Merge main into PR #10
+**Branch**: `zb-skip-online-checks`
+
+### Summary
+
+Merged origin/main (launcher auto-update and proxy settings, #11) into zb-skip-online-checks. Resolved directory-structure.md by keeping both sides (mod launch-step lines plus Update/ and Net/; both constants files), rebuilt journal-1.md and index.md in chronological order (sessions 10, 11 then 12) after git interleaved them. Merged tree builds with 0 warnings; tests pass (Core 1197/3 skipped, Desktop 1326).
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `d97d785` | Merge remote-tracking branch 'origin/main' into zb-skip-online-checks |
+
+### Status
+
+[OK] **Completed**
