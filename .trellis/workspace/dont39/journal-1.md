@@ -455,3 +455,25 @@ Grouped Workshop files into Sources/Actions/Helper subfolders; shared duplicated
 ### Status
 
 [OK] **Completed**
+
+
+## Session 19: Local Workshop favorites with share/import
+<!-- trellis-session: v=2 fp=81b54faf6c8ac47d -->
+
+**Date**: 2026-10-19
+**Task**: Local Workshop favorites with share/import
+**Branch**: `feat/workshop-management`
+
+### Summary
+
+Launcher-local stars for Steam collections and items (preference workshopFavorites, not per account); 本地收藏 group and 本地收藏的物品 pseudo-collection in 工坊合集; star column and filter in 工坊订阅; share as #collections/#items id text, import merges with Web API classification of unmarked ids. Tests: Core 1578, Desktop 1778; AOT 0 warnings.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `bcbc0af` | Star Workshop collections and items locally, and share them |
+
+### Status
+
+[OK] **Completed**
