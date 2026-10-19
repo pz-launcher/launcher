@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 17
+- **Total Sessions**: 18
 - **Last Active**: 2026-10-19
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~433 | Active |
+| `journal-1.md` | ~457 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 18 | 2026-10-19 | Favorited and own Steam collections; Workshop reuse refactor | `5288c3b`, `2059178`, `e3969a8` | `feat/workshop-management` |
 | 17 | 2026-10-19 | Steam Workshop management | `ce67881` | `feat/workshop-management` |
 | 16 | 2026-10-18 | Extract shared code and split oversized files | `e14b8b4` | `refactor/extract-shared-code` |
 | 15 | 2026-10-18 | Steam launch hook setting | `f28b7f7` | `feat/steam-launch-hook` |

@@ -431,3 +431,27 @@ Added 工坊订阅 and 工坊合集 sections to the Mods tab: subscriptions from
 ### Status
 
 [OK] **Completed**
+
+
+## Session 18: Favorited and own Steam collections; Workshop reuse refactor
+<!-- trellis-session: v=2 fp=2aaedf0cb27f58a7 -->
+
+**Date**: 2026-10-19
+**Task**: Favorited and own Steam collections; Workshop reuse refactor
+**Branch**: `feat/workshop-management`
+
+### Summary
+
+Grouped Workshop files into Sources/Actions/Helper subfolders; shared duplicated Workshop code with existing helpers (HttpJson, SteamKeyValues read/parse, WorkshopItem.WithLatest, section/dialog base VMs, shared styles). Added favorited + own Steam collections to 工坊合集 via a read-only helper query (creator 0, consumer 108600, paged), cached per account, auto-fetched once per session plus 刷新; Steam-not-running doesn't consume the auto fetch. Live read-only check matched expected ids/counts with CJK titles. Tests: Core 1578, Desktop 1724.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `5288c3b` | Group Workshop files into Sources, Actions and Helper subfolders |
+| `2059178` | Share duplicated Workshop code with existing helpers |
+| `e3969a8` | List favorited and own Steam collections in 工坊合集 |
+
+### Status
+
+[OK] **Completed**
