@@ -944,6 +944,12 @@
   <data name="Workshop_FilterUnused" xml:space="preserve">
     <value>未被任何合集使用</value>
   </data>
+  <data name="Workshop_FilterFavorites" xml:space="preserve">
+    <value>本機收藏</value>
+  </data>
+  <data name="Workshop_FavoriteToggle" xml:space="preserve">
+    <value>加入或移出本機收藏</value>
+  </data>
   <data name="Workshop_ColumnTitle" xml:space="preserve">
     <value>標題</value>
   </data>
@@ -1165,6 +1171,42 @@
   </data>
   <data name="WorkshopCollections_SkippedNoMods" xml:space="preserve">
     <value>不含模組</value>
+  </data>
+  <data name="WorkshopFavorites_Title" xml:space="preserve">
+    <value>本機收藏</value>
+  </data>
+  <data name="WorkshopFavorites_Items" xml:space="preserve">
+    <value>本機收藏的項目</value>
+  </data>
+  <data name="WorkshopFavorites_CollectionsEmpty" xml:space="preserve">
+    <value>加上星號的合輯會列在這裡。</value>
+  </data>
+  <data name="WorkshopFavorites_ItemsEmpty" xml:space="preserve">
+    <value>還沒有收藏任何項目。在工作坊訂閱或合輯中加上星號即可收藏。</value>
+  </data>
+  <data name="WorkshopFavorites_CollectionName" xml:space="preserve">
+    <value>本機收藏</value>
+  </data>
+  <data name="WorkshopFavorites_Share" xml:space="preserve">
+    <value>複製本機收藏的 ID，分享給別人</value>
+  </data>
+  <data name="WorkshopFavorites_Shared" xml:space="preserve">
+    <value>已將 {0} 個合輯和 {1} 個項目複製到剪貼簿。</value>
+  </data>
+  <data name="WorkshopFavorites_Import" xml:space="preserve">
+    <value>匯入</value>
+  </data>
+  <data name="WorkshopFavorites_ImportTitle" xml:space="preserve">
+    <value>匯入本機收藏</value>
+  </data>
+  <data name="WorkshopFavorites_ImportMessage" xml:space="preserve">
+    <value>貼上從啟動器分享的本機收藏，或工作坊連結和 ID，每行一個。已有的收藏會保留。</value>
+  </data>
+  <data name="WorkshopFavorites_ImportNothing" xml:space="preserve">
+    <value>找不到工作坊連結或 ID。</value>
+  </data>
+  <data name="WorkshopFavorites_Imported" xml:space="preserve">
+    <value>已新增 {0} 個合輯和 {1} 個項目，略過 {2} 行。</value>
   </data>
   <data name="WorkshopLaunch_Title" xml:space="preserve">
     <value>工作坊有更新</value>

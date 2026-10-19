@@ -22,7 +22,7 @@ namespace PzLauncher.Desktop.Services.Preferences;
 
 public sealed partial class JsonPreferenceStore(string filePath, ILogger logger, ISecretProtector secrets) : IPreferenceStore
 {
-    private static readonly PreferencesFile Empty = new(null, null, null, null, null, null, null, null, null, null, null, null, null);
+    private static readonly PreferencesFile Empty = new(null, null, null, null, null, null, null, null, null, null, null, null, null, null);
 
     private delegate bool EntryReader<T>(JsonElement element, [MaybeNullWhen(false)] out T value);
 
@@ -99,7 +99,7 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger,
             LogInvalidSteamHookReminder(logger, filePath);
         }
 
-        var workshopCollections = ToWorkshopCollections(file.WorkshopCollections, out var workshopCollectionsValid);
+        var workshopCollections = ToWorkshopEntries(file.WorkshopCollections, out var workshopCollectionsValid);
         if (!workshopCollectionsValid)
         {
             LogInvalidWorkshopCollections(logger, filePath);
@@ -109,6 +109,12 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger,
         if (!userCollectionsValid)
         {
             LogInvalidWorkshopUserCollections(logger, filePath);
+        }
+
+        var favorites = ToWorkshopFavorites(file.WorkshopFavorites, out var favoritesValid);
+        if (!favoritesValid)
+        {
+            LogInvalidWorkshopFavorites(logger, filePath);
         }
 
         return new UserPreferences(language, theme, window)
@@ -123,6 +129,7 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger,
             DefaultModCollections = collections,
             WorkshopCollections = workshopCollections,
             WorkshopUserCollections = userCollections,
+            WorkshopFavorites = favorites,
         };
     }
 
@@ -188,12 +195,23 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger,
         return SaveAsync(file => file with { SteamHookReminder = entry }, ct);
     }
 
-    public Task SaveWorkshopCollectionsAsync(IReadOnlyList<SavedWorkshopCollection> collections, CancellationToken ct = default)
+    public Task SaveWorkshopCollectionsAsync(IReadOnlyList<SavedWorkshopEntry> collections, CancellationToken ct = default)
     {
-        WorkshopCollectionFile[] entries =
-            [.. collections.Select(collection => new WorkshopCollectionFile(collection.Id.ToString(CultureInfo.InvariantCulture), collection.Title))];
-        var element = JsonSerializer.SerializeToElement(entries, DesktopJsonContext.Default.WorkshopCollectionFileArray);
+        var element = ToElement(collections);
         return SaveAsync(file => file with { WorkshopCollections = element }, ct);
+    }
+
+    public Task SaveWorkshopFavoritesAsync(SavedWorkshopFavorites favorites, CancellationToken ct = default)
+    {
+        var element = JsonSerializer.SerializeToElement(
+            new WorkshopFavoritesFile(ToElement(favorites.Collections), ToElement(favorites.Items)), DesktopJsonContext.Default.WorkshopFavoritesFile);
+        return SaveAsync(file => file with { WorkshopFavorites = element }, ct);
+    }
+
+    private static JsonElement ToElement(IReadOnlyList<SavedWorkshopEntry> entries)
+    {
+        WorkshopEntryFile[] files = [.. entries.Select(entry => new WorkshopEntryFile(entry.Id.ToString(CultureInfo.InvariantCulture), entry.Title))];
+        return JsonSerializer.SerializeToElement(files, DesktopJsonContext.Default.WorkshopEntryFileArray);
     }
 
     public Task SaveWorkshopUserCollectionsAsync(SavedWorkshopUserCollections collections, CancellationToken ct = default)
@@ -287,9 +305,9 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger,
     ];
 
     // A later entry with an id already read is dropped.
-    private static List<SavedWorkshopCollection> ToWorkshopCollections(JsonElement? element, out bool valid)
+    private static List<SavedWorkshopEntry> ToWorkshopEntries(JsonElement? element, out bool valid)
     {
-        var result = new List<SavedWorkshopCollection>();
+        var result = new List<SavedWorkshopEntry>();
         if (element is not { ValueKind: JsonValueKind.Array } array)
         {
             valid = element is null or { ValueKind: JsonValueKind.Null };
@@ -299,9 +317,9 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger,
         valid = true;
         foreach (var entry in array.EnumerateArray())
         {
-            if (ToWorkshopCollection(entry) is { } collection && !result.Exists(saved => saved.Id == collection.Id))
+            if (ToWorkshopEntry(entry) is { } read && !result.Exists(saved => saved.Id == read.Id))
             {
-                result.Add(collection);
+                result.Add(read);
             }
             else
             {
@@ -312,17 +330,38 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger,
         return result;
     }
 
-    private static SavedWorkshopCollection? ToWorkshopCollection(JsonElement element)
+    private static SavedWorkshopEntry? ToWorkshopEntry(JsonElement element)
     {
         if (element.ValueKind != JsonValueKind.Object)
         {
             return null;
         }
 
-        return TryDeserialize(element, DesktopJsonContext.Default.WorkshopCollectionFile) is { } entry
+        return TryDeserialize(element, DesktopJsonContext.Default.WorkshopEntryFile) is { } entry
             && ulong.TryParse(entry.Id, NumberStyles.None, CultureInfo.InvariantCulture, out var id) && id != 0
-            ? new SavedWorkshopCollection(id, entry.Title is { Length: > 0 } title ? title : null)
+            ? new SavedWorkshopEntry(id, entry.Title is { Length: > 0 } title ? title : null)
             : null;
+    }
+
+    // A non-object loads none; a list that is missing loads empty, one that isn't an array or a bad entry is dropped.
+    private static SavedWorkshopFavorites ToWorkshopFavorites(JsonElement? element, out bool valid)
+    {
+        valid = true;
+        if (element is not { ValueKind: not JsonValueKind.Null } value)
+        {
+            return SavedWorkshopFavorites.None;
+        }
+
+        if (value.ValueKind != JsonValueKind.Object || TryDeserialize(value, DesktopJsonContext.Default.WorkshopFavoritesFile) is not { } file)
+        {
+            valid = false;
+            return SavedWorkshopFavorites.None;
+        }
+
+        var collections = ToWorkshopEntries(file.Collections, out var collectionsValid);
+        var items = ToWorkshopEntries(file.Items, out var itemsValid);
+        valid = collectionsValid && itemsValid;
+        return new SavedWorkshopFavorites(collections, items);
     }
 
     // A missing account, time or list makes the whole entry invalid; a bad or repeated list entry is dropped.
@@ -568,6 +607,9 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger,
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Steam collection list preference {Path} holds entries that aren't valid; ignoring them")]
     private static partial void LogInvalidWorkshopUserCollections(ILogger logger, string path);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Workshop favorites preference {Path} holds entries that aren't valid; ignoring them")]
+    private static partial void LogInvalidWorkshopFavorites(ILogger logger, string path);
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Proxy preference {Path} is not valid; using the system proxy")]
     private static partial void LogInvalidProxy(ILogger logger, string path);

@@ -944,6 +944,12 @@
   <data name="Workshop_FilterUnused" xml:space="preserve">
     <value>未被任何合集使用</value>
   </data>
+  <data name="Workshop_FilterFavorites" xml:space="preserve">
+    <value>本地收藏</value>
+  </data>
+  <data name="Workshop_FavoriteToggle" xml:space="preserve">
+    <value>加入或移出本地收藏</value>
+  </data>
   <data name="Workshop_ColumnTitle" xml:space="preserve">
     <value>标题</value>
   </data>
@@ -1165,6 +1171,42 @@
   </data>
   <data name="WorkshopCollections_SkippedNoMods" xml:space="preserve">
     <value>不含模组</value>
+  </data>
+  <data name="WorkshopFavorites_Title" xml:space="preserve">
+    <value>本地收藏</value>
+  </data>
+  <data name="WorkshopFavorites_Items" xml:space="preserve">
+    <value>本地收藏的物品</value>
+  </data>
+  <data name="WorkshopFavorites_CollectionsEmpty" xml:space="preserve">
+    <value>点亮星标的合集会列在这里。</value>
+  </data>
+  <data name="WorkshopFavorites_ItemsEmpty" xml:space="preserve">
+    <value>还没有收藏任何物品。在工坊订阅或合集里点亮星标即可收藏。</value>
+  </data>
+  <data name="WorkshopFavorites_CollectionName" xml:space="preserve">
+    <value>本地收藏</value>
+  </data>
+  <data name="WorkshopFavorites_Share" xml:space="preserve">
+    <value>复制本地收藏的 ID，分享给别人</value>
+  </data>
+  <data name="WorkshopFavorites_Shared" xml:space="preserve">
+    <value>已将 {0} 个合集和 {1} 个物品复制到剪贴板。</value>
+  </data>
+  <data name="WorkshopFavorites_Import" xml:space="preserve">
+    <value>导入</value>
+  </data>
+  <data name="WorkshopFavorites_ImportTitle" xml:space="preserve">
+    <value>导入本地收藏</value>
+  </data>
+  <data name="WorkshopFavorites_ImportMessage" xml:space="preserve">
+    <value>粘贴从启动器分享的本地收藏，或工坊链接和 ID，每行一个。已有的收藏会保留。</value>
+  </data>
+  <data name="WorkshopFavorites_ImportNothing" xml:space="preserve">
+    <value>没有找到工坊链接或 ID。</value>
+  </data>
+  <data name="WorkshopFavorites_Imported" xml:space="preserve">
+    <value>已添加 {0} 个合集和 {1} 个物品，跳过 {2} 行。</value>
   </data>
   <data name="WorkshopLaunch_Title" xml:space="preserve">
     <value>创意工坊有更新</value>

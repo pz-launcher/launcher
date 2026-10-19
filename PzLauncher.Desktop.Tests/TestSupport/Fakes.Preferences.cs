@@ -100,9 +100,9 @@ public sealed class FakePreferenceStore : IPreferenceStore
         return Task.CompletedTask;
     }
 
-    public List<IReadOnlyList<SavedWorkshopCollection>> SavedWorkshopCollections { get; } = [];
+    public List<IReadOnlyList<SavedWorkshopEntry>> SavedWorkshopCollections { get; } = [];
 
-    public Task SaveWorkshopCollectionsAsync(IReadOnlyList<SavedWorkshopCollection> collections, CancellationToken ct = default)
+    public Task SaveWorkshopCollectionsAsync(IReadOnlyList<SavedWorkshopEntry> collections, CancellationToken ct = default)
     {
         SavedWorkshopCollections.Add(collections);
         return Task.CompletedTask;
@@ -113,6 +113,14 @@ public sealed class FakePreferenceStore : IPreferenceStore
     public Task SaveWorkshopUserCollectionsAsync(SavedWorkshopUserCollections collections, CancellationToken ct = default)
     {
         SavedWorkshopUserCollections.Add(collections);
+        return Task.CompletedTask;
+    }
+
+    public List<SavedWorkshopFavorites> SavedWorkshopFavorites { get; } = [];
+
+    public Task SaveWorkshopFavoritesAsync(SavedWorkshopFavorites favorites, CancellationToken ct = default)
+    {
+        SavedWorkshopFavorites.Add(favorites);
         return Task.CompletedTask;
     }
 }

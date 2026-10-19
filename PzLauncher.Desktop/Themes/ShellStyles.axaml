@@ -237,6 +237,17 @@
         <Setter Property="Margin" Value="0,0,8,0" />
     </Style>
 
+    <!-- Local favorite toggle: a Button with Classes.favorite bound to the starred state, holding an ic:FluentIcon.favoriteStar. -->
+    <Style Selector="ic|FluentIcon.favoriteStar">
+        <Setter Property="Icon" Value="Star" />
+        <Setter Property="IconVariant" Value="Regular" />
+        <Setter Property="FontSize" Value="14" />
+    </Style>
+    <Style Selector="Button.favorite ic|FluentIcon.favoriteStar">
+        <Setter Property="IconVariant" Value="Filled" />
+        <Setter Property="Foreground" Value="{DynamicResource Shell.Accent}" />
+    </Style>
+
     <!-- error and warning leave wrapping to each site: not every one wraps. -->
     <Style Selector="TextBlock.pageTitle">
         <Setter Property="FontSize" Value="22" />

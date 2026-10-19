@@ -32,7 +32,7 @@ public sealed class JsonPreferenceStoreTests : IDisposable
 
     private static readonly GameLaunchOverrides Overrides = new(JavaA, 8192, 2048, "-Dzomboid.steam=1", "-debug", GarbageCollector.Shenandoah);
 
-    private static readonly SavedWorkshopCollection SteamCollection = new(18446744073709551615, "B42 \"必备\" pack");
+    private static readonly SavedWorkshopEntry SteamCollection = new(18446744073709551615, "B42 \"必备\" pack");
 
     private static readonly SavedWorkshopUserCollections UserCollections = new(
         new DateTimeOffset(2026, 10, 19, 8, 30, 0, TimeSpan.Zero),
@@ -40,6 +40,10 @@ public sealed class JsonPreferenceStoreTests : IDisposable
             12345678,
             [new WorkshopCollectionSummary(18446744073709551615, "合集 \"one\"", 201), new WorkshopCollectionSummary(2690796635, null, 0)],
             [new WorkshopCollectionSummary(3815132834, "my", 214)]));
+
+    private static readonly SavedWorkshopFavorites Favorites = new(
+        [SteamCollection],
+        [new SavedWorkshopEntry(2002, "物品 \"one\""), new SavedWorkshopEntry(18446744073709551614, null)]);
 
     private static UserPreferences WithJava(params string[] homes) => new(null, null, null) { ManualJavaHomes = homes };
 
@@ -210,6 +214,7 @@ public sealed class JsonPreferenceStoreTests : IDisposable
     [InlineData(10)]
     [InlineData(11)]
     [InlineData(12)]
+    [InlineData(13)]
     public async Task SaveOneField_FileHoldsTheOthers_KeepsAll(int savedLast)
     {
         var ct = TestContext.Current.CancellationToken;
@@ -228,6 +233,7 @@ public sealed class JsonPreferenceStoreTests : IDisposable
             () => CreateStore().SaveSteamHookReminderAsync(false, ct),
             () => CreateStore().SaveWorkshopCollectionsAsync([SteamCollection], ct),
             () => CreateStore().SaveWorkshopUserCollectionsAsync(UserCollections, ct),
+            () => CreateStore().SaveWorkshopFavoritesAsync(Favorites, ct),
         ];
 
         // Separate stores, as across app runs.
@@ -249,6 +255,7 @@ public sealed class JsonPreferenceStoreTests : IDisposable
                 SteamHookReminder = false,
                 WorkshopCollections = [SteamCollection],
                 WorkshopUserCollections = UserCollections,
+                WorkshopFavorites = Favorites,
             },
             CreateStore().Load());
     }
@@ -275,7 +282,8 @@ public sealed class JsonPreferenceStoreTests : IDisposable
             store.SaveProxyAsync(ManualProxy, TestContext.Current.CancellationToken),
             store.SaveSteamHookReminderAsync(false, TestContext.Current.CancellationToken),
             store.SaveWorkshopCollectionsAsync([SteamCollection], TestContext.Current.CancellationToken),
-            store.SaveWorkshopUserCollectionsAsync(UserCollections, TestContext.Current.CancellationToken));
+            store.SaveWorkshopUserCollectionsAsync(UserCollections, TestContext.Current.CancellationToken),
+            store.SaveWorkshopFavoritesAsync(Favorites, TestContext.Current.CancellationToken));
 
         Assert.Equal(
             new UserPreferences(AppLanguage.PortugueseBrazil, AppTheme.Dark, Placement)
@@ -290,6 +298,7 @@ public sealed class JsonPreferenceStoreTests : IDisposable
                 SteamHookReminder = false,
                 WorkshopCollections = [SteamCollection],
                 WorkshopUserCollections = UserCollections,
+                WorkshopFavorites = Favorites,
             },
             CreateStore().Load());
     }
@@ -312,6 +321,7 @@ public sealed class JsonPreferenceStoreTests : IDisposable
         await CreateStore().SaveSteamHookReminderAsync(false, TestContext.Current.CancellationToken);
         await CreateStore().SaveWorkshopCollectionsAsync([SteamCollection], TestContext.Current.CancellationToken);
         await CreateStore().SaveWorkshopUserCollectionsAsync(UserCollections, TestContext.Current.CancellationToken);
+        await CreateStore().SaveWorkshopFavoritesAsync(Favorites, TestContext.Current.CancellationToken);
 
         Assert.Equal(new UserPreferences(null, null, null), CreateStore().Load());
     }
@@ -683,7 +693,7 @@ public sealed class JsonPreferenceStoreTests : IDisposable
     [Fact]
     public async Task SaveWorkshopCollectionsAsync_ThenLoad_RoundTripsInOrder()
     {
-        var untitled = new SavedWorkshopCollection(2002, null);
+        var untitled = new SavedWorkshopEntry(2002, null);
 
         await CreateStore().SaveWorkshopCollectionsAsync([untitled, SteamCollection], TestContext.Current.CancellationToken);
 
@@ -694,7 +704,7 @@ public sealed class JsonPreferenceStoreTests : IDisposable
     public async Task SaveWorkshopCollectionsAsync_WritesIdsAsTextAndOmitsUnknownTitles()
     {
         await CreateStore().SaveWorkshopCollectionsAsync(
-            [new SavedWorkshopCollection(18446744073709551615, "B42 pack"), new SavedWorkshopCollection(2002, null)],
+            [new SavedWorkshopEntry(18446744073709551615, "B42 pack"), new SavedWorkshopEntry(2002, null)],
             TestContext.Current.CancellationToken);
 
         Assert.Equal(
@@ -827,6 +837,89 @@ public sealed class JsonPreferenceStoreTests : IDisposable
     public void Load_InvalidWorkshopUserCollections_KeepsOtherFieldsAndLoadsNull(string value)
     {
         WriteFile($$"""{"theme":"dark","workshopUserCollections":{{value}}}""");
+
+        Assert.Equal(new UserPreferences(null, AppTheme.Dark, null), CreateStore().Load());
+    }
+
+    [Fact]
+    public async Task SaveWorkshopFavoritesAsync_ThenLoad_RoundTripsInOrder()
+    {
+        await CreateStore().SaveWorkshopFavoritesAsync(Favorites, TestContext.Current.CancellationToken);
+
+        Assert.Equal(new UserPreferences(null, null, null) { WorkshopFavorites = Favorites }, CreateStore().Load());
+    }
+
+    [Fact]
+    public async Task SaveWorkshopFavoritesAsync_WritesIdsAsTextAndOmitsUnknownTitles()
+    {
+        await CreateStore().SaveWorkshopFavoritesAsync(
+            new SavedWorkshopFavorites([new SavedWorkshopEntry(18446744073709551615, "pack")], [new SavedWorkshopEntry(2002, null)]),
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal(
+            """{"workshopFavorites":{"collections":[{"id":"18446744073709551615","title":"pack"}],"items":[{"id":"2002"}]}}""",
+            await File.ReadAllTextAsync(FilePath, TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
+    public void Load_NoWorkshopFavorites_LoadsNone()
+    {
+        WriteFile("""{"theme":"dark"}""");
+
+        Assert.Equal(SavedWorkshopFavorites.None, CreateStore().Load().WorkshopFavorites);
+    }
+
+    [Fact]
+    public void Load_WorkshopFavoritesWithInvalidEntries_KeepsTheValidOnesAndOtherFields()
+    {
+        WriteFile("""
+            {"theme":"dark","workshopFavorites":{"collections":[
+              {"id":"1001","title":"First"},
+              {"id":"1001","title":"Repeated"},
+              {"id":1002,"title":"Number id"},
+              {"id":"0","title":"Zero"},
+              {"id":"abc","title":"Text"},
+              {"title":"No id"},
+              {"id":"1003","title":7},
+              {"id":"1004","title":""},
+              "1005",
+              null
+            ],"items":[
+              {"id":"1001","title":"Same id as a collection"},
+              {"id":"2001"},
+              {"id":"2001","title":"Repeated"},
+              {"id":"-5"}
+            ]}}
+            """);
+
+        Assert.Equal(
+            new UserPreferences(null, AppTheme.Dark, null)
+            {
+                WorkshopFavorites = new SavedWorkshopFavorites(
+                    [new SavedWorkshopEntry(1001, "First"), new SavedWorkshopEntry(1004, null)],
+                    [new SavedWorkshopEntry(1001, "Same id as a collection"), new SavedWorkshopEntry(2001, null)]),
+            },
+            CreateStore().Load());
+    }
+
+    [Theory]
+    [InlineData("""{"items":[{"id":"2001"}]}""")]
+    [InlineData("""{"collections":{},"items":[{"id":"2001"}]}""")]
+    [InlineData("""{"collections":"1001","items":[{"id":"2001"}]}""")]
+    public void Load_WorkshopFavoritesListMissingOrNotAnArray_LoadsItEmptyAndKeepsTheOther(string value)
+    {
+        WriteFile($$"""{"workshopFavorites":{{value}}}""");
+
+        Assert.Equal(new SavedWorkshopFavorites([], [new SavedWorkshopEntry(2001, null)]), CreateStore().Load().WorkshopFavorites);
+    }
+
+    [Theory]
+    [InlineData("5")]
+    [InlineData("[]")]
+    [InlineData("\"x\"")]
+    public void Load_WorkshopFavoritesNotAnObject_KeepsOtherFieldsAndLoadsNone(string value)
+    {
+        WriteFile($$"""{"theme":"dark","workshopFavorites":{{value}}}""");
 
         Assert.Equal(new UserPreferences(null, AppTheme.Dark, null), CreateStore().Load());
     }

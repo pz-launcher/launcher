@@ -231,8 +231,11 @@ public static class TestWorkshop
     public static WorkshopLaunchCheck LaunchCheck(IWorkshopService workshop, IModCollectionService collections, TimeProvider? time = null) =>
         new(workshop, collections, time ?? new ManualTimeProvider(), NullLogger<WorkshopLaunchCheck>.Instance);
 
-    public static WorkshopCollectionHistory History(FakePreferenceStore? store = null, params SavedWorkshopCollection[] saved) =>
+    public static WorkshopCollectionHistory History(FakePreferenceStore? store = null, params SavedWorkshopEntry[] saved) =>
         new(store ?? new FakePreferenceStore(), new UserPreferences(null, null, null) { WorkshopCollections = saved });
+
+    public static WorkshopFavorites Favorites(FakePreferenceStore? store = null, SavedWorkshopFavorites? saved = null) =>
+        new(store ?? new FakePreferenceStore(), new UserPreferences(null, null, null) { WorkshopFavorites = saved ?? SavedWorkshopFavorites.None });
 
     public static WorkshopUserCollectionsCache UserCollections(FakePreferenceStore? store = null, SavedWorkshopUserCollections? saved = null, TimeProvider? time = null) =>
         new(store ?? new FakePreferenceStore(), new UserPreferences(null, null, null) { WorkshopUserCollections = saved }, time ?? new ManualTimeProvider());

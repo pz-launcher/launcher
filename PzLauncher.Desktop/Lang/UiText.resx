@@ -944,6 +944,12 @@
   <data name="Workshop_FilterUnused" xml:space="preserve">
     <value>Used by no collection</value>
   </data>
+  <data name="Workshop_FilterFavorites" xml:space="preserve">
+    <value>Local favorites</value>
+  </data>
+  <data name="Workshop_FavoriteToggle" xml:space="preserve">
+    <value>Star or unstar in local favorites</value>
+  </data>
   <data name="Workshop_ColumnTitle" xml:space="preserve">
     <value>Title</value>
   </data>
@@ -1165,6 +1171,42 @@
   </data>
   <data name="WorkshopCollections_SkippedNoMods" xml:space="preserve">
     <value>No mods</value>
+  </data>
+  <data name="WorkshopFavorites_Title" xml:space="preserve">
+    <value>Local favorites</value>
+  </data>
+  <data name="WorkshopFavorites_Items" xml:space="preserve">
+    <value>Starred items</value>
+  </data>
+  <data name="WorkshopFavorites_CollectionsEmpty" xml:space="preserve">
+    <value>Collections you star are listed here.</value>
+  </data>
+  <data name="WorkshopFavorites_ItemsEmpty" xml:space="preserve">
+    <value>No items are starred yet. Star items in Workshop subscriptions or in a collection.</value>
+  </data>
+  <data name="WorkshopFavorites_CollectionName" xml:space="preserve">
+    <value>Local favorites</value>
+  </data>
+  <data name="WorkshopFavorites_Share" xml:space="preserve">
+    <value>Copy the local favorites' IDs to share them</value>
+  </data>
+  <data name="WorkshopFavorites_Shared" xml:space="preserve">
+    <value>Copied {0} collections and {1} items to the clipboard.</value>
+  </data>
+  <data name="WorkshopFavorites_Import" xml:space="preserve">
+    <value>Import</value>
+  </data>
+  <data name="WorkshopFavorites_ImportTitle" xml:space="preserve">
+    <value>Import local favorites</value>
+  </data>
+  <data name="WorkshopFavorites_ImportMessage" xml:space="preserve">
+    <value>Paste local favorites shared from the launcher, or Workshop links and IDs, one per line. Favorites you already have are kept.</value>
+  </data>
+  <data name="WorkshopFavorites_ImportNothing" xml:space="preserve">
+    <value>No Workshop link or ID found.</value>
+  </data>
+  <data name="WorkshopFavorites_Imported" xml:space="preserve">
+    <value>Added {0} collections and {1} items; {2} lines skipped.</value>
   </data>
   <data name="WorkshopLaunch_Title" xml:space="preserve">
     <value>Workshop updates available</value>

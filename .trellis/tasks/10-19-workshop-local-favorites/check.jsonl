@@ -1,0 +1,4 @@
+{"file": ".trellis/spec/common/test-strategy.md", "reason": "test placement and fakes"}
+{"file": ".trellis/spec/common/coding-rules.md", "reason": "review rules"}
+{"file": ".trellis/spec/desktop/preferences.md", "reason": "preferences contract"}
+{"file": ".trellis/spec/desktop/localization.md", "reason": "every key in every resx"}

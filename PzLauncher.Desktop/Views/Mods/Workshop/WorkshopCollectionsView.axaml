@@ -24,15 +24,23 @@
 
     <UserControl.Resources>
         <DataTemplate x:Key="UserCollectionRowTemplate" x:DataType="vm:WorkshopUserCollectionRow">
-            <Button Theme="{StaticResource Shell.ListRow}" Classes.inUse="{Binding IsOpen}"
-                    Command="{Binding $parent[ItemsControl].((vm:WorkshopCollectionsViewModel)DataContext).OpenUserCollectionCommand}"
-                    CommandParameter="{Binding}">
-                <StackPanel Spacing="2">
-                    <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Title}" />
-                    <TextBlock Text="{Binding ChildCount, StringFormat={x:Static lang:UiText.WorkshopCollections_ItemCountFormat}}"
-                               FontSize="12" Foreground="{DynamicResource Shell.TextMuted}" />
-                </StackPanel>
-            </Button>
+            <Grid ColumnDefinitions="*,Auto">
+                <Button Grid.Column="0" Theme="{StaticResource Shell.ListRow}" Classes.inUse="{Binding IsOpen}"
+                        Command="{Binding $parent[ItemsControl].((vm:WorkshopCollectionsViewModel)DataContext).OpenUserCollectionCommand}"
+                        CommandParameter="{Binding}">
+                    <StackPanel Spacing="2">
+                        <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Title}" />
+                        <TextBlock Text="{Binding ChildCount, StringFormat={x:Static lang:UiText.WorkshopCollections_ItemCountFormat}}"
+                                   FontSize="12" Foreground="{DynamicResource Shell.TextMuted}" />
+                    </StackPanel>
+                </Button>
+                <Button Grid.Column="1" VerticalAlignment="Center" Margin="4,0,0,0" Classes.favorite="{Binding IsFavorite}"
+                        Command="{Binding $parent[ItemsControl].((vm:WorkshopCollectionsViewModel)DataContext).ToggleUserCollectionFavoriteCommand}"
+                        CommandParameter="{Binding}"
+                        ToolTip.Tip="{x:Static lang:UiText.Workshop_FavoriteToggle}" AutomationProperties.Name="{x:Static lang:UiText.Workshop_FavoriteToggle}">
+                    <ic:FluentIcon Classes="favoriteStar" />
+                </Button>
+            </Grid>
         </DataTemplate>
     </UserControl.Resources>
 
@@ -53,10 +61,64 @@
                            IsVisible="{Binding LinkErrorText, Converter={x:Static ObjectConverters.IsNotNull}}" />
             </StackPanel>
 
-            <!-- The Steam account's collections, then the ones opened here. Rows are buttons, not ListBox items: a click opens the collection. -->
+            <!-- The local favorites, the Steam account's collections, then the ones opened here. Rows are buttons, not ListBox items: a click opens the collection. -->
             <ScrollViewer>
                 <StackPanel Spacing="4">
-                    <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,4">
+                    <Grid ColumnDefinitions="*,Auto,Auto" Margin="0,0,0,4">
+                        <TextBlock Grid.Column="0" Text="{x:Static lang:UiText.WorkshopFavorites_Title}" Classes="sectionTitle" VerticalAlignment="Center" />
+                        <Button Grid.Column="1" Command="{Binding ShareFavoritesCommand}" Margin="0,0,4,0"
+                                ToolTip.Tip="{x:Static lang:UiText.WorkshopFavorites_Share}" AutomationProperties.Name="{x:Static lang:UiText.WorkshopFavorites_Share}">
+                            <ic:FluentIcon Icon="Share" IconVariant="Regular" FontSize="14" />
+                        </Button>
+                        <Button Grid.Column="2" Command="{Binding ImportFavoritesCommand}"
+                                ToolTip.Tip="{x:Static lang:UiText.WorkshopFavorites_ImportTitle}" AutomationProperties.Name="{x:Static lang:UiText.WorkshopFavorites_ImportTitle}">
+                            <ic:FluentIcon Icon="ArrowImport" IconVariant="Regular" FontSize="14" />
+                        </Button>
+                    </Grid>
+                    <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsImportingFavorites}" />
+                    <TextBlock Text="{Binding FavoritesStatusText}" Classes="hint" TextWrapping="Wrap"
+                               IsVisible="{Binding FavoritesStatusText, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                    <Button Theme="{StaticResource Shell.ListRow}" Classes.inUse="{Binding IsFavoriteItemsView}" Command="{Binding OpenFavoriteItemsCommand}">
+                        <Grid ColumnDefinitions="Auto,*">
+                            <ic:FluentIcon Grid.Column="0" Icon="Star" IconVariant="Filled" FontSize="16" Foreground="{DynamicResource Shell.Accent}"
+                                           VerticalAlignment="Center" Margin="0,0,8,0" />
+                            <StackPanel Grid.Column="1" Spacing="2">
+                                <TextBlock Text="{x:Static lang:UiText.WorkshopFavorites_Items}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                                <TextBlock Text="{Binding FavoriteItemCount, StringFormat={x:Static lang:UiText.WorkshopCollections_ItemCountFormat}}"
+                                           FontSize="12" Foreground="{DynamicResource Shell.TextMuted}" />
+                            </StackPanel>
+                        </Grid>
+                    </Button>
+                    <TextBlock Text="{x:Static lang:UiText.WorkshopFavorites_CollectionsEmpty}" IsVisible="{Binding !HasFavoriteCollections}" Classes="hint" TextWrapping="Wrap" />
+                    <ItemsControl ItemsSource="{Binding FavoriteCollections}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Spacing="4" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:RememberedWorkshopCollectionRow">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <Button Grid.Column="0" Theme="{StaticResource Shell.ListRow}" Classes.inUse="{Binding IsOpen}"
+                                            Command="{Binding $parent[ItemsControl].((vm:WorkshopCollectionsViewModel)DataContext).OpenRememberedCommand}"
+                                            CommandParameter="{Binding}">
+                                        <StackPanel Spacing="2">
+                                            <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Title}" />
+                                            <TextBlock Text="{Binding IdText}" FontSize="12" Foreground="{DynamicResource Shell.TextMuted}" />
+                                        </StackPanel>
+                                    </Button>
+                                    <Button Grid.Column="1" VerticalAlignment="Center" Margin="4,0,0,0" Classes.favorite="{Binding IsFavorite}"
+                                            Command="{Binding $parent[ItemsControl].((vm:WorkshopCollectionsViewModel)DataContext).ToggleCollectionFavoriteCommand}"
+                                            CommandParameter="{Binding}"
+                                            ToolTip.Tip="{x:Static lang:UiText.Workshop_FavoriteToggle}" AutomationProperties.Name="{x:Static lang:UiText.Workshop_FavoriteToggle}">
+                                        <ic:FluentIcon Classes="favoriteStar" />
+                                    </Button>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <Grid ColumnDefinitions="*,Auto" Margin="0,12,0,4">
                         <TextBlock Grid.Column="0" Text="{x:Static lang:UiText.WorkshopCollections_Favorited}" Classes="sectionTitle" VerticalAlignment="Center" />
                         <Button Grid.Column="1" Command="{Binding RefreshUserCollectionsCommand}"
                                 ToolTip.Tip="{x:Static lang:UiText.WorkshopCollections_RefreshHint}" ToolTip.ShowOnDisabled="True">
@@ -101,7 +163,7 @@
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate x:DataType="vm:RememberedWorkshopCollectionRow">
-                                <Grid ColumnDefinitions="*,Auto">
+                                <Grid ColumnDefinitions="*,Auto,Auto">
                                     <Button Grid.Column="0" Theme="{StaticResource Shell.ListRow}" Classes.inUse="{Binding IsOpen}"
                                             Command="{Binding $parent[ItemsControl].((vm:WorkshopCollectionsViewModel)DataContext).OpenRememberedCommand}"
                                             CommandParameter="{Binding}">
@@ -110,7 +172,13 @@
                                             <TextBlock Text="{Binding IdText}" FontSize="12" Foreground="{DynamicResource Shell.TextMuted}" />
                                         </StackPanel>
                                     </Button>
-                                    <Button Grid.Column="1" VerticalAlignment="Center" Margin="4,0,0,0"
+                                    <Button Grid.Column="1" VerticalAlignment="Center" Margin="4,0,0,0" Classes.favorite="{Binding IsFavorite}"
+                                            Command="{Binding $parent[ItemsControl].((vm:WorkshopCollectionsViewModel)DataContext).ToggleCollectionFavoriteCommand}"
+                                            CommandParameter="{Binding}"
+                                            ToolTip.Tip="{x:Static lang:UiText.Workshop_FavoriteToggle}" AutomationProperties.Name="{x:Static lang:UiText.Workshop_FavoriteToggle}">
+                                        <ic:FluentIcon Classes="favoriteStar" />
+                                    </Button>
+                                    <Button Grid.Column="2" VerticalAlignment="Center" Margin="4,0,0,0"
                                             Command="{Binding $parent[ItemsControl].((vm:WorkshopCollectionsViewModel)DataContext).ForgetCommand}"
                                             CommandParameter="{Binding}"
                                             ToolTip.Tip="{x:Static lang:UiText.WorkshopCollections_Forget}"
@@ -125,7 +193,7 @@
             </ScrollViewer>
         </DockPanel>
 
-        <!-- The open collection. -->
+        <!-- The open collection, or the starred items. -->
         <DockPanel Grid.Column="2">
             <ProgressBar DockPanel.Dock="Top" IsIndeterminate="True" IsVisible="{Binding IsLoading}" Margin="0,0,0,8" />
             <TextBlock DockPanel.Dock="Top" Text="{Binding ErrorText}" Classes="error" TextWrapping="Wrap"
@@ -144,6 +212,11 @@
 
                 <DockPanel IsVisible="{Binding HasCollection}">
                     <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="8" Margin="0,0,0,8">
+                        <Button VerticalAlignment="Center" Classes.favorite="{Binding IsOpenCollectionFavorite}" Command="{Binding ToggleOpenCollectionFavoriteCommand}"
+                                IsVisible="{Binding ShowsSteamCollection}"
+                                ToolTip.Tip="{x:Static lang:UiText.Workshop_FavoriteToggle}" AutomationProperties.Name="{x:Static lang:UiText.Workshop_FavoriteToggle}">
+                            <ic:FluentIcon Classes="favoriteStar" />
+                        </Button>
                         <TextBlock Text="{Binding Title}" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
                                    ToolTip.Tip="{Binding Title}" />
                         <TextBlock Text="{Binding IdText}" Foreground="{DynamicResource Shell.TextMuted}" VerticalAlignment="Center" />
@@ -173,13 +246,13 @@
                                 <TextBlock Text="{x:Static lang:UiText.WorkshopCollections_Generate}" VerticalAlignment="Center" />
                             </StackPanel>
                         </Button>
-                        <Button Command="{Binding OpenCollectionInSteamCommand}" Margin="0,0,6,6">
+                        <Button Command="{Binding OpenCollectionInSteamCommand}" Margin="0,0,6,6" IsVisible="{Binding ShowsSteamCollection}">
                             <StackPanel Orientation="Horizontal" Spacing="6">
                                 <ic:FluentIcon Icon="Globe" IconVariant="Regular" FontSize="16" VerticalAlignment="Center" />
                                 <TextBlock Text="{x:Static lang:UiText.Workshop_OpenInSteam}" VerticalAlignment="Center" />
                             </StackPanel>
                         </Button>
-                        <Button Command="{Binding UnsubscribeAllCommand}" Margin="0,0,6,6">
+                        <Button Command="{Binding UnsubscribeAllCommand}" Margin="0,0,6,6" IsVisible="{Binding ShowsSteamCollection}">
                             <StackPanel Orientation="Horizontal" Spacing="6">
                                 <ic:FluentIcon Icon="Dismiss" IconVariant="Regular" FontSize="16" VerticalAlignment="Center" />
                                 <TextBlock Text="{x:Static lang:UiText.WorkshopCollections_UnsubscribeAll}" VerticalAlignment="Center" />
@@ -190,17 +263,19 @@
                     <TextBlock DockPanel.Dock="Top" Text="{Binding StatusText}" Classes="hint" TextWrapping="Wrap"
                                IsVisible="{Binding StatusText, Converter={x:Static ObjectConverters.IsNotNull}}" Margin="0,0,0,8" />
 
-                    <Grid DockPanel.Dock="Top" ColumnDefinitions="2*,110,1.5*,80,120,1.5*,40" Margin="13,0,13,4">
-                        <TextBlock Grid.Column="0" Classes="columnHeader" Text="{x:Static lang:UiText.Workshop_ColumnTitle}" />
-                        <TextBlock Grid.Column="1" Classes="columnHeader" Text="{x:Static lang:UiText.Workshop_ColumnItemId}" />
-                        <TextBlock Grid.Column="2" Classes="columnHeader" Text="{x:Static lang:UiText.Workshop_ColumnMods}" />
-                        <TextBlock Grid.Column="3" Classes="columnHeader" Text="{x:Static lang:UiText.Workshop_ColumnSize}" />
-                        <TextBlock Grid.Column="4" Classes="columnHeader" Text="{x:Static lang:UiText.Workshop_ColumnState}" />
-                        <TextBlock Grid.Column="5" Classes="columnHeader" Text="{x:Static lang:UiText.Mods_ColumnCollections}" />
+                    <Grid DockPanel.Dock="Top" ColumnDefinitions="32,2*,110,1.5*,80,120,1.5*,40" Margin="13,0,13,4">
+                        <TextBlock Grid.Column="1" Classes="columnHeader" Text="{x:Static lang:UiText.Workshop_ColumnTitle}" />
+                        <TextBlock Grid.Column="2" Classes="columnHeader" Text="{x:Static lang:UiText.Workshop_ColumnItemId}" />
+                        <TextBlock Grid.Column="3" Classes="columnHeader" Text="{x:Static lang:UiText.Workshop_ColumnMods}" />
+                        <TextBlock Grid.Column="4" Classes="columnHeader" Text="{x:Static lang:UiText.Workshop_ColumnSize}" />
+                        <TextBlock Grid.Column="5" Classes="columnHeader" Text="{x:Static lang:UiText.Workshop_ColumnState}" />
+                        <TextBlock Grid.Column="6" Classes="columnHeader" Text="{x:Static lang:UiText.Mods_ColumnCollections}" />
                     </Grid>
 
                     <Panel>
                         <TextBlock Text="{x:Static lang:UiText.WorkshopCollections_Empty}" IsVisible="{Binding IsCollectionEmpty}" TextWrapping="Wrap"
+                                   Foreground="{DynamicResource Shell.TextMuted}" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" />
+                        <TextBlock Text="{x:Static lang:UiText.WorkshopFavorites_ItemsEmpty}" IsVisible="{Binding IsFavoriteItemsEmpty}" TextWrapping="Wrap"
                                    Foreground="{DynamicResource Shell.TextMuted}" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" />
 
                         <ScrollViewer>
@@ -213,16 +288,22 @@
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate x:DataType="vm:WorkshopItemRow">
                                         <Border Padding="12,6" Margin="0,0,0,4" CornerRadius="4" BorderThickness="1" BorderBrush="{DynamicResource Shell.Border}">
-                                            <Grid ColumnDefinitions="2*,110,1.5*,80,120,1.5*,40">
-                                                <TextBlock Grid.Column="0" Classes="cell" Text="{Binding Title}" FontWeight="SemiBold" ToolTip.Tip="{Binding Title}" />
-                                                <TextBlock Grid.Column="1" Classes="cell" Text="{Binding IdText}" Foreground="{DynamicResource Shell.TextMuted}" />
-                                                <TextBlock Grid.Column="2" Classes="cell" Text="{Binding ModIds}" ToolTip.Tip="{Binding ModIds}" />
-                                                <TextBlock Grid.Column="3" Classes="cell" Text="{Binding SizeMb, StringFormat={x:Static lang:UiText.Workshop_SizeFormat}}"
+                                            <Grid ColumnDefinitions="32,2*,110,1.5*,80,120,1.5*,40">
+                                                <Button Grid.Column="0" VerticalAlignment="Center" Classes.favorite="{Binding IsFavorite}"
+                                                        Command="{Binding $parent[ItemsControl].((vm:WorkshopCollectionsViewModel)DataContext).ToggleFavoriteCommand}"
+                                                        CommandParameter="{Binding}"
+                                                        ToolTip.Tip="{x:Static lang:UiText.Workshop_FavoriteToggle}" AutomationProperties.Name="{x:Static lang:UiText.Workshop_FavoriteToggle}">
+                                                    <ic:FluentIcon Classes="favoriteStar" />
+                                                </Button>
+                                                <TextBlock Grid.Column="1" Classes="cell" Text="{Binding Title}" FontWeight="SemiBold" ToolTip.Tip="{Binding Title}" />
+                                                <TextBlock Grid.Column="2" Classes="cell" Text="{Binding IdText}" Foreground="{DynamicResource Shell.TextMuted}" />
+                                                <TextBlock Grid.Column="3" Classes="cell" Text="{Binding ModIds}" ToolTip.Tip="{Binding ModIds}" />
+                                                <TextBlock Grid.Column="4" Classes="cell" Text="{Binding SizeMb, StringFormat={x:Static lang:UiText.Workshop_SizeFormat}}"
                                                            Foreground="{DynamicResource Shell.TextMuted}"
                                                            IsVisible="{Binding SizeMb, Converter={x:Static ObjectConverters.IsNotNull}}" />
-                                                <local:WorkshopItemStateCell Grid.Column="4" />
-                                                <TextBlock Grid.Column="5" Classes="cell" Text="{Binding CollectionNames}" ToolTip.Tip="{Binding CollectionNames}" />
-                                                <Button Grid.Column="6" HorizontalAlignment="Right" VerticalAlignment="Center"
+                                                <local:WorkshopItemStateCell Grid.Column="5" />
+                                                <TextBlock Grid.Column="6" Classes="cell" Text="{Binding CollectionNames}" ToolTip.Tip="{Binding CollectionNames}" />
+                                                <Button Grid.Column="7" HorizontalAlignment="Right" VerticalAlignment="Center"
                                                         Command="{Binding $parent[ItemsControl].((vm:WorkshopCollectionsViewModel)DataContext).OpenInSteamCommand}"
                                                         CommandParameter="{Binding}"
                                                         ToolTip.Tip="{x:Static lang:UiText.Workshop_OpenInSteam}" AutomationProperties.Name="{x:Static lang:UiText.Workshop_OpenInSteam}">

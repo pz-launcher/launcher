@@ -944,6 +944,12 @@
   <data name="Workshop_FilterUnused" xml:space="preserve">
     <value>Sem utilização em coleções</value>
   </data>
+  <data name="Workshop_FilterFavorites" xml:space="preserve">
+    <value>Favoritos locais</value>
+  </data>
+  <data name="Workshop_FavoriteToggle" xml:space="preserve">
+    <value>Adicionar aos favoritos locais ou remover deles</value>
+  </data>
   <data name="Workshop_ColumnTitle" xml:space="preserve">
     <value>Título</value>
   </data>
@@ -1165,6 +1171,42 @@
   </data>
   <data name="WorkshopCollections_SkippedNoMods" xml:space="preserve">
     <value>Sem mods</value>
+  </data>
+  <data name="WorkshopFavorites_Title" xml:space="preserve">
+    <value>Favoritos locais</value>
+  </data>
+  <data name="WorkshopFavorites_Items" xml:space="preserve">
+    <value>Itens favoritos</value>
+  </data>
+  <data name="WorkshopFavorites_CollectionsEmpty" xml:space="preserve">
+    <value>As coleções que marcar com estrela aparecem aqui.</value>
+  </data>
+  <data name="WorkshopFavorites_ItemsEmpty" xml:space="preserve">
+    <value>Ainda não há itens favoritos. Marque itens com estrela nas Subscrições do Workshop ou numa coleção.</value>
+  </data>
+  <data name="WorkshopFavorites_CollectionName" xml:space="preserve">
+    <value>Favoritos locais</value>
+  </data>
+  <data name="WorkshopFavorites_Share" xml:space="preserve">
+    <value>Copiar os IDs dos favoritos locais para os partilhar</value>
+  </data>
+  <data name="WorkshopFavorites_Shared" xml:space="preserve">
+    <value>{0} coleções e {1} itens copiados para a área de transferência.</value>
+  </data>
+  <data name="WorkshopFavorites_Import" xml:space="preserve">
+    <value>Importar</value>
+  </data>
+  <data name="WorkshopFavorites_ImportTitle" xml:space="preserve">
+    <value>Importar favoritos locais</value>
+  </data>
+  <data name="WorkshopFavorites_ImportMessage" xml:space="preserve">
+    <value>Cole os favoritos locais partilhados a partir do launcher, ou ligações e IDs do Workshop, um por linha. Os favoritos que já tem são mantidos.</value>
+  </data>
+  <data name="WorkshopFavorites_ImportNothing" xml:space="preserve">
+    <value>Nenhuma ligação ou ID do Workshop encontrado.</value>
+  </data>
+  <data name="WorkshopFavorites_Imported" xml:space="preserve">
+    <value>{0} coleções e {1} itens adicionados; {2} linhas ignoradas.</value>
   </data>
   <data name="WorkshopLaunch_Title" xml:space="preserve">
     <value>Há atualizações no Workshop</value>

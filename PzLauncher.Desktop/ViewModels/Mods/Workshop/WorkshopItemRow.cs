@@ -7,7 +7,8 @@ using PzLauncher.Desktop.Services.Shell;
 
 namespace PzLauncher.Desktop.ViewModels.Mods.Workshop;
 
-public sealed partial class WorkshopItemRow(WorkshopItem item, bool isSelected, Action<WorkshopItemRow> selectionChanged) : ObservableObject
+/// <param name="isFavorite">Starred in the launcher's local favorites.</param>
+public sealed partial class WorkshopItemRow(WorkshopItem item, bool isSelected, bool isFavorite, Action<WorkshopItemRow> selectionChanged) : ObservableObject
 {
     private const double BytesPerMegabyte = 1024 * 1024;
 
@@ -35,6 +36,8 @@ public sealed partial class WorkshopItemRow(WorkshopItem item, bool isSelected, 
     public bool NeedsUpdate => Item.State == WorkshopItemState.NeedsUpdate;
 
     [ObservableProperty] public partial bool IsSelected { get; set; } = isSelected;
+
+    [ObservableProperty] public partial bool IsFavorite { get; internal set; } = isFavorite;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasDownloadPercent), nameof(IsDownloadingWithoutPercent))]

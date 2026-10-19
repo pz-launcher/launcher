@@ -53,7 +53,8 @@ public class ModsViewModelTests : UiTextCultureTest
         await Installs.ActivateCommand.ExecuteAsync(null);
         var vm = new ModsViewModel(
             Installs, _service, _overrides, _defaults, new ModCollectionApplier(_service, _dialogs), _dialogs, _clipboard, _runState, _orderWriter,
-            new FakeWorkshopService(), new FakeWorkshopActionRunner(), new FakeUrlLauncher(), TestWorkshop.History(), TestWorkshop.UserCollections(), Localization);
+            new FakeWorkshopService(), new FakeWorkshopActionRunner(), new FakeUrlLauncher(), TestWorkshop.History(), TestWorkshop.UserCollections(),
+            TestWorkshop.Favorites(), Localization);
         await vm.ActivateCommand.ExecuteAsync(null);
         return vm;
     }

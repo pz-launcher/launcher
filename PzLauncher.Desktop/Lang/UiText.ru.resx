@@ -944,6 +944,12 @@
   <data name="Workshop_FilterUnused" xml:space="preserve">
     <value>Не используется в сборках</value>
   </data>
+  <data name="Workshop_FilterFavorites" xml:space="preserve">
+    <value>Локальное избранное</value>
+  </data>
+  <data name="Workshop_FavoriteToggle" xml:space="preserve">
+    <value>Добавить в локальное избранное или убрать из него</value>
+  </data>
   <data name="Workshop_ColumnTitle" xml:space="preserve">
     <value>Название</value>
   </data>
@@ -1165,6 +1171,42 @@
   </data>
   <data name="WorkshopCollections_SkippedNoMods" xml:space="preserve">
     <value>Нет модов</value>
+  </data>
+  <data name="WorkshopFavorites_Title" xml:space="preserve">
+    <value>Локальное избранное</value>
+  </data>
+  <data name="WorkshopFavorites_Items" xml:space="preserve">
+    <value>Избранные предметы</value>
+  </data>
+  <data name="WorkshopFavorites_CollectionsEmpty" xml:space="preserve">
+    <value>Здесь появятся коллекции, отмеченные звёздочкой.</value>
+  </data>
+  <data name="WorkshopFavorites_ItemsEmpty" xml:space="preserve">
+    <value>Избранных предметов пока нет. Отметьте предметы звёздочкой в подписках Мастерской или в коллекции.</value>
+  </data>
+  <data name="WorkshopFavorites_CollectionName" xml:space="preserve">
+    <value>Локальное избранное</value>
+  </data>
+  <data name="WorkshopFavorites_Share" xml:space="preserve">
+    <value>Скопировать ID из локального избранного, чтобы поделиться</value>
+  </data>
+  <data name="WorkshopFavorites_Shared" xml:space="preserve">
+    <value>Скопировано в буфер обмена: коллекций — {0}, предметов — {1}.</value>
+  </data>
+  <data name="WorkshopFavorites_Import" xml:space="preserve">
+    <value>Импорт</value>
+  </data>
+  <data name="WorkshopFavorites_ImportTitle" xml:space="preserve">
+    <value>Импорт локального избранного</value>
+  </data>
+  <data name="WorkshopFavorites_ImportMessage" xml:space="preserve">
+    <value>Вставьте локальное избранное, которым поделились из лаунчера, или ссылки и ID Мастерской, по одному в строке. Уже добавленное избранное сохранится.</value>
+  </data>
+  <data name="WorkshopFavorites_ImportNothing" xml:space="preserve">
+    <value>Ссылки или ID Мастерской не найдены.</value>
+  </data>
+  <data name="WorkshopFavorites_Imported" xml:space="preserve">
+    <value>Добавлено коллекций: {0}, предметов: {1}. Пропущено строк: {2}.</value>
   </data>
   <data name="WorkshopLaunch_Title" xml:space="preserve">
     <value>Доступны обновления Мастерской</value>

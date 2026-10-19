@@ -9,6 +9,7 @@ using PzLauncher.Core.Steam.Workshop;
 using PzLauncher.Core.Steam.Workshop.Actions;
 using PzLauncher.Desktop.Lang;
 using PzLauncher.Desktop.Localization;
+using PzLauncher.Desktop.Services.Mods;
 using PzLauncher.Desktop.Services.Shell;
 
 namespace PzLauncher.Desktop.ViewModels.Mods.Workshop;
@@ -30,8 +31,9 @@ public partial class WorkshopSubscriptionsViewModel : WorkshopSectionViewModel
         IWorkshopActionRunner runner,
         IDialogService dialogs,
         IClipboardService clipboard,
-        IUrlLauncher urls)
-        : base(page, service, runner, dialogs, urls)
+        IUrlLauncher urls,
+        WorkshopFavorites favorites)
+        : base(page, service, runner, dialogs, urls, favorites)
     {
         _clipboard = clipboard;
         VisibleRows = [];
@@ -266,6 +268,15 @@ public partial class WorkshopSubscriptionsViewModel : WorkshopSectionViewModel
         CheckUpdatesCommand.NotifyCanExecuteChanged();
     }
 
+    protected override void OnFavoritesChanged()
+    {
+        ShowFavorites(_rows);
+        if (Filter == WorkshopSubscriptionsFilter.Favorites)
+        {
+            RefreshVisibleRows();
+        }
+    }
+
     private Task RunAsync(WorkshopAction action, IReadOnlyList<WorkshopActionItemRow> items) => RunActionAsync(action, items, () => _rows, LoadAsync);
 
     private List<WorkshopItemRow> SelectedRows() => [.. _rows.Where(row => row.IsSelected)];
@@ -276,12 +287,13 @@ public partial class WorkshopSubscriptionsViewModel : WorkshopSectionViewModel
         ShowWarnings(subscriptions?.Warnings ?? []);
         IReadOnlyList<WorkshopItem> items = subscriptions?.Items ?? [];
         _selection.IntersectWith(items.Select(item => item.Id));
-        _rows = Sorted(items.Select(item => new WorkshopItemRow(item, _selection.Contains(item.Id), OnRowSelectionChanged)));
+        _rows = Sorted(items.Select(item => new WorkshopItemRow(item, _selection.Contains(item.Id), IsFavoriteItem(item.Id), OnRowSelectionChanged)));
         RefreshVisibleRows();
         OnPropertyChanged(nameof(IsEmpty));
         OnPropertyChanged(nameof(SelectedCount));
         OnPropertyChanged(nameof(OutdatedCount));
         NotifyActionCommands();
+        RememberTitles(_rows);
     }
 
     private void OnRowSelectionChanged(WorkshopItemRow row)
@@ -303,6 +315,7 @@ public partial class WorkshopSubscriptionsViewModel : WorkshopSectionViewModel
         WorkshopSubscriptionsFilter.All => true,
         WorkshopSubscriptionsFilter.NeedsUpdate => row.Item.State == WorkshopItemState.NeedsUpdate,
         WorkshopSubscriptionsFilter.Unused => row.Item.Collections.Count == 0,
+        WorkshopSubscriptionsFilter.Favorites => row.IsFavorite,
     };
 
     /// <summary>Title, item id or a mod id contains the search text, ignoring case; an empty search matches all.</summary>

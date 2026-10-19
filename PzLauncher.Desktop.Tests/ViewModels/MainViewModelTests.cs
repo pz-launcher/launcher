@@ -42,7 +42,8 @@ public class MainViewModelTests : UiTextCultureTest
             installs,
             new ModsViewModel(
                 installs, collections, overrides, defaults, applier, dialogs, new FakeClipboardService(), runState, orderWriter,
-                new FakeWorkshopService(), new FakeWorkshopActionRunner(), new FakeUrlLauncher(), TestWorkshop.History(), TestWorkshop.UserCollections(), Localization),
+                new FakeWorkshopService(), new FakeWorkshopActionRunner(), new FakeUrlLauncher(), TestWorkshop.History(), TestWorkshop.UserCollections(),
+                TestWorkshop.Favorites(), Localization),
             new SettingsViewModel(
                 new FakeThemeService(AppTheme.Light),
                 store,

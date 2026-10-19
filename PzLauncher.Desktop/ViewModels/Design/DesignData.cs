@@ -177,7 +177,8 @@ public static class DesignData
     {
         var vm = new ModsViewModel(
             Installs, ModCollectionsSample, InstallOverrides, ModCollectionDefaults, Applier, new NoDialogs(), new NoClipboard(), RunState, OrderWriter,
-            new SampleWorkshop(), new SampleWorkshopActions(), new NoUrlLauncher(), CreateWorkshopHistory(), CreateWorkshopUserCollections(), Localization);
+            new SampleWorkshop(), new SampleWorkshopActions(), new NoUrlLauncher(), CreateWorkshopHistory(), CreateWorkshopUserCollections(),
+            CreateWorkshopFavorites(), Localization);
         vm.ActivateCommand.Execute(null);
 
         // Completes synchronously: the sample answers at once. One outdated item shows as downloading.
@@ -191,10 +192,18 @@ public static class DesignData
     private static WorkshopCollectionHistory CreateWorkshopHistory() =>
         new(Preferences, new UserPreferences(null, null, null)
         {
-            WorkshopCollections = [new SavedWorkshopCollection(1000900, "Example Collection"), new SavedWorkshopCollection(1000901, null)],
+            WorkshopCollections = [new SavedWorkshopEntry(1000900, "Example Collection"), new SavedWorkshopEntry(1000901, null)],
         });
 
     private static WorkshopUserCollectionsCache CreateWorkshopUserCollections() => new(Preferences, new UserPreferences(null, null, null), TimeProvider.System);
+
+    private static WorkshopFavorites CreateWorkshopFavorites() =>
+        new(Preferences, new UserPreferences(null, null, null)
+        {
+            WorkshopFavorites = new SavedWorkshopFavorites(
+                [new SavedWorkshopEntry(1000900, "Example Collection"), new SavedWorkshopEntry(1000902, null)],
+                [new SavedWorkshopEntry(1000102, "Example Map Pack"), new SavedWorkshopEntry(1000107, "Example Weather Pack")]),
+        });
 
     private static WorkshopModPickViewModel CreateWorkshopModPick()
     {
@@ -566,9 +575,11 @@ public static class DesignData
 
         public Task SaveSteamHookReminderAsync(bool remind, CancellationToken ct = default) => Task.CompletedTask;
 
-        public Task SaveWorkshopCollectionsAsync(IReadOnlyList<SavedWorkshopCollection> collections, CancellationToken ct = default) => Task.CompletedTask;
+        public Task SaveWorkshopCollectionsAsync(IReadOnlyList<SavedWorkshopEntry> collections, CancellationToken ct = default) => Task.CompletedTask;
 
         public Task SaveWorkshopUserCollectionsAsync(SavedWorkshopUserCollections collections, CancellationToken ct = default) => Task.CompletedTask;
+
+        public Task SaveWorkshopFavoritesAsync(SavedWorkshopFavorites favorites, CancellationToken ct = default) => Task.CompletedTask;
     }
 
     // Steam opens a launcher in another folder, so the account, the switch and the other path all show.

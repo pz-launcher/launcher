@@ -7,6 +7,7 @@ using PzLauncher.Desktop.Lang;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Services.Launch;
 using PzLauncher.Desktop.Services.Mods;
+using PzLauncher.Desktop.Services.Preferences;
 using PzLauncher.Desktop.Services.Shell;
 using PzLauncher.Desktop.Tests.TestSupport;
 using PzLauncher.Desktop.ViewModels.Installs;
@@ -29,10 +30,13 @@ public class WorkshopSubscriptionsViewModelTests : UiTextCultureTest
     private readonly FakeWorkshopService _service = new();
     private readonly FakeWorkshopActionRunner _runner = new();
     private readonly GameRunState _runState = new();
+    private readonly FakePreferenceStore _preferences = new();
+    private readonly WorkshopFavorites _favorites;
 
     public WorkshopSubscriptionsViewModelTests()
     {
         Installs = new(_detection, new FakeFolderPicker(), new FakePlatformEnvironment(), Localization);
+        _favorites = Favorites(_preferences);
         _service
             .WithItem(Item(1001, mods: ["Core"], collections: ["Survival"], latest: Details(1001, "Core Library", "100")))
             .WithItem(Item(1002, mods: ["Maps", "MapsExtra"], collections: ["Survival", "Driving"], latest: Details(1002, "Map Pack", "100")))
@@ -49,7 +53,7 @@ public class WorkshopSubscriptionsViewModelTests : UiTextCultureTest
         var orderWriter = new ModCollectionOrderWriter(_collections, _runState, new FakePlatformEnvironment(), new ManualTimeProvider());
         var page = new ModsViewModel(
             Installs, _collections, _overrides, new FakeModCollectionDefaultsService(), new ModCollectionApplier(_collections, _dialogs), _dialogs,
-            _clipboard, _runState, orderWriter, _service, _runner, _urls, TestWorkshop.History(), TestWorkshop.UserCollections(), Localization)
+            _clipboard, _runState, orderWriter, _service, _runner, _urls, TestWorkshop.History(), TestWorkshop.UserCollections(), _favorites, Localization)
         {
             Section = section,
         };
@@ -533,5 +537,63 @@ public class WorkshopSubscriptionsViewModelTests : UiTextCultureTest
         await vm.OpenInSteamCommand.ExecuteAsync(Row(vm, 1002));
 
         Assert.Equal("steam://url/CommunityFilePage/1002", Assert.Single(_urls.Opened).OriginalString);
+    }
+
+    // Local favorites
+
+    [Fact]
+    public async Task ToggleFavorite_StarsTheRowAndSavesItWithItsTitle()
+    {
+        var vm = await CreateAsync();
+
+        vm.ToggleFavoriteCommand.Execute(Row(vm, 1002));
+
+        Assert.True(Row(vm, 1002).IsFavorite);
+        Assert.Equal([new SavedWorkshopEntry(1002, "Map Pack")], _preferences.SavedWorkshopFavorites[^1].Items);
+    }
+
+    [Fact]
+    public async Task ToggleFavorite_WhileAGameRuns_StarsWithoutSteam()
+    {
+        var vm = await CreateAsync();
+        _runState.IsGameRunning = true;
+
+        Assert.True(vm.ToggleFavoriteCommand.CanExecute(Row(vm, 1001)));
+        vm.ToggleFavoriteCommand.Execute(Row(vm, 1001));
+        vm.ToggleFavoriteCommand.Execute(Row(vm, 1002));
+        vm.ToggleFavoriteCommand.Execute(Row(vm, 1002));
+
+        Assert.Equal([1001UL], _favorites.Items.Select(entry => entry.Id));
+        Assert.Empty(_runner.Runs);
+        Assert.Empty(_runner.ListRuns);
+    }
+
+    [Fact]
+    public async Task Load_StarredEarlier_ShowsTheStarAndKeepsTheNewTitle()
+    {
+        _favorites.Toggle(WorkshopFavoriteKind.Item, 1001, null);
+
+        var vm = await CreateAsync();
+
+        Assert.True(Row(vm, 1001).IsFavorite);
+        Assert.False(Row(vm, 1002).IsFavorite);
+        Assert.Equal([new SavedWorkshopEntry(1001, "Core Library")], _favorites.Items);
+    }
+
+    [Fact]
+    public async Task FavoritesFilter_ShowsExactlyTheStarredSubscriptionsAndFollowsTheStars()
+    {
+        _favorites.Toggle(WorkshopFavoriteKind.Item, 1003, null);
+        _favorites.Toggle(WorkshopFavoriteKind.Item, 5005, null);
+        var vm = await CreateAsync();
+
+        vm.Filter = WorkshopSubscriptionsFilter.Favorites;
+
+        Assert.Equal([1003UL], vm.VisibleRows.Select(row => row.Id));
+
+        vm.ToggleFavoriteCommand.Execute(Row(vm, 1003));
+
+        Assert.Empty(vm.VisibleRows);
+        Assert.True(vm.IsFilterEmpty);
     }
 }
