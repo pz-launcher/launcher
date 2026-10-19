@@ -6,6 +6,7 @@ using PzLauncher.Core.Net;
 using PzLauncher.Core.Platform;
 using PzLauncher.Core.Steam;
 using PzLauncher.Core.Steam.Workshop;
+using PzLauncher.Core.Steam.Workshop.Sources;
 using PzLauncher.Core.Tests.Mod.ZombieBuddy;
 using PzLauncher.Core.Tests.TestSupport;
 using static PzLauncher.Core.Tests.TestSupport.UpdateTestKit;

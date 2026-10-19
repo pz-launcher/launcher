@@ -1,6 +1,7 @@
 using PzLauncher.Desktop.Services.Shell;
 using PzLauncher.Desktop.Themes;
 using PzLauncher.Desktop.ViewModels.Mods;
+using PzLauncher.Desktop.ViewModels.Mods.Workshop;
 using PzLauncher.Desktop.ViewModels.ZombieBuddy;
 
 namespace PzLauncher.Desktop.Tests.TestSupport;

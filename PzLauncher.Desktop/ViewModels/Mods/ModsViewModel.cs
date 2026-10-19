@@ -8,11 +8,13 @@ using PzLauncher.Core.Common;
 using PzLauncher.Core.Installs;
 using PzLauncher.Core.Mod.Collections;
 using PzLauncher.Core.Steam.Workshop;
+using PzLauncher.Core.Steam.Workshop.Actions;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Services.Launch;
 using PzLauncher.Desktop.Services.Mods;
 using PzLauncher.Desktop.Services.Shell;
 using PzLauncher.Desktop.ViewModels.Installs;
+using PzLauncher.Desktop.ViewModels.Mods.Workshop;
 
 namespace PzLauncher.Desktop.ViewModels.Mods;
 

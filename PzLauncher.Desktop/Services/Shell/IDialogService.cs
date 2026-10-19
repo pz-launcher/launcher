@@ -1,5 +1,6 @@
 using System.Threading.Tasks;
 using PzLauncher.Desktop.ViewModels.Mods;
+using PzLauncher.Desktop.ViewModels.Mods.Workshop;
 using PzLauncher.Desktop.ViewModels.ZombieBuddy;
 
 namespace PzLauncher.Desktop.Services.Shell;

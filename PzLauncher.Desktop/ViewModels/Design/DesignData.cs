@@ -17,6 +17,7 @@ using PzLauncher.Core.Net;
 using PzLauncher.Core.Platform;
 using PzLauncher.Core.Steam;
 using PzLauncher.Core.Steam.Workshop;
+using PzLauncher.Core.Steam.Workshop.Actions;
 using PzLauncher.Core.Update;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Services.Launch;
@@ -31,10 +32,11 @@ using PzLauncher.Desktop.Themes;
 using PzLauncher.Desktop.ViewModels.Home;
 using PzLauncher.Desktop.ViewModels.Installs;
 using PzLauncher.Desktop.ViewModels.Java;
+using PzLauncher.Desktop.ViewModels.LaunchSettings;
 using PzLauncher.Desktop.ViewModels.Mods;
+using PzLauncher.Desktop.ViewModels.Mods.Workshop;
 using PzLauncher.Desktop.ViewModels.Net;
 using PzLauncher.Desktop.ViewModels.Settings;
-using PzLauncher.Desktop.ViewModels.LaunchSettings;
 using PzLauncher.Desktop.ViewModels.Update;
 using PzLauncher.Desktop.ViewModels.ZombieBuddy;
 
@@ -208,7 +210,7 @@ public static class DesignData
         var vm = new WorkshopActionViewModel(
             new SampleWorkshopActions(),
             SampleAppPath("ProjectZomboid"),
-            Core.Steam.Workshop.WorkshopAction.Update,
+            Core.Steam.Workshop.Actions.WorkshopAction.Update,
             [
                 new WorkshopActionItemRow(1000102, "Example Map Pack"),
                 new WorkshopActionItemRow(1000103, "Example Vehicles"),

@@ -6,8 +6,10 @@ using Avalonia.Layout;
 using Avalonia.Media;
 using PzLauncher.Desktop.Lang;
 using PzLauncher.Desktop.ViewModels.Mods;
+using PzLauncher.Desktop.ViewModels.Mods.Workshop;
 using PzLauncher.Desktop.ViewModels.ZombieBuddy;
 using PzLauncher.Desktop.Views.Mods;
+using PzLauncher.Desktop.Views.Mods.Workshop;
 using PzLauncher.Desktop.Views.ZombieBuddy;
 
 namespace PzLauncher.Desktop.Services.Shell;

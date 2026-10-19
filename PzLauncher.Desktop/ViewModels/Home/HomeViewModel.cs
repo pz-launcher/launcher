@@ -1,9 +1,9 @@
-using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
+using System;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using PzLauncher.Core.Common;
@@ -11,6 +11,7 @@ using PzLauncher.Core.Installs;
 using PzLauncher.Core.Launch;
 using PzLauncher.Core.Mod.Collections;
 using PzLauncher.Core.Mod.ZombieBuddy;
+using PzLauncher.Core.Steam.Workshop.Actions;
 using PzLauncher.Core.Steam.Workshop;
 using PzLauncher.Desktop.Lang;
 using PzLauncher.Desktop.Localization;
@@ -19,6 +20,7 @@ using PzLauncher.Desktop.Services.Mods;
 using PzLauncher.Desktop.Services.Shell;
 using PzLauncher.Desktop.Services.ZombieBuddy;
 using PzLauncher.Desktop.ViewModels.Installs;
+using PzLauncher.Desktop.ViewModels.Mods.Workshop;
 using PzLauncher.Desktop.ViewModels.Mods;
 using PzLauncher.Desktop.ViewModels.ZombieBuddy;
 

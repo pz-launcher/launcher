@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using PzLauncher.Core.Common;
 using PzLauncher.Core.Mod.Collections;
 using PzLauncher.Core.Steam.Workshop;
+using PzLauncher.Core.Steam.Workshop.Actions;
 using PzLauncher.Desktop.Services.Mods;
 using PzLauncher.Desktop.Services.Preferences;
 

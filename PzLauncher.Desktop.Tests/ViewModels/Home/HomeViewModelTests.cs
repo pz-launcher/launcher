@@ -2,6 +2,7 @@ using PzLauncher.Core.Common;
 using PzLauncher.Core.Installs;
 using PzLauncher.Core.Launch;
 using PzLauncher.Core.Mod.ZombieBuddy;
+using PzLauncher.Core.Steam.Workshop.Actions;
 using PzLauncher.Core.Steam.Workshop;
 using PzLauncher.Desktop.Lang;
 using PzLauncher.Desktop.Localization;

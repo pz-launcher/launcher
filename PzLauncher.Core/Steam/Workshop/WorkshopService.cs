@@ -5,6 +5,7 @@ using PzLauncher.Core.Common;
 using PzLauncher.Core.Installs;
 using PzLauncher.Core.Mod;
 using PzLauncher.Core.Mod.Collections;
+using PzLauncher.Core.Steam.Workshop.Sources;
 
 namespace PzLauncher.Core.Steam.Workshop;
 

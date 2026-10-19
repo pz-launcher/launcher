@@ -7,6 +7,7 @@
              xmlns:controls="using:PzLauncher.Desktop.Views.Controls"
              xmlns:lang="using:PzLauncher.Desktop.Lang"
              xmlns:mods="using:PzLauncher.Desktop.Views.Mods"
+             xmlns:workshop="using:PzLauncher.Desktop.Views.Mods.Workshop"
              mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="600"
              x:Class="PzLauncher.Desktop.Views.Mods.ModsView"
              x:DataType="vm:ModsViewModel"
@@ -68,10 +69,10 @@
                             <mods:ModCollectionsView DataContext="{Binding Collections}" />
                         </Panel>
                         <Panel IsVisible="{Binding Section, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:ModsSection.WorkshopSubscriptions}}">
-                            <mods:WorkshopSubscriptionsView DataContext="{Binding WorkshopSubscriptions}" />
+                            <workshop:WorkshopSubscriptionsView DataContext="{Binding WorkshopSubscriptions}" />
                         </Panel>
                         <Panel IsVisible="{Binding Section, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:ModsSection.WorkshopCollections}}">
-                            <mods:WorkshopCollectionsView DataContext="{Binding WorkshopCollections}" />
+                            <workshop:WorkshopCollectionsView DataContext="{Binding WorkshopCollections}" />
                         </Panel>
                     </Panel>
                 </Panel>
