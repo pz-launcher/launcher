@@ -72,7 +72,7 @@ internal static partial class ModLocator
             var items = Subfolders(WorkshopLibraries.ContentFolder(library), logger);
             foreach (var item in items.OrderBy(item => !string.Equals(Path.GetFileName(item), preferredItemId, StringComparison.Ordinal)))
             {
-                yield return new ModRoot(ModFolders.WorkshopModsFolder(item), InstalledModSource.SteamWorkshop, Path.GetFileName(item));
+                yield return ModRoot.ForWorkshopItem(item);
             }
         }
 
@@ -172,7 +172,11 @@ internal static partial class ModLocator
         return x.Length.CompareTo(y.Length);
     }
 
-    internal readonly record struct ModRoot(string ModsFolder, InstalledModSource Source, string? WorkshopId);
+    internal readonly record struct ModRoot(string ModsFolder, InstalledModSource Source, string? WorkshopId)
+    {
+        public static ModRoot ForWorkshopItem(string itemFolder) =>
+            new(ModFolders.WorkshopModsFolder(itemFolder), InstalledModSource.SteamWorkshop, Path.GetFileName(itemFolder));
+    }
 
     [LoggerMessage(Level = LogLevel.Debug, Message = "Mod lookup skipped {Path}: {Detail}")]
     private static partial void LogSkipped(ILogger logger, string path, string detail);

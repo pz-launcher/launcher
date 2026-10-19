@@ -1,7 +1,6 @@
-using System;
 using CommunityToolkit.Mvvm.ComponentModel;
-using PzLauncher.Core.Steam.Workshop;
 using PzLauncher.Core.Steam.Workshop.Actions;
+using PzLauncher.Desktop.Services.Shell;
 
 namespace PzLauncher.Desktop.ViewModels.Mods.Workshop;
 
@@ -44,7 +43,7 @@ public sealed partial class WorkshopActionItemRow(ulong id, string name) : Obser
     internal void ShowProgress(ulong bytes, ulong total)
     {
         State = WorkshopActionItemState.Running;
-        Percent = total == 0 ? null : (int)Math.Min(100, bytes * 100.0 / total);
+        Percent = ProgressPercent.Of(bytes, total);
     }
 
     internal void Finish(WorkshopItemOutcome outcome)

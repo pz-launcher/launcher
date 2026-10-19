@@ -3,8 +3,8 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:PzLauncher.Desktop.ViewModels.Mods.Workshop"
+             xmlns:local="using:PzLauncher.Desktop.Views.Mods.Workshop"
              xmlns:design="using:PzLauncher.Desktop.ViewModels.Design"
-             xmlns:loc="using:PzLauncher.Desktop.Localization"
              xmlns:lang="using:PzLauncher.Desktop.Lang"
              xmlns:ic="using:FluentIcons.Avalonia"
              mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="560"
@@ -16,11 +16,6 @@
     </Design.DataContext>
 
     <UserControl.Styles>
-        <Style Selector="TextBlock.cell">
-            <Setter Property="VerticalAlignment" Value="Center" />
-            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
-            <Setter Property="Margin" Value="0,0,8,0" />
-        </Style>
         <Style Selector="TextBlock.columnHeader">
             <Setter Property="Foreground" Value="{DynamicResource Shell.TextMuted}" />
             <Setter Property="TextTrimming" Value="CharacterEllipsis" />
@@ -179,15 +174,7 @@
                                                 <TextBlock Grid.Column="3" Classes="cell" Text="{Binding SizeMb, StringFormat={x:Static lang:UiText.Workshop_SizeFormat}}"
                                                            Foreground="{DynamicResource Shell.TextMuted}"
                                                            IsVisible="{Binding SizeMb, Converter={x:Static ObjectConverters.IsNotNull}}" />
-                                                <Panel Grid.Column="4">
-                                                    <TextBlock Classes="cell" Text="{Binding Item.State, Converter={x:Static loc:DisplayNames.WorkshopItemStateName}}"
-                                                               Classes.warning="{Binding NeedsUpdate}"
-                                                               IsVisible="{Binding !IsDownloading}" />
-                                                    <TextBlock Classes="cell" Text="{x:Static lang:UiText.Workshop_Downloading}" Foreground="{DynamicResource Shell.Accent}"
-                                                               IsVisible="{Binding IsDownloadingWithoutPercent}" />
-                                                    <TextBlock Classes="cell" Text="{Binding DownloadPercent, StringFormat={x:Static lang:UiText.Workshop_DownloadingFormat}}"
-                                                               Foreground="{DynamicResource Shell.Accent}" IsVisible="{Binding HasDownloadPercent}" />
-                                                </Panel>
+                                                <local:WorkshopItemStateCell Grid.Column="4" />
                                                 <TextBlock Grid.Column="5" Classes="cell" Text="{Binding CollectionNames}" ToolTip.Tip="{Binding CollectionNames}" />
                                                 <Button Grid.Column="6" HorizontalAlignment="Right" VerticalAlignment="Center"
                                                         Command="{Binding $parent[ItemsControl].((vm:WorkshopCollectionsViewModel)DataContext).OpenInSteamCommand}"

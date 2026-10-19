@@ -6,4 +6,6 @@ internal static class ErrorDetails
     public static Dictionary<string, string> Path(string path) => new() { ["path"] = path };
 
     public static Dictionary<string, string> Path(string path, string reason) => new() { ["path"] = path, ["reason"] = reason };
+
+    public static Dictionary<string, string> Reason(string reason) => new() { ["reason"] = reason };
 }

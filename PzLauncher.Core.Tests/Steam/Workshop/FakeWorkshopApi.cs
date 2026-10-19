@@ -1,6 +1,5 @@
 using System.Globalization;
 using System.Net;
-using System.Text;
 using PzLauncher.Core.Steam.Workshop;
 using PzLauncher.Core.Tests.TestSupport;
 
@@ -21,14 +20,14 @@ internal sealed class FakeWorkshopApi
             var ids = await IdsAsync(request, "itemcount", ct);
             Record(_detailRequests, ids);
             var entries = ids.Select(id => _items.TryGetValue(id, out var item) ? item : NotFound(id));
-            return Json($$$"""{"response":{"result":1,"resultcount":{{{ids.Count}}},"publishedfiledetails":[{{{string.Join(',', entries)}}}]}}""");
+            return FakeHttpHandler.JsonResponse($$$"""{"response":{"result":1,"resultcount":{{{ids.Count}}},"publishedfiledetails":[{{{string.Join(',', entries)}}}]}}""");
         });
         Handler.Respond(WorkshopFiles.CollectionDetailsUrl, async (request, ct) =>
         {
             var ids = await IdsAsync(request, "collectioncount", ct);
             Record(_collectionRequests, ids);
             var entries = ids.Select(id => _collections.TryGetValue(id, out var children) ? CollectionEntry(id, children) : NotFound(id));
-            return Json($$$"""{"response":{"result":1,"resultcount":0,"collectiondetails":[{{{string.Join(',', entries)}}}]}}""");
+            return FakeHttpHandler.JsonResponse($$$"""{"response":{"result":1,"resultcount":0,"collectiondetails":[{{{string.Join(',', entries)}}}]}}""");
         });
     }
 
@@ -92,7 +91,4 @@ internal sealed class FakeWorkshopApi
             requests.Add(ids);
         }
     }
-
-    private static HttpResponseMessage Json(string json) =>
-        new(HttpStatusCode.OK) { Content = new StringContent(json, Encoding.UTF8, "application/json") };
 }

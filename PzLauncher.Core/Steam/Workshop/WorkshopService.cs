@@ -1,5 +1,4 @@
 using System.Collections.Concurrent;
-using System.Globalization;
 using Microsoft.Extensions.Logging;
 using PzLauncher.Core.Common;
 using PzLauncher.Core.Installs;
@@ -33,19 +32,14 @@ internal sealed partial class WorkshopService(
             return Logged(InstallErrors.InvalidPath(installRoot));
         }
 
-        if (locator.FindSteamRoots() is not [var steamRoot, ..])
+        var login = await SteamLoginUsers.LocateCurrentAsync(locator, ct).ConfigureAwait(false);
+        if (!login.IsSuccess)
         {
-            return Logged(SteamErrors.NotInstalled());
-        }
-
-        var account = await SteamLoginUsers.ReadCurrentAsync(SteamClientFiles.LoginUsersPath(steamRoot), ct).ConfigureAwait(false);
-        if (!account.IsSuccess)
-        {
-            return Logged(account.Error);
+            return Logged(login.Error);
         }
 
         var subscriptions = await WorkshopSubscriptionsFile.ReadAsync(
-            WorkshopFiles.SubscriptionsPath(steamRoot, account.Value.AccountId), logger, ct).ConfigureAwait(false);
+            WorkshopFiles.SubscriptionsPath(login.Value.SteamRoot, login.Value.Account.AccountId), logger, ct).ConfigureAwait(false);
         if (!subscriptions.IsSuccess)
         {
             return Logged(subscriptions.Error);
@@ -69,7 +63,9 @@ internal sealed partial class WorkshopService(
         foreach (var subscription in subscriptions.Value)
         {
             var installed = manifest.Items.GetValueOrDefault(subscription.Id) is { } entry && Directory.Exists(entry.Install.Folder) ? entry : null;
-            var mods = installed is null ? [] : await ModsAsync(subscription.Id, installed.Install.Folder, ct).ConfigureAwait(false);
+            var mods = installed is null
+                ? []
+                : await ModCatalog.ReadRootAsync(ModLocator.ModRoot.ForWorkshopItem(installed.Install.Folder), logger, ct).ConfigureAwait(false);
             var latest = _cache.GetValueOrDefault(subscription.Id)?.Details;
             items.Add(new WorkshopItem(
                 subscription.Id,
@@ -79,7 +75,8 @@ internal sealed partial class WorkshopService(
                 latest,
                 mods,
                 UsedBy(mods, collections),
-                StateOf(subscription.DisabledLocally, installed, latest)));
+                // Before a check, Steam's own latest manifest is the best known; it lags the Web API.
+                WorkshopItem.StateOf(subscription.DisabledLocally, installed?.Install, latest?.Manifest ?? installed?.LatestManifest)));
         }
 
         return new WorkshopSubscriptions(items, warnings);
@@ -122,13 +119,6 @@ internal sealed partial class WorkshopService(
             itemIds.ConvertAll(itemId => new WorkshopCollectionItem(itemId, details.Value.GetValueOrDefault(itemId))));
     }
 
-    private async Task<IReadOnlyList<InstalledMod>> ModsAsync(ulong id, string itemFolder, CancellationToken ct)
-    {
-        var root = new ModLocator.ModRoot(
-            ModFolders.WorkshopModsFolder(itemFolder), InstalledModSource.SteamWorkshop, id.ToString(CultureInfo.InvariantCulture));
-        return await ModCatalog.ReadRootAsync(root, logger, ct).ConfigureAwait(false);
-    }
-
     private static List<string> UsedBy(IReadOnlyList<InstalledMod> mods, IReadOnlyList<ModCollection> collections)
     {
         if (mods.Count == 0)
@@ -138,25 +128,6 @@ internal sealed partial class WorkshopService(
 
         var ids = mods.Select(mod => mod.Id).ToHashSet(StringComparer.Ordinal);
         return [.. collections.Where(collection => collection.ModIds.Any(ids.Contains)).Select(collection => collection.Name)];
-    }
-
-    // Before a check, Steam's own latest manifest is the best known; it lags the Web API.
-    private static WorkshopItemState StateOf(bool disabledLocally, WorkshopManifestEntry? installed, WorkshopItemDetails? latest)
-    {
-        if (disabledLocally)
-        {
-            return WorkshopItemState.DisabledLocally;
-        }
-
-        if (installed is null)
-        {
-            return WorkshopItemState.NotInstalled;
-        }
-
-        var latestManifest = latest?.Manifest ?? installed.LatestManifest;
-        return latestManifest is not null && !string.Equals(latestManifest, installed.Install.Manifest, StringComparison.Ordinal)
-            ? WorkshopItemState.NeedsUpdate
-            : WorkshopItemState.UpToDate;
     }
 
     private async Task<Result<IReadOnlyDictionary<ulong, WorkshopItemDetails?>>> DetailsAsync(IReadOnlyList<ulong> ids, CancellationToken ct)

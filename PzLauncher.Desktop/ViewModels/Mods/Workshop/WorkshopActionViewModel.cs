@@ -7,11 +7,9 @@ using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using PzLauncher.Core.Common;
-using PzLauncher.Core.Steam.Workshop;
 using PzLauncher.Core.Steam.Workshop.Actions;
 using PzLauncher.Desktop.Lang;
 using PzLauncher.Desktop.Localization;
-using PzLauncher.Desktop.Services.Shell;
 
 namespace PzLauncher.Desktop.ViewModels.Mods.Workshop;
 
@@ -27,13 +25,8 @@ public sealed partial class WorkshopActionViewModel(
     WorkshopAction action,
     IReadOnlyList<WorkshopActionItemRow> items,
     Action<WorkshopActionEvent>? observer = null,
-    Func<CancellationToken, Task<IReadOnlySet<ulong>>>? stillOutdated = null) : ViewModelBase
+    Func<CancellationToken, Task<IReadOnlySet<ulong>>>? stillOutdated = null) : DialogOperationViewModel
 {
-    private readonly CancellationTokenSource _cancel = new();
-    private bool _started;
-
-    public event EventHandler? CloseRequested;
-
     public WorkshopAction Action { get; } = action;
 
     public string Title => Action switch
@@ -65,56 +58,15 @@ public sealed partial class WorkshopActionViewModel(
 
     [ObservableProperty] public partial string? ErrorText { get; private set; }
 
-    /// <summary>Runs once; later calls return at once.</summary>
-    public Task StartAsync()
+    protected override async Task RunAsync()
     {
-        if (_started)
-        {
-            return Task.CompletedTask;
-        }
-
-        _started = true;
-        return RunAsync();
-    }
-
-    /// <summary>Stops a run in progress; for a dialog closed by the window's own close button.</summary>
-    public void Abort() => _cancel.Cancel();
-
-    [RelayCommand]
-    private void Close()
-    {
-        Abort();
-        CloseRequested?.Invoke(this, EventArgs.Empty);
-    }
-
-    private async Task RunAsync()
-    {
-        var ct = _cancel.Token;
         IsRunning = true;
-
-        // Reports posted before the result arrives are applied before it; anything later is ignored.
-        var finished = false;
-        var progress = new ContextProgress<WorkshopActionEvent>(report =>
+        var run = await RunWithProgressAsync<WorkshopActionEvent, Result<WorkshopActionOutcome>>(
+            (progress, ct) => runner.RunAsync(installRoot, new WorkshopActionRequest(Action, [.. Items.Select(item => item.Id)]), progress, ct),
+            OnEvent);
+        if (run is not { } result)
         {
-            if (!finished)
-            {
-                OnEvent(report);
-            }
-        });
-
-        Result<WorkshopActionOutcome> result;
-        try
-        {
-            result = await runner.RunAsync(installRoot, new WorkshopActionRequest(Action, [.. Items.Select(item => item.Id)]), progress, ct);
-        }
-        catch (OperationCanceledException) when (ct.IsCancellationRequested)
-        {
-            // The dialog is closing.
             return;
-        }
-        finally
-        {
-            finished = true;
         }
 
         if (result.IsSuccess)
@@ -130,6 +82,7 @@ public sealed partial class WorkshopActionViewModel(
 
             if (stillOutdated is not null && Items.Any(item => item.State == WorkshopActionItemState.Done))
             {
+                var ct = AbortToken;
                 IReadOnlySet<ulong> outdated;
                 try
                 {
@@ -157,6 +110,9 @@ public sealed partial class WorkshopActionViewModel(
         IsRunning = false;
         IsFinished = true;
     }
+
+    [RelayCommand]
+    private void Close() => AbortAndClose();
 
     private void OnEvent(WorkshopActionEvent report)
     {

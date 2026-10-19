@@ -17,25 +17,8 @@
     </Design.DataContext>
 
     <UserControl.Styles>
-        <!-- Border and padding hang outside the column so the label lines up with the cells below. -->
         <Style Selector="Button.columnHeader">
-            <Setter Property="Theme" Value="{StaticResource Shell.ColumnHeader}" />
-            <Setter Property="Margin" Value="-7,0,1,0" />
             <Setter Property="ToolTip.Tip" Value="{x:Static lang:UiText.Mods_SortColumnTip}" />
-        </Style>
-        <Style Selector="ic|FluentIcon.sortArrow">
-            <Setter Property="Icon" Value="ArrowSortUp" />
-            <Setter Property="IconVariant" Value="Regular" />
-            <Setter Property="FontSize" Value="12" />
-            <Setter Property="VerticalAlignment" Value="Center" />
-        </Style>
-        <Style Selector="Grid.sortDescending ic|FluentIcon.sortArrow">
-            <Setter Property="Icon" Value="ArrowSortDown" />
-        </Style>
-        <Style Selector="TextBlock.cell">
-            <Setter Property="VerticalAlignment" Value="Center" />
-            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
-            <Setter Property="Margin" Value="0,0,8,0" />
         </Style>
     </UserControl.Styles>
 

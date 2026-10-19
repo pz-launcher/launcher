@@ -20,13 +20,13 @@ internal static class WorkshopErrors
     public static Error NetworkFailed(string reason) =>
         new(ErrorCode.WorkshopNetworkFailed, $"Steam Web API could not be reached ({reason})", ErrorKind.External)
         {
-            Details = new Dictionary<string, string> { ["reason"] = reason },
+            Details = ErrorDetails.Reason(reason),
         };
 
     public static Error ResponseInvalid(string reason) =>
         new(ErrorCode.WorkshopResponseInvalid, $"Steam Web API sent an unreadable response ({reason})", ErrorKind.External)
         {
-            Details = new Dictionary<string, string> { ["reason"] = reason },
+            Details = ErrorDetails.Reason(reason),
         };
 
     public static Error CollectionNotFound(ulong id) =>
@@ -53,7 +53,7 @@ internal static class WorkshopErrors
     public static Error SteamInitFailed(string reason) =>
         new(ErrorCode.WorkshopSteamInitFailed, $"Steam refused to start the Workshop helper ({reason})", ErrorKind.External)
         {
-            Details = new Dictionary<string, string> { ["reason"] = reason },
+            Details = ErrorDetails.Reason(reason),
         };
 
     public static Error HelperStartFailed(string path, string reason) =>
@@ -65,7 +65,7 @@ internal static class WorkshopErrors
     public static Error HelperFailed(string reason) =>
         new(ErrorCode.WorkshopHelperFailed, $"The Steam helper stopped without a result ({reason})", ErrorKind.Unexpected)
         {
-            Details = new Dictionary<string, string> { ["reason"] = reason },
+            Details = ErrorDetails.Reason(reason),
         };
 
     public static Error HelperTimedOut(TimeSpan timeout) =>

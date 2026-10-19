@@ -5,10 +5,9 @@ using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
 using PzLauncher.Desktop.Lang;
-using PzLauncher.Desktop.ViewModels.Mods;
+using PzLauncher.Desktop.ViewModels;
 using PzLauncher.Desktop.ViewModels.Mods.Workshop;
 using PzLauncher.Desktop.ViewModels.ZombieBuddy;
-using PzLauncher.Desktop.Views.Mods;
 using PzLauncher.Desktop.Views.Mods.Workshop;
 using PzLauncher.Desktop.Views.ZombieBuddy;
 
@@ -114,58 +113,41 @@ public sealed class AvaloniaDialogService(Func<Window?> owner) : IDialogService
         return result;
     }
 
-    public async Task<bool> ShowZombieBuddySetupAsync(ZombieBuddySetupViewModel setup)
+    public Task<bool> ShowZombieBuddySetupAsync(ZombieBuddySetupViewModel setup) =>
+        ShowOperationDialogAsync(setup, setup.Title, 480, () => new ZombieBuddySetupView { DataContext = setup });
+
+    public Task ShowWorkshopActionAsync(WorkshopActionViewModel action) =>
+        ShowOperationDialogAsync(action, action.Title, 520, () => new WorkshopActionView { DataContext = action });
+
+    public Task<bool> PickWorkshopModsAsync(WorkshopModPickViewModel pick) =>
+        ShowViewDialogAsync(pick, UiText.WorkshopCollections_PickTitle, 520, () => new WorkshopModPickView { DataContext = pick });
+
+    private Task<bool> ShowOperationDialogAsync(DialogOperationViewModel operation, string title, double width, Func<Control> view) =>
+        ShowViewDialogAsync(operation, title, width, view, dialog =>
+        {
+            dialog.Opened += (_, _) => _ = operation.StartAsync();
+
+            // Covers the window's own close button; after a close request there is nothing left to cancel.
+            dialog.Closed += (_, _) => operation.Abort();
+        });
+
+    private async Task<bool> ShowViewDialogAsync(DialogViewModel viewModel, string title, double width, Func<Control> view, Action<Window>? setUp = null)
     {
         if (owner() is not { } window)
         {
             return false;
         }
 
-        var dialog = CreateDialog(setup.Title, 480, new ZombieBuddySetupView { DataContext = setup });
-        var launch = false;
-        setup.CloseRequested += (_, launchGame) =>
+        var dialog = CreateDialog(title, width, view());
+        var result = false;
+        viewModel.CloseRequested += (_, closeResult) =>
         {
-            launch = launchGame;
+            result = closeResult;
             dialog.Close();
         };
-        dialog.Opened += (_, _) => _ = setup.StartAsync();
-
-        // Covers the window's own close button; after a launch or close request there is nothing left to cancel.
-        dialog.Closed += (_, _) => setup.Abort();
+        setUp?.Invoke(dialog);
         await dialog.ShowDialog(window);
-        return launch;
-    }
-
-    public async Task ShowWorkshopActionAsync(WorkshopActionViewModel action)
-    {
-        if (owner() is not { } window)
-        {
-            return;
-        }
-
-        var dialog = CreateDialog(action.Title, 520, new WorkshopActionView { DataContext = action });
-        action.CloseRequested += (_, _) => dialog.Close();
-        dialog.Opened += (_, _) => _ = action.StartAsync();
-        dialog.Closed += (_, _) => action.Abort();
-        await dialog.ShowDialog(window);
-    }
-
-    public async Task<bool> PickWorkshopModsAsync(WorkshopModPickViewModel pick)
-    {
-        if (owner() is not { } window)
-        {
-            return false;
-        }
-
-        var dialog = CreateDialog(UiText.WorkshopCollections_PickTitle, 520, new WorkshopModPickView { DataContext = pick });
-        var accepted = false;
-        pick.CloseRequested += (_, accept) =>
-        {
-            accepted = accept;
-            dialog.Close();
-        };
-        await dialog.ShowDialog(window);
-        return accepted;
+        return result;
     }
 
     // Without option text, no option is shown and OptionChecked is false; without alternative text, no second button.

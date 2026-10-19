@@ -98,6 +98,8 @@ public static class DesignData
 
     public static WorkshopCollectionsViewModel WorkshopCollections => Mods.WorkshopCollections;
 
+    public static WorkshopItemRow WorkshopRow => WorkshopSubscriptions.VisibleRows.First(row => row.IsDownloading);
+
     public static WorkshopActionViewModel WorkshopAction { get; } = CreateWorkshopAction();
 
     public static WorkshopModPickViewModel WorkshopModPick { get; } = CreateWorkshopModPick();

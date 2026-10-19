@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using PzLauncher.Core.Steam.Workshop;
+using PzLauncher.Desktop.Services.Shell;
 
 namespace PzLauncher.Desktop.ViewModels.Mods.Workshop;
 
@@ -17,9 +18,9 @@ public sealed partial class WorkshopItemRow(WorkshopItem item, bool isSelected, 
     public string IdText { get; } = item.Id.ToString(CultureInfo.InvariantCulture);
 
     /// <summary>The Web API title, else the item id.</summary>
-    public string Title { get; } = item.Latest is { Title.Length: > 0 } latest ? latest.Title : item.Id.ToString(CultureInfo.InvariantCulture);
+    public string Title { get; } = TitleOf(item);
 
-    public bool HasTitle => Item.Latest is { Title.Length: > 0 };
+    public bool HasTitle => WebTitle(Item) is not null;
 
     public string ModIds { get; } = string.Join(", ", item.Mods.Select(mod => mod.Id));
 
@@ -50,7 +51,7 @@ public sealed partial class WorkshopItemRow(WorkshopItem item, bool isSelected, 
 
     internal void ShowDownload(ulong bytes, ulong total)
     {
-        DownloadPercent = total == 0 ? null : (int)Math.Min(100, bytes * 100.0 / total);
+        DownloadPercent = ProgressPercent.Of(bytes, total);
         IsDownloading = true;
     }
 
@@ -59,6 +60,10 @@ public sealed partial class WorkshopItemRow(WorkshopItem item, bool isSelected, 
         IsDownloading = false;
         DownloadPercent = null;
     }
+
+    internal static string TitleOf(WorkshopItem item) => WebTitle(item) ?? item.Id.ToString(CultureInfo.InvariantCulture);
+
+    internal static string? WebTitle(WorkshopItem item) => item.Latest is { Title.Length: > 0 } latest ? latest.Title : null;
 
     partial void OnIsSelectedChanged(bool value) => selectionChanged(this);
 }

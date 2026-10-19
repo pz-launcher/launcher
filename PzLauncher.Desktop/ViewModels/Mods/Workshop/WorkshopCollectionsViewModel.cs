@@ -1,14 +1,11 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using PzLauncher.Core.Mod;
-using PzLauncher.Core.Mod.Collections;
 using PzLauncher.Core.Steam.Workshop;
 using PzLauncher.Core.Steam.Workshop.Actions;
 using PzLauncher.Desktop.Lang;
@@ -19,18 +16,9 @@ using PzLauncher.Desktop.Services.Shell;
 namespace PzLauncher.Desktop.ViewModels.Mods.Workshop;
 
 /// <summary>A Steam Workshop collection opened by link or id, with each item's state for the account Steam signs in with and the install in use.</summary>
-public partial class WorkshopCollectionsViewModel : ViewModelBase
+public partial class WorkshopCollectionsViewModel : WorkshopSectionViewModel
 {
-    private readonly ModsViewModel _page;
-    private readonly IWorkshopService _service;
-    private readonly IWorkshopActionRunner _runner;
-    private readonly IDialogService _dialogs;
-    private readonly IUrlLauncher _urls;
     private readonly WorkshopCollectionHistory _history;
-
-    private readonly LocalizedText _error;
-    private readonly LocalizedText _status;
-    private readonly LocalizedErrorList _warnings = new();
     private WorkshopCollection? _collection;
 
     // A newer load supersedes one still in flight.
@@ -43,19 +31,12 @@ public partial class WorkshopCollectionsViewModel : ViewModelBase
         IDialogService dialogs,
         IUrlLauncher urls,
         WorkshopCollectionHistory history)
+        : base(page, service, runner, dialogs, urls)
     {
-        _page = page;
-        _service = service;
-        _runner = runner;
-        _dialogs = dialogs;
-        _urls = urls;
         _history = history;
         Rows = [];
         Remembered = [];
-        _error = new LocalizedText(text => ErrorText = text);
-        _status = new LocalizedText(text => StatusText = text);
         RefreshRemembered();
-        page.PropertyChanged += OnPagePropertyChanged;
     }
 
     /// <summary>A collection link or id to open.</summary>
@@ -101,19 +82,8 @@ public partial class WorkshopCollectionsViewModel : ViewModelBase
     [NotifyCanExecuteChangedFor(nameof(OpenCommand), nameof(GenerateCommand))]
     public partial bool IsLoading { get; private set; }
 
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(CanRunActions))]
-    public partial bool IsActionRunning { get; private set; }
-
-    [ObservableProperty] public partial string? ErrorText { get; private set; }
-
-    [ObservableProperty] public partial string? StatusText { get; private set; }
-
-    /// <summary>Files Steam's list could only be read in part from.</summary>
-    public ObservableCollection<string> Warnings => _warnings.Items;
-
     /// <summary>Steam actions may start: a collection is open, none runs, and no game from this launcher does.</summary>
-    public bool CanRunActions => HasCollection && _page.Install is not null && !_page.IsGameRunning && !IsActionRunning;
+    public override bool CanRunActions => HasCollection && base.CanRunActions;
 
     /// <summary>Re-reads the open collection's subscription states; for the section being shown.</summary>
     internal async Task ShowAsync()
@@ -141,11 +111,9 @@ public partial class WorkshopCollectionsViewModel : ViewModelBase
     /// <summary>Opens the open collection again from the Web API.</summary>
     internal Task RefreshAsync() => _collection is { } collection ? LoadCollectionAsync(collection.Id) : Task.CompletedTask;
 
-    internal void RenderTexts()
+    internal override void RenderTexts()
     {
-        _error.Render();
-        _status.Render();
-        _warnings.Render();
+        base.RenderTexts();
         OnPropertyChanged(nameof(LinkErrorText));
     }
 
@@ -168,16 +136,13 @@ public partial class WorkshopCollectionsViewModel : ViewModelBase
 
     [RelayCommand(CanExecute = nameof(CanOpenCollectionInSteam))]
     private Task OpenCollectionInSteamAsync() =>
-        _collection is { } collection ? WorkshopActionFlow.OpenInSteamAsync(_urls, _dialogs, collection.Id) : Task.CompletedTask;
-
-    [RelayCommand]
-    private Task OpenInSteamAsync(WorkshopItemRow row) => WorkshopActionFlow.OpenInSteamAsync(_urls, _dialogs, row.Id);
+        _collection is { } collection ? OpenInSteamAsync(collection.Id) : Task.CompletedTask;
 
     private bool CanSubscribeMissing() => CanRunActions && MissingCount > 0;
 
     [RelayCommand(CanExecute = nameof(CanSubscribeMissing))]
     private Task SubscribeMissingAsync() =>
-        RunActionAsync(WorkshopAction.Subscribe, [.. Rows.Where(row => row.Item.State == WorkshopItemState.NotSubscribed)]);
+        RunAsync(WorkshopAction.Subscribe, Rows.Where(row => row.Item.State == WorkshopItemState.NotSubscribed));
 
     private bool CanUnsubscribeAll() => CanRunActions && SubscribedCount > 0;
 
@@ -185,9 +150,9 @@ public partial class WorkshopCollectionsViewModel : ViewModelBase
     private async Task UnsubscribeAllAsync()
     {
         List<WorkshopItemRow> subscribed = [.. Rows.Where(row => row.Item.State != WorkshopItemState.NotSubscribed)];
-        if (subscribed.Count > 0 && await WorkshopActionFlow.ConfirmUnsubscribeAsync(_dialogs, subscribed))
+        if (subscribed.Count > 0 && await WorkshopActionFlow.ConfirmUnsubscribeAsync(Dialogs, subscribed))
         {
-            await RunActionAsync(WorkshopAction.Unsubscribe, subscribed);
+            await RunAsync(WorkshopAction.Unsubscribe, subscribed);
         }
     }
 
@@ -195,9 +160,9 @@ public partial class WorkshopCollectionsViewModel : ViewModelBase
 
     [RelayCommand(CanExecute = nameof(CanUpdateOutdated))]
     private Task UpdateOutdatedAsync() =>
-        RunActionAsync(WorkshopAction.Update, [.. Rows.Where(row => row.Item.State == WorkshopItemState.NeedsUpdate)]);
+        RunAsync(WorkshopAction.Update, Rows.Where(row => row.Item.State == WorkshopItemState.NeedsUpdate));
 
-    private bool CanGenerate() => HasCollection && Rows.Count > 0 && _page.CanWrite && !IsLoading && !IsActionRunning;
+    private bool CanGenerate() => HasCollection && Rows.Count > 0 && Page.CanWrite && !IsLoading && !IsActionRunning;
 
     /// <summary>A launcher mod collection of the installed items' mods, in collection order.</summary>
     [RelayCommand(CanExecute = nameof(CanGenerate))]
@@ -214,7 +179,7 @@ public partial class WorkshopCollectionsViewModel : ViewModelBase
         {
             if (SkipReason(row.Item) is { } reason)
             {
-                skipped.Add(string.Format(CultureInfo.CurrentCulture, UiText.WorkshopCollections_SkippedFormat, WorkshopActionFlow.NameWithId(row), reason));
+                skipped.Add(string.Format(CultureInfo.CurrentCulture, UiText.WorkshopCollections_SkippedFormat, WorkshopActionFlow.NameWithId(row.Item), reason));
             }
             else
             {
@@ -224,7 +189,7 @@ public partial class WorkshopCollectionsViewModel : ViewModelBase
 
         if (used.Count == 0)
         {
-            await _dialogs.ShowErrorAsync(UiText.WorkshopCollections_GenerateNothing);
+            await Dialogs.ShowErrorAsync(UiText.WorkshopCollections_GenerateNothing);
             return;
         }
 
@@ -235,10 +200,10 @@ public partial class WorkshopCollectionsViewModel : ViewModelBase
                 .Where(row => row.Item.Mods.Count > 1)
                 .Select(row => new WorkshopModPickItem(
                     row.Id,
-                    WorkshopActionFlow.NameWithId(row),
+                    WorkshopActionFlow.NameWithId(row.Item),
                     [.. row.Item.Mods.Select(mod => new WorkshopModChoice(mod, Conflicts(mod, candidates)))])),
         ];
-        if ((picks.Count > 0 || skipped.Count > 0) && !await _dialogs.PickWorkshopModsAsync(new WorkshopModPickViewModel(picks, skipped)))
+        if ((picks.Count > 0 || skipped.Count > 0) && !await Dialogs.PickWorkshopModsAsync(new WorkshopModPickViewModel(picks, skipped)))
         {
             return;
         }
@@ -254,40 +219,48 @@ public partial class WorkshopCollectionsViewModel : ViewModelBase
         ];
         if (ids.Count == 0)
         {
-            await _dialogs.ShowErrorAsync(UiText.WorkshopCollections_GenerateNothing);
+            await Dialogs.ShowErrorAsync(UiText.WorkshopCollections_GenerateNothing);
             return;
         }
 
         var prompt = ModCollectionPrompts.NamePrompt(UiText.WorkshopCollections_GenerateTitle, collection.Title ?? "", UiText.ModCollections_Create);
-        if (await ModCollectionPrompts.AskNameAsync(_dialogs, prompt, _page.Collections.Exists) is not TextPromptResult.Accepted accepted)
+        if (await Page.Collections.AskNameAsync(prompt, original: null) is not { } name || !await Page.Collections.SaveAndSelectAsync(name, ids))
         {
             return;
         }
 
-        var name = accepted.Text;
-        if (!await _page.WriteAsync((root, extraGameArgs) => _page.Service.SaveAsync(new SaveModCollectionRequest(root, extraGameArgs, null, name, ids))))
-        {
-            return;
-        }
-
-        _page.Collections.SelectByName(name);
         var count = ids.Count;
-        _status.Show(() => string.Format(CultureInfo.CurrentCulture, UiText.WorkshopCollections_Generated, name, count));
+        ShownStatus.Show(() => string.Format(CultureInfo.CurrentCulture, UiText.WorkshopCollections_Generated, name, count));
 
         // The items' usage by launcher collections changed.
         await ShowAsync();
     }
 
-    partial void OnIsActionRunningChanged(bool value) => NotifyActionCommands();
+    protected override void NotifyActionCommands()
+    {
+        SubscribeMissingCommand.NotifyCanExecuteChanged();
+        UnsubscribeAllCommand.NotifyCanExecuteChanged();
+        UpdateOutdatedCommand.NotifyCanExecuteChanged();
+        GenerateCommand.NotifyCanExecuteChanged();
+    }
+
+    protected override void OnPageChanged(string? propertyName)
+    {
+        base.OnPageChanged(propertyName);
+        if (propertyName == nameof(ModsViewModel.CanWrite))
+        {
+            GenerateCommand.NotifyCanExecuteChanged();
+        }
+    }
 
     private async Task LoadCollectionAsync(ulong id)
     {
         var version = ++_loadVersion;
         IsLoading = true;
-        _status.Clear();
+        ShownStatus.Clear();
         try
         {
-            var result = await _service.GetCollectionAsync(id);
+            var result = await Service.GetCollectionAsync(id);
             if (version != _loadVersion)
             {
                 return;
@@ -297,7 +270,7 @@ public partial class WorkshopCollectionsViewModel : ViewModelBase
             {
                 SetCollection(null);
                 SetRows([]);
-                _error.Show(result.Error);
+                ShownError.Show(result.Error);
                 return;
             }
 
@@ -318,12 +291,12 @@ public partial class WorkshopCollectionsViewModel : ViewModelBase
 
     private async Task MergeAsync(int version)
     {
-        if (_collection is not { } collection || _page.Install is not { } install)
+        if (_collection is not { } collection || Page.Install is not { } install)
         {
             return;
         }
 
-        var result = await _service.GetSubscriptionsAsync(install.RootPath, _page.ExtraGameArgs(install));
+        var result = await Service.GetSubscriptionsAsync(install.RootPath, Page.ExtraGameArgs(install));
         if (version != _loadVersion)
         {
             return;
@@ -332,17 +305,12 @@ public partial class WorkshopCollectionsViewModel : ViewModelBase
         if (!result.IsSuccess)
         {
             SetRows([]);
-            _error.Show(result.Error);
+            ShownError.Show(result.Error);
             return;
         }
 
-        _error.Clear();
-        _warnings.Clear();
-        foreach (var warning in result.Value.Warnings)
-        {
-            _warnings.Add(warning);
-        }
-
+        ShownError.Clear();
+        ShowWarnings(result.Value.Warnings);
         var subscribed = new Dictionary<ulong, WorkshopItem>();
         foreach (var item in result.Value.Items)
         {
@@ -352,26 +320,8 @@ public partial class WorkshopCollectionsViewModel : ViewModelBase
         SetRows([.. collection.Items.Select(entry => ItemOf(entry, subscribed))]);
     }
 
-    private async Task RunActionAsync(WorkshopAction action, IReadOnlyList<WorkshopItemRow> rows)
-    {
-        if (!CanRunActions || rows.Count == 0 || _page.Install is not { } install)
-        {
-            return;
-        }
-
-        IsActionRunning = true;
-        try
-        {
-            await WorkshopActionFlow.RunAsync(
-                _runner, _service, _dialogs, install.RootPath, _page.ExtraGameArgs(install), action, WorkshopActionFlow.ActionItems(rows), () => Rows);
-        }
-        finally
-        {
-            IsActionRunning = false;
-        }
-
-        await ShowAsync();
-    }
+    private Task RunAsync(WorkshopAction action, IEnumerable<WorkshopItemRow> rows) =>
+        RunActionAsync(action, WorkshopActionFlow.ActionItems(rows), () => Rows, ShowAsync);
 
     // The collection's own details fill in a title the subscription list hasn't fetched.
     private static WorkshopItem ItemOf(WorkshopCollectionItem entry, IReadOnlyDictionary<ulong, WorkshopItem> subscribed) =>
@@ -416,26 +366,4 @@ public partial class WorkshopCollectionsViewModel : ViewModelBase
             .. _history.Items.Select(saved => new RememberedWorkshopCollectionRow(
                 saved.Id, saved.Title ?? saved.Id.ToString(CultureInfo.InvariantCulture), saved.Id == _collection?.Id)),
         ];
-
-    private void OnPagePropertyChanged(object? sender, PropertyChangedEventArgs e)
-    {
-        switch (e.PropertyName)
-        {
-            case nameof(ModsViewModel.Install) or nameof(ModsViewModel.IsGameRunning):
-                OnPropertyChanged(nameof(CanRunActions));
-                NotifyActionCommands();
-                break;
-            case nameof(ModsViewModel.CanWrite):
-                GenerateCommand.NotifyCanExecuteChanged();
-                break;
-        }
-    }
-
-    private void NotifyActionCommands()
-    {
-        SubscribeMissingCommand.NotifyCanExecuteChanged();
-        UnsubscribeAllCommand.NotifyCanExecuteChanged();
-        UpdateOutdatedCommand.NotifyCanExecuteChanged();
-        GenerateCommand.NotifyCanExecuteChanged();
-    }
 }

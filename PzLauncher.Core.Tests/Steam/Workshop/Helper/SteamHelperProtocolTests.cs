@@ -14,7 +14,7 @@ public sealed class SteamHelperProtocolTests
     public void Request_RoundTrips_WithStringAction()
     {
         var original = new SteamHelperRequest(
-            SteamHelperAction.Unsubscribe, @"E:\SteamLibrary\steamapps\common\ProjectZomboid\steam_api64.dll", [3811390574, 18446744073709551615]);
+            WorkshopAction.Unsubscribe, @"E:\SteamLibrary\steamapps\common\ProjectZomboid\steam_api64.dll", [3811390574, 18446744073709551615]);
 
         var json = JsonSerializer.Serialize(original, SteamHelperJsonContext.Default.SteamHelperRequest);
         var copy = JsonSerializer.Deserialize(json, SteamHelperJsonContext.Default.SteamHelperRequest);
@@ -102,7 +102,7 @@ public sealed class SteamHelperProtocolTests
     {
         using var temp = new TempDirectory();
         var request = JsonSerializer.Serialize(
-            new SteamHelperRequest(SteamHelperAction.Update, Path.Combine(temp.Path, "steam_api64.dll"), [1]),
+            new SteamHelperRequest(WorkshopAction.Update, Path.Combine(temp.Path, "steam_api64.dll"), [1]),
             SteamHelperJsonContext.Default.SteamHelperRequest);
 
         var (exitCode, events) = RunHost(request);

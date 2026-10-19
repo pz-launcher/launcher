@@ -264,4 +264,14 @@ public partial class ErrorCodeTests
     [InlineData(ErrorCode.UpdateRestartFailed)]
     public void Factory_PathReasonDetails_HoldThePathAndReason(ErrorCode code) =>
         Assert.Equal(new Dictionary<string, string> { ["path"] = "p", ["reason"] = "r" }, Factories[code].Error.Details);
+
+    [Theory]
+    [InlineData(ErrorCode.SteamVdfMalformed)]
+    [InlineData(ErrorCode.SteamShutdownUnconfirmed)]
+    [InlineData(ErrorCode.WorkshopNetworkFailed)]
+    [InlineData(ErrorCode.WorkshopResponseInvalid)]
+    [InlineData(ErrorCode.WorkshopSteamInitFailed)]
+    [InlineData(ErrorCode.WorkshopHelperFailed)]
+    public void Factory_ReasonDetails_HoldTheReason(ErrorCode code) =>
+        Assert.Equal(new Dictionary<string, string> { ["reason"] = "r" }, Factories[code].Error.Details);
 }

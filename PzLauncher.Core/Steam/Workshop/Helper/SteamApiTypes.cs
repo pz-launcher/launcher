@@ -47,8 +47,6 @@ internal readonly record struct DownloadItemResult(uint AppId, ulong Id, int Res
 /// <summary>Callback payload layouts; a 64-bit field after a 32-bit one starts at 8 with pack 8, at 4 with pack 4.</summary>
 internal static class SteamCallbackPayloads
 {
-    public const int ResultOk = 1;
-
     /// <summary>RemoteStorageSubscribePublishedFileResult_t or RemoteStorageUnsubscribePublishedFileResult_t (same layout); <c>null</c> when the payload is too short.</summary>
     public static PublishedFileResult? ReadPublishedFileResult(byte[] payload, bool largePack)
     {

@@ -1,0 +1,26 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:PzLauncher.Desktop.ViewModels.Mods.Workshop"
+             xmlns:design="using:PzLauncher.Desktop.ViewModels.Design"
+             xmlns:loc="using:PzLauncher.Desktop.Localization"
+             xmlns:lang="using:PzLauncher.Desktop.Lang"
+             mc:Ignorable="d" d:DesignWidth="130"
+             x:Class="PzLauncher.Desktop.Views.Mods.Workshop.WorkshopItemStateCell"
+             x:DataType="vm:WorkshopItemRow">
+
+    <Design.DataContext>
+        <x:Static Member="design:DesignData.WorkshopRow" />
+    </Design.DataContext>
+
+    <Panel>
+        <TextBlock Classes="cell" Text="{Binding Item.State, Converter={x:Static loc:DisplayNames.WorkshopItemStateName}}"
+                   Classes.warning="{Binding NeedsUpdate}"
+                   IsVisible="{Binding !IsDownloading}" />
+        <TextBlock Classes="cell" Text="{x:Static lang:UiText.Workshop_Downloading}" Foreground="{DynamicResource Shell.Accent}"
+                   IsVisible="{Binding IsDownloadingWithoutPercent}" />
+        <TextBlock Classes="cell" Text="{Binding DownloadPercent, StringFormat={x:Static lang:UiText.Workshop_DownloadingFormat}}"
+                   Foreground="{DynamicResource Shell.Accent}" IsVisible="{Binding HasDownloadPercent}" />
+    </Panel>
+</UserControl>

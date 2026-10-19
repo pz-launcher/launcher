@@ -68,23 +68,23 @@ public sealed class WorkshopActionRunnerTests : IDisposable
         Assert.True(process.InputClosed);
         Assert.EndsWith("\n", process.Input, StringComparison.Ordinal);
         var sent = SentRequest(process);
-        Assert.Equal((SteamHelperAction.Update, SteamApi), (sent.Action, sent.SteamApiPath));
+        Assert.Equal((WorkshopAction.Update, SteamApi), (sent.Action, sent.SteamApiPath));
         Assert.Equal([1UL, 2UL], sent.Ids);
         Assert.True(process.IsDisposed);
         Assert.False(process.Killed);
     }
 
     [Theory]
-    [InlineData(WorkshopAction.Subscribe, nameof(SteamHelperAction.Subscribe))]
-    [InlineData(WorkshopAction.Unsubscribe, nameof(SteamHelperAction.Unsubscribe))]
-    [InlineData(WorkshopAction.Update, nameof(SteamHelperAction.Update))]
-    public async Task RunAsync_SendsTheHelperAction(WorkshopAction action, string expected)
+    [InlineData(WorkshopAction.Subscribe)]
+    [InlineData(WorkshopAction.Unsubscribe)]
+    [InlineData(WorkshopAction.Update)]
+    public async Task RunAsync_SendsTheHelperAction(WorkshopAction action)
     {
         Script(new SteamHelperStarted(), new SteamHelperItemDone(7), new SteamHelperFinished());
 
         ResultAssert.Ok(await Runner().RunAsync(_root, new WorkshopActionRequest(action, [7]), null, Ct));
 
-        Assert.Equal(Enum.Parse<SteamHelperAction>(expected), SentRequest(Assert.Single(_processes.PipedProcesses)).Action);
+        Assert.Equal(action, SentRequest(Assert.Single(_processes.PipedProcesses)).Action);
     }
 
     [Fact]

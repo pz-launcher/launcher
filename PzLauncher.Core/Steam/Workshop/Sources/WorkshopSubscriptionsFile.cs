@@ -15,40 +15,27 @@ internal static partial class WorkshopSubscriptionsFile
     // A missing file is an account that never subscribed to anything.
     public static async Task<Result<IReadOnlyList<WorkshopSubscription>>> ReadAsync(string path, ILogger logger, CancellationToken ct)
     {
-        string text;
-        try
-        {
-            text = await File.ReadAllTextAsync(path, ct).ConfigureAwait(false);
-        }
-        catch (Exception ex) when (ex is FileNotFoundException or DirectoryNotFoundException)
+        var text = await SteamKeyValues.ReadTextIfExistsAsync(path, reason => WorkshopErrors.SubscriptionsUnreadable(path, reason), ct)
+            .ConfigureAwait(false);
+        if (text is not { } read)
         {
             return Array.Empty<WorkshopSubscription>();
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-        {
-            return WorkshopErrors.SubscriptionsUnreadable(path, ex.Message);
-        }
 
-        return Parse(text, path, logger);
+        return read.IsSuccess ? Parse(read.Value, path, logger) : read.Error;
     }
 
     public static Result<IReadOnlyList<WorkshopSubscription>> Parse(string text, string path, ILogger logger)
     {
-        var parsed = SteamKeyValues.Parse(text);
-        if (!parsed.IsSuccess)
+        var root = SteamKeyValues.ParseBlock(text, WorkshopFiles.SubscriptionsRoot, reason => WorkshopErrors.SubscriptionsUnreadable(path, reason));
+        if (!root.IsSuccess)
         {
-            return WorkshopErrors.SubscriptionsUnreadable(path, parsed.Error.Message);
-        }
-
-        var root = parsed.Value.GetChild(WorkshopFiles.SubscriptionsRoot);
-        if (root is null || !root.IsCollection)
-        {
-            return WorkshopErrors.SubscriptionsUnreadable(path, $"missing \"{WorkshopFiles.SubscriptionsRoot}\" block");
+            return root.Error;
         }
 
         var items = new List<WorkshopSubscription>();
         var seen = new HashSet<ulong>();
-        foreach (var (key, entry) in root.GetChildren())
+        foreach (var (key, entry) in root.Value.GetChildren())
         {
             // Numbered entries are items; "appid" and "time_last_updated" are metadata.
             if (!int.TryParse(key, NumberStyles.None, CultureInfo.InvariantCulture, out _))

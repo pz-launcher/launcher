@@ -13,11 +13,8 @@ namespace PzLauncher.Desktop.ViewModels.Mods.Workshop;
 /// items that hold several, and the items left out.
 /// </summary>
 /// <param name="skipped">Each item left out, with the reason.</param>
-public sealed partial class WorkshopModPickViewModel(IReadOnlyList<WorkshopModPickItem> items, IReadOnlyList<string> skipped) : ViewModelBase
+public sealed partial class WorkshopModPickViewModel(IReadOnlyList<WorkshopModPickItem> items, IReadOnlyList<string> skipped) : DialogViewModel
 {
-    /// <summary><c>true</c> for the accept button.</summary>
-    public event EventHandler<bool>? CloseRequested;
-
     public IReadOnlyList<WorkshopModPickItem> Items { get; } = items;
 
     public IReadOnlyList<string> Skipped { get; } = skipped;
@@ -29,10 +26,10 @@ public sealed partial class WorkshopModPickViewModel(IReadOnlyList<WorkshopModPi
     public string SkippedText => string.Join(Environment.NewLine, Skipped);
 
     [RelayCommand]
-    private void Accept() => CloseRequested?.Invoke(this, true);
+    private void Accept() => RequestClose(true);
 
     [RelayCommand]
-    private void Cancel() => CloseRequested?.Invoke(this, false);
+    private void Cancel() => RequestClose(false);
 }
 
 /// <param name="Name">The item's title with its id.</param>

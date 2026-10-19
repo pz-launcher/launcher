@@ -130,15 +130,14 @@ internal sealed partial class SteamLaunchHookService(
             return SteamErrors.PlatformUnsupported(platform.Os);
         }
 
-        if (locator.FindSteamRoots() is not [var root, ..])
+        var login = await SteamLoginUsers.LocateCurrentAsync(locator, ct).ConfigureAwait(false);
+        if (!login.IsSuccess)
         {
-            return SteamErrors.NotInstalled();
+            return login.Error;
         }
 
-        var account = await SteamLoginUsers.ReadCurrentAsync(SteamClientFiles.LoginUsersPath(root), ct).ConfigureAwait(false);
-        return account.IsSuccess
-            ? new SteamTarget(root, account.Value, SteamClientFiles.LocalConfigPath(root, account.Value.AccountId))
-            : account.Error;
+        var (root, account) = login.Value;
+        return new SteamTarget(root, account, SteamClientFiles.LocalConfigPath(root, account.AccountId));
     }
 
     private bool IsSteamRunning()

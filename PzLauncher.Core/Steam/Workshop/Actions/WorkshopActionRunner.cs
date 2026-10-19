@@ -53,7 +53,7 @@ internal sealed partial class WorkshopActionRunner(
             return Logged(WorkshopErrors.HelperStartFailed(AppContext.BaseDirectory, "the launcher's own executable path is unknown"));
         }
 
-        var helperRequest = new SteamHelperRequest(ToHelperAction(request.Action), steamApi, ids);
+        var helperRequest = new SteamHelperRequest(request.Action, steamApi, ids);
         await _gate.WaitAsync(ct).ConfigureAwait(false);
         try
         {
@@ -65,13 +65,6 @@ internal sealed partial class WorkshopActionRunner(
             _gate.Release();
         }
     }
-
-    private static SteamHelperAction ToHelperAction(WorkshopAction action) => action switch
-    {
-        WorkshopAction.Subscribe => SteamHelperAction.Subscribe,
-        WorkshopAction.Unsubscribe => SteamHelperAction.Unsubscribe,
-        WorkshopAction.Update => SteamHelperAction.Update,
-    };
 
     private async Task<Result<WorkshopActionOutcome>> RunHelperAsync(
         string executable, string workingDirectory, SteamHelperRequest request, IProgress<WorkshopActionEvent>? progress, CancellationToken ct)

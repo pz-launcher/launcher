@@ -20,7 +20,7 @@ PzLauncher.Core/
 │   ├── Zabric/      # launch step: Zabric's entry in ZombieBuddy's preload list
 │   └── ZBSkipOnlineChecks/ # launch step: ZB Skip Online Checks' preload entry and patches_jar agent start
 ├── Update/          # launcher self-update: GitHub/Gitee release feeds, download + verify + stage, install with rollback
-├── Net/             # the one shared HttpClient (LauncherHttpClient), runtime-switchable proxy, proxy settings, connection test
+├── Net/             # the one shared HttpClient (LauncherHttpClient), JSON request helper (HttpJson), runtime-switchable proxy, proxy settings, connection test
 ├── Serialization/   # CoreJsonContext (source-gen JSON)
 └── ServiceCollectionExtensions.cs   # AddPzLauncherCore()
 ```

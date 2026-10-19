@@ -34,7 +34,7 @@ validated yet" or "error".
 | Non-null param | Trust the annotation: no `ThrowIfNull`. Every caller is in this solution, compiled with nullable warnings as errors and no `!` | `InstallDetectionService.InspectAsync` |
 | Generic value that must not be null | `where T : notnull`, not a runtime check | `Result<T>` |
 | OS / registry / env / file value | Nullable only until the first validation | `SteamLocator.GetCandidateRoots` |
-| Value or failure reason | `Result<T>`, not a tuple of nullables | `SteamLibraryReader.ReadAsync` |
+| Value or failure reason | `Result<T>`, not a tuple of nullables | `SteamKeyValues.ReadTextAsync` |
 | Fields that are null together | One nullable sub-record; derive flags from it | `PzInstall` |
 | Collections on DTOs | Non-null, empty by default | `Error.Details` |
 | Value set at startup and used right away | Local or constructor parameter, not a nullable field | `PzLauncher.Desktop/App.axaml.cs` |

@@ -14,4 +14,18 @@ public sealed record WorkshopItem(
     WorkshopItemDetails? Latest,
     IReadOnlyList<InstalledMod> Mods,
     IReadOnlyList<string> Collections,
-    WorkshopItemState State);
+    WorkshopItemState State)
+{
+    /// <summary>This item with <paramref name="latest"/> as its latest version and the state that follows from it.</summary>
+    public WorkshopItem WithLatest(WorkshopItemDetails latest) => this with
+    {
+        Latest = latest,
+        State = State == WorkshopItemState.NotSubscribed ? State : StateOf(DisabledLocally, Installed, latest.Manifest),
+    };
+
+    internal static WorkshopItemState StateOf(bool disabledLocally, WorkshopInstall? installed, string? latestManifest) =>
+        disabledLocally ? WorkshopItemState.DisabledLocally
+        : installed is null ? WorkshopItemState.NotInstalled
+        : latestManifest is not null && !string.Equals(latestManifest, installed.Manifest, StringComparison.Ordinal) ? WorkshopItemState.NeedsUpdate
+        : WorkshopItemState.UpToDate;
+}

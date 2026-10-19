@@ -3,41 +3,40 @@ using PzLauncher.Core.Common;
 
 namespace PzLauncher.Core.Steam;
 
+internal sealed record SteamLogin(string SteamRoot, SteamAccount Account);
+
 /// <summary>The account Steam signs in with: <c>config/loginusers.vdf</c>'s <c>MostRecent</c> user, else the latest sign-in.</summary>
 internal static class SteamLoginUsers
 {
-    public static async Task<Result<SteamAccount>> ReadCurrentAsync(string path, CancellationToken ct)
+    /// <summary>The current account of the first Steam root found.</summary>
+    public static async Task<Result<SteamLogin>> LocateCurrentAsync(SteamLocator locator, CancellationToken ct)
     {
-        string text;
-        try
+        if (locator.FindSteamRoots() is not [var root, ..])
         {
-            text = await File.ReadAllTextAsync(path, ct).ConfigureAwait(false);
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-        {
-            return SteamErrors.NoCurrentAccount(path, ex.Message);
+            return SteamErrors.NotInstalled();
         }
 
-        return ParseCurrent(text, path);
+        var account = await ReadCurrentAsync(SteamClientFiles.LoginUsersPath(root), ct).ConfigureAwait(false);
+        return account.IsSuccess ? new SteamLogin(root, account.Value) : account.Error;
+    }
+
+    public static async Task<Result<SteamAccount>> ReadCurrentAsync(string path, CancellationToken ct)
+    {
+        var text = await SteamKeyValues.ReadTextAsync(path, reason => SteamErrors.NoCurrentAccount(path, reason), ct).ConfigureAwait(false);
+        return text.IsSuccess ? ParseCurrent(text.Value, path) : text.Error;
     }
 
     // Newer clients dropped MostRecent; each sign-in still updates the user's timestamp.
     public static Result<SteamAccount> ParseCurrent(string text, string path)
     {
-        var parsed = SteamKeyValues.Parse(text);
-        if (!parsed.IsSuccess)
+        var users = SteamKeyValues.ParseBlock(text, "users", reason => SteamErrors.NoCurrentAccount(path, reason));
+        if (!users.IsSuccess)
         {
-            return SteamErrors.NoCurrentAccount(path, parsed.Error.Message);
-        }
-
-        var users = parsed.Value.GetChild("users");
-        if (users is null || !users.IsCollection)
-        {
-            return SteamErrors.NoCurrentAccount(path, "missing \"users\" block");
+            return users.Error;
         }
 
         (ulong SteamId, ValveKeyValue.KVObject User, long Timestamp)? latest = null;
-        foreach (var (key, user) in users.GetChildren())
+        foreach (var (key, user) in users.Value.GetChildren())
         {
             if (!user.IsCollection || !ulong.TryParse(key, NumberStyles.None, CultureInfo.InvariantCulture, out var steamId))
             {

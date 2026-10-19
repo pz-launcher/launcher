@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.Json;
+using PzLauncher.Core.Steam.Workshop.Actions;
 
 namespace PzLauncher.Core.Steam.Workshop.Helper;
 
@@ -59,13 +60,13 @@ public static class SteamHelperHost
             var session = new SteamHelperSession(api, Write, TimeProvider.System);
             switch (request.Action)
             {
-                case SteamHelperAction.Subscribe:
+                case WorkshopAction.Subscribe:
                     session.ChangeSubscriptions(request.Ids, subscribe: true);
                     break;
-                case SteamHelperAction.Unsubscribe:
+                case WorkshopAction.Unsubscribe:
                     session.ChangeSubscriptions(request.Ids, subscribe: false);
                     break;
-                case SteamHelperAction.Update:
+                case WorkshopAction.Update:
                     session.Update(request.Ids);
                     break;
             }

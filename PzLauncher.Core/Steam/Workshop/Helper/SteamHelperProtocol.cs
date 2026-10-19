@@ -3,15 +3,8 @@ using PzLauncher.Core.Steam.Workshop.Actions;
 
 namespace PzLauncher.Core.Steam.Workshop.Helper;
 
-internal enum SteamHelperAction
-{
-    Subscribe,
-    Unsubscribe,
-    Update,
-}
-
 /// <summary>The one JSON line the helper reads from stdin.</summary>
-internal sealed record SteamHelperRequest(SteamHelperAction Action, string SteamApiPath, IReadOnlyList<ulong> Ids);
+internal sealed record SteamHelperRequest(WorkshopAction Action, string SteamApiPath, IReadOnlyList<ulong> Ids);
 
 internal enum SteamHelperFailure
 {

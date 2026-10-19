@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
@@ -16,20 +14,10 @@ using PzLauncher.Desktop.Services.Shell;
 namespace PzLauncher.Desktop.ViewModels.Mods.Workshop;
 
 /// <summary>The Steam Workshop subscriptions of the account Steam signs in with, in the Steam libraries of the install in use.</summary>
-public partial class WorkshopSubscriptionsViewModel : ViewModelBase
+public partial class WorkshopSubscriptionsViewModel : WorkshopSectionViewModel
 {
-    private readonly ModsViewModel _page;
-    private readonly IWorkshopService _service;
-    private readonly IWorkshopActionRunner _runner;
-    private readonly IDialogService _dialogs;
     private readonly IClipboardService _clipboard;
-    private readonly IUrlLauncher _urls;
-
-    // By id, so a reload keeps what was ticked.
-    private readonly HashSet<ulong> _selectedIds = [];
-    private readonly LocalizedText _error;
-    private readonly LocalizedText _status;
-    private readonly LocalizedErrorList _warnings = new();
+    private readonly RowSelection<ulong> _selection = new();
     private IReadOnlyList<WorkshopItemRow> _rows = [];
     private bool _loaded;
 
@@ -43,17 +31,10 @@ public partial class WorkshopSubscriptionsViewModel : ViewModelBase
         IDialogService dialogs,
         IClipboardService clipboard,
         IUrlLauncher urls)
+        : base(page, service, runner, dialogs, urls)
     {
-        _page = page;
-        _service = service;
-        _runner = runner;
-        _dialogs = dialogs;
         _clipboard = clipboard;
-        _urls = urls;
         VisibleRows = [];
-        _error = new LocalizedText(text => ErrorText = text);
-        _status = new LocalizedText(text => StatusText = text);
-        page.PropertyChanged += OnPagePropertyChanged;
     }
 
     [ObservableProperty]
@@ -79,24 +60,9 @@ public partial class WorkshopSubscriptionsViewModel : ViewModelBase
 
     public bool ShowsProgress => IsLoading || IsChecking;
 
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(CanRunActions))]
-    [NotifyCanExecuteChangedFor(nameof(CheckUpdatesCommand))]
-    public partial bool IsActionRunning { get; private set; }
-
-    [ObservableProperty] public partial string? ErrorText { get; private set; }
-
-    [ObservableProperty] public partial string? StatusText { get; private set; }
-
-    /// <summary>Files Steam's list could only be read in part from, and a failed title lookup.</summary>
-    public ObservableCollection<string> Warnings => _warnings.Items;
-
-    public int SelectedCount => _selectedIds.Count;
+    public int SelectedCount => _selection.Count;
 
     public int OutdatedCount => _rows.Count(row => row.Item.State == WorkshopItemState.NeedsUpdate);
-
-    /// <summary>Steam actions may start: none runs, and no game from this launcher does.</summary>
-    public bool CanRunActions => _page.Install is not null && !_page.IsGameRunning && !IsActionRunning;
 
     /// <summary>Loaded, and the account has no subscription.</summary>
     public bool IsEmpty => _loaded && _rows.Count == 0;
@@ -107,18 +73,18 @@ public partial class WorkshopSubscriptionsViewModel : ViewModelBase
     internal async Task LoadAsync()
     {
         var version = ++_loadVersion;
-        if (_page.Install is not { } install)
+        if (Page.Install is not { } install)
         {
             Clear();
             return;
         }
 
         var root = install.RootPath;
-        var extraGameArgs = _page.ExtraGameArgs(install);
+        var extraGameArgs = Page.ExtraGameArgs(install);
         IsLoading = true;
         try
         {
-            var result = await _service.GetSubscriptionsAsync(root, extraGameArgs);
+            var result = await Service.GetSubscriptionsAsync(root, extraGameArgs);
             if (version != _loadVersion)
             {
                 return;
@@ -127,11 +93,11 @@ public partial class WorkshopSubscriptionsViewModel : ViewModelBase
             if (!result.IsSuccess)
             {
                 Show(null);
-                _error.Show(result.Error);
+                ShownError.Show(result.Error);
                 return;
             }
 
-            _error.Clear();
+            ShownError.Clear();
             Show(result.Value);
             List<ulong> untitled = [.. result.Value.Items.Where(item => item.Latest is null).Select(item => item.Id)];
             if (untitled.Count == 0)
@@ -139,7 +105,7 @@ public partial class WorkshopSubscriptionsViewModel : ViewModelBase
                 return;
             }
 
-            var details = await _service.CheckUpdatesAsync(untitled);
+            var details = await Service.CheckUpdatesAsync(untitled);
             if (version != _loadVersion)
             {
                 return;
@@ -147,7 +113,7 @@ public partial class WorkshopSubscriptionsViewModel : ViewModelBase
 
             if (!details.IsSuccess)
             {
-                _warnings.Add(details.Error);
+                AddWarning(details.Error);
                 return;
             }
 
@@ -157,7 +123,7 @@ public partial class WorkshopSubscriptionsViewModel : ViewModelBase
                 return;
             }
 
-            result = await _service.GetSubscriptionsAsync(root, extraGameArgs);
+            result = await Service.GetSubscriptionsAsync(root, extraGameArgs);
             if (version != _loadVersion)
             {
                 return;
@@ -169,7 +135,7 @@ public partial class WorkshopSubscriptionsViewModel : ViewModelBase
             }
             else
             {
-                _error.Show(result.Error);
+                ShownError.Show(result.Error);
             }
         }
         finally
@@ -185,16 +151,9 @@ public partial class WorkshopSubscriptionsViewModel : ViewModelBase
     {
         ++_loadVersion;
         IsLoading = false;
-        _error.Clear();
-        _status.Clear();
+        ShownError.Clear();
+        ShownStatus.Clear();
         Show(null);
-    }
-
-    internal void RenderTexts()
-    {
-        _error.Render();
-        _status.Render();
-        _warnings.Render();
     }
 
     [RelayCommand]
@@ -215,10 +174,7 @@ public partial class WorkshopSubscriptionsViewModel : ViewModelBase
         RefreshVisibleRows();
     }
 
-    [RelayCommand]
-    private Task OpenInSteamAsync(WorkshopItemRow row) => WorkshopActionFlow.OpenInSteamAsync(_urls, _dialogs, row.Id);
-
-    private bool CanCheckUpdates() => _page.Install is not null && !IsChecking && !IsActionRunning;
+    private bool CanCheckUpdates() => Page.Install is not null && !IsChecking && !IsActionRunning;
 
     [RelayCommand(CanExecute = nameof(CanCheckUpdates))]
     private async Task CheckUpdatesAsync()
@@ -229,10 +185,10 @@ public partial class WorkshopSubscriptionsViewModel : ViewModelBase
         {
             if (ids.Count > 0)
             {
-                var result = await _service.CheckUpdatesAsync(ids);
+                var result = await Service.CheckUpdatesAsync(ids);
                 if (!result.IsSuccess)
                 {
-                    await _dialogs.ShowErrorAsync(ErrorMessages.ToUserText(result.Error));
+                    await Dialogs.ShowErrorAsync(ErrorMessages.ToUserText(result.Error));
                     return;
                 }
 
@@ -240,7 +196,7 @@ public partial class WorkshopSubscriptionsViewModel : ViewModelBase
             }
 
             var outdated = OutdatedCount;
-            _status.Show(() => outdated == 0
+            ShownStatus.Show(() => outdated == 0
                 ? UiText.Workshop_CheckedAllCurrent
                 : string.Format(CultureInfo.CurrentCulture, UiText.Workshop_CheckedOutdated, outdated));
         }
@@ -262,13 +218,13 @@ public partial class WorkshopSubscriptionsViewModel : ViewModelBase
             initial,
             UiText.Workshop_SubscribeAccept,
             text => WorkshopLinks.TryParseItemId(text, out _) ? null : UiText.Workshop_LinkInvalid);
-        if (await _dialogs.PromptTextAsync(prompt) is not TextPromptResult.Accepted accepted || !WorkshopLinks.TryParseItemId(accepted.Text, out var id))
+        if (await Dialogs.PromptTextAsync(prompt) is not TextPromptResult.Accepted accepted || !WorkshopLinks.TryParseItemId(accepted.Text, out var id))
         {
             return;
         }
 
         var name = _rows.FirstOrDefault(row => row.Id == id)?.Title ?? id.ToString(CultureInfo.InvariantCulture);
-        await RunActionAsync(WorkshopAction.Subscribe, [new WorkshopActionItemRow(id, name)]);
+        await RunAsync(WorkshopAction.Subscribe, [new WorkshopActionItemRow(id, name)]);
     }
 
     private bool CanRunOnSelection() => CanRunActions && SelectedCount > 0;
@@ -282,9 +238,9 @@ public partial class WorkshopSubscriptionsViewModel : ViewModelBase
             return;
         }
 
-        if (await WorkshopActionFlow.ConfirmUnsubscribeAsync(_dialogs, selected))
+        if (await WorkshopActionFlow.ConfirmUnsubscribeAsync(Dialogs, selected))
         {
-            await RunActionAsync(WorkshopAction.Unsubscribe, WorkshopActionFlow.ActionItems(selected));
+            await RunAsync(WorkshopAction.Unsubscribe, WorkshopActionFlow.ActionItems(selected));
         }
     }
 
@@ -292,51 +248,35 @@ public partial class WorkshopSubscriptionsViewModel : ViewModelBase
 
     [RelayCommand(CanExecute = nameof(CanUpdateAll))]
     private Task UpdateAllAsync() =>
-        RunActionAsync(WorkshopAction.Update, WorkshopActionFlow.ActionItems(_rows.Where(row => row.Item.State == WorkshopItemState.NeedsUpdate)));
+        RunAsync(WorkshopAction.Update, WorkshopActionFlow.ActionItems(_rows.Where(row => row.Item.State == WorkshopItemState.NeedsUpdate)));
 
     [RelayCommand(CanExecute = nameof(CanRunOnSelection))]
-    private Task UpdateSelectedAsync() => RunActionAsync(WorkshopAction.Update, WorkshopActionFlow.ActionItems(SelectedRows()));
+    private Task UpdateSelectedAsync() => RunAsync(WorkshopAction.Update, WorkshopActionFlow.ActionItems(SelectedRows()));
 
     partial void OnSearchTextChanged(string value) => RefreshVisibleRows();
 
     partial void OnFilterChanged(WorkshopSubscriptionsFilter value) => RefreshVisibleRows();
 
-    partial void OnIsActionRunningChanged(bool value) => NotifyActionCommands();
-
-    private async Task RunActionAsync(WorkshopAction action, IReadOnlyList<WorkshopActionItemRow> items)
+    protected override void NotifyActionCommands()
     {
-        if (!CanRunActions || items.Count == 0 || _page.Install is not { } install)
-        {
-            return;
-        }
-
-        IsActionRunning = true;
-        try
-        {
-            await WorkshopActionFlow.RunAsync(_runner, _service, _dialogs, install.RootPath, _page.ExtraGameArgs(install), action, items, () => _rows);
-        }
-        finally
-        {
-            IsActionRunning = false;
-        }
-
-        await LoadAsync();
+        SubscribeCommand.NotifyCanExecuteChanged();
+        UnsubscribeCommand.NotifyCanExecuteChanged();
+        UpdateAllCommand.NotifyCanExecuteChanged();
+        UpdateSelectedCommand.NotifyCanExecuteChanged();
+        CheckUpdatesCommand.NotifyCanExecuteChanged();
     }
+
+    private Task RunAsync(WorkshopAction action, IReadOnlyList<WorkshopActionItemRow> items) => RunActionAsync(action, items, () => _rows, LoadAsync);
 
     private List<WorkshopItemRow> SelectedRows() => [.. _rows.Where(row => row.IsSelected)];
 
     private void Show(WorkshopSubscriptions? subscriptions)
     {
         _loaded = subscriptions is not null;
-        _warnings.Clear();
-        foreach (var warning in subscriptions?.Warnings ?? [])
-        {
-            _warnings.Add(warning);
-        }
-
+        ShowWarnings(subscriptions?.Warnings ?? []);
         IReadOnlyList<WorkshopItem> items = subscriptions?.Items ?? [];
-        _selectedIds.IntersectWith(items.Select(item => item.Id));
-        _rows = Sorted([.. items.Select(item => new WorkshopItemRow(item, _selectedIds.Contains(item.Id), OnRowSelectionChanged))]);
+        _selection.IntersectWith(items.Select(item => item.Id));
+        _rows = Sorted(items.Select(item => new WorkshopItemRow(item, _selection.Contains(item.Id), OnRowSelectionChanged)));
         RefreshVisibleRows();
         OnPropertyChanged(nameof(IsEmpty));
         OnPropertyChanged(nameof(SelectedCount));
@@ -346,35 +286,9 @@ public partial class WorkshopSubscriptionsViewModel : ViewModelBase
 
     private void OnRowSelectionChanged(WorkshopItemRow row)
     {
-        if (row.IsSelected)
-        {
-            _selectedIds.Add(row.Id);
-        }
-        else
-        {
-            _selectedIds.Remove(row.Id);
-        }
-
+        _selection.Set(row.Id, row.IsSelected);
         OnPropertyChanged(nameof(SelectedCount));
         UnsubscribeCommand.NotifyCanExecuteChanged();
-        UpdateSelectedCommand.NotifyCanExecuteChanged();
-    }
-
-    private void OnPagePropertyChanged(object? sender, PropertyChangedEventArgs e)
-    {
-        if (e.PropertyName is nameof(ModsViewModel.Install) or nameof(ModsViewModel.IsGameRunning))
-        {
-            OnPropertyChanged(nameof(CanRunActions));
-            NotifyActionCommands();
-            CheckUpdatesCommand.NotifyCanExecuteChanged();
-        }
-    }
-
-    private void NotifyActionCommands()
-    {
-        SubscribeCommand.NotifyCanExecuteChanged();
-        UnsubscribeCommand.NotifyCanExecuteChanged();
-        UpdateAllCommand.NotifyCanExecuteChanged();
         UpdateSelectedCommand.NotifyCanExecuteChanged();
     }
 
@@ -398,30 +312,12 @@ public partial class WorkshopSubscriptionsViewModel : ViewModelBase
         || row.IdText.Contains(search, StringComparison.Ordinal)
         || row.Item.Mods.Any(mod => mod.Id.Contains(search, StringComparison.OrdinalIgnoreCase));
 
-    private WorkshopItemRow[] Sorted(IReadOnlyList<WorkshopItemRow> rows)
+    private WorkshopItemRow[] Sorted(IEnumerable<WorkshopItemRow> rows) =>
+        SortedRows.Sort(rows, SortColumn, SortDescending, IsBlank, CompareColumn, CompareByTitle);
+
+    private static int CompareByTitle(WorkshopItemRow x, WorkshopItemRow y)
     {
-        var column = SortColumn;
-        var sign = SortDescending ? -1 : 1;
-        return [.. rows.Order(Comparer<WorkshopItemRow>.Create((x, y) => CompareRows(x, y, column, sign)))];
-    }
-
-    private static int CompareRows(WorkshopItemRow x, WorkshopItemRow y, WorkshopSubscriptionsSortColumn column, int sign)
-    {
-        // Blank cells stay at the bottom in both directions.
-        var xBlank = IsBlank(x, column);
-        var yBlank = IsBlank(y, column);
-        if (xBlank != yBlank)
-        {
-            return xBlank ? 1 : -1;
-        }
-
-        var order = xBlank ? 0 : sign * CompareColumn(x, y, column);
-        if (order != 0)
-        {
-            return order;
-        }
-
-        order = StringComparer.CurrentCultureIgnoreCase.Compare(x.Title, y.Title);
+        var order = StringComparer.CurrentCultureIgnoreCase.Compare(x.Title, y.Title);
         return order != 0 ? order : x.Id.CompareTo(y.Id);
     }
 

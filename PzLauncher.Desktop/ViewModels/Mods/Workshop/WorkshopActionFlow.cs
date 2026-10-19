@@ -59,7 +59,7 @@ internal static class WorkshopActionFlow
         return dialogs.ConfirmAsync(
             new ConfirmPrompt(UiText.Workshop_UnsubscribeTitle, message, UiText.Workshop_Unsubscribe, UiText.Dialog_Cancel)
             {
-                Items = [.. rows.Select(NameWithId)],
+                Items = [.. rows.Select(row => NameWithId(row.Item))],
             });
     }
 
@@ -72,11 +72,16 @@ internal static class WorkshopActionFlow
         }
     }
 
-    public static List<WorkshopActionItemRow> ActionItems(IEnumerable<WorkshopItemRow> rows) =>
-        [.. rows.Select(row => new WorkshopActionItemRow(row.Id, row.Title))];
+    public static List<WorkshopActionItemRow> ActionItems(IEnumerable<WorkshopItemRow> rows) => ActionItems(rows.Select(row => row.Item));
 
-    public static string NameWithId(WorkshopItemRow row) =>
-        row.HasTitle ? string.Format(CultureInfo.CurrentCulture, UiText.Mods_NameWithId, row.Title, row.IdText) : row.IdText;
+    public static List<WorkshopActionItemRow> ActionItems(IEnumerable<WorkshopItem> items) =>
+        [.. items.Select(item => new WorkshopActionItemRow(item.Id, WorkshopItemRow.TitleOf(item)))];
+
+    public static string NameWithId(WorkshopItem item)
+    {
+        var id = item.Id.ToString(CultureInfo.InvariantCulture);
+        return WorkshopItemRow.WebTitle(item) is { } title ? string.Format(CultureInfo.CurrentCulture, UiText.Mods_NameWithId, title, id) : id;
+    }
 
     private static void ShowEvent(IReadOnlyList<WorkshopItemRow> rows, WorkshopActionEvent report)
     {

@@ -3,9 +3,9 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:PzLauncher.Desktop.ViewModels.Mods.Workshop"
+             xmlns:local="using:PzLauncher.Desktop.Views.Mods.Workshop"
              xmlns:design="using:PzLauncher.Desktop.ViewModels.Design"
              xmlns:controls="using:PzLauncher.Desktop.Views.Controls"
-             xmlns:loc="using:PzLauncher.Desktop.Localization"
              xmlns:lang="using:PzLauncher.Desktop.Lang"
              xmlns:ic="using:FluentIcons.Avalonia"
              mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="560"
@@ -17,25 +17,8 @@
     </Design.DataContext>
 
     <UserControl.Styles>
-        <!-- Border and padding hang outside the column so the label lines up with the cells below. -->
         <Style Selector="Button.columnHeader">
-            <Setter Property="Theme" Value="{StaticResource Shell.ColumnHeader}" />
-            <Setter Property="Margin" Value="-7,0,1,0" />
             <Setter Property="ToolTip.Tip" Value="{x:Static lang:UiText.Mods_SortColumnTip}" />
-        </Style>
-        <Style Selector="ic|FluentIcon.sortArrow">
-            <Setter Property="Icon" Value="ArrowSortUp" />
-            <Setter Property="IconVariant" Value="Regular" />
-            <Setter Property="FontSize" Value="12" />
-            <Setter Property="VerticalAlignment" Value="Center" />
-        </Style>
-        <Style Selector="Grid.sortDescending ic|FluentIcon.sortArrow">
-            <Setter Property="Icon" Value="ArrowSortDown" />
-        </Style>
-        <Style Selector="TextBlock.cell">
-            <Setter Property="VerticalAlignment" Value="Center" />
-            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
-            <Setter Property="Margin" Value="0,0,8,0" />
         </Style>
     </UserControl.Styles>
 
@@ -190,15 +173,7 @@
                                     <TextBlock Grid.Column="5" Classes="cell" Text="{Binding Updated, StringFormat='{}{0:g}'}"
                                                Foreground="{DynamicResource Shell.TextMuted}"
                                                IsVisible="{Binding Updated, Converter={x:Static ObjectConverters.IsNotNull}}" />
-                                    <Panel Grid.Column="6">
-                                        <TextBlock Classes="cell" Text="{Binding Item.State, Converter={x:Static loc:DisplayNames.WorkshopItemStateName}}"
-                                                   Classes.warning="{Binding NeedsUpdate}"
-                                                   IsVisible="{Binding !IsDownloading}" />
-                                        <TextBlock Classes="cell" Text="{x:Static lang:UiText.Workshop_Downloading}" Foreground="{DynamicResource Shell.Accent}"
-                                                   IsVisible="{Binding IsDownloadingWithoutPercent}" />
-                                        <TextBlock Classes="cell" Text="{Binding DownloadPercent, StringFormat={x:Static lang:UiText.Workshop_DownloadingFormat}}"
-                                                   Foreground="{DynamicResource Shell.Accent}" IsVisible="{Binding HasDownloadPercent}" />
-                                    </Panel>
+                                    <local:WorkshopItemStateCell Grid.Column="6" />
                                     <TextBlock Grid.Column="7" Classes="cell" Text="{Binding CollectionNames}" ToolTip.Tip="{Binding CollectionNames}" />
                                     <Button Grid.Column="8" HorizontalAlignment="Right" VerticalAlignment="Center"
                                             Command="{Binding $parent[ItemsControl].((vm:WorkshopSubscriptionsViewModel)DataContext).OpenInSteamCommand}"

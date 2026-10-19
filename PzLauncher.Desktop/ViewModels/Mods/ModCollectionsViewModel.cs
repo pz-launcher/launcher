@@ -376,18 +376,21 @@ public partial class ModCollectionsViewModel : ViewModelBase
         await _page.WriteAsync((root, extraGameArgs) => _page.Service.SaveAsync(new SaveModCollectionRequest(root, extraGameArgs, name, name, ids)));
     }
 
-    private async Task SaveAndSelectAsync(string name, IReadOnlyList<string> ids)
+    internal async Task<bool> SaveAndSelectAsync(string name, IReadOnlyList<string> ids)
     {
-        if (await _page.WriteAsync((root, extraGameArgs) =>
+        if (!await _page.WriteAsync((root, extraGameArgs) =>
                 _page.Service.SaveAsync(new SaveModCollectionRequest(root, extraGameArgs, null, name, ids))))
         {
-            SelectByName(name);
+            return false;
         }
+
+        SelectByName(name);
+        return true;
     }
 
     /// <summary>The trimmed name, or <c>null</c> when cancelled.</summary>
     /// <param name="original">The collection being renamed, which its own name doesn't clash with.</param>
-    private async Task<string?> AskNameAsync(TextPrompt prompt, string? original) =>
+    internal async Task<string?> AskNameAsync(TextPrompt prompt, string? original) =>
         await ModCollectionPrompts.AskNameAsync(_dialogs, prompt, name => name != original && Exists(name)) is TextPromptResult.Accepted accepted
             ? accepted.Text
             : null;
@@ -405,9 +408,9 @@ public partial class ModCollectionsViewModel : ViewModelBase
             : null;
     }
 
-    internal bool Exists(string name) => _page.State?.Collections.Any(collection => collection.Name == name) ?? false;
+    private bool Exists(string name) => _page.State?.Collections.Any(collection => collection.Name == name) ?? false;
 
-    internal void SelectByName(string? name)
+    private void SelectByName(string? name)
     {
         _selectedName = name;
         Rebuild(_page.State);

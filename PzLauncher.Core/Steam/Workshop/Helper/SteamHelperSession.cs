@@ -52,7 +52,7 @@ internal sealed class SteamHelperSession(SteamApi api, Action<SteamHelperEvent> 
         var result = callResult.Failed || callResult.Id != expectedCallback
             ? null
             : SteamCallbackPayloads.ReadPublishedFileResult(callResult.Payload, api.LargeCallbackPack);
-        return result is { Result: SteamCallbackPayloads.ResultOk }
+        return result is { Result: WorkshopFiles.ResultOk }
             ? null
             : new SteamHelperItemFailed(id, failure, result?.Result ?? 0);
     }
@@ -80,7 +80,7 @@ internal sealed class SteamHelperSession(SteamApi api, Action<SteamHelperEvent> 
             var state = api.GetItemState(id);
             if (_downloadResults.TryGetValue(id, out var result))
             {
-                if (result != SteamCallbackPayloads.ResultOk)
+                if (result != WorkshopFiles.ResultOk)
                 {
                     return new SteamHelperItemFailed(id, WorkshopItemFailure.DownloadFailed, result);
                 }

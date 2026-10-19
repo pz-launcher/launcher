@@ -248,14 +248,13 @@ public partial class HomeViewModel : ViewModelBase
             return true;
         }
 
-        List<WorkshopItemRow> rows = [.. outdated.Select(item => new WorkshopItemRow(item, isSelected: false, _ => { }))];
         var prompt = new ConfirmPrompt(
             UiText.WorkshopLaunch_Title,
-            string.Format(CultureInfo.CurrentCulture, UiText.WorkshopLaunch_Message, rows.Count),
+            string.Format(CultureInfo.CurrentCulture, UiText.WorkshopLaunch_Message, outdated.Count),
             UiText.WorkshopLaunch_Update,
             UiText.Dialog_Cancel)
         {
-            Items = [.. rows.Select(WorkshopActionFlow.NameWithId)],
+            Items = [.. outdated.Select(WorkshopActionFlow.NameWithId)],
         };
         switch (await _dialogs.ChooseAsync(prompt, UiText.WorkshopLaunch_LaunchNow))
         {
@@ -268,12 +267,12 @@ public partial class HomeViewModel : ViewModelBase
         }
 
         // The items are on no page here, so no row shows their download.
-        var items = WorkshopActionFlow.ActionItems(rows);
+        var items = WorkshopActionFlow.ActionItems(outdated);
         await WorkshopActionFlow.RunAsync(
             _workshopActions, _workshop, _dialogs, installRoot, extraGameArgs, WorkshopAction.Update, items, () => []);
 
         // Closing the progress dialog early leaves the unfinished items short of Done too.
-        var names = rows.ToDictionary(row => row.Id, WorkshopActionFlow.NameWithId);
+        var names = outdated.ToDictionary(item => item.Id, WorkshopActionFlow.NameWithId);
         List<string> notUpdated = [.. items.Where(item => item.State != WorkshopActionItemState.Done).Select(item => names[item.Id])];
         return notUpdated.Count == 0 || await _dialogs.ConfirmAsync(
             new ConfirmPrompt(

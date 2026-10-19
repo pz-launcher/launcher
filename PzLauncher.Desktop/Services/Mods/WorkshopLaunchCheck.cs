@@ -72,22 +72,14 @@ public sealed partial class WorkshopLaunchCheck(
         }
 
         var details = latest.Value.ToDictionary(item => item.Id);
-        var outdated = new List<WorkshopItem>();
-        foreach (var item in used)
-        {
-            var current = details.GetValueOrDefault(item.Id);
 
-            // An item the Web API doesn't show keeps what Steam itself knows.
-            var isOutdated = current is not null && item.Installed is { } installed
-                ? !string.Equals(current.Manifest, installed.Manifest, StringComparison.Ordinal)
-                : item.State == WorkshopItemState.NeedsUpdate;
-            if (isOutdated)
-            {
-                outdated.Add(item with { Latest = current ?? item.Latest, State = WorkshopItemState.NeedsUpdate });
-            }
-        }
-
-        return outdated;
+        // An item the Web API doesn't show keeps what Steam itself knows.
+        return
+        [
+            .. used
+                .Select(item => details.GetValueOrDefault(item.Id) is { } current ? item.WithLatest(current) : item)
+                .Where(item => item.State == WorkshopItemState.NeedsUpdate),
+        ];
     }
 
     // A current collection gone from the file isn't applied (the apply reports it), so the enabled list stays as it is.

@@ -5,6 +5,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using System.Text.Json.Serialization.Metadata;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -217,16 +218,7 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger,
             return null;
         }
 
-        ProxyFile? entry;
-        try
-        {
-            entry = value.Deserialize(DesktopJsonContext.Default.ProxyFile);
-        }
-        catch (JsonException)
-        {
-            entry = null;
-        }
-
+        var entry = TryDeserialize(value, DesktopJsonContext.Default.ProxyFile);
         if (entry is null || ProxyModePreferences.FromPreferenceName(entry.Mode) is not { } mode)
         {
             LogInvalidProxy(logger, filePath);
@@ -302,17 +294,8 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger,
             return null;
         }
 
-        WorkshopCollectionFile? entry;
-        try
-        {
-            entry = element.Deserialize(DesktopJsonContext.Default.WorkshopCollectionFile);
-        }
-        catch (JsonException)
-        {
-            return null;
-        }
-
-        return entry is not null && ulong.TryParse(entry.Id, NumberStyles.None, CultureInfo.InvariantCulture, out var id) && id != 0
+        return TryDeserialize(element, DesktopJsonContext.Default.WorkshopCollectionFile) is { } entry
+            && ulong.TryParse(entry.Id, NumberStyles.None, CultureInfo.InvariantCulture, out var id) && id != 0
             ? new SavedWorkshopCollection(id, entry.Title is { Length: > 0 } title ? title : null)
             : null;
     }
@@ -364,21 +347,10 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger,
         return name is not null;
     }
 
-    private static GameLaunchOverrides? ToOverrides(JsonElement element)
-    {
-        InstallOverridesFile? entry;
-        try
-        {
-            entry = element.Deserialize(DesktopJsonContext.Default.InstallOverridesFile);
-        }
-        catch (JsonException)
-        {
-            return null;
-        }
-
-        return entry is { MaxMemoryMb: null or > 0, MinMemoryMb: null or > 0 }
-               && (entry.JavaHome is null || IsAbsolutePath(entry.JavaHome))
-               && !(entry.MinMemoryMb > entry.MaxMemoryMb)
+    private static GameLaunchOverrides? ToOverrides(JsonElement element) =>
+        TryDeserialize(element, DesktopJsonContext.Default.InstallOverridesFile) is { MaxMemoryMb: null or > 0, MinMemoryMb: null or > 0 } entry
+        && (entry.JavaHome is null || IsAbsolutePath(entry.JavaHome))
+        && !(entry.MinMemoryMb > entry.MaxMemoryMb)
             ? new GameLaunchOverrides(
                 entry.JavaHome,
                 entry.MaxMemoryMb,
@@ -387,6 +359,18 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger,
                 entry.GameArgs ?? "",
                 GarbageCollectorPreferences.FromPreferenceName(entry.Gc))
             : null;
+
+    private static T? TryDeserialize<T>(JsonElement element, JsonTypeInfo<T> typeInfo)
+        where T : class
+    {
+        try
+        {
+            return element.Deserialize(typeInfo);
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
     }
 
     private static bool IsAbsolutePath(string path) =>

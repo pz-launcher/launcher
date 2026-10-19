@@ -33,6 +33,48 @@ internal static class SteamKeyValues
         return KVObject.ListCollection([new KeyValuePair<string, KVObject>(document.Name, document.Root)]);
     }
 
+    // The reason is the parser's own, so the caller's message doesn't nest VdfMalformed's.
+    public static Result<KVObject> ParseBlock(string text, string rootKey, Func<string, Error> unreadable)
+    {
+        var parsed = Parse(text);
+        if (!parsed.IsSuccess)
+        {
+            return unreadable(parsed.Error.Details.TryGetValue("reason", out var reason) ? reason : parsed.Error.Message);
+        }
+
+        var root = parsed.Value.GetChild(rootKey);
+        return root is { IsCollection: true } ? root : unreadable($"missing \"{rootKey}\" block");
+    }
+
+    public static async Task<Result<string>> ReadTextAsync(string path, Func<string, Error> unreadable, CancellationToken ct)
+    {
+        try
+        {
+            return await File.ReadAllTextAsync(path, ct).ConfigureAwait(false);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            return unreadable(ex.Message);
+        }
+    }
+
+    /// <summary><c>null</c> when the file or its folder doesn't exist.</summary>
+    public static async Task<Result<string>?> ReadTextIfExistsAsync(string path, Func<string, Error> unreadable, CancellationToken ct)
+    {
+        try
+        {
+            return await File.ReadAllTextAsync(path, ct).ConfigureAwait(false);
+        }
+        catch (Exception ex) when (ex is FileNotFoundException or DirectoryNotFoundException)
+        {
+            return null;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            return unreadable(ex.Message);
+        }
+    }
+
     // Steam isn't consistent about key casing (BetaKey vs betakey); last duplicate wins.
     public static KVObject? GetChild(this KVObject node, string key)
     {

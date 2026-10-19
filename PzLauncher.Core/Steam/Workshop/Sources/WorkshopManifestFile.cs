@@ -19,22 +19,14 @@ internal static partial class WorkshopManifestFile
         foreach (var library in libraries)
         {
             var path = WorkshopFiles.ManifestPath(library);
-            string text;
-            try
+            var text = await SteamKeyValues.ReadTextIfExistsAsync(path, reason => WorkshopErrors.ManifestUnreadable(path, reason), ct)
+                .ConfigureAwait(false);
+            if (text is not { } read)
             {
-                text = await File.ReadAllTextAsync(path, ct).ConfigureAwait(false);
-            }
-            catch (Exception ex) when (ex is FileNotFoundException or DirectoryNotFoundException)
-            {
-                continue;
-            }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-            {
-                warnings.Add(Logged(logger, WorkshopErrors.ManifestUnreadable(path, ex.Message)));
                 continue;
             }
 
-            var parsed = Parse(text, library, path, logger);
+            var parsed = read.IsSuccess ? Parse(read.Value, library, path, logger) : read.Error;
             if (!parsed.IsSuccess)
             {
                 warnings.Add(Logged(logger, parsed.Error));
@@ -52,21 +44,15 @@ internal static partial class WorkshopManifestFile
 
     public static Result<IReadOnlyList<KeyValuePair<ulong, WorkshopManifestEntry>>> Parse(string text, string library, string path, ILogger logger)
     {
-        var parsed = SteamKeyValues.Parse(text);
-        if (!parsed.IsSuccess)
+        var root = SteamKeyValues.ParseBlock(text, WorkshopFiles.ManifestRoot, reason => WorkshopErrors.ManifestUnreadable(path, reason));
+        if (!root.IsSuccess)
         {
-            return WorkshopErrors.ManifestUnreadable(path, parsed.Error.Message);
+            return root.Error;
         }
 
-        var root = parsed.Value.GetChild(WorkshopFiles.ManifestRoot);
-        if (root is null || !root.IsCollection)
-        {
-            return WorkshopErrors.ManifestUnreadable(path, $"missing \"{WorkshopFiles.ManifestRoot}\" block");
-        }
-
-        var details = root.GetChild(WorkshopFiles.ItemDetailsKey);
+        var details = root.Value.GetChild(WorkshopFiles.ItemDetailsKey);
         var items = new List<KeyValuePair<ulong, WorkshopManifestEntry>>();
-        foreach (var (key, entry) in root.GetChild(WorkshopFiles.InstalledItemsKey)?.GetChildren() ?? [])
+        foreach (var (key, entry) in root.Value.GetChild(WorkshopFiles.InstalledItemsKey)?.GetChildren() ?? [])
         {
             if (!WorkshopIds.TryParse(key, out var id)
                 || !entry.IsCollection

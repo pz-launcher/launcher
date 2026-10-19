@@ -68,7 +68,7 @@ public sealed class FakeWorkshopService : IWorkshopService
             return Task.FromResult<Result<WorkshopSubscriptions>>(error);
         }
 
-        List<WorkshopItem> items = [.. Items.Select(item => (_fetched.GetValueOrDefault(item.Id) ?? item.Latest) is { } latest ? WithLatest(item, latest) : item)];
+        List<WorkshopItem> items = [.. Items.Select(item => (_fetched.GetValueOrDefault(item.Id) ?? item.Latest) is { } latest ? item.WithLatest(latest) : item)];
         return Task.FromResult<Result<WorkshopSubscriptions>>(new WorkshopSubscriptions(items, [.. Warnings]));
     }
 
@@ -115,18 +115,6 @@ public sealed class FakeWorkshopService : IWorkshopService
 
         return Task.FromResult<Result<WorkshopCollection>>(new WorkshopCollection(id, Published.GetValueOrDefault(id)?.Title, items));
     }
-
-    private static WorkshopItem WithLatest(WorkshopItem item, WorkshopItemDetails latest) => item with
-    {
-        Latest = latest,
-        State = item.State switch
-        {
-            WorkshopItemState.UpToDate or WorkshopItemState.NeedsUpdate => item.Installed!.Manifest == latest.Manifest
-                ? WorkshopItemState.UpToDate
-                : WorkshopItemState.NeedsUpdate,
-            WorkshopItemState.NotInstalled or WorkshopItemState.DisabledLocally or WorkshopItemState.NotSubscribed => item.State,
-        },
-    };
 }
 
 /// <summary>
