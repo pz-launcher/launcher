@@ -1,3 +1,4 @@
+using System.Globalization;
 using PzLauncher.Core.Common;
 using PzLauncher.Core.Installs;
 using PzLauncher.Core.Steam.Workshop;
@@ -24,6 +25,17 @@ public class WorkshopCollectionsViewModelTests : UiTextCultureTest
 
     private const string PackLink = "https://steamcommunity.com/sharedfiles/filedetails/?id=9000";
 
+    private const uint Account = 12345678;
+
+    private static readonly WorkshopUserCollections SteamCollections = new(
+        Account,
+        [new WorkshopCollectionSummary(3623026433, "Favorite Pack", 201), new WorkshopCollectionSummary(2690796635, null, 71)],
+        [new WorkshopCollectionSummary(3815132834, "my", 214)]);
+
+    private static readonly SavedWorkshopUserCollections SavedCollections = new(
+        new DateTimeOffset(2026, 10, 1, 12, 30, 0, TimeSpan.Zero),
+        new WorkshopUserCollections(Account, [new WorkshopCollectionSummary(5001, "Saved Favorite", 12)], []));
+
     private readonly FakeInstallDetectionService _detection = new();
     private readonly FakeModCollectionService _collections = new();
     private readonly FakeInstallOverridesService _overrides = new();
@@ -33,6 +45,8 @@ public class WorkshopCollectionsViewModelTests : UiTextCultureTest
     private readonly FakeWorkshopActionRunner _runner = new();
     private readonly FakePreferenceStore _preferences = new();
     private readonly GameRunState _runState = new();
+    private readonly ManualTimeProvider _time = new();
+    private SavedWorkshopUserCollections? _savedUserCollections;
 
     public WorkshopCollectionsViewModelTests()
     {
@@ -54,17 +68,23 @@ public class WorkshopCollectionsViewModelTests : UiTextCultureTest
 
     private async Task<ModsViewModel> CreatePageAsync(params SavedWorkshopCollection[] saved)
     {
+        var page = await CreateInactivePageAsync(saved);
+        await page.ActivateCommand.ExecuteAsync(null);
+        return page;
+    }
+
+    private async Task<ModsViewModel> CreateInactivePageAsync(params SavedWorkshopCollection[] saved)
+    {
         _detection.ScanResults.Enqueue(FakeInstallDetectionService.Found(SteamGame));
         await Installs.ActivateCommand.ExecuteAsync(null);
         var orderWriter = new ModCollectionOrderWriter(_collections, _runState, new FakePlatformEnvironment(), new ManualTimeProvider());
-        var page = new ModsViewModel(
+        return new ModsViewModel(
             Installs, _collections, _overrides, new FakeModCollectionDefaultsService(), new ModCollectionApplier(_collections, _dialogs), _dialogs,
-            new FakeClipboardService(), _runState, orderWriter, _service, _runner, _urls, History(_preferences, saved), Localization)
+            new FakeClipboardService(), _runState, orderWriter, _service, _runner, _urls, History(_preferences, saved),
+            UserCollections(_preferences, _savedUserCollections, _time), Localization)
         {
             Section = ModsSection.WorkshopCollections,
         };
-        await page.ActivateCommand.ExecuteAsync(null);
-        return page;
     }
 
     private async Task<WorkshopCollectionsViewModel> CreateAsync() => (await CreatePageAsync()).WorkshopCollections;
@@ -475,5 +495,239 @@ public class WorkshopCollectionsViewModelTests : UiTextCultureTest
 
         Assert.Equal([UiText.WorkshopCollections_GenerateNothing], _dialogs.Errors);
         Assert.Empty(_collections.Saves);
+    }
+
+    // The Steam account's collections
+
+    private static string UpdatedText(DateTimeOffset at) =>
+        string.Format(CultureInfo.CurrentCulture, UiText.WorkshopCollections_UpdatedFormat, at.LocalDateTime.ToString("g", CultureInfo.CurrentCulture));
+
+    private static WorkshopUserCollectionRow UserRow(ulong id, string title, uint count, bool isOpen = false) => new(id, title, count, isOpen);
+
+    [Fact]
+    public async Task FirstShow_ListsTheFavoritedAndPublishedCollectionsSteamGives()
+    {
+        _runner.Collections = SteamCollections;
+
+        var vm = await CreateAsync();
+
+        Assert.Equal([SteamGame.RootPath], _runner.ListRuns);
+        Assert.Equal([UserRow(3623026433, "Favorite Pack", 201), UserRow(2690796635, "2690796635", 71)], vm.Favorited);
+        Assert.Equal([UserRow(3815132834, "my", 214)], vm.Published);
+        Assert.False(vm.IsFavoritedEmpty);
+        Assert.Equal(UpdatedText(_time.GetUtcNow()), vm.UserCollectionsUpdatedText);
+        Assert.Null(vm.UserCollectionsErrorText);
+        Assert.False(vm.IsFetchingUserCollections);
+    }
+
+    [Fact]
+    public async Task Fetched_IsSavedWithItsAccountAndTime()
+    {
+        _runner.Collections = SteamCollections;
+
+        await CreateAsync();
+
+        Assert.Equal([new SavedWorkshopUserCollections(_time.GetUtcNow(), SteamCollections)], _preferences.SavedWorkshopUserCollections);
+    }
+
+    [Fact]
+    public async Task SteamListsNone_GroupsSayTheyAreEmpty()
+    {
+        var vm = await CreateAsync();
+
+        Assert.True(vm.IsFavoritedEmpty);
+        Assert.True(vm.IsPublishedEmpty);
+    }
+
+    [Fact]
+    public async Task SectionShownAgain_DoesNotAskSteamAgain()
+    {
+        var page = await CreatePageAsync();
+
+        page.Section = ModsSection.Mods;
+        page.Section = ModsSection.WorkshopCollections;
+
+        Assert.Single(_runner.ListRuns);
+    }
+
+    [Fact]
+    public async Task RefreshUserCollections_AsksSteamAgainAndShowsTheNewLists()
+    {
+        var vm = await CreateAsync();
+        _runner.Collections = SteamCollections;
+        _time.Advance(TimeSpan.FromMinutes(5));
+
+        await vm.RefreshUserCollectionsCommand.ExecuteAsync(null);
+
+        Assert.Equal(2, _runner.ListRuns.Count);
+        Assert.Equal(3815132834UL, Assert.Single(vm.Published).Id);
+        Assert.Equal(UpdatedText(_time.GetUtcNow()), vm.UserCollectionsUpdatedText);
+    }
+
+    [Fact]
+    public async Task SavedForTheSameAccount_ShowsAtOnceThenRefreshesOnce()
+    {
+        _savedUserCollections = SavedCollections;
+        _runner.Collections = SteamCollections;
+        _runner.ListGate = new TaskCompletionSource();
+        var page = await CreateInactivePageAsync();
+        var vm = page.WorkshopCollections;
+
+        var activating = page.ActivateCommand.ExecuteAsync(null);
+
+        Assert.Equal([UserRow(5001, "Saved Favorite", 12)], vm.Favorited);
+        Assert.Equal(UpdatedText(SavedCollections.FetchedAt), vm.UserCollectionsUpdatedText);
+        Assert.True(vm.IsFetchingUserCollections);
+        Assert.False(vm.RefreshUserCollectionsCommand.CanExecute(null));
+        _runner.ListGate.SetResult();
+        await activating;
+        Assert.Equal(3623026433UL, vm.Favorited[0].Id);
+        Assert.Single(_runner.ListRuns);
+        Assert.True(vm.RefreshUserCollectionsCommand.CanExecute(null));
+    }
+
+    [Fact]
+    public async Task SavedForAnotherAccount_IsNotShown()
+    {
+        _savedUserCollections = SavedCollections with { Collections = SavedCollections.Collections with { AccountId = 99 } };
+        _runState.IsGameRunning = true;
+
+        var vm = await CreateAsync();
+
+        Assert.Empty(vm.Favorited);
+        Assert.False(vm.IsFavoritedEmpty);
+        Assert.Null(vm.UserCollectionsUpdatedText);
+    }
+
+    [Fact]
+    public async Task AccountUnreadable_SavedIsNotShownButSteamIsStillAsked()
+    {
+        _savedUserCollections = SavedCollections;
+        _service.AccountError = () => TestErrors.Create(ErrorCode.WorkshopSubscriptionsUnreadable);
+        _runner.ListError = () => TestErrors.Create(ErrorCode.WorkshopSteamNotRunning);
+
+        var vm = await CreateAsync();
+
+        Assert.Empty(vm.Favorited);
+        Assert.Null(vm.UserCollectionsUpdatedText);
+        Assert.Single(_runner.ListRuns);
+    }
+
+    [Fact]
+    public async Task GameRuns_AsksNothingAndTheSkipDoesNotUseUpTheSessionsFetch()
+    {
+        _runState.IsGameRunning = true;
+        var page = await CreatePageAsync();
+
+        Assert.Empty(_runner.ListRuns);
+        Assert.False(page.WorkshopCollections.RefreshUserCollectionsCommand.CanExecute(null));
+
+        _runState.IsGameRunning = false;
+        Assert.True(page.WorkshopCollections.RefreshUserCollectionsCommand.CanExecute(null));
+        page.Section = ModsSection.Mods;
+        page.Section = ModsSection.WorkshopCollections;
+
+        Assert.Single(_runner.ListRuns);
+    }
+
+    [Fact]
+    public async Task ActionRuns_RefreshUserCollectionsIsDisabledUntilItEnds()
+    {
+        _runner.Gate = new TaskCompletionSource();
+        var vm = await OpenPackAsync();
+
+        var running = vm.UpdateOutdatedCommand.ExecuteAsync(null);
+
+        Assert.False(vm.RefreshUserCollectionsCommand.CanExecute(null));
+        _runner.Gate.SetResult();
+        await running;
+        Assert.True(vm.RefreshUserCollectionsCommand.CanExecute(null));
+    }
+
+    [Fact]
+    public async Task SteamNotRunning_KeepsTheSavedListsAndSaysSoWithoutADialog()
+    {
+        _savedUserCollections = SavedCollections;
+        _runner.ListError = () => TestErrors.Create(ErrorCode.WorkshopSteamNotRunning);
+
+        var vm = await CreateAsync();
+
+        Assert.Equal(UiText.Error_WorkshopSteamNotRunning, vm.UserCollectionsErrorText);
+        Assert.Equal([UserRow(5001, "Saved Favorite", 12)], vm.Favorited);
+        Assert.Equal(UpdatedText(SavedCollections.FetchedAt), vm.UserCollectionsUpdatedText);
+        Assert.Empty(_dialogs.Errors);
+        Assert.Empty(_preferences.SavedWorkshopUserCollections);
+    }
+
+    [Fact]
+    public async Task SteamNotRunning_DoesNotUseUpTheSessionsFetch()
+    {
+        _runner.ListError = () => TestErrors.Create(ErrorCode.WorkshopSteamNotRunning);
+        var page = await CreatePageAsync();
+        _runner.ListError = () => null;
+        _runner.Collections = SteamCollections;
+
+        page.Section = ModsSection.Mods;
+        page.Section = ModsSection.WorkshopCollections;
+        page.Section = ModsSection.Mods;
+        page.Section = ModsSection.WorkshopCollections;
+
+        Assert.Equal(2, _runner.ListRuns.Count);
+        Assert.Equal(2, page.WorkshopCollections.Favorited.Count);
+    }
+
+    [Fact]
+    public async Task OtherFetchFailure_UsesUpTheSessionsFetch()
+    {
+        _runner.ListError = () => TestErrors.Create(ErrorCode.WorkshopSteamInitFailed);
+        var page = await CreatePageAsync();
+
+        page.Section = ModsSection.Mods;
+        page.Section = ModsSection.WorkshopCollections;
+
+        Assert.Single(_runner.ListRuns);
+    }
+
+    [Theory]
+    [InlineData(ErrorCode.WorkshopSteamInitFailed)]
+    [InlineData(ErrorCode.WorkshopHelperTimedOut)]
+    [InlineData(ErrorCode.WorkshopCollectionsQueryFailed)]
+    public async Task FetchFails_ShowsTheReasonAsAStatusLine(ErrorCode code)
+    {
+        var error = TestErrors.Create(code);
+        _runner.ListError = () => error;
+
+        var vm = await CreateAsync();
+
+        Assert.Equal(ErrorMessages.ToUserText(error), vm.UserCollectionsErrorText);
+        Assert.Empty(_dialogs.Errors);
+    }
+
+    [Fact]
+    public async Task FetchFailsThenSucceeds_ClearsTheReason()
+    {
+        _runner.ListError = () => TestErrors.Create(ErrorCode.WorkshopSteamNotRunning);
+        var vm = await CreateAsync();
+        _runner.ListError = () => null;
+        _runner.Collections = SteamCollections;
+
+        await vm.RefreshUserCollectionsCommand.ExecuteAsync(null);
+
+        Assert.Null(vm.UserCollectionsErrorText);
+        Assert.Equal(2, vm.Favorited.Count);
+    }
+
+    [Fact]
+    public async Task OpenUserCollection_OpensItAndRemembersIt()
+    {
+        _runner.Collections = new WorkshopUserCollections(Account, [new WorkshopCollectionSummary(Pack, "Survival Pack", 6)], []);
+        var vm = await CreateAsync();
+
+        await vm.OpenUserCollectionCommand.ExecuteAsync(vm.Favorited[0]);
+
+        Assert.Equal("Survival Pack", vm.Title);
+        Assert.Equal(Pack, Assert.Single(vm.Remembered).Id);
+        Assert.Equal([UserRow(Pack, "Survival Pack", 6, isOpen: true)], vm.Favorited);
+        Assert.Single(_runner.ListRuns);
     }
 }

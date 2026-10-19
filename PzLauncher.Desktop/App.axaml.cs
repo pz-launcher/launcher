@@ -81,6 +81,7 @@ public partial class App : Application
             services.AddSingleton<ModCollectionApplier>();
             services.AddSingleton<IModCollectionOrderWriter, ModCollectionOrderWriter>();
             services.AddSingleton<WorkshopCollectionHistory>();
+            services.AddSingleton<WorkshopUserCollectionsCache>();
             services.AddSingleton<WorkshopLaunchCheck>();
             services.AddSingleton<GameRunState>();
             services.AddSingleton<UpdateCoordinator>();

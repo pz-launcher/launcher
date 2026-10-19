@@ -119,6 +119,13 @@ internal sealed partial class WorkshopService(
             itemIds.ConvertAll(itemId => new WorkshopCollectionItem(itemId, details.Value.GetValueOrDefault(itemId))));
     }
 
+    public async Task<Result<SteamAccount>> GetCurrentAccountAsync(CancellationToken ct = default)
+    {
+        ct.ThrowIfCancellationRequested();
+        var login = await SteamLoginUsers.LocateCurrentAsync(locator, ct).ConfigureAwait(false);
+        return login.IsSuccess ? login.Value.Account : Logged(login.Error);
+    }
+
     private static List<string> UsedBy(IReadOnlyList<InstalledMod> mods, IReadOnlyList<ModCollection> collections)
     {
         if (mods.Count == 0)

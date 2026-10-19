@@ -42,6 +42,7 @@ public enum ErrorCode
     [JsonStringEnumMemberName("workshop.helper_start_failed")] WorkshopHelperStartFailed,
     [JsonStringEnumMemberName("workshop.helper_failed")] WorkshopHelperFailed,
     [JsonStringEnumMemberName("workshop.helper_timed_out")] WorkshopHelperTimedOut,
+    [JsonStringEnumMemberName("workshop.collections_query_failed")] WorkshopCollectionsQueryFailed,
 
     // ── install ───────────────────────────────────────────────
     [JsonStringEnumMemberName("install.files_missing")] InstallFilesMissing,

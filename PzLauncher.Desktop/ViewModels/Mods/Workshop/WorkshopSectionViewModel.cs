@@ -16,7 +16,6 @@ namespace PzLauncher.Desktop.ViewModels.Mods.Workshop;
 /// <summary>What the Workshop sections of the Mods page share: texts, opening an item in Steam and running a Steam action.</summary>
 public abstract partial class WorkshopSectionViewModel : ViewModelBase
 {
-    private readonly IWorkshopActionRunner _runner;
     private readonly IUrlLauncher _urls;
     private readonly LocalizedErrorList _warnings = new();
 
@@ -25,7 +24,7 @@ public abstract partial class WorkshopSectionViewModel : ViewModelBase
     {
         Page = page;
         Service = service;
-        _runner = runner;
+        Runner = runner;
         Dialogs = dialogs;
         _urls = urls;
         ShownError = new LocalizedText(text => ErrorText = text);
@@ -50,6 +49,8 @@ public abstract partial class WorkshopSectionViewModel : ViewModelBase
     protected ModsViewModel Page { get; }
 
     protected IWorkshopService Service { get; }
+
+    protected IWorkshopActionRunner Runner { get; }
 
     protected IDialogService Dialogs { get; }
 
@@ -87,7 +88,7 @@ public abstract partial class WorkshopSectionViewModel : ViewModelBase
         IsActionRunning = true;
         try
         {
-            await WorkshopActionFlow.RunAsync(_runner, Service, Dialogs, install.RootPath, Page.ExtraGameArgs(install), action, items, rows);
+            await WorkshopActionFlow.RunAsync(Runner, Service, Dialogs, install.RootPath, Page.ExtraGameArgs(install), action, items, rows);
         }
         finally
         {

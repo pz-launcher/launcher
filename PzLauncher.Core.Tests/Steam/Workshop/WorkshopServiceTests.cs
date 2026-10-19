@@ -226,6 +226,30 @@ public sealed class WorkshopServiceTests : IDisposable
         ResultAssert.Failed(await _service.GetSubscriptionsAsync("relative", "", Ct), ErrorCode.InstallInvalidPath);
 
     [Fact]
+    public async Task GetCurrentAccountAsync_ReadsTheSignedInAccount()
+    {
+        var expected = ResultAssert.Ok(SteamLoginUsers.ParseCurrent(Fixtures.Read("Steam", "loginusers.vdf"), "p"));
+
+        Assert.Equal(expected, ResultAssert.Ok(await _service.GetCurrentAccountAsync(Ct)));
+    }
+
+    [Fact]
+    public async Task GetCurrentAccountAsync_NoSteam_IsSteamNotInstalled()
+    {
+        _platform.SteamRegistryPath = null;
+
+        ResultAssert.Failed(await _service.GetCurrentAccountAsync(Ct), ErrorCode.SteamNotInstalled);
+    }
+
+    [Fact]
+    public async Task GetCurrentAccountAsync_NoLoginUsers_IsNoCurrentAccount()
+    {
+        File.Delete(SteamClientFiles.LoginUsersPath(_steamRoot));
+
+        ResultAssert.Failed(await _service.GetCurrentAccountAsync(Ct), ErrorCode.SteamNoCurrentAccount);
+    }
+
+    [Fact]
     public async Task CheckUpdatesAsync_ReturnsShownItemsInRequestOrder()
     {
         _api.AddItem(2, "Two", manifest: "22", updated: 50, size: 7);

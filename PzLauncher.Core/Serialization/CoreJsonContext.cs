@@ -75,4 +75,6 @@ namespace PzLauncher.Core.Serialization;
 [JsonSerializable(typeof(WorkshopItemOutcome))]
 [JsonSerializable(typeof(WorkshopActionOutcome))]
 [JsonSerializable(typeof(WorkshopActionEvent))]
+[JsonSerializable(typeof(WorkshopCollectionSummary))]
+[JsonSerializable(typeof(WorkshopUserCollections))]
 public sealed partial class CoreJsonContext : JsonSerializerContext;

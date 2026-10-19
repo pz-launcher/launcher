@@ -24,9 +24,17 @@ internal sealed unsafe class SteamApi : IDisposable
     private readonly delegate* unmanaged[Cdecl]<nint, ulong, ulong> _subscribeItem;
     private readonly delegate* unmanaged[Cdecl]<nint, ulong, ulong> _unsubscribeItem;
     private readonly delegate* unmanaged[Cdecl]<nint, ulong, byte, byte> _downloadItem;
+    private readonly delegate* unmanaged[Cdecl]<nint, uint, int, int, int, uint, uint, uint, ulong> _createQueryUserUgcRequest;
+    private readonly delegate* unmanaged[Cdecl]<nint, ulong, byte, byte> _setReturnChildren;
+    private readonly delegate* unmanaged[Cdecl]<nint, ulong, ulong> _sendQueryUgcRequest;
+    private readonly delegate* unmanaged[Cdecl]<nint, ulong, uint, byte*, byte> _getQueryUgcResult;
+    private readonly delegate* unmanaged[Cdecl]<nint, ulong, byte> _releaseQueryUgcRequest;
+    private readonly delegate* unmanaged[Cdecl]<nint> _steamUser;
+    private readonly delegate* unmanaged[Cdecl]<nint, ulong> _getSteamId;
 
     private int _pipe;
     private nint _ugc;
+    private nint _user;
     private bool _initialized;
 
     // Never freed: the helper process exits right after shutdown.
@@ -46,6 +54,14 @@ internal sealed unsafe class SteamApi : IDisposable
         _subscribeItem = (delegate* unmanaged[Cdecl]<nint, ulong, ulong>)NativeLibrary.GetExport(library, "SteamAPI_ISteamUGC_SubscribeItem");
         _unsubscribeItem = (delegate* unmanaged[Cdecl]<nint, ulong, ulong>)NativeLibrary.GetExport(library, "SteamAPI_ISteamUGC_UnsubscribeItem");
         _downloadItem = (delegate* unmanaged[Cdecl]<nint, ulong, byte, byte>)NativeLibrary.GetExport(library, "SteamAPI_ISteamUGC_DownloadItem");
+        _createQueryUserUgcRequest = (delegate* unmanaged[Cdecl]<nint, uint, int, int, int, uint, uint, uint, ulong>)NativeLibrary.GetExport(
+            library, "SteamAPI_ISteamUGC_CreateQueryUserUGCRequest");
+        _setReturnChildren = (delegate* unmanaged[Cdecl]<nint, ulong, byte, byte>)NativeLibrary.GetExport(library, "SteamAPI_ISteamUGC_SetReturnChildren");
+        _sendQueryUgcRequest = (delegate* unmanaged[Cdecl]<nint, ulong, ulong>)NativeLibrary.GetExport(library, "SteamAPI_ISteamUGC_SendQueryUGCRequest");
+        _getQueryUgcResult = (delegate* unmanaged[Cdecl]<nint, ulong, uint, byte*, byte>)NativeLibrary.GetExport(library, "SteamAPI_ISteamUGC_GetQueryUGCResult");
+        _releaseQueryUgcRequest = (delegate* unmanaged[Cdecl]<nint, ulong, byte>)NativeLibrary.GetExport(library, "SteamAPI_ISteamUGC_ReleaseQueryUGCRequest");
+        _steamUser = (delegate* unmanaged[Cdecl]<nint>)NativeLibrary.GetExport(library, "SteamAPI_SteamUser_v023");
+        _getSteamId = (delegate* unmanaged[Cdecl]<nint, ulong>)NativeLibrary.GetExport(library, "SteamAPI_ISteamUser_GetSteamID");
     }
 
     /// <summary>Callback structs use pack 8 on Windows and pack 4 elsewhere (VALVE_CALLBACK_PACK_LARGE / SMALL).</summary>
@@ -69,6 +85,7 @@ internal sealed unsafe class SteamApi : IDisposable
         _manualDispatchInit();
         _pipe = _getHSteamPipe();
         _ugc = _steamUgc();
+        _user = _steamUser();
         return new SteamInitOutcome(result, "");
     }
 
@@ -88,6 +105,44 @@ internal sealed unsafe class SteamApi : IDisposable
     public ulong UnsubscribeItem(ulong id) => _unsubscribeItem(_ugc, id);
 
     public bool DownloadItem(ulong id, bool highPriority) => _downloadItem(_ugc, id, highPriority ? (byte)1 : (byte)0) != 0;
+
+    /// <summary>The signed-in account: the low 32 bits of its SteamID64.</summary>
+    public uint GetAccountId() => (uint)(_getSteamId(_user) & 0xFFFFFFFF);
+
+    /// <summary>One page of the account's collections of the game, with child counts.</summary>
+    /// <returns>The query handle, <see cref="SteamUgcQuery.InvalidHandle"/> when Steam refused it; release every other one.</returns>
+    public ulong CreateUserCollectionsQuery(uint accountId, SteamUserUgcList list, uint page)
+    {
+        var handle = _createQueryUserUgcRequest(
+            _ugc, accountId, (int)list, SteamUgcQuery.MatchingCollections, SteamUgcQuery.SortCreationOrderDesc, SteamUgcQuery.AnyCreatorApp, PzSteamApps.Game, page);
+        if (handle != SteamUgcQuery.InvalidHandle)
+        {
+            _setReturnChildren(_ugc, handle, 1);
+        }
+
+        return handle;
+    }
+
+    /// <returns>The call handle, 0 when Steam refused the call.</returns>
+    public ulong SendQuery(ulong handle) => _sendQueryUgcRequest(_ugc, handle);
+
+    /// <returns><c>null</c> when Steam has no result at this index.</returns>
+    public UgcDetails? GetQueryResult(ulong handle, uint index)
+    {
+        // Allocated at the larger (Windows) size so the library never writes past it under either packing.
+        var details = new byte[SteamCallbackPayloads.UgcDetailsSize];
+        fixed (byte* buffer = details)
+        {
+            if (_getQueryUgcResult(_ugc, handle, index, buffer) == 0)
+            {
+                return null;
+            }
+        }
+
+        return SteamCallbackPayloads.ReadUgcDetails(details, LargeCallbackPack);
+    }
+
+    public void ReleaseQuery(ulong handle) => _releaseQueryUgcRequest(_ugc, handle);
 
     /// <summary>Runs one dispatch frame and returns every callback and finished call result it produced.</summary>
     public List<SteamCallback> Pump()

@@ -68,7 +68,7 @@ public sealed class WorkshopActionRunnerTests : IDisposable
         Assert.True(process.InputClosed);
         Assert.EndsWith("\n", process.Input, StringComparison.Ordinal);
         var sent = SentRequest(process);
-        Assert.Equal((WorkshopAction.Update, SteamApi), (sent.Action, sent.SteamApiPath));
+        Assert.Equal((SteamHelperAction.Update, SteamApi), (sent.Action, sent.SteamApiPath));
         Assert.Equal([1UL, 2UL], sent.Ids);
         Assert.True(process.IsDisposed);
         Assert.False(process.Killed);
@@ -84,7 +84,7 @@ public sealed class WorkshopActionRunnerTests : IDisposable
 
         ResultAssert.Ok(await Runner().RunAsync(_root, new WorkshopActionRequest(action, [7]), null, Ct));
 
-        Assert.Equal(action, SentRequest(Assert.Single(_processes.PipedProcesses)).Action);
+        Assert.Equal(action.ToString(), SentRequest(Assert.Single(_processes.PipedProcesses)).Action.ToString());
     }
 
     [Fact]
@@ -238,6 +238,7 @@ public sealed class WorkshopActionRunnerTests : IDisposable
     [InlineData(nameof(SteamHelperFailure.LibraryNotLoaded), ErrorCode.WorkshopSteamApiUnusable)]
     [InlineData(nameof(SteamHelperFailure.ExportMissing), ErrorCode.WorkshopSteamApiUnusable)]
     [InlineData(nameof(SteamHelperFailure.BadRequest), ErrorCode.WorkshopHelperFailed)]
+    [InlineData(nameof(SteamHelperFailure.QueryFailed), ErrorCode.WorkshopCollectionsQueryFailed)]
     public async Task RunAsync_HelperFailure_MapsToItsError(string reason, ErrorCode expected)
     {
         Script(new SteamHelperFailed(Enum.Parse<SteamHelperFailure>(reason), "steam says no"));
@@ -349,5 +350,121 @@ public sealed class WorkshopActionRunnerTests : IDisposable
     public async Task RunAsync_RelativeInstallRoot_IsInvalid()
     {
         ResultAssert.Failed(await Runner().RunAsync("relative", Update(1), null, Ct), ErrorCode.InstallInvalidPath);
+    }
+
+    [Fact]
+    public async Task ListCollectionsAsync_StartsTheHelperWithTheListRequest_AndReturnsItsCollections()
+    {
+        var listed = new WorkshopUserCollections(
+            12345678,
+            [new WorkshopCollectionSummary(3623026433, "Pack", 201), new WorkshopCollectionSummary(2690796635, null, 71)],
+            [new WorkshopCollectionSummary(3815132834, "Mine", 214)]);
+        Script(new SteamHelperStarted(), new SteamHelperCollections(listed), new SteamHelperFinished());
+
+        var collections = ResultAssert.Ok(await Runner().ListCollectionsAsync(_root, Ct));
+
+        Assert.Equal(listed.AccountId, collections.AccountId);
+        Assert.Equal(listed.Favorited, collections.Favorited);
+        Assert.Equal(listed.Published, collections.Published);
+        var start = Assert.Single(_processes.Requests);
+        Assert.Equal([LauncherArguments.SteamHelper], start.Arguments);
+        Assert.Equal("108600", start.Environment["SteamAppId"]);
+        var process = Assert.Single(_processes.PipedProcesses);
+        var sent = SentRequest(process);
+        Assert.Equal((SteamHelperAction.ListCollections, SteamApi), (sent.Action, sent.SteamApiPath));
+        Assert.Empty(sent.Ids);
+        Assert.True(process.IsDisposed);
+        Assert.False(process.Killed);
+    }
+
+    [Fact]
+    public async Task ListCollectionsAsync_FinishedWithoutCollections_Fails()
+    {
+        Script(new SteamHelperStarted(), new SteamHelperFinished());
+
+        ResultAssert.Failed(await Runner().ListCollectionsAsync(_root, Ct), ErrorCode.WorkshopHelperFailed);
+    }
+
+    [Fact]
+    public async Task ListCollectionsAsync_CollectionsWithoutFinished_Fails()
+    {
+        Script(new SteamHelperStarted(), new SteamHelperCollections(new WorkshopUserCollections(1, [], [])));
+
+        ResultAssert.Failed(await Runner().ListCollectionsAsync(_root, Ct), ErrorCode.WorkshopHelperFailed);
+    }
+
+    [Theory]
+    [InlineData(nameof(SteamHelperFailure.SteamNotRunning), ErrorCode.WorkshopSteamNotRunning)]
+    [InlineData(nameof(SteamHelperFailure.InitFailed), ErrorCode.WorkshopSteamInitFailed)]
+    [InlineData(nameof(SteamHelperFailure.ExportMissing), ErrorCode.WorkshopSteamApiUnusable)]
+    [InlineData(nameof(SteamHelperFailure.QueryFailed), ErrorCode.WorkshopCollectionsQueryFailed)]
+    public async Task ListCollectionsAsync_HelperFailure_MapsToItsError(string reason, ErrorCode expected)
+    {
+        Script(new SteamHelperFailed(Enum.Parse<SteamHelperFailure>(reason), "Favorited page 2: EResult 2"));
+
+        ResultAssert.Failed(await Runner().ListCollectionsAsync(_root, Ct), expected);
+    }
+
+    [Fact]
+    public async Task ListCollectionsAsync_QueryFailed_KeepsSteamsReason()
+    {
+        Script(new SteamHelperStarted(), new SteamHelperFailed(SteamHelperFailure.QueryFailed, "Favorited page 2: EResult 2"));
+
+        var error = ResultAssert.Failed(await Runner().ListCollectionsAsync(_root, Ct), ErrorCode.WorkshopCollectionsQueryFailed);
+
+        Assert.Equal("Favorited page 2: EResult 2", error.Details["reason"]);
+    }
+
+    [Fact]
+    public async Task ListCollectionsAsync_MissingSteamApi_FailsWithoutStartingTheHelper()
+    {
+        File.Delete(SteamApi);
+
+        ResultAssert.Failed(await Runner().ListCollectionsAsync(_root, Ct), ErrorCode.WorkshopSteamApiMissing);
+        Assert.Empty(_processes.Requests);
+    }
+
+    [Fact]
+    public async Task ListCollectionsAsync_RelativeInstallRoot_IsInvalid()
+    {
+        ResultAssert.Failed(await Runner().ListCollectionsAsync("relative", Ct), ErrorCode.InstallInvalidPath);
+        Assert.Empty(_processes.Requests);
+    }
+
+    [Fact]
+    public async Task ListCollectionsAsync_NoEventWithinStallTimeout_KillsTheHelper()
+    {
+        _processes.OnStartPiped = process => process.Output(Line(new SteamHelperStarted()));
+
+        ResultAssert.Failed(await Runner(new SteppingTimeProvider()).ListCollectionsAsync(_root, Ct), ErrorCode.WorkshopHelperTimedOut);
+
+        Assert.True(Assert.Single(_processes.PipedProcesses).Killed);
+    }
+
+    [Fact]
+    public async Task ListCollectionsAsync_WhileAnActionRuns_WaitsForIt()
+    {
+        var runner = Runner();
+        _processes.OnStartPiped = process =>
+        {
+            if (_processes.PipedProcesses.Count > 1)
+            {
+                process.Output(
+                    Line(new SteamHelperStarted()), Line(new SteamHelperCollections(new WorkshopUserCollections(1, [], []))), Line(new SteamHelperFinished()));
+                process.Finish();
+            }
+        };
+
+        var action = runner.RunAsync(_root, Update(1), null, Ct);
+        var list = runner.ListCollectionsAsync(_root, Ct);
+
+        Assert.Single(_processes.Requests);
+        Assert.False(list.IsCompleted);
+        var running = _processes.PipedProcesses[0];
+        running.Output(Line(new SteamHelperStarted()), Line(new SteamHelperItemDone(1)), Line(new SteamHelperFinished()));
+        running.Finish();
+        ResultAssert.Ok(await action);
+        Assert.Equal(1u, ResultAssert.Ok(await list).AccountId);
+        Assert.Equal(SteamHelperAction.ListCollections, SentRequest(_processes.PipedProcesses[1]).Action);
     }
 }

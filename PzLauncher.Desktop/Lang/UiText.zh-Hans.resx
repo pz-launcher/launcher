@@ -350,6 +350,9 @@
   <data name="Error_WorkshopHelperTimedOut" xml:space="preserve">
     <value>Steam 在 {0} 秒内没有报告任何进度，创意工坊操作已停止。请稍后重试。</value>
   </data>
+  <data name="Error_WorkshopCollectionsQueryFailed" xml:space="preserve">
+    <value>Steam 无法列出你的创意工坊合集（{0}）。请稍后重试。</value>
+  </data>
   <data name="Error_FolderNotLocal" xml:space="preserve">
     <value>{0} 不是这台电脑上的文件夹，启动器无法打开它。请选择本地文件夹。</value>
   </data>
@@ -1096,6 +1099,24 @@
   </data>
   <data name="WorkshopCollections_Forget" xml:space="preserve">
     <value>从列表中移除</value>
+  </data>
+  <data name="WorkshopCollections_Favorited" xml:space="preserve">
+    <value>收藏的合集</value>
+  </data>
+  <data name="WorkshopCollections_FavoritedEmpty" xml:space="preserve">
+    <value>你还没有在 Steam 上收藏本游戏的合集。</value>
+  </data>
+  <data name="WorkshopCollections_Published" xml:space="preserve">
+    <value>我的合集</value>
+  </data>
+  <data name="WorkshopCollections_PublishedEmpty" xml:space="preserve">
+    <value>你还没有在 Steam 上发布本游戏的合集。</value>
+  </data>
+  <data name="WorkshopCollections_RefreshHint" xml:space="preserve">
+    <value>向 Steam 查询你收藏和发布的合集。查询期间，Steam 会短暂显示你正在玩 Project Zomboid。</value>
+  </data>
+  <data name="WorkshopCollections_UpdatedFormat" xml:space="preserve">
+    <value>上次更新：{0}</value>
   </data>
   <data name="WorkshopCollections_NoneOpen" xml:space="preserve">
     <value>粘贴 Steam 创意工坊合集的链接或 ID，查看其中的物品和订阅情况。</value>

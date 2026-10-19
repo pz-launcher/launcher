@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -10,6 +11,8 @@ namespace PzLauncher.Desktop.Services.Preferences;
 [JsonSerializable(typeof(ProxyFile))]
 [JsonSerializable(typeof(WorkshopCollectionFile))]
 [JsonSerializable(typeof(WorkshopCollectionFile[]))]
+[JsonSerializable(typeof(WorkshopUserCollectionsFile))]
+[JsonSerializable(typeof(WorkshopUserCollectionFile))]
 [JsonSerializable(typeof(string))]
 [JsonSerializable(typeof(bool))]
 internal sealed partial class DesktopJsonContext : JsonSerializerContext;
@@ -24,6 +27,7 @@ internal sealed partial class DesktopJsonContext : JsonSerializerContext;
 /// <param name="Proxy">A <see cref="ProxyFile"/>; an element for the same reason as <paramref name="JavaRuntimes"/>.</param>
 /// <param name="SteamHookReminder">A bool; an element for the same reason as <paramref name="JavaRuntimes"/>.</param>
 /// <param name="WorkshopCollections">An array of <see cref="WorkshopCollectionFile"/> objects; an element, so neither a non-array nor one bad entry makes the whole file unreadable.</param>
+/// <param name="WorkshopUserCollections">A <see cref="WorkshopUserCollectionsFile"/>; an element for the same reason as <paramref name="JavaRuntimes"/>.</param>
 internal sealed record PreferencesFile(
     string? Language,
     string? Theme,
@@ -36,7 +40,8 @@ internal sealed record PreferencesFile(
     JsonElement? AutoCheckUpdates,
     JsonElement? Proxy,
     JsonElement? SteamHookReminder,
-    JsonElement? WorkshopCollections);
+    JsonElement? WorkshopCollections,
+    JsonElement? WorkshopUserCollections);
 
 /// <summary>Nullable members, so a missing one is told apart from a zero.</summary>
 internal sealed record WindowFile(int? X, int? Y, double? Width, double? Height, bool? Maximized);
@@ -50,3 +55,10 @@ internal sealed record ProxyFile(string? Mode, string? Host, int? Port, string? 
 
 /// <param name="Id">Decimal text: a JSON number can't hold every 64-bit id exactly in other readers.</param>
 internal sealed record WorkshopCollectionFile(string? Id, string? Title);
+
+/// <param name="Favorited">Elements, so one bad entry doesn't drop the whole list.</param>
+internal sealed record WorkshopUserCollectionsFile(
+    uint? AccountId, DateTimeOffset? FetchedAt, IReadOnlyList<JsonElement>? Favorited, IReadOnlyList<JsonElement>? Published);
+
+/// <param name="Id">Decimal text, as in <see cref="WorkshopCollectionFile"/>.</param>
+internal sealed record WorkshopUserCollectionFile(string? Id, string? Title, uint? ChildCount);

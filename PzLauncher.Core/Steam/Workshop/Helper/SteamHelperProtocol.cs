@@ -4,7 +4,17 @@ using PzLauncher.Core.Steam.Workshop.Actions;
 namespace PzLauncher.Core.Steam.Workshop.Helper;
 
 /// <summary>The one JSON line the helper reads from stdin.</summary>
-internal sealed record SteamHelperRequest(WorkshopAction Action, string SteamApiPath, IReadOnlyList<ulong> Ids);
+/// <param name="Ids">Empty for <see cref="SteamHelperAction.ListCollections"/>.</param>
+internal sealed record SteamHelperRequest(SteamHelperAction Action, string SteamApiPath, IReadOnlyList<ulong> Ids);
+
+/// <summary><see cref="WorkshopAction"/>'s members under the same names, plus the read-only list.</summary>
+internal enum SteamHelperAction
+{
+    Subscribe,
+    Unsubscribe,
+    Update,
+    ListCollections,
+}
 
 internal enum SteamHelperFailure
 {
@@ -14,6 +24,9 @@ internal enum SteamHelperFailure
     SteamNotRunning,
     VersionMismatch,
     InitFailed,
+
+    /// <summary>Steam didn't answer a collection query with OK.</summary>
+    QueryFailed,
 }
 
 /// <summary>One JSON line the helper writes to stdout.</summary>
@@ -22,6 +35,7 @@ internal enum SteamHelperFailure
 [JsonDerivedType(typeof(SteamHelperProgress), "progress")]
 [JsonDerivedType(typeof(SteamHelperItemDone), "itemDone")]
 [JsonDerivedType(typeof(SteamHelperItemFailed), "itemFailed")]
+[JsonDerivedType(typeof(SteamHelperCollections), "collections")]
 [JsonDerivedType(typeof(SteamHelperFailed), "failed")]
 [JsonDerivedType(typeof(SteamHelperFinished), "finished")]
 internal abstract record SteamHelperEvent;
@@ -34,6 +48,8 @@ internal sealed record SteamHelperItemDone(ulong Id) : SteamHelperEvent;
 
 /// <param name="SteamResult">Steam's EResult; 0 (k_EResultNone) when Steam gave none.</param>
 internal sealed record SteamHelperItemFailed(ulong Id, WorkshopItemFailure Reason, int SteamResult) : SteamHelperEvent;
+
+internal sealed record SteamHelperCollections(WorkshopUserCollections Collections) : SteamHelperEvent;
 
 internal sealed record SteamHelperFailed(SteamHelperFailure Reason, string Message) : SteamHelperEvent;
 

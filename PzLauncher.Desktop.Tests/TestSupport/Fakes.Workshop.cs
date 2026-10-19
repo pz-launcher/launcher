@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging.Abstractions;
 using PzLauncher.Core.Common;
 using PzLauncher.Core.Mod.Collections;
+using PzLauncher.Core.Steam;
 using PzLauncher.Core.Steam.Workshop;
 using PzLauncher.Core.Steam.Workshop.Actions;
 using PzLauncher.Desktop.Services.Mods;
@@ -40,6 +41,10 @@ public sealed class FakeWorkshopService : IWorkshopService
     public List<ulong> CollectionRequests { get; } = [];
 
     public Func<Error?> CollectionError { get; set; } = () => null;
+
+    public SteamAccount Account { get; set; } = new(12345678, "Survivor");
+
+    public Func<Error?> AccountError { get; set; } = () => null;
 
     public FakeWorkshopService WithItem(WorkshopItem item)
     {
@@ -115,6 +120,9 @@ public sealed class FakeWorkshopService : IWorkshopService
 
         return Task.FromResult<Result<WorkshopCollection>>(new WorkshopCollection(id, Published.GetValueOrDefault(id)?.Title, items));
     }
+
+    public Task<Result<SteamAccount>> GetCurrentAccountAsync(CancellationToken ct = default) =>
+        Task.FromResult(AccountError() is { } error ? (Result<SteamAccount>)error : Account);
 }
 
 /// <summary>
@@ -134,6 +142,15 @@ public sealed class FakeWorkshopActionRunner : IWorkshopActionRunner
 
     /// <summary>Holds every run open after the progress events, until set.</summary>
     public TaskCompletionSource? Gate { get; set; }
+
+    public List<string> ListRuns { get; } = [];
+
+    public WorkshopUserCollections Collections { get; set; } = new(12345678, [], []);
+
+    public Func<Error?> ListError { get; set; } = () => null;
+
+    /// <summary>Holds every collection list open until set.</summary>
+    public TaskCompletionSource? ListGate { get; set; }
 
     public async Task<Result<WorkshopActionOutcome>> RunAsync(
         string installRoot, WorkshopActionRequest request, IProgress<WorkshopActionEvent>? progress = null, CancellationToken ct = default)
@@ -171,6 +188,17 @@ public sealed class FakeWorkshopActionRunner : IWorkshopActionRunner
 
         return new WorkshopActionOutcome(outcomes);
     }
+
+    public async Task<Result<WorkshopUserCollections>> ListCollectionsAsync(string installRoot, CancellationToken ct = default)
+    {
+        ListRuns.Add(installRoot);
+        if (ListGate is { } gate)
+        {
+            await gate.Task.WaitAsync(ct);
+        }
+
+        return ListError() is { } error ? error : Collections;
+    }
 }
 
 public static class TestWorkshop
@@ -205,4 +233,7 @@ public static class TestWorkshop
 
     public static WorkshopCollectionHistory History(FakePreferenceStore? store = null, params SavedWorkshopCollection[] saved) =>
         new(store ?? new FakePreferenceStore(), new UserPreferences(null, null, null) { WorkshopCollections = saved });
+
+    public static WorkshopUserCollectionsCache UserCollections(FakePreferenceStore? store = null, SavedWorkshopUserCollections? saved = null, TimeProvider? time = null) =>
+        new(store ?? new FakePreferenceStore(), new UserPreferences(null, null, null) { WorkshopUserCollections = saved }, time ?? new ManualTimeProvider());
 }

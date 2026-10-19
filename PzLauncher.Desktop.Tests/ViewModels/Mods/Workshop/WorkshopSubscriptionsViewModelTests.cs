@@ -49,7 +49,7 @@ public class WorkshopSubscriptionsViewModelTests : UiTextCultureTest
         var orderWriter = new ModCollectionOrderWriter(_collections, _runState, new FakePlatformEnvironment(), new ManualTimeProvider());
         var page = new ModsViewModel(
             Installs, _collections, _overrides, new FakeModCollectionDefaultsService(), new ModCollectionApplier(_collections, _dialogs), _dialogs,
-            _clipboard, _runState, orderWriter, _service, _runner, _urls, TestWorkshop.History(), Localization)
+            _clipboard, _runState, orderWriter, _service, _runner, _urls, TestWorkshop.History(), TestWorkshop.UserCollections(), Localization)
         {
             Section = section,
         };

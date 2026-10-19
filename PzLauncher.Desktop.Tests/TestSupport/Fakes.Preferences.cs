@@ -107,4 +107,12 @@ public sealed class FakePreferenceStore : IPreferenceStore
         SavedWorkshopCollections.Add(collections);
         return Task.CompletedTask;
     }
+
+    public List<SavedWorkshopUserCollections> SavedWorkshopUserCollections { get; } = [];
+
+    public Task SaveWorkshopUserCollectionsAsync(SavedWorkshopUserCollections collections, CancellationToken ct = default)
+    {
+        SavedWorkshopUserCollections.Add(collections);
+        return Task.CompletedTask;
+    }
 }

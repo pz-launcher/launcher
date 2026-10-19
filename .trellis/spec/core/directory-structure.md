@@ -9,7 +9,7 @@ PzLauncher.Core/
 ├── Steam/           # Steam root/library discovery, Workshop library order, KeyValues parsing, launch hook in the current account's launch options
 │   └── Workshop/    # the account's Workshop items and collections: IWorkshopService, its DTOs, errors, constants
 │       ├── Sources/ # read side: Steam's local subscription/acf files, keyless Web API
-│       ├── Actions/ # write side in the launcher: helper runner, its request/outcome/events
+│       ├── Actions/ # launcher side of the helper: runner for write actions and the read-only collection list, their request/outcome/events
 │       └── Helper/  # runs inside the helper process: Steamworks flat-API binding, session, stdin/stdout protocol
 ├── Installs/        # PZ game + dedicated server install detection
 ├── Java/            # Java runtime discovery (Windows + Linux sources)

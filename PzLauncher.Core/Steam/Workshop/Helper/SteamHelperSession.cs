@@ -8,6 +8,9 @@ internal sealed class SteamHelperSession(SteamApi api, Action<SteamHelperEvent> 
 {
     private static readonly TimeSpan PollInterval = TimeSpan.FromMilliseconds(100);
 
+    // Bounds a run if Steam keeps answering full pages.
+    internal const uint MaxPages = 100;
+
     private readonly Dictionary<ulong, SteamCallback> _callResults = [];
     private readonly Dictionary<ulong, int> _downloadResults = [];
 
@@ -29,6 +32,92 @@ internal sealed class SteamHelperSession(SteamApi api, Action<SteamHelperEvent> 
         foreach (var id in ids)
         {
             write(UpdateItem(id));
+        }
+    }
+
+    /// <returns><see cref="SteamHelperCollections"/>, or <see cref="SteamHelperFailed"/> for the first query Steam didn't answer.</returns>
+    public SteamHelperEvent ListCollections()
+    {
+        var account = api.GetAccountId();
+        List<WorkshopCollectionSummary> favorited = [], published = [];
+        var failed = ReadAllPages(SteamUserUgcList.Favorited, page => QueryPage(account, SteamUserUgcList.Favorited, page), favorited)
+            ?? ReadAllPages(SteamUserUgcList.Published, page => QueryPage(account, SteamUserUgcList.Published, page), published);
+        return failed ?? (SteamHelperEvent)new SteamHelperCollections(new WorkshopUserCollections(account, favorited, published));
+    }
+
+    /// <summary>Reads pages from 1 until a short page or Steam's total, adding each collection once.</summary>
+    /// <returns>The failure of the first page Steam didn't answer with OK, <c>null</c> once all were read.</returns>
+    internal static SteamHelperFailed? ReadAllPages(SteamUserUgcList list, Func<uint, SteamUgcPage> queryPage, List<WorkshopCollectionSummary> collections)
+    {
+        var seen = new HashSet<ulong>();
+        ulong read = 0;
+        for (uint page = 1; page <= MaxPages; page++)
+        {
+            var answer = queryPage(page);
+            if (answer.Result != WorkshopFiles.ResultOk)
+            {
+                return new SteamHelperFailed(
+                    SteamHelperFailure.QueryFailed,
+                    answer.Result == 0 ? $"{list} page {page}: no answer from Steam" : $"{list} page {page}: EResult {answer.Result}");
+            }
+
+            foreach (var item in answer.Items)
+            {
+                if (item.Result == WorkshopFiles.ResultOk && item.FileType == WorkshopFiles.FileTypeCollection && seen.Add(item.Id))
+                {
+                    collections.Add(new WorkshopCollectionSummary(item.Id, item.Title.Length > 0 ? item.Title : null, item.ChildCount));
+                }
+            }
+
+            read += answer.Returned;
+            if (answer.Returned < SteamUgcQuery.ResultsPerPage || read >= answer.TotalMatching)
+            {
+                break;
+            }
+        }
+
+        return null;
+    }
+
+    private SteamUgcPage QueryPage(uint account, SteamUserUgcList list, uint page)
+    {
+        var handle = api.CreateUserCollectionsQuery(account, list, page);
+        if (handle == SteamUgcQuery.InvalidHandle)
+        {
+            return SteamUgcPage.NoAnswer;
+        }
+
+        try
+        {
+            var call = api.SendQuery(handle);
+            if (call == 0
+                || !TryWaitForCallResult(call, out var callResult)
+                || callResult.Failed
+                || callResult.Id != SteamCallbackIds.UgcQueryCompleted
+                || SteamCallbackPayloads.ReadUgcQueryCompleted(callResult.Payload) is not { } completed)
+            {
+                return SteamUgcPage.NoAnswer;
+            }
+
+            if (completed.Result != WorkshopFiles.ResultOk)
+            {
+                return new SteamUgcPage(completed.Result, 0, 0, []);
+            }
+
+            var items = new List<UgcDetails>();
+            for (uint index = 0; index < completed.Returned; index++)
+            {
+                if (api.GetQueryResult(handle, index) is { } details)
+                {
+                    items.Add(details);
+                }
+            }
+
+            return new SteamUgcPage(completed.Result, completed.Returned, completed.TotalMatching, items);
+        }
+        finally
+        {
+            api.ReleaseQuery(handle);
         }
     }
 
@@ -153,4 +242,11 @@ internal sealed class SteamHelperSession(SteamApi api, Action<SteamHelperEvent> 
             }
         }
     }
+}
+
+/// <param name="Result">Steam's EResult for the query; 0 (k_EResultNone) when Steam refused it or no answer came in time.</param>
+/// <param name="Returned">Results on this page, including any Steam then had no details for.</param>
+internal sealed record SteamUgcPage(int Result, uint Returned, uint TotalMatching, IReadOnlyList<UgcDetails> Items)
+{
+    public static SteamUgcPage NoAnswer { get; } = new(0, 0, 0, []);
 }

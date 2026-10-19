@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using PzLauncher.Core.Launch;
 using PzLauncher.Core.Mod.ZombieBuddy;
 using PzLauncher.Core.Net;
+using PzLauncher.Core.Steam.Workshop.Actions;
 using PzLauncher.Core.Update;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Services.Preferences;
@@ -32,6 +33,13 @@ public sealed class JsonPreferenceStoreTests : IDisposable
     private static readonly GameLaunchOverrides Overrides = new(JavaA, 8192, 2048, "-Dzomboid.steam=1", "-debug", GarbageCollector.Shenandoah);
 
     private static readonly SavedWorkshopCollection SteamCollection = new(18446744073709551615, "B42 \"必备\" pack");
+
+    private static readonly SavedWorkshopUserCollections UserCollections = new(
+        new DateTimeOffset(2026, 10, 19, 8, 30, 0, TimeSpan.Zero),
+        new WorkshopUserCollections(
+            12345678,
+            [new WorkshopCollectionSummary(18446744073709551615, "合集 \"one\"", 201), new WorkshopCollectionSummary(2690796635, null, 0)],
+            [new WorkshopCollectionSummary(3815132834, "my", 214)]));
 
     private static UserPreferences WithJava(params string[] homes) => new(null, null, null) { ManualJavaHomes = homes };
 
@@ -201,6 +209,7 @@ public sealed class JsonPreferenceStoreTests : IDisposable
     [InlineData(9)]
     [InlineData(10)]
     [InlineData(11)]
+    [InlineData(12)]
     public async Task SaveOneField_FileHoldsTheOthers_KeepsAll(int savedLast)
     {
         var ct = TestContext.Current.CancellationToken;
@@ -218,6 +227,7 @@ public sealed class JsonPreferenceStoreTests : IDisposable
             () => CreateStore().SaveProxyAsync(ManualProxy, ct),
             () => CreateStore().SaveSteamHookReminderAsync(false, ct),
             () => CreateStore().SaveWorkshopCollectionsAsync([SteamCollection], ct),
+            () => CreateStore().SaveWorkshopUserCollectionsAsync(UserCollections, ct),
         ];
 
         // Separate stores, as across app runs.
@@ -238,6 +248,7 @@ public sealed class JsonPreferenceStoreTests : IDisposable
                 Proxy = ManualProxy,
                 SteamHookReminder = false,
                 WorkshopCollections = [SteamCollection],
+                WorkshopUserCollections = UserCollections,
             },
             CreateStore().Load());
     }
@@ -263,7 +274,8 @@ public sealed class JsonPreferenceStoreTests : IDisposable
             store.SaveAutoCheckUpdatesAsync(false, TestContext.Current.CancellationToken),
             store.SaveProxyAsync(ManualProxy, TestContext.Current.CancellationToken),
             store.SaveSteamHookReminderAsync(false, TestContext.Current.CancellationToken),
-            store.SaveWorkshopCollectionsAsync([SteamCollection], TestContext.Current.CancellationToken));
+            store.SaveWorkshopCollectionsAsync([SteamCollection], TestContext.Current.CancellationToken),
+            store.SaveWorkshopUserCollectionsAsync(UserCollections, TestContext.Current.CancellationToken));
 
         Assert.Equal(
             new UserPreferences(AppLanguage.PortugueseBrazil, AppTheme.Dark, Placement)
@@ -277,6 +289,7 @@ public sealed class JsonPreferenceStoreTests : IDisposable
                 Proxy = ManualProxy,
                 SteamHookReminder = false,
                 WorkshopCollections = [SteamCollection],
+                WorkshopUserCollections = UserCollections,
             },
             CreateStore().Load());
     }
@@ -298,6 +311,7 @@ public sealed class JsonPreferenceStoreTests : IDisposable
         await CreateStore().SaveProxyAsync(ManualProxy, TestContext.Current.CancellationToken);
         await CreateStore().SaveSteamHookReminderAsync(false, TestContext.Current.CancellationToken);
         await CreateStore().SaveWorkshopCollectionsAsync([SteamCollection], TestContext.Current.CancellationToken);
+        await CreateStore().SaveWorkshopUserCollectionsAsync(UserCollections, TestContext.Current.CancellationToken);
 
         Assert.Equal(new UserPreferences(null, null, null), CreateStore().Load());
     }
@@ -728,6 +742,91 @@ public sealed class JsonPreferenceStoreTests : IDisposable
     public void Load_WorkshopCollectionsNotAnArray_KeepsOtherFieldsAndLoadsNone(string value)
     {
         WriteFile($$"""{"theme":"dark","workshopCollections":{{value}}}""");
+
+        Assert.Equal(new UserPreferences(null, AppTheme.Dark, null), CreateStore().Load());
+    }
+
+    [Fact]
+    public async Task SaveWorkshopUserCollectionsAsync_ThenLoad_RoundTrips()
+    {
+        await CreateStore().SaveWorkshopUserCollectionsAsync(UserCollections, TestContext.Current.CancellationToken);
+
+        Assert.Equal(new UserPreferences(null, null, null) { WorkshopUserCollections = UserCollections }, CreateStore().Load());
+    }
+
+    [Fact]
+    public async Task SaveWorkshopUserCollectionsAsync_WritesIdsAsTextAndOmitsUnknownTitles()
+    {
+        var collections = new SavedWorkshopUserCollections(
+            new DateTimeOffset(2026, 10, 19, 8, 30, 0, TimeSpan.Zero),
+            new WorkshopUserCollections(12345678, [new WorkshopCollectionSummary(18446744073709551615, "pack", 201)], [new WorkshopCollectionSummary(2002, null, 7)]));
+
+        await CreateStore().SaveWorkshopUserCollectionsAsync(collections, TestContext.Current.CancellationToken);
+
+        // The default JSON encoder escapes '+'.
+        Assert.Equal(
+            """{"workshopUserCollections":{"accountId":12345678,"fetchedAt":"2026-10-19T08:30:00\u002B00:00","favorited":[{"id":"18446744073709551615","title":"pack","childCount":201}],"published":[{"id":"2002","childCount":7}]}}""",
+            await File.ReadAllTextAsync(FilePath, TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
+    public void Load_NoWorkshopUserCollections_LoadsNull()
+    {
+        WriteFile("""{"theme":"dark"}""");
+
+        Assert.Null(CreateStore().Load().WorkshopUserCollections);
+    }
+
+    [Fact]
+    public void Load_WorkshopUserCollectionsWithInvalidEntries_KeepsTheValidOnesAndOtherFields()
+    {
+        WriteFile("""
+            {"theme":"dark","workshopUserCollections":{"accountId":42,"fetchedAt":"2026-10-19T08:30:00+00:00","favorited":[
+              {"id":"1001","title":"First","childCount":3},
+              {"id":"1002","childCount":0},
+              {"id":"1002","title":"Repeated","childCount":1},
+              {"id":1003,"title":"Number id","childCount":1},
+              {"id":"0","title":"Zero","childCount":1},
+              {"id":"abc","title":"Text","childCount":1},
+              {"title":"No id","childCount":1},
+              {"id":"1004","title":7,"childCount":1},
+              {"id":"1005","title":"No count"},
+              {"id":"1006","title":"Negative count","childCount":-1},
+              {"id":"1007","title":"Text count","childCount":"5"},
+              {"id":"1008","title":"","childCount":2},
+              "1009",
+              null
+            ],"published":[{"id":"1001","title":"Also favorited","childCount":3}]}}
+            """);
+
+        Assert.Equal(
+            new UserPreferences(null, AppTheme.Dark, null)
+            {
+                WorkshopUserCollections = new SavedWorkshopUserCollections(
+                    new DateTimeOffset(2026, 10, 19, 8, 30, 0, TimeSpan.Zero),
+                    new WorkshopUserCollections(
+                        42,
+                        [new WorkshopCollectionSummary(1001, "First", 3), new WorkshopCollectionSummary(1002, null, 0), new WorkshopCollectionSummary(1008, null, 2)],
+                        [new WorkshopCollectionSummary(1001, "Also favorited", 3)])),
+            },
+            CreateStore().Load());
+    }
+
+    [Theory]
+    [InlineData("5")]
+    [InlineData("[]")]
+    [InlineData("\"x\"")]
+    [InlineData("""{"fetchedAt":"2026-10-19T08:30:00+00:00","favorited":[],"published":[]}""")]
+    [InlineData("""{"accountId":0,"fetchedAt":"2026-10-19T08:30:00+00:00","favorited":[],"published":[]}""")]
+    [InlineData("""{"accountId":-1,"fetchedAt":"2026-10-19T08:30:00+00:00","favorited":[],"published":[]}""")]
+    [InlineData("""{"accountId":"42","fetchedAt":"2026-10-19T08:30:00+00:00","favorited":[],"published":[]}""")]
+    [InlineData("""{"accountId":42,"favorited":[],"published":[]}""")]
+    [InlineData("""{"accountId":42,"fetchedAt":"yesterday","favorited":[],"published":[]}""")]
+    [InlineData("""{"accountId":42,"fetchedAt":"2026-10-19T08:30:00+00:00","published":[]}""")]
+    [InlineData("""{"accountId":42,"fetchedAt":"2026-10-19T08:30:00+00:00","favorited":{},"published":[]}""")]
+    public void Load_InvalidWorkshopUserCollections_KeepsOtherFieldsAndLoadsNull(string value)
+    {
+        WriteFile($$"""{"theme":"dark","workshopUserCollections":{{value}}}""");
 
         Assert.Equal(new UserPreferences(null, AppTheme.Dark, null), CreateStore().Load());
     }

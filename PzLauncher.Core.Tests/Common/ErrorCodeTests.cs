@@ -47,6 +47,7 @@ public partial class ErrorCodeTests
         [ErrorCode.WorkshopHelperStartFailed] = (WorkshopErrors.HelperStartFailed("p", "r"), ErrorKind.External),
         [ErrorCode.WorkshopHelperFailed] = (WorkshopErrors.HelperFailed("r"), ErrorKind.Unexpected),
         [ErrorCode.WorkshopHelperTimedOut] = (WorkshopErrors.HelperTimedOut(TimeSpan.FromMinutes(3)), ErrorKind.External),
+        [ErrorCode.WorkshopCollectionsQueryFailed] = (WorkshopErrors.CollectionsQueryFailed("r"), ErrorKind.External),
         [ErrorCode.InstallFilesMissing] = (InstallErrors.FilesMissing("p", 1), ErrorKind.NotFound),
         [ErrorCode.InstallInvalidPath] = (InstallErrors.InvalidPath("p"), ErrorKind.Validation),
         [ErrorCode.InstallPathNotFound] = (InstallErrors.PathNotFound("p"), ErrorKind.NotFound),
@@ -154,6 +155,7 @@ public partial class ErrorCodeTests
     [InlineData(ErrorCode.WorkshopHelperStartFailed, "workshop.helper_start_failed")]
     [InlineData(ErrorCode.WorkshopHelperFailed, "workshop.helper_failed")]
     [InlineData(ErrorCode.WorkshopHelperTimedOut, "workshop.helper_timed_out")]
+    [InlineData(ErrorCode.WorkshopCollectionsQueryFailed, "workshop.collections_query_failed")]
     [InlineData(ErrorCode.InstallFilesMissing, "install.files_missing")]
     [InlineData(ErrorCode.InstallInvalidPath, "install.invalid_path")]
     [InlineData(ErrorCode.InstallPathNotFound, "install.path_not_found")]
@@ -272,6 +274,7 @@ public partial class ErrorCodeTests
     [InlineData(ErrorCode.WorkshopResponseInvalid)]
     [InlineData(ErrorCode.WorkshopSteamInitFailed)]
     [InlineData(ErrorCode.WorkshopHelperFailed)]
+    [InlineData(ErrorCode.WorkshopCollectionsQueryFailed)]
     public void Factory_ReasonDetails_HoldTheReason(ErrorCode code) =>
         Assert.Equal(new Dictionary<string, string> { ["reason"] = "r" }, Factories[code].Error.Details);
 }

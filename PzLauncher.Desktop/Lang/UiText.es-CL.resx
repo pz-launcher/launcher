@@ -350,6 +350,9 @@
   <data name="Error_WorkshopHelperTimedOut" xml:space="preserve">
     <value>Steam no informó ningún progreso en {0} segundos, así que se detuvo la acción de Workshop. Vuelve a intentarlo más tarde.</value>
   </data>
+  <data name="Error_WorkshopCollectionsQueryFailed" xml:space="preserve">
+    <value>Steam no pudo mostrar tus colecciones de Workshop ({0}). Vuelve a intentarlo más tarde.</value>
+  </data>
   <data name="Error_FolderNotLocal" xml:space="preserve">
     <value>{0} no es una carpeta de este computador, así que el launcher no puede abrirla. Elige una carpeta local.</value>
   </data>
@@ -1096,6 +1099,24 @@
   </data>
   <data name="WorkshopCollections_Forget" xml:space="preserve">
     <value>Quitar de la lista</value>
+  </data>
+  <data name="WorkshopCollections_Favorited" xml:space="preserve">
+    <value>Colecciones favoritas</value>
+  </data>
+  <data name="WorkshopCollections_FavoritedEmpty" xml:space="preserve">
+    <value>No tienes colecciones favoritas de este juego en Steam.</value>
+  </data>
+  <data name="WorkshopCollections_Published" xml:space="preserve">
+    <value>Mis colecciones</value>
+  </data>
+  <data name="WorkshopCollections_PublishedEmpty" xml:space="preserve">
+    <value>No has publicado colecciones de este juego en Steam.</value>
+  </data>
+  <data name="WorkshopCollections_RefreshHint" xml:space="preserve">
+    <value>Consulta en Steam tus colecciones favoritas y publicadas. Durante unos segundos, Steam muestra que estás jugando Project Zomboid.</value>
+  </data>
+  <data name="WorkshopCollections_UpdatedFormat" xml:space="preserve">
+    <value>Última actualización: {0}</value>
   </data>
   <data name="WorkshopCollections_NoneOpen" xml:space="preserve">
     <value>Pega el enlace o el ID de una colección de Steam Workshop para ver sus elementos y a cuáles estás suscrito.</value>

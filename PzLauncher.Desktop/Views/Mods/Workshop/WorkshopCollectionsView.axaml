@@ -22,6 +22,20 @@
         </Style>
     </UserControl.Styles>
 
+    <UserControl.Resources>
+        <DataTemplate x:Key="UserCollectionRowTemplate" x:DataType="vm:WorkshopUserCollectionRow">
+            <Button Theme="{StaticResource Shell.ListRow}" Classes.inUse="{Binding IsOpen}"
+                    Command="{Binding $parent[ItemsControl].((vm:WorkshopCollectionsViewModel)DataContext).OpenUserCollectionCommand}"
+                    CommandParameter="{Binding}">
+                <StackPanel Spacing="2">
+                    <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Title}" />
+                    <TextBlock Text="{Binding ChildCount, StringFormat={x:Static lang:UiText.WorkshopCollections_ItemCountFormat}}"
+                               FontSize="12" Foreground="{DynamicResource Shell.TextMuted}" />
+                </StackPanel>
+            </Button>
+        </DataTemplate>
+    </UserControl.Resources>
+
     <Grid ColumnDefinitions="260,16,*">
         <!-- Open by link, or pick a collection opened before. -->
         <DockPanel Grid.Column="0">
@@ -39,14 +53,46 @@
                            IsVisible="{Binding LinkErrorText, Converter={x:Static ObjectConverters.IsNotNull}}" />
             </StackPanel>
 
-            <TextBlock DockPanel.Dock="Top" Text="{x:Static lang:UiText.WorkshopCollections_Remembered}" Classes="sectionTitle" Margin="0,0,0,8" />
+            <!-- The Steam account's collections, then the ones opened here. Rows are buttons, not ListBox items: a click opens the collection. -->
+            <ScrollViewer>
+                <StackPanel Spacing="4">
+                    <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,4">
+                        <TextBlock Grid.Column="0" Text="{x:Static lang:UiText.WorkshopCollections_Favorited}" Classes="sectionTitle" VerticalAlignment="Center" />
+                        <Button Grid.Column="1" Command="{Binding RefreshUserCollectionsCommand}"
+                                ToolTip.Tip="{x:Static lang:UiText.WorkshopCollections_RefreshHint}" ToolTip.ShowOnDisabled="True">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <ic:FluentIcon Icon="ArrowClockwise" IconVariant="Regular" FontSize="14" VerticalAlignment="Center" />
+                                <TextBlock Text="{x:Static lang:UiText.Mods_Refresh}" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                    </Grid>
+                    <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsFetchingUserCollections}" />
+                    <TextBlock Text="{x:Static lang:UiText.WorkshopCollections_FavoritedEmpty}" IsVisible="{Binding IsFavoritedEmpty}" Classes="hint" TextWrapping="Wrap" />
+                    <ItemsControl ItemsSource="{Binding Favorited}" ItemTemplate="{StaticResource UserCollectionRowTemplate}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Spacing="4" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                    </ItemsControl>
 
-            <Panel>
-                <TextBlock Text="{x:Static lang:UiText.WorkshopCollections_RememberedEmpty}" IsVisible="{Binding !HasRemembered}" TextWrapping="Wrap"
-                           Foreground="{DynamicResource Shell.TextMuted}" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" />
+                    <TextBlock Text="{x:Static lang:UiText.WorkshopCollections_Published}" Classes="sectionTitle" Margin="0,12,0,4" />
+                    <TextBlock Text="{x:Static lang:UiText.WorkshopCollections_PublishedEmpty}" IsVisible="{Binding IsPublishedEmpty}" Classes="hint" TextWrapping="Wrap" />
+                    <ItemsControl ItemsSource="{Binding Published}" ItemTemplate="{StaticResource UserCollectionRowTemplate}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Spacing="4" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                    </ItemsControl>
 
-                <!-- Rows are buttons, not ListBox items: a click opens the collection. -->
-                <ScrollViewer>
+                    <TextBlock Text="{Binding UserCollectionsErrorText}" Classes="warning" TextWrapping="Wrap" Margin="0,4,0,0"
+                               IsVisible="{Binding UserCollectionsErrorText, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                    <TextBlock Text="{Binding UserCollectionsUpdatedText}" Classes="hint" TextWrapping="Wrap"
+                               IsVisible="{Binding UserCollectionsUpdatedText, Converter={x:Static ObjectConverters.IsNotNull}}" />
+
+                    <TextBlock Text="{x:Static lang:UiText.WorkshopCollections_Remembered}" Classes="sectionTitle" Margin="0,12,0,4" />
+                    <TextBlock Text="{x:Static lang:UiText.WorkshopCollections_RememberedEmpty}" IsVisible="{Binding !HasRemembered}" Classes="hint" TextWrapping="Wrap" />
                     <ItemsControl ItemsSource="{Binding Remembered}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
@@ -75,8 +121,8 @@
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
-                </ScrollViewer>
-            </Panel>
+                </StackPanel>
+            </ScrollViewer>
         </DockPanel>
 
         <!-- The open collection. -->

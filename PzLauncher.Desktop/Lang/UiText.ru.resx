@@ -350,6 +350,9 @@
   <data name="Error_WorkshopHelperTimedOut" xml:space="preserve">
     <value>Steam не сообщал о ходе работы {0} с, поэтому действие с Мастерской остановлено. Повторите попытку позже.</value>
   </data>
+  <data name="Error_WorkshopCollectionsQueryFailed" xml:space="preserve">
+    <value>Steam не смог получить список ваших коллекций Мастерской ({0}). Повторите попытку позже.</value>
+  </data>
   <data name="Error_FolderNotLocal" xml:space="preserve">
     <value>{0} — не папка на этом компьютере, поэтому лаунчер не может её открыть. Выберите локальную папку.</value>
   </data>
@@ -1096,6 +1099,24 @@
   </data>
   <data name="WorkshopCollections_Forget" xml:space="preserve">
     <value>Убрать из списка</value>
+  </data>
+  <data name="WorkshopCollections_Favorited" xml:space="preserve">
+    <value>Избранные коллекции</value>
+  </data>
+  <data name="WorkshopCollections_FavoritedEmpty" xml:space="preserve">
+    <value>В Steam нет избранных коллекций для этой игры.</value>
+  </data>
+  <data name="WorkshopCollections_Published" xml:space="preserve">
+    <value>Мои коллекции</value>
+  </data>
+  <data name="WorkshopCollections_PublishedEmpty" xml:space="preserve">
+    <value>Вы ещё не публиковали в Steam коллекции для этой игры.</value>
+  </data>
+  <data name="WorkshopCollections_RefreshHint" xml:space="preserve">
+    <value>Запрашивает у Steam ваши избранные и опубликованные коллекции. Несколько секунд Steam показывает, что вы играете в Project Zomboid.</value>
+  </data>
+  <data name="WorkshopCollections_UpdatedFormat" xml:space="preserve">
+    <value>Обновлено: {0}</value>
   </data>
   <data name="WorkshopCollections_NoneOpen" xml:space="preserve">
     <value>Вставьте ссылку на коллекцию Мастерской Steam или её ID, чтобы увидеть её предметы и ваши подписки.</value>

@@ -5,21 +5,30 @@ using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using PzLauncher.Core.Common;
 using PzLauncher.Core.Mod;
 using PzLauncher.Core.Steam.Workshop;
 using PzLauncher.Core.Steam.Workshop.Actions;
 using PzLauncher.Desktop.Lang;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Services.Mods;
+using PzLauncher.Desktop.Services.Preferences;
 using PzLauncher.Desktop.Services.Shell;
 
 namespace PzLauncher.Desktop.ViewModels.Mods.Workshop;
 
-/// <summary>A Steam Workshop collection opened by link or id, with each item's state for the account Steam signs in with and the install in use.</summary>
+/// <summary>A Steam Workshop collection opened by link, id or from the account's favorited and published ones, with each item's state for the account Steam signs in with and the install in use.</summary>
 public partial class WorkshopCollectionsViewModel : WorkshopSectionViewModel
 {
     private readonly WorkshopCollectionHistory _history;
+    private readonly WorkshopUserCollectionsCache _userCache;
+    private readonly LocalizedText _userUpdated;
+    private readonly LocalizedText _userError;
     private WorkshopCollection? _collection;
+    private SavedWorkshopUserCollections? _userCollections;
+
+    // Steam is asked once per launcher session (the helper makes Steam show the game running); a skipped automatic fetch doesn't count.
+    private bool _userCollectionsFetched;
 
     // A newer load supersedes one still in flight.
     private int _loadVersion;
@@ -30,12 +39,18 @@ public partial class WorkshopCollectionsViewModel : WorkshopSectionViewModel
         IWorkshopActionRunner runner,
         IDialogService dialogs,
         IUrlLauncher urls,
-        WorkshopCollectionHistory history)
+        WorkshopCollectionHistory history,
+        WorkshopUserCollectionsCache userCache)
         : base(page, service, runner, dialogs, urls)
     {
         _history = history;
+        _userCache = userCache;
+        _userUpdated = new LocalizedText(text => UserCollectionsUpdatedText = text);
+        _userError = new LocalizedText(text => UserCollectionsErrorText = text);
         Rows = [];
         Remembered = [];
+        Favorited = [];
+        Published = [];
         RefreshRemembered();
     }
 
@@ -53,6 +68,30 @@ public partial class WorkshopCollectionsViewModel : WorkshopSectionViewModel
     public partial IReadOnlyList<RememberedWorkshopCollectionRow> Remembered { get; private set; }
 
     public bool HasRemembered => Remembered.Count > 0;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsFavoritedEmpty))]
+    public partial IReadOnlyList<WorkshopUserCollectionRow> Favorited { get; private set; }
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsPublishedEmpty))]
+    public partial IReadOnlyList<WorkshopUserCollectionRow> Published { get; private set; }
+
+    /// <summary>Steam's answer is shown and lists none; before any answer the group is just empty.</summary>
+    public bool IsFavoritedEmpty => _userCollections is not null && Favorited.Count == 0;
+
+    /// <inheritdoc cref="IsFavoritedEmpty"/>
+    public bool IsPublishedEmpty => _userCollections is not null && Published.Count == 0;
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(RefreshUserCollectionsCommand))]
+    public partial bool IsFetchingUserCollections { get; private set; }
+
+    /// <summary>When Steam gave the shown lists.</summary>
+    [ObservableProperty] public partial string? UserCollectionsUpdatedText { get; private set; }
+
+    /// <summary>Why the last fetch failed; cleared by a later success.</summary>
+    [ObservableProperty] public partial string? UserCollectionsErrorText { get; private set; }
 
     /// <summary>The open collection's items in collection order.</summary>
     [ObservableProperty]
@@ -85,28 +124,8 @@ public partial class WorkshopCollectionsViewModel : WorkshopSectionViewModel
     /// <summary>Steam actions may start: a collection is open, none runs, and no game from this launcher does.</summary>
     public override bool CanRunActions => HasCollection && base.CanRunActions;
 
-    /// <summary>Re-reads the open collection's subscription states; for the section being shown.</summary>
-    internal async Task ShowAsync()
-    {
-        if (_collection is null)
-        {
-            return;
-        }
-
-        var version = ++_loadVersion;
-        IsLoading = true;
-        try
-        {
-            await MergeAsync(version);
-        }
-        finally
-        {
-            if (version == _loadVersion)
-            {
-                IsLoading = false;
-            }
-        }
-    }
+    /// <summary>For the section being shown: the account's Steam collections (asked once per session), and the open collection's subscription states again.</summary>
+    internal Task ShowAsync() => Task.WhenAll(ShowUserCollectionsAsync(), ShowCollectionAsync());
 
     /// <summary>Opens the open collection again from the Web API.</summary>
     internal Task RefreshAsync() => _collection is { } collection ? LoadCollectionAsync(collection.Id) : Task.CompletedTask;
@@ -114,6 +133,8 @@ public partial class WorkshopCollectionsViewModel : WorkshopSectionViewModel
     internal override void RenderTexts()
     {
         base.RenderTexts();
+        _userUpdated.Render();
+        _userError.Render();
         OnPropertyChanged(nameof(LinkErrorText));
     }
 
@@ -124,6 +145,14 @@ public partial class WorkshopCollectionsViewModel : WorkshopSectionViewModel
 
     [RelayCommand]
     private Task OpenRememberedAsync(RememberedWorkshopCollectionRow row) => LoadCollectionAsync(row.Id);
+
+    [RelayCommand]
+    private Task OpenUserCollectionAsync(WorkshopUserCollectionRow row) => LoadCollectionAsync(row.Id);
+
+    private bool CanRefreshUserCollections() => Page.Install is not null && !Page.IsGameRunning && !IsActionRunning && !IsFetchingUserCollections;
+
+    [RelayCommand(CanExecute = nameof(CanRefreshUserCollections))]
+    private Task RefreshUserCollectionsAsync() => FetchUserCollectionsAsync();
 
     [RelayCommand]
     private void Forget(RememberedWorkshopCollectionRow row)
@@ -233,11 +262,12 @@ public partial class WorkshopCollectionsViewModel : WorkshopSectionViewModel
         ShownStatus.Show(() => string.Format(CultureInfo.CurrentCulture, UiText.WorkshopCollections_Generated, name, count));
 
         // The items' usage by launcher collections changed.
-        await ShowAsync();
+        await ShowCollectionAsync();
     }
 
     protected override void NotifyActionCommands()
     {
+        RefreshUserCollectionsCommand.NotifyCanExecuteChanged();
         SubscribeMissingCommand.NotifyCanExecuteChanged();
         UnsubscribeAllCommand.NotifyCanExecuteChanged();
         UpdateOutdatedCommand.NotifyCanExecuteChanged();
@@ -289,6 +319,28 @@ public partial class WorkshopCollectionsViewModel : WorkshopSectionViewModel
         }
     }
 
+    private async Task ShowCollectionAsync()
+    {
+        if (_collection is null)
+        {
+            return;
+        }
+
+        var version = ++_loadVersion;
+        IsLoading = true;
+        try
+        {
+            await MergeAsync(version);
+        }
+        finally
+        {
+            if (version == _loadVersion)
+            {
+                IsLoading = false;
+            }
+        }
+    }
+
     private async Task MergeAsync(int version)
     {
         if (_collection is not { } collection || Page.Install is not { } install)
@@ -321,7 +373,73 @@ public partial class WorkshopCollectionsViewModel : WorkshopSectionViewModel
     }
 
     private Task RunAsync(WorkshopAction action, IEnumerable<WorkshopItemRow> rows) =>
-        RunActionAsync(action, WorkshopActionFlow.ActionItems(rows), () => Rows, ShowAsync);
+        RunActionAsync(action, WorkshopActionFlow.ActionItems(rows), () => Rows, ShowCollectionAsync);
+
+    private async Task ShowUserCollectionsAsync()
+    {
+        if (_userCollectionsFetched)
+        {
+            return;
+        }
+
+        var account = await Service.GetCurrentAccountAsync();
+        if (_userCollectionsFetched)
+        {
+            return;
+        }
+
+        SetUserCollections(account.IsSuccess ? _userCache.For(account.Value.AccountId) : null);
+        if (CanRefreshUserCollections())
+        {
+            await FetchUserCollectionsAsync();
+        }
+    }
+
+    private async Task FetchUserCollectionsAsync()
+    {
+        if (!CanRefreshUserCollections() || Page.Install is not { } install)
+        {
+            return;
+        }
+
+        _userCollectionsFetched = true;
+        IsFetchingUserCollections = true;
+        try
+        {
+            var result = await Runner.ListCollectionsAsync(install.RootPath);
+            if (result.IsSuccess)
+            {
+                _userError.Clear();
+                SetUserCollections(_userCache.Save(result.Value));
+            }
+            else
+            {
+                // Steam was never reached, so the next show may still ask on its own.
+                _userCollectionsFetched = result.Error.Code != ErrorCode.WorkshopSteamNotRunning;
+                _userError.Show(result.Error);
+            }
+        }
+        finally
+        {
+            IsFetchingUserCollections = false;
+        }
+    }
+
+    private void SetUserCollections(SavedWorkshopUserCollections? collections)
+    {
+        _userCollections = collections;
+        if (collections is null)
+        {
+            _userUpdated.Clear();
+        }
+        else
+        {
+            var fetchedAt = collections.FetchedAt.LocalDateTime.ToString("g", CultureInfo.CurrentCulture);
+            _userUpdated.Show(() => string.Format(CultureInfo.CurrentCulture, UiText.WorkshopCollections_UpdatedFormat, fetchedAt));
+        }
+
+        RefreshUserRows();
+    }
 
     // The collection's own details fill in a title the subscription list hasn't fetched.
     private static WorkshopItem ItemOf(WorkshopCollectionItem entry, IReadOnlyDictionary<ulong, WorkshopItem> subscribed) =>
@@ -352,6 +470,7 @@ public partial class WorkshopCollectionsViewModel : WorkshopSectionViewModel
         OnPropertyChanged(nameof(CanRunActions));
         OpenCollectionInSteamCommand.NotifyCanExecuteChanged();
         RefreshRemembered();
+        RefreshUserRows();
     }
 
     private void SetRows(IReadOnlyList<WorkshopItem> items)
@@ -366,4 +485,16 @@ public partial class WorkshopCollectionsViewModel : WorkshopSectionViewModel
             .. _history.Items.Select(saved => new RememberedWorkshopCollectionRow(
                 saved.Id, saved.Title ?? saved.Id.ToString(CultureInfo.InvariantCulture), saved.Id == _collection?.Id)),
         ];
+
+    private void RefreshUserRows()
+    {
+        Favorited = UserRows(_userCollections?.Collections.Favorited ?? []);
+        Published = UserRows(_userCollections?.Collections.Published ?? []);
+    }
+
+    private List<WorkshopUserCollectionRow> UserRows(IReadOnlyList<WorkshopCollectionSummary> collections) =>
+    [
+        .. collections.Select(collection => new WorkshopUserCollectionRow(
+            collection.Id, collection.Title ?? collection.Id.ToString(CultureInfo.InvariantCulture), collection.ChildCount, collection.Id == _collection?.Id)),
+    ];
 }

@@ -37,6 +37,7 @@ public static class ErrorMessages
             ErrorCode.WorkshopHelperStartFailed => Format(UiText.Error_WorkshopHelperStartFailed, path),
             ErrorCode.WorkshopHelperFailed => Format(UiText.Error_WorkshopHelperFailed, Detail(error, "reason")),
             ErrorCode.WorkshopHelperTimedOut => Format(UiText.Error_WorkshopHelperTimedOut, Detail(error, "seconds")),
+            ErrorCode.WorkshopCollectionsQueryFailed => Format(UiText.Error_WorkshopCollectionsQueryFailed, Detail(error, "reason")),
             ErrorCode.InstallFilesMissing => Format(UiText.Error_InstallFilesMissing, path),
             ErrorCode.InstallInvalidPath => UiText.Error_InstallInvalidPath,
             ErrorCode.InstallPathNotFound => Format(UiText.Error_InstallPathNotFound, path),

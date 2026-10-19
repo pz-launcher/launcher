@@ -350,6 +350,9 @@
   <data name="Error_WorkshopHelperTimedOut" xml:space="preserve">
     <value>Steam 在 {0} 秒內沒有回報任何進度，工作坊操作已停止。請稍後再試一次。</value>
   </data>
+  <data name="Error_WorkshopCollectionsQueryFailed" xml:space="preserve">
+    <value>Steam 無法列出你的工作坊合輯（{0}）。請稍後再試一次。</value>
+  </data>
   <data name="Error_FolderNotLocal" xml:space="preserve">
     <value>{0} 不是這台電腦上的資料夾，啟動器無法開啟它。請選擇本機資料夾。</value>
   </data>
@@ -1096,6 +1099,24 @@
   </data>
   <data name="WorkshopCollections_Forget" xml:space="preserve">
     <value>從清單中移除</value>
+  </data>
+  <data name="WorkshopCollections_Favorited" xml:space="preserve">
+    <value>收藏的合輯</value>
+  </data>
+  <data name="WorkshopCollections_FavoritedEmpty" xml:space="preserve">
+    <value>你還沒有在 Steam 上收藏本遊戲的合輯。</value>
+  </data>
+  <data name="WorkshopCollections_Published" xml:space="preserve">
+    <value>我的合輯</value>
+  </data>
+  <data name="WorkshopCollections_PublishedEmpty" xml:space="preserve">
+    <value>你還沒有在 Steam 上發布本遊戲的合輯。</value>
+  </data>
+  <data name="WorkshopCollections_RefreshHint" xml:space="preserve">
+    <value>向 Steam 查詢你收藏和發布的合輯。查詢期間，Steam 會短暫顯示你正在玩 Project Zomboid。</value>
+  </data>
+  <data name="WorkshopCollections_UpdatedFormat" xml:space="preserve">
+    <value>上次更新：{0}</value>
   </data>
   <data name="WorkshopCollections_NoneOpen" xml:space="preserve">
     <value>貼上 Steam 工作坊合輯的連結或 ID，查看其中的項目和訂閱情況。</value>

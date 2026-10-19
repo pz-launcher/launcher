@@ -39,6 +39,8 @@ public sealed record UserPreferences(AppLanguage? Language, AppTheme? Theme, Win
     /// <summary>Most recent first; empty when none are saved.</summary>
     public IReadOnlyList<SavedWorkshopCollection> WorkshopCollections { get; init; } = [];
 
+    public SavedWorkshopUserCollections? WorkshopUserCollections { get; init; }
+
     // Compares the collections by content; the generated equality would compare references.
     public bool Equals(UserPreferences? other) =>
         other is not null
@@ -49,6 +51,7 @@ public sealed record UserPreferences(AppLanguage? Language, AppTheme? Theme, Win
         && AutoCheckUpdates == other.AutoCheckUpdates
         && Proxy == other.Proxy
         && SteamHookReminder == other.SteamHookReminder
+        && WorkshopUserCollections == other.WorkshopUserCollections
         && ManualJavaHomes.SequenceEqual(other.ManualJavaHomes, StringComparer.Ordinal)
         && WorkshopCollections.SequenceEqual(other.WorkshopCollections)
         && InstallOverrides.Count == other.InstallOverrides.Count
@@ -60,7 +63,7 @@ public sealed record UserPreferences(AppLanguage? Language, AppTheme? Theme, Win
 
     public override int GetHashCode() =>
         HashCode.Combine(
-            HashCode.Combine(Language, Theme, Window, UpdateSource, AutoCheckUpdates, Proxy, SteamHookReminder),
+            HashCode.Combine(Language, Theme, Window, UpdateSource, AutoCheckUpdates, Proxy, SteamHookReminder, WorkshopUserCollections),
             ManualJavaHomes.Count,
             WorkshopCollections.Count,
             InstallOverrides.Count,
@@ -108,4 +111,7 @@ public interface IPreferenceStore
 
     /// <inheritdoc cref="SaveLanguageAsync"/>
     Task SaveWorkshopCollectionsAsync(IReadOnlyList<SavedWorkshopCollection> collections, CancellationToken ct = default);
+
+    /// <inheritdoc cref="SaveLanguageAsync"/>
+    Task SaveWorkshopUserCollectionsAsync(SavedWorkshopUserCollections collections, CancellationToken ct = default);
 }

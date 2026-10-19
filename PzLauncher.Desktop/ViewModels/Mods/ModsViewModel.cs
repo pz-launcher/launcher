@@ -47,6 +47,7 @@ public partial class ModsViewModel : ViewModelBase
         IWorkshopActionRunner workshopActions,
         IUrlLauncher urls,
         WorkshopCollectionHistory workshopHistory,
+        WorkshopUserCollectionsCache workshopUserCollections,
         ILocalizationService localization)
     {
         _installs = installs;
@@ -58,7 +59,7 @@ public partial class ModsViewModel : ViewModelBase
         Mods = new InstalledModsViewModel(this);
         Collections = new ModCollectionsViewModel(this, defaults, applier, dialogs, clipboard);
         WorkshopSubscriptions = new WorkshopSubscriptionsViewModel(this, workshop, workshopActions, dialogs, clipboard, urls);
-        WorkshopCollections = new WorkshopCollectionsViewModel(this, workshop, workshopActions, dialogs, urls, workshopHistory);
+        WorkshopCollections = new WorkshopCollectionsViewModel(this, workshop, workshopActions, dialogs, urls, workshopHistory, workshopUserCollections);
         _error = new LocalizedText(text => ErrorText = text);
 
         // Never unsubscribed: these are app-lifetime singletons.

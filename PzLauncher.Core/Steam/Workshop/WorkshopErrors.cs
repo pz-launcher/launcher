@@ -73,4 +73,10 @@ internal static class WorkshopErrors
         {
             Details = new Dictionary<string, string> { ["seconds"] = timeout.TotalSeconds.ToString("0", CultureInfo.InvariantCulture) },
         };
+
+    public static Error CollectionsQueryFailed(string reason) =>
+        new(ErrorCode.WorkshopCollectionsQueryFailed, $"Steam could not list the account's Workshop collections ({reason})", ErrorKind.External)
+        {
+            Details = ErrorDetails.Reason(reason),
+        };
 }

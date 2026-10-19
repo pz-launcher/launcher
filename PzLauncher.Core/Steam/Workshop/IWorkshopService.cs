@@ -18,4 +18,7 @@ public interface IWorkshopService
     Task<Result<IReadOnlyList<WorkshopItemDetails>>> CheckUpdatesAsync(IReadOnlyList<ulong> ids, CancellationToken ct = default);
 
     Task<Result<WorkshopCollection>> GetCollectionAsync(ulong id, CancellationToken ct = default);
+
+    /// <summary>The account Steam signs in with, from Steam's local files.</summary>
+    Task<Result<SteamAccount>> GetCurrentAccountAsync(CancellationToken ct = default);
 }

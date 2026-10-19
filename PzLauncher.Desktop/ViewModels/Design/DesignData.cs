@@ -177,13 +177,14 @@ public static class DesignData
     {
         var vm = new ModsViewModel(
             Installs, ModCollectionsSample, InstallOverrides, ModCollectionDefaults, Applier, new NoDialogs(), new NoClipboard(), RunState, OrderWriter,
-            new SampleWorkshop(), new SampleWorkshopActions(), new NoUrlLauncher(), CreateWorkshopHistory(), Localization);
+            new SampleWorkshop(), new SampleWorkshopActions(), new NoUrlLauncher(), CreateWorkshopHistory(), CreateWorkshopUserCollections(), Localization);
         vm.ActivateCommand.Execute(null);
 
         // Completes synchronously: the sample answers at once. One outdated item shows as downloading.
         _ = vm.WorkshopSubscriptions.LoadAsync();
         vm.WorkshopSubscriptions.VisibleRows.FirstOrDefault(row => row.NeedsUpdate)?.ShowDownload(36 * 1024 * 1024, 90 * 1024 * 1024);
         vm.WorkshopCollections.OpenRememberedCommand.Execute(vm.WorkshopCollections.Remembered[0]);
+        _ = vm.WorkshopCollections.ShowAsync();
         return vm;
     }
 
@@ -192,6 +193,8 @@ public static class DesignData
         {
             WorkshopCollections = [new SavedWorkshopCollection(1000900, "Example Collection"), new SavedWorkshopCollection(1000901, null)],
         });
+
+    private static WorkshopUserCollectionsCache CreateWorkshopUserCollections() => new(Preferences, new UserPreferences(null, null, null), TimeProvider.System);
 
     private static WorkshopModPickViewModel CreateWorkshopModPick()
     {
@@ -434,6 +437,9 @@ public static class DesignData
                     new WorkshopCollectionItem(1000108, null),
                 ]));
 
+        public Task<Result<SteamAccount>> GetCurrentAccountAsync(CancellationToken ct = default) =>
+            Task.FromResult<Result<SteamAccount>>(new SteamAccount(12345678, "Survivor"));
+
         private static WorkshopItem Item(ulong id, string? title, WorkshopItemState state, string[] modIds, string[] collections)
         {
             var updated = new DateTimeOffset(2026, 9, 1, 18, 30, 0, TimeSpan.Zero).AddDays(id % 30);
@@ -467,6 +473,12 @@ public static class DesignData
 
             return new TaskCompletionSource<Result<WorkshopActionOutcome>>().Task;
         }
+
+        public Task<Result<WorkshopUserCollections>> ListCollectionsAsync(string installRoot, CancellationToken ct = default) =>
+            Task.FromResult<Result<WorkshopUserCollections>>(new WorkshopUserCollections(
+                12345678,
+                [new WorkshopCollectionSummary(1000201, "Example Survival Pack", 42), new WorkshopCollectionSummary(1000202, null, 7)],
+                [new WorkshopCollectionSummary(1000203, "Example Server Mods", 18)]));
     }
 
     private sealed class SampleModCollectionDefaults : IModCollectionDefaultsService
@@ -555,6 +567,8 @@ public static class DesignData
         public Task SaveSteamHookReminderAsync(bool remind, CancellationToken ct = default) => Task.CompletedTask;
 
         public Task SaveWorkshopCollectionsAsync(IReadOnlyList<SavedWorkshopCollection> collections, CancellationToken ct = default) => Task.CompletedTask;
+
+        public Task SaveWorkshopUserCollectionsAsync(SavedWorkshopUserCollections collections, CancellationToken ct = default) => Task.CompletedTask;
     }
 
     // Steam opens a launcher in another folder, so the account, the switch and the other path all show.

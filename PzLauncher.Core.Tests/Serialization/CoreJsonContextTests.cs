@@ -554,6 +554,24 @@ public class CoreJsonContextTests
     }
 
     [Fact]
+    public void WorkshopUserCollections_RoundTrips()
+    {
+        var original = new WorkshopUserCollections(
+            12345678,
+            [new WorkshopCollectionSummary(3623026433, "Example pack", 201), new WorkshopCollectionSummary(18446744073709551615, null, 0)],
+            [new WorkshopCollectionSummary(3815132834, "Mine", 214)]);
+
+        var json = JsonSerializer.Serialize(original, CoreJsonContext.Default.WorkshopUserCollections);
+        var copy = JsonSerializer.Deserialize(json, CoreJsonContext.Default.WorkshopUserCollections);
+
+        Assert.Contains("\"childCount\":201", json, StringComparison.Ordinal);
+        Assert.NotNull(copy);
+        Assert.Equal(original.AccountId, copy.AccountId);
+        Assert.Equal(original.Favorited, copy.Favorited);
+        Assert.Equal(original.Published, copy.Published);
+    }
+
+    [Fact]
     public void WorkshopActionEvent_RoundTrips_WithItsKind()
     {
         WorkshopActionEvent[] events =
