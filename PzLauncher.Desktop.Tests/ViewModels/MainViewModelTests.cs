@@ -42,7 +42,8 @@ public class MainViewModelTests : UiTextCultureTest
             new HomeViewModel(
                 installs, launcher, overrides, dialogs, zombieBuddy, channels, new FakeZombieBuddyModsService(),
                 collections, defaults, applier, orderWriter, TestWorkshop.LaunchCheck(new FakeWorkshopService()),
-                new FakeWorkshopService(), new FakeWorkshopActionRunner(), runState),
+                new FakeWorkshopService(), new FakeWorkshopActionRunner(), runState, new AfterLaunchSettings(store, new(null, null, null)),
+                new FakeLauncherWindow(), new FakeAppLifetime(), new ManualTimeProvider()),
             installs,
             new ModsViewModel(
                 installs, collections, overrides, defaults, applier, dialogs, new FakeClipboardService(), runState, orderWriter,
@@ -52,6 +53,7 @@ public class MainViewModelTests : UiTextCultureTest
                 new FakeThemeService(AppTheme.Light),
                 store,
                 new FakeWindowPlacementService(),
+                new AfterLaunchSettings(store, new(null, null, null)),
                 java,
                 new UpdateSettingsViewModel(updates, Localization),
                 TestProxy.ViewModel(Localization, store),

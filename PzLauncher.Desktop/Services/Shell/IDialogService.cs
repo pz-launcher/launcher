@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using PzLauncher.Desktop.Services.Launch;
 using PzLauncher.Desktop.ViewModels.Mods;
 using PzLauncher.Desktop.ViewModels.Mods.Workshop;
 using PzLauncher.Desktop.ViewModels.ZombieBuddy;
@@ -29,4 +30,7 @@ public interface IDialogService
 
     /// <summary><c>true</c> only for the accept button; the choices stay on the view model.</summary>
     Task<bool> PickWorkshopModsAsync(WorkshopModPickViewModel pick);
+
+    /// <summary>Asks what the window does after a launch, <see cref="AfterLaunchAction.Keep"/> preselected; <c>null</c> when dismissed.</summary>
+    Task<AfterLaunchAction?> ChooseAfterLaunchAsync();
 }

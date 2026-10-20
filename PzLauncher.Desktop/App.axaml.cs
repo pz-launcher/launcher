@@ -4,6 +4,7 @@ using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
@@ -66,6 +67,8 @@ public partial class App : Application
             services.AddSingleton<IAppLifetime>(new AvaloniaAppLifetime(() => desktop.MainWindow));
             WindowPlacementPersistence? windowPlacement = null;
             services.AddSingleton<IWindowPlacementService>(new WindowPlacementService(() => windowPlacement));
+            LauncherWindow? launcherWindow = null;
+            services.AddSingleton<ILauncherWindow>(new LauncherWindowService(() => launcherWindow));
             services.AddSingleton<ISecretProtector>(sp => sp.GetRequiredService<IPlatformEnvironment>().Os switch
             {
                 PlatformKind.Windows => new WindowsDpapiSecretProtector(),
@@ -86,6 +89,7 @@ public partial class App : Application
             services.AddSingleton<WorkshopTitles>();
             services.AddSingleton<WorkshopLaunchCheck>();
             services.AddSingleton<GameRunState>();
+            services.AddSingleton<AfterLaunchSettings>();
             services.AddSingleton<UpdateCoordinator>();
             // The apphost's path; Steam starts the launcher through it.
             var launcherExe = Environment.ProcessPath ?? Path.Combine(AppContext.BaseDirectory, "PzLauncher.exe");
@@ -139,10 +143,15 @@ public partial class App : Application
                 updates.InstallPendingOnCloseAsync,
                 provider.GetRequiredService<ILogger<WindowPlacementPersistence>>());
             desktop.MainWindow = mainWindow;
+            var window = LauncherWindow.Attach(mainWindow);
+            launcherWindow = window;
             if (Instance is { } instance)
             {
-                WindowActivation.Attach(mainWindow, instance);
+                // Raised on a thread-pool thread.
+                instance.ActivationRequested += (_, _) => Dispatcher.UIThread.Post(window.Restore);
             }
+
+            AddTrayIcon(mainWindow, window, provider.GetRequiredService<IAppLifetime>(), localization);
 
             // Once the window shows, so neither delays the first frame; failures are only logged.
             var steam = provider.GetRequiredService<SteamSettingsViewModel>();
@@ -155,6 +164,34 @@ public partial class App : Application
         }
 
         base.OnFrameworkInitializationCompleted();
+    }
+
+    // Shown whatever the after-launch choice: it is how a window hidden after a launch comes back.
+    private void AddTrayIcon(Window mainWindow, LauncherWindow window, IAppLifetime lifetime, ILocalizationService localization)
+    {
+        var show = new NativeMenuItem();
+        show.Click += (_, _) => window.Restore();
+        var exit = new NativeMenuItem();
+        exit.Click += (_, _) => lifetime.Close();
+        var tray = new TrayIcon
+        {
+            Icon = mainWindow.Icon,
+            ToolTipText = "PzLauncher",
+            Menu = new NativeMenu { Items = { show, exit } },
+        };
+        tray.Clicked += (_, _) => window.Restore();
+
+        void RenderTexts()
+        {
+            show.Header = UiText.Tray_Show;
+            exit.Header = UiText.Tray_Exit;
+        }
+
+        RenderTexts();
+
+        // Never unsubscribed: the tray icon and the localization service live as long as the app.
+        localization.LanguageChanged += (_, _) => RenderTexts();
+        TrayIcon.SetIcons(this, [tray]);
     }
 
     // Views read text once via {x:Static}, so a language switch rebuilds the window's content around the same view models.

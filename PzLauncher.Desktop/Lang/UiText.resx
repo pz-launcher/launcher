@@ -1316,4 +1316,40 @@
   <data name="UpdateSource_Gitee" xml:space="preserve">
     <value>Gitee</value>
   </data>
+  <data name="Settings_General" xml:space="preserve">
+    <value>General</value>
+  </data>
+  <data name="Settings_AfterLaunch" xml:space="preserve">
+    <value>After the game starts</value>
+  </data>
+  <data name="Settings_AfterLaunchHint" xml:space="preserve">
+    <value>The launcher comes back when the game exits. With “Close the launcher”, it closes only once the game has started properly, so a failed start is still reported.</value>
+  </data>
+  <data name="AfterLaunchAction_Keep" xml:space="preserve">
+    <value>Keep the launcher open</value>
+  </data>
+  <data name="AfterLaunchAction_Minimize" xml:space="preserve">
+    <value>Minimize the launcher</value>
+  </data>
+  <data name="AfterLaunchAction_MinimizeToTray" xml:space="preserve">
+    <value>Minimize to the system tray</value>
+  </data>
+  <data name="AfterLaunchAction_Close" xml:space="preserve">
+    <value>Close the launcher</value>
+  </data>
+  <data name="AfterLaunch_PromptTitle" xml:space="preserve">
+    <value>After the game starts</value>
+  </data>
+  <data name="AfterLaunch_PromptMessage" xml:space="preserve">
+    <value>What should the launcher do once the game has started?</value>
+  </data>
+  <data name="AfterLaunch_PromptHint" xml:space="preserve">
+    <value>You can change this later in Settings → General.</value>
+  </data>
+  <data name="Tray_Show" xml:space="preserve">
+    <value>Show launcher</value>
+  </data>
+  <data name="Tray_Exit" xml:space="preserve">
+    <value>Exit launcher</value>
+  </data>
 </root>

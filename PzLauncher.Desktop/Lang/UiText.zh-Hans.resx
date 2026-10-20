@@ -1316,4 +1316,40 @@
   <data name="UpdateSource_Gitee" xml:space="preserve">
     <value>Gitee</value>
   </data>
+  <data name="Settings_General" xml:space="preserve">
+    <value>常规</value>
+  </data>
+  <data name="Settings_AfterLaunch" xml:space="preserve">
+    <value>游戏启动后</value>
+  </data>
+  <data name="Settings_AfterLaunchHint" xml:space="preserve">
+    <value>游戏退出后启动器会重新出现。选择“关闭启动器”时，要等游戏顺利启动后才会关闭，以便仍能报告启动失败。</value>
+  </data>
+  <data name="AfterLaunchAction_Keep" xml:space="preserve">
+    <value>保持启动器打开</value>
+  </data>
+  <data name="AfterLaunchAction_Minimize" xml:space="preserve">
+    <value>最小化启动器</value>
+  </data>
+  <data name="AfterLaunchAction_MinimizeToTray" xml:space="preserve">
+    <value>最小化到系统托盘</value>
+  </data>
+  <data name="AfterLaunchAction_Close" xml:space="preserve">
+    <value>关闭启动器</value>
+  </data>
+  <data name="AfterLaunch_PromptTitle" xml:space="preserve">
+    <value>游戏启动后</value>
+  </data>
+  <data name="AfterLaunch_PromptMessage" xml:space="preserve">
+    <value>游戏启动后，启动器要做什么？</value>
+  </data>
+  <data name="AfterLaunch_PromptHint" xml:space="preserve">
+    <value>之后可以在“设置 → 常规”里更改。</value>
+  </data>
+  <data name="Tray_Show" xml:space="preserve">
+    <value>显示启动器</value>
+  </data>
+  <data name="Tray_Exit" xml:space="preserve">
+    <value>退出启动器</value>
+  </data>
 </root>

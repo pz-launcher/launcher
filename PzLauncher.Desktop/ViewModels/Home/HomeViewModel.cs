@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -43,6 +44,10 @@ public partial class HomeViewModel : ViewModelBase
     private readonly IWorkshopService _workshop;
     private readonly IWorkshopActionRunner _workshopActions;
     private readonly GameRunState _runState;
+    private readonly AfterLaunchSettings _afterLaunch;
+    private readonly ILauncherWindow _window;
+    private readonly IAppLifetime _lifetime;
+    private readonly TimeProvider _time;
 
     private CollectionChoice _selectedCollection = CollectionChoice.None;
     private bool _activated;
@@ -65,7 +70,11 @@ public partial class HomeViewModel : ViewModelBase
         WorkshopLaunchCheck workshopCheck,
         IWorkshopService workshop,
         IWorkshopActionRunner workshopActions,
-        GameRunState runState)
+        GameRunState runState,
+        AfterLaunchSettings afterLaunch,
+        ILauncherWindow window,
+        IAppLifetime lifetime,
+        TimeProvider time)
     {
         _installs = installs;
         _launcher = launcher;
@@ -82,6 +91,10 @@ public partial class HomeViewModel : ViewModelBase
         _workshop = workshop;
         _workshopActions = workshopActions;
         _runState = runState;
+        _afterLaunch = afterLaunch;
+        _window = window;
+        _lifetime = lifetime;
+        _time = time;
         CollectionChoices = [CollectionChoice.None];
 
         // Never unsubscribed: all of these are app-lifetime singletons.
@@ -170,6 +183,8 @@ public partial class HomeViewModel : ViewModelBase
             return;
         }
 
+        var afterLaunch = _afterLaunch.Action ?? await AskAfterLaunchAsync();
+
         // A reorder still waiting for its delay must be on disk before the default collection is applied.
         var flushed = await _orderWriter.FlushAsync();
         if (!flushed.IsSuccess)
@@ -223,20 +238,81 @@ public partial class HomeViewModel : ViewModelBase
         }
 
         _runState.IsGameRunning = true;
+        ApplyAfterLaunch(afterLaunch);
         Result exit;
+        var closing = false;
         try
         {
-            exit = await _launcher.WaitForExitAsync();
+            var exited = _launcher.WaitForExitAsync();
+            if (afterLaunch == AfterLaunchAction.Close && await RunsPastEarlyExitAsync(exited) && _window.IsHidden)
+            {
+                // Still awaits the exit: the run state stays set while the close flush runs, so no write touches the running game.
+                _lifetime.Close();
+                closing = true;
+            }
+
+            exit = await exited;
         }
         finally
         {
             _runState.IsGameRunning = false;
         }
 
+        if (closing)
+        {
+            return;
+        }
+
+        if (afterLaunch != AfterLaunchAction.Keep)
+        {
+            _window.Restore();
+        }
+
         if (!exit.IsSuccess)
         {
             await _dialogs.ShowErrorAsync(ErrorMessages.ToUserText(exit.Error));
         }
+    }
+
+    // Dismissed: this launch keeps the window as it is, and the next one asks again.
+    private async Task<AfterLaunchAction> AskAfterLaunchAsync()
+    {
+        if (await _dialogs.ChooseAfterLaunchAsync() is not { } chosen)
+        {
+            return AfterLaunchAction.Keep;
+        }
+
+        _afterLaunch.Action = chosen;
+        return chosen;
+    }
+
+    private void ApplyAfterLaunch(AfterLaunchAction action)
+    {
+        switch (action)
+        {
+            case AfterLaunchAction.Keep:
+                break;
+            case AfterLaunchAction.Minimize:
+                _window.Minimize();
+                break;
+            case AfterLaunchAction.MinimizeToTray:
+            case AfterLaunchAction.Close:
+                _window.HideToTray();
+                break;
+        }
+    }
+
+    // An exit within the window is a failed start the user must see, so the launcher only closes after it.
+    private async Task<bool> RunsPastEarlyExitAsync(Task<Result> exited)
+    {
+        using var stopDelay = new CancellationTokenSource();
+        var delay = Task.Delay(GameSession.EarlyExitWindow, _time, stopDelay.Token);
+        await Task.WhenAny(exited, delay);
+
+        // Not just "the delay won": the game may exit before this resumes on the UI thread.
+        var running = !exited.IsCompleted;
+        await stopDelay.CancelAsync();
+        return running;
     }
 
     // False when the user cancelled the launch. Runs before the apply, so a cancel leaves the enabled list as it was.

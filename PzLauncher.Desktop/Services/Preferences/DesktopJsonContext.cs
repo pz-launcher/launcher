@@ -30,6 +30,7 @@ internal sealed partial class DesktopJsonContext : JsonSerializerContext;
 /// <param name="WorkshopCollections">An array of <see cref="WorkshopEntryFile"/> objects; an element, so neither a non-array nor one bad entry makes the whole file unreadable.</param>
 /// <param name="WorkshopUserCollections">A <see cref="WorkshopUserCollectionsFile"/>; an element for the same reason as <paramref name="JavaRuntimes"/>.</param>
 /// <param name="WorkshopFavorites">A <see cref="WorkshopFavoritesFile"/>; an element for the same reason as <paramref name="JavaRuntimes"/>.</param>
+/// <param name="AfterLaunch"><see cref="AfterLaunchPreferences.PreferenceName"/>; an element for the same reason as <paramref name="JavaRuntimes"/>.</param>
 internal sealed record PreferencesFile(
     string? Language,
     string? Theme,
@@ -44,7 +45,8 @@ internal sealed record PreferencesFile(
     JsonElement? SteamHookReminder,
     JsonElement? WorkshopCollections,
     JsonElement? WorkshopUserCollections,
-    JsonElement? WorkshopFavorites);
+    JsonElement? WorkshopFavorites,
+    JsonElement? AfterLaunch);
 
 /// <summary>Nullable members, so a missing one is told apart from a zero.</summary>
 internal sealed record WindowFile(int? X, int? Y, double? Width, double? Height, bool? Maximized);

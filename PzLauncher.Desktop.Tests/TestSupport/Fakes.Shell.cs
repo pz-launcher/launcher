@@ -1,3 +1,4 @@
+using PzLauncher.Desktop.Services.Launch;
 using PzLauncher.Desktop.Services.Shell;
 using PzLauncher.Desktop.Themes;
 using PzLauncher.Desktop.ViewModels.Mods;
@@ -10,7 +11,7 @@ namespace PzLauncher.Desktop.Tests.TestSupport;
 /// The Workshop action dialog runs its action, as the real dialog does on open, unless <see cref="WorkshopActionHandler"/> says otherwise.
 /// The setup dialog returns <see cref="SetupResult"/>'s answer without running the operation unless the handler starts it.
 /// The mod pick dialog answers with <see cref="ModPickResult"/>, which may change the choices first.
-/// Prompts and confirms take their answers from the queues in order; an empty queue cancels.
+/// Prompts, confirms and the after-launch choice take their answers from the queues in order; an empty queue cancels.
 /// </summary>
 public sealed class FakeDialogService : IDialogService
 {
@@ -45,6 +46,11 @@ public sealed class FakeDialogService : IDialogService
     public List<WorkshopModPickViewModel> ModPicks { get; } = [];
 
     public Func<WorkshopModPickViewModel, bool> ModPickResult { get; set; } = _ => true;
+
+    public int AfterLaunchPrompts { get; private set; }
+
+    /// <summary>An empty queue dismisses.</summary>
+    public Queue<AfterLaunchAction> AfterLaunchAnswers { get; } = new();
 
     public event Action? Shown;
 
@@ -104,6 +110,13 @@ public sealed class FakeDialogService : IDialogService
         return Task.FromResult(ModPickResult(pick));
     }
 
+    public Task<AfterLaunchAction?> ChooseAfterLaunchAsync()
+    {
+        AfterLaunchPrompts++;
+        Shown?.Invoke();
+        return Task.FromResult<AfterLaunchAction?>(AfterLaunchAnswers.Count > 0 ? AfterLaunchAnswers.Dequeue() : null);
+    }
+
     /// <summary>Runs the operation as the real dialog does on open, then answers.</summary>
     public static Func<ZombieBuddySetupViewModel, Task<bool>> RunsSetup(bool launch = true) => async setup =>
     {
@@ -143,6 +156,28 @@ public sealed class FakeWindowPlacementService : IWindowPlacementService
     public int ResetCalls { get; private set; }
 
     public void ResetToDefault() => ResetCalls++;
+}
+
+/// <summary>Records each call by its <see cref="ILauncherWindow"/> member name.</summary>
+public sealed class FakeLauncherWindow : ILauncherWindow
+{
+    public List<string> Calls { get; } = [];
+
+    public bool IsHidden { get; private set; }
+
+    public void Minimize() => Calls.Add(nameof(Minimize));
+
+    public void HideToTray()
+    {
+        IsHidden = true;
+        Calls.Add(nameof(HideToTray));
+    }
+
+    public void Restore()
+    {
+        IsHidden = false;
+        Calls.Add(nameof(Restore));
+    }
 }
 
 public sealed class FakeAppLifetime : IAppLifetime

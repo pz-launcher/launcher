@@ -2,6 +2,7 @@ using PzLauncher.Core.Launch;
 using PzLauncher.Core.Mod.ZombieBuddy;
 using PzLauncher.Core.Update;
 using PzLauncher.Desktop.Localization;
+using PzLauncher.Desktop.Services.Launch;
 using PzLauncher.Desktop.Services.Preferences;
 using PzLauncher.Desktop.Services.Shell;
 using PzLauncher.Desktop.Themes;
@@ -121,6 +122,14 @@ public sealed class FakePreferenceStore : IPreferenceStore
     public Task SaveWorkshopFavoritesAsync(SavedWorkshopFavorites favorites, CancellationToken ct = default)
     {
         SavedWorkshopFavorites.Add(favorites);
+        return Task.CompletedTask;
+    }
+
+    public List<AfterLaunchAction> SavedAfterLaunch { get; } = [];
+
+    public Task SaveAfterLaunchAsync(AfterLaunchAction action, CancellationToken ct = default)
+    {
+        SavedAfterLaunch.Add(action);
         return Task.CompletedTask;
     }
 }

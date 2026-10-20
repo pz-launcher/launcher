@@ -15,6 +15,7 @@ using PzLauncher.Core.Net;
 using PzLauncher.Core.Steam.Workshop.Actions;
 using PzLauncher.Core.Update;
 using PzLauncher.Desktop.Localization;
+using PzLauncher.Desktop.Services.Launch;
 using PzLauncher.Desktop.Services.Shell;
 using PzLauncher.Desktop.Themes;
 
@@ -22,7 +23,7 @@ namespace PzLauncher.Desktop.Services.Preferences;
 
 public sealed partial class JsonPreferenceStore(string filePath, ILogger logger, ISecretProtector secrets) : IPreferenceStore
 {
-    private static readonly PreferencesFile Empty = new(null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+    private static readonly PreferencesFile Empty = new(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
 
     private delegate bool EntryReader<T>(JsonElement element, [MaybeNullWhen(false)] out T value);
 
@@ -99,6 +100,14 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger,
             LogInvalidSteamHookReminder(logger, filePath);
         }
 
+        var afterLaunch = file.AfterLaunch is { ValueKind: JsonValueKind.String } afterLaunchName
+            ? AfterLaunchPreferences.FromPreferenceName(afterLaunchName.GetString())
+            : null;
+        if (afterLaunch is null && file.AfterLaunch is { ValueKind: not JsonValueKind.Null })
+        {
+            LogInvalidAfterLaunch(logger, filePath);
+        }
+
         var workshopCollections = ToWorkshopEntries(file.WorkshopCollections, out var workshopCollectionsValid);
         if (!workshopCollectionsValid)
         {
@@ -130,6 +139,7 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger,
             WorkshopCollections = workshopCollections,
             WorkshopUserCollections = userCollections,
             WorkshopFavorites = favorites,
+            AfterLaunch = afterLaunch,
         };
     }
 
@@ -193,6 +203,12 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger,
     {
         var entry = JsonSerializer.SerializeToElement(remind, DesktopJsonContext.Default.Boolean);
         return SaveAsync(file => file with { SteamHookReminder = entry }, ct);
+    }
+
+    public Task SaveAfterLaunchAsync(AfterLaunchAction action, CancellationToken ct = default)
+    {
+        var entry = JsonSerializer.SerializeToElement(action.PreferenceName(), DesktopJsonContext.Default.String);
+        return SaveAsync(file => file with { AfterLaunch = entry }, ct);
     }
 
     public Task SaveWorkshopCollectionsAsync(IReadOnlyList<SavedWorkshopEntry> collections, CancellationToken ct = default)
@@ -587,6 +603,9 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger,
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Steam hook reminder preference {Path} is not true or false; reminding")]
     private static partial void LogInvalidSteamHookReminder(ILogger logger, string path);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "After-launch preference {Path} holds an unsupported value; asking at the next launch")]
+    private static partial void LogInvalidAfterLaunch(ILogger logger, string path);
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Workshop collection list preference {Path} holds entries that aren't valid; ignoring them")]
     private static partial void LogInvalidWorkshopCollections(ILogger logger, string path);

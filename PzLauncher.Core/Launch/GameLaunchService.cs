@@ -18,9 +18,6 @@ internal sealed partial class GameLaunchService(
 {
     private const long BytesPerMb = 1024 * 1024;
 
-    // A failed JVM start (bad option, missing GC) exits within a few seconds; later exits are the game's own.
-    private static readonly TimeSpan EarlyExitWindow = TimeSpan.FromSeconds(30);
-
     private readonly SemaphoreSlim _launchGate = new(1, 1);
 
     // Completes once the tracked game has exited and its process handle is released.
@@ -248,7 +245,7 @@ internal sealed partial class GameLaunchService(
             return LaunchErrors.GameCrashed(crashLog, process.ExitCode);
         }
 
-        if (process.ExitCode != 0 && time.GetUtcNow() - startedAt < EarlyExitWindow)
+        if (process.ExitCode != 0 && time.GetUtcNow() - startedAt < GameSession.EarlyExitWindow)
         {
             return LaunchErrors.GameExitedEarly(process.ExitCode, string.Join('\n', process.ErrorOutputTail));
         }

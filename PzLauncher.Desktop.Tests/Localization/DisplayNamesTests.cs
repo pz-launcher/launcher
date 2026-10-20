@@ -9,6 +9,7 @@ using PzLauncher.Core.Steam.Workshop;
 using PzLauncher.Core.Steam.Workshop.Actions;
 using PzLauncher.Core.Update;
 using PzLauncher.Desktop.Localization;
+using PzLauncher.Desktop.Services.Launch;
 using PzLauncher.Desktop.Tests.TestSupport;
 
 namespace PzLauncher.Desktop.Tests.Localization;
@@ -30,6 +31,7 @@ public class DisplayNamesTests : UiTextCultureTest
         AssertDistinctNonEmpty([.. Enum.GetValues<ZombieBuddyStep>().Select(DisplayNames.Of)]);
         AssertDistinctNonEmpty([.. Enum.GetValues<UpdateSource>().Select(DisplayNames.Of)]);
         AssertDistinctNonEmpty([.. Enum.GetValues<ProxyMode>().Select(DisplayNames.Of)]);
+        AssertDistinctNonEmpty([.. Enum.GetValues<AfterLaunchAction>().Select(DisplayNames.Of)]);
         AssertDistinctNonEmpty([.. Enum.GetValues<WorkshopItemState>().Select(DisplayNames.Of)]);
         AssertDistinctNonEmpty([.. Enum.GetValues<WorkshopItemFailure>().Select(DisplayNames.Of)]);
     }

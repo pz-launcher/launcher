@@ -1,3 +1,5 @@
+using PzLauncher.Desktop.Services.Launch;
+using PzLauncher.Desktop.Services.Preferences;
 using PzLauncher.Desktop.Tests.TestSupport;
 using PzLauncher.Desktop.Themes;
 using PzLauncher.Desktop.ViewModels.Settings;
@@ -13,11 +15,12 @@ public class SettingsViewModelTests : UiTextCultureTest
     private readonly FakeJavaDiscoveryService _java = new();
     private readonly FakeSteamLaunchHookService _steam = new();
 
-    private SettingsViewModel CreateViewModel(FakeThemeService theme) =>
+    private SettingsViewModel CreateViewModel(FakeThemeService theme, AfterLaunchAction? afterLaunch = null) =>
         new(
             theme,
             _store,
             _windowPlacement,
+            new AfterLaunchSettings(_store, new UserPreferences(null, null, null) { AfterLaunch = afterLaunch }),
             TestJava.ViewModel(Localization, _java, _store),
             new UpdateSettingsViewModel(TestUpdates.Coordinator(new FakeUpdateService(), _store), Localization),
             TestProxy.ViewModel(Localization, _store),
@@ -33,7 +36,7 @@ public class SettingsViewModelTests : UiTextCultureTest
         var vm = CreateViewModel(theme);
 
         Assert.Equal(current, vm.Theme);
-        Assert.Equal(SettingsSection.Appearance, vm.Section);
+        Assert.Equal(SettingsSection.General, vm.Section);
         Assert.Empty(theme.Applied);
         Assert.Empty(_store.SavedThemes);
         Assert.Equal(0, _java.ScanCalls);
@@ -56,6 +59,28 @@ public class SettingsViewModelTests : UiTextCultureTest
         Assert.Equal(expected, theme.Applied);
         Assert.Equal(expected, _store.SavedThemes);
         Assert.Empty(_store.SavedLanguages);
+    }
+
+    [Fact]
+    public void AfterLaunch_NothingSaved_IsUnchosen()
+    {
+        var vm = CreateViewModel(new FakeThemeService(AppTheme.Light));
+
+        Assert.Null(vm.AfterLaunch.Action);
+    }
+
+    [Fact]
+    public void AfterLaunch_Chosen_SavesEachChangeButNotTheLoadedValue()
+    {
+        var vm = CreateViewModel(new FakeThemeService(AppTheme.Light), AfterLaunchAction.Minimize);
+
+        Assert.Equal(AfterLaunchAction.Minimize, vm.AfterLaunch.Action);
+        Assert.Empty(_store.SavedAfterLaunch);
+
+        vm.AfterLaunch.Action = AfterLaunchAction.Close;
+        vm.AfterLaunch.Action = AfterLaunchAction.Keep;
+
+        Assert.Equal([AfterLaunchAction.Close, AfterLaunchAction.Keep], _store.SavedAfterLaunch);
     }
 
     [Fact]

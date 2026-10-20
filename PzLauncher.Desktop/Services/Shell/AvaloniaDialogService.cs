@@ -1,10 +1,14 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Media;
 using PzLauncher.Desktop.Lang;
+using PzLauncher.Desktop.Localization;
+using PzLauncher.Desktop.Services.Launch;
 using PzLauncher.Desktop.ViewModels;
 using PzLauncher.Desktop.ViewModels.Mods.Workshop;
 using PzLauncher.Desktop.ViewModels.ZombieBuddy;
@@ -121,6 +125,45 @@ public sealed class AvaloniaDialogService(Func<Window?> owner) : IDialogService
 
     public Task<bool> PickWorkshopModsAsync(WorkshopModPickViewModel pick) =>
         ShowViewDialogAsync(pick, UiText.WorkshopCollections_PickTitle, 520, () => new WorkshopModPickView { DataContext = pick });
+
+    public async Task<AfterLaunchAction?> ChooseAfterLaunchAsync()
+    {
+        if (owner() is not { } window)
+        {
+            return null;
+        }
+
+        var options = Enum.GetValues<AfterLaunchAction>()
+            .Select(action => (Action: action, Button: new RadioButton
+            {
+                Content = DisplayNames.Of(action),
+                GroupName = nameof(AfterLaunchAction),
+                IsChecked = action == AfterLaunchAction.Keep,
+            }))
+            .ToList();
+        var ok = new Button { Content = UiText.Dialog_Ok, Classes = { "accent" }, IsDefault = true };
+        var content = new StackPanel { Margin = new Thickness(16), Spacing = 12 };
+        content.Children.Add(new TextBlock { Text = UiText.AfterLaunch_PromptMessage, TextWrapping = TextWrapping.Wrap });
+        var choices = new StackPanel { Spacing = 4 };
+        choices.Children.AddRange(options.Select(option => option.Button));
+        content.Children.Add(choices);
+        content.Children.Add(new TextBlock { Text = UiText.AfterLaunch_PromptHint, TextWrapping = TextWrapping.Wrap, Classes = { "hint" } });
+        content.Children.Add(Buttons(ok));
+        var dialog = CreateDialog(UiText.AfterLaunch_PromptTitle, 460, content);
+        AfterLaunchAction? result = null;
+        CloseOnClick(ok, dialog, () => result = options.First(option => option.Button.IsChecked == true).Action);
+
+        // No cancel button, so Esc is wired by hand; it dismisses like the window's close button.
+        dialog.KeyDown += (_, e) =>
+        {
+            if (e.Key == Key.Escape)
+            {
+                dialog.Close();
+            }
+        };
+        await dialog.ShowDialog(window);
+        return result;
+    }
 
     private Task<bool> ShowOperationDialogAsync(DialogOperationViewModel operation, string title, double width, Func<Control> view) =>
         ShowViewDialogAsync(operation, title, width, view, dialog =>

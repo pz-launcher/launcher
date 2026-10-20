@@ -30,6 +30,7 @@
 | `workshopCollections` | array of `{id, title}`, most recent first; a bad or repeated entry is dropped, the rest kept | `UserPreferences.WorkshopCollections` |
 | `workshopUserCollections` | `{accountId, fetchedAt, favorited, published}`: the last Steam answer for one account; an invalid entry loads as null | `UserPreferences.WorkshopUserCollections` |
 | `workshopFavorites` | `{collections, items}`, each a list as in `workshopCollections` | `UserPreferences.WorkshopFavorites` |
+| `afterLaunch` | `keep`, `minimize`, `tray`, `close`; anything else loads as null (not chosen: the next launch asks) | `UserPreferences.AfterLaunch`, `AfterLaunchPreferences.PreferenceName` |
 | `proxy` | `{mode, host, port, username, password}`; `mode`: `system`, `none`, `manual`; an unknown mode, a member of the wrong JSON type or a non-object loads the whole entry as null (System). `host`/`port` are kept outside manual mode; an invalid one is dropped, the rest kept. Empty members are omitted. `password`: `dpapi:<base64>` (Windows, current user) or `plain:<text>` (Linux, macOS), written by `ISecretProtector`; another scheme or an undecryptable value loads as null and is logged | `UserPreferences.Proxy` (`SavedProxy`), `ProxyModePreferences.PreferenceName` |
 | `window` | `{x, y, width, height, maximized}`: normal-state position (int, physical px), client size (number > 0, DIPs), maximized (bool); invalid if any member is missing | `WindowPlacement` |
 

@@ -9,6 +9,7 @@ using PzLauncher.Core.Steam.Workshop;
 using PzLauncher.Core.Steam.Workshop.Actions;
 using PzLauncher.Core.Update;
 using PzLauncher.Desktop.Lang;
+using PzLauncher.Desktop.Services.Launch;
 
 namespace PzLauncher.Desktop.Localization;
 
@@ -86,6 +87,14 @@ public static class DisplayNames
         ProxyMode.System => UiText.ProxyMode_System,
         ProxyMode.None => UiText.ProxyMode_None,
         ProxyMode.Manual => UiText.ProxyMode_Manual,
+    };
+
+    public static string Of(AfterLaunchAction action) => action switch
+    {
+        AfterLaunchAction.Keep => UiText.AfterLaunchAction_Keep,
+        AfterLaunchAction.Minimize => UiText.AfterLaunchAction_Minimize,
+        AfterLaunchAction.MinimizeToTray => UiText.AfterLaunchAction_MinimizeToTray,
+        AfterLaunchAction.Close => UiText.AfterLaunchAction_Close,
     };
 
     public static string Of(ZombieBuddyStep step) => step switch

@@ -76,6 +76,14 @@ Reference: `PzLauncher.Desktop/Services/Shell/SingleInstanceGuard.cs`, run in `P
 - A start with `LauncherArguments.Restart` (the self-update restart) waits, bounded, for the closing instance instead of exiting.
 - Any failure to open the named mutex or event (e.g. created by an elevated instance) runs without the guard; the guard never blocks startup.
 
+## Window after a launch
+
+Reference: `HomeViewModel.LaunchAsync`, `PzLauncher.Desktop/Views/LauncherWindow.cs` (behind `ILauncherWindow`), `PzLauncher.Desktop/Services/Launch/AfterLaunchSettings.cs`.
+
+- The choice applies only once the game has started. Every way back (tray click and menu, a second start, the game's exit) goes through `LauncherWindow.Restore`, which shows a hidden window and keeps a maximized one maximized.
+- The tray icon is always shown, built in `App.axaml.cs`; its menu texts are set in code and re-set on `LanguageChanged`.
+- Close hides the window and closes through `IAppLifetime.Close` only once the game outlives `GameSession.EarlyExitWindow` with the window still hidden; the run state stays set until the game exits, so the close flush writes nothing the game uses.
+
 ## Composition root
 
 `PzLauncher.Desktop/App.axaml.cs` is the only place that builds the DI container.
