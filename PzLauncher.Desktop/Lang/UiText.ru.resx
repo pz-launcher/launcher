@@ -729,7 +729,7 @@
     <value>Коллекции Мастерской</value>
   </data>
   <data name="Mods_SectionWorkshopFavorites" xml:space="preserve">
-    <value>Избранное</value>
+    <value>Локальное избранное</value>
   </data>
   <data name="Mods_Refresh" xml:space="preserve">
     <value>Обновить</value>
@@ -1176,10 +1176,10 @@
     <value>Нет модов</value>
   </data>
   <data name="WorkshopFavorites_Items" xml:space="preserve">
-    <value>Избранные предметы</value>
+    <value>Предметы</value>
   </data>
   <data name="WorkshopFavorites_Collections" xml:space="preserve">
-    <value>Избранные коллекции</value>
+    <value>Коллекции</value>
   </data>
   <data name="WorkshopFavorites_CollectionsEmpty" xml:space="preserve">
     <value>Здесь появятся коллекции, отмеченные звёздочкой.</value>

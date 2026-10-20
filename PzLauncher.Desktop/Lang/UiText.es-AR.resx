@@ -729,7 +729,7 @@
     <value>Colecciones de Workshop</value>
   </data>
   <data name="Mods_SectionWorkshopFavorites" xml:space="preserve">
-    <value>Favoritos</value>
+    <value>Favoritos locales</value>
   </data>
   <data name="Mods_Refresh" xml:space="preserve">
     <value>Actualizar</value>
@@ -1176,10 +1176,10 @@
     <value>Sin mods</value>
   </data>
   <data name="WorkshopFavorites_Items" xml:space="preserve">
-    <value>Elementos favoritos</value>
+    <value>Elementos</value>
   </data>
   <data name="WorkshopFavorites_Collections" xml:space="preserve">
-    <value>Colecciones favoritas</value>
+    <value>Colecciones</value>
   </data>
   <data name="WorkshopFavorites_CollectionsEmpty" xml:space="preserve">
     <value>Acá aparecen las colecciones que marques con una estrella.</value>
