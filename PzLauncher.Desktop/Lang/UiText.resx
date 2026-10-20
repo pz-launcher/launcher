@@ -728,6 +728,9 @@
   <data name="Mods_SectionWorkshopCollections" xml:space="preserve">
     <value>Workshop collections</value>
   </data>
+  <data name="Mods_SectionWorkshopFavorites" xml:space="preserve">
+    <value>Favorites</value>
+  </data>
   <data name="Mods_Refresh" xml:space="preserve">
     <value>Refresh</value>
   </data>
@@ -1172,11 +1175,11 @@
   <data name="WorkshopCollections_SkippedNoMods" xml:space="preserve">
     <value>No mods</value>
   </data>
-  <data name="WorkshopFavorites_Title" xml:space="preserve">
-    <value>Local favorites</value>
-  </data>
   <data name="WorkshopFavorites_Items" xml:space="preserve">
     <value>Starred items</value>
+  </data>
+  <data name="WorkshopFavorites_Collections" xml:space="preserve">
+    <value>Starred collections</value>
   </data>
   <data name="WorkshopFavorites_CollectionsEmpty" xml:space="preserve">
     <value>Collections you star are listed here.</value>

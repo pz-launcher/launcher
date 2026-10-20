@@ -728,6 +728,9 @@
   <data name="Mods_SectionWorkshopCollections" xml:space="preserve">
     <value>工作坊合輯</value>
   </data>
+  <data name="Mods_SectionWorkshopFavorites" xml:space="preserve">
+    <value>收藏</value>
+  </data>
   <data name="Mods_Refresh" xml:space="preserve">
     <value>重新整理</value>
   </data>
@@ -1172,11 +1175,11 @@
   <data name="WorkshopCollections_SkippedNoMods" xml:space="preserve">
     <value>不含模組</value>
   </data>
-  <data name="WorkshopFavorites_Title" xml:space="preserve">
-    <value>本機收藏</value>
-  </data>
   <data name="WorkshopFavorites_Items" xml:space="preserve">
     <value>本機收藏的項目</value>
+  </data>
+  <data name="WorkshopFavorites_Collections" xml:space="preserve">
+    <value>本機收藏的合輯</value>
   </data>
   <data name="WorkshopFavorites_CollectionsEmpty" xml:space="preserve">
     <value>加上星號的合輯會列在這裡。</value>

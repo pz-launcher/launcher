@@ -1,0 +1,126 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:PzLauncher.Desktop.ViewModels.Mods.Workshop"
+             xmlns:local="using:PzLauncher.Desktop.Views.Mods.Workshop"
+             xmlns:design="using:PzLauncher.Desktop.ViewModels.Design"
+             xmlns:lang="using:PzLauncher.Desktop.Lang"
+             xmlns:ic="using:FluentIcons.Avalonia"
+             mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="560"
+             x:Class="PzLauncher.Desktop.Views.Mods.Workshop.WorkshopFavoritesView"
+             x:DataType="vm:WorkshopFavoritesViewModel">
+
+    <Design.DataContext>
+        <x:Static Member="design:DesignData.WorkshopFavorites" />
+    </Design.DataContext>
+
+    <DockPanel>
+        <!-- Share and import cover the starred collections and items alike. -->
+        <StackPanel DockPanel.Dock="Top" Spacing="4" Margin="0,0,0,12">
+            <WrapPanel Orientation="Horizontal">
+                <Button Command="{Binding ShareFavoritesCommand}" Margin="0,0,6,0" ToolTip.Tip="{x:Static lang:UiText.WorkshopFavorites_Share}">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <ic:FluentIcon Icon="Share" IconVariant="Regular" FontSize="16" VerticalAlignment="Center" />
+                        <TextBlock Text="{x:Static lang:UiText.ModCollections_Share}" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+                <Button Command="{Binding ImportFavoritesCommand}" ToolTip.Tip="{x:Static lang:UiText.WorkshopFavorites_ImportTitle}">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <ic:FluentIcon Icon="ArrowImport" IconVariant="Regular" FontSize="16" VerticalAlignment="Center" />
+                        <TextBlock Text="{x:Static lang:UiText.WorkshopFavorites_Import}" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+            </WrapPanel>
+            <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsImportingFavorites}" />
+            <TextBlock Text="{Binding FavoritesStatusText}" Classes="hint" TextWrapping="Wrap"
+                       IsVisible="{Binding FavoritesStatusText, Converter={x:Static ObjectConverters.IsNotNull}}" />
+        </StackPanel>
+
+        <!-- Starred collections. Rows are buttons, not ListBox items: a click opens the collection in Workshop collections. -->
+        <StackPanel DockPanel.Dock="Top" Spacing="4" Margin="0,0,0,12">
+            <TextBlock Text="{x:Static lang:UiText.WorkshopFavorites_Collections}" Classes="sectionTitle" Margin="0,0,0,4" />
+            <TextBlock Text="{x:Static lang:UiText.WorkshopFavorites_CollectionsEmpty}" IsVisible="{Binding !HasCollections}" Classes="hint" TextWrapping="Wrap" />
+            <ScrollViewer MaxHeight="160">
+                <ItemsControl ItemsSource="{Binding Collections}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel Orientation="Horizontal" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:RememberedWorkshopCollectionRow">
+                            <Grid ColumnDefinitions="*,Auto" Width="280" Margin="0,0,12,4">
+                                <Button Grid.Column="0" Theme="{StaticResource Shell.ListRow}"
+                                        Command="{Binding $parent[ItemsControl].((vm:WorkshopFavoritesViewModel)DataContext).OpenCollectionCommand}"
+                                        CommandParameter="{Binding}">
+                                    <StackPanel Spacing="2">
+                                        <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Title}" />
+                                        <TextBlock Text="{Binding IdText}" FontSize="12" Foreground="{DynamicResource Shell.TextMuted}" />
+                                    </StackPanel>
+                                </Button>
+                                <Button Grid.Column="1" VerticalAlignment="Center" Margin="4,0,0,0" Classes.favorite="{Binding IsFavorite}"
+                                        Command="{Binding $parent[ItemsControl].((vm:WorkshopFavoritesViewModel)DataContext).UnstarCollectionCommand}"
+                                        CommandParameter="{Binding}"
+                                        ToolTip.Tip="{x:Static lang:UiText.Workshop_FavoriteToggle}" AutomationProperties.Name="{x:Static lang:UiText.Workshop_FavoriteToggle}">
+                                    <ic:FluentIcon Classes="favoriteStar" />
+                                </Button>
+                            </Grid>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </StackPanel>
+
+        <!-- Starred items, with their state like an opened collection's. -->
+        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="8" Margin="0,0,0,8">
+            <TextBlock Text="{x:Static lang:UiText.WorkshopFavorites_Items}" Classes="sectionTitle" VerticalAlignment="Center" />
+            <TextBlock Text="{Binding ItemCount, StringFormat={x:Static lang:UiText.WorkshopCollections_ItemCountFormat}}"
+                       Foreground="{DynamicResource Shell.TextMuted}" VerticalAlignment="Center" />
+        </StackPanel>
+
+        <ProgressBar DockPanel.Dock="Top" IsIndeterminate="True" IsVisible="{Binding IsLoading}" Margin="0,0,0,8" />
+        <TextBlock DockPanel.Dock="Top" Text="{Binding ErrorText}" Classes="error" TextWrapping="Wrap"
+                   IsVisible="{Binding ErrorText, Converter={x:Static ObjectConverters.IsNotNull}}" Margin="0,0,0,8" />
+        <ItemsControl DockPanel.Dock="Top" ItemsSource="{Binding Warnings}" Margin="0,0,0,4">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="x:String">
+                    <TextBlock Text="{Binding}" Classes="warning" TextWrapping="Wrap" Margin="0,0,0,4" />
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <WrapPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,4">
+            <Button Command="{Binding SubscribeMissingCommand}" Margin="0,0,6,6">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <ic:FluentIcon Icon="Add" IconVariant="Regular" FontSize="16" VerticalAlignment="Center" />
+                    <TextBlock Text="{x:Static lang:UiText.WorkshopCollections_SubscribeMissing}" VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding MissingCount, StringFormat='({0})'}" VerticalAlignment="Center" />
+                </StackPanel>
+            </Button>
+            <Button Command="{Binding UpdateOutdatedCommand}" Margin="0,0,6,6">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <ic:FluentIcon Icon="ArrowDownload" IconVariant="Regular" FontSize="16" VerticalAlignment="Center" />
+                    <TextBlock Text="{x:Static lang:UiText.Workshop_UpdateAll}" VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding OutdatedCount, StringFormat='({0})'}" VerticalAlignment="Center" />
+                </StackPanel>
+            </Button>
+            <Button Command="{Binding GenerateCommand}" Margin="0,0,6,6"
+                    ToolTip.Tip="{x:Static lang:UiText.WorkshopCollections_GenerateHint}" ToolTip.ShowOnDisabled="True">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <ic:FluentIcon Icon="Collections" IconVariant="Regular" FontSize="16" VerticalAlignment="Center" />
+                    <TextBlock Text="{x:Static lang:UiText.WorkshopCollections_Generate}" VerticalAlignment="Center" />
+                </StackPanel>
+            </Button>
+        </WrapPanel>
+
+        <TextBlock DockPanel.Dock="Top" Text="{Binding StatusText}" Classes="hint" TextWrapping="Wrap"
+                   IsVisible="{Binding StatusText, Converter={x:Static ObjectConverters.IsNotNull}}" Margin="0,0,0,8" />
+
+        <Panel>
+            <local:WorkshopItemListView />
+            <TextBlock Text="{x:Static lang:UiText.WorkshopFavorites_ItemsEmpty}" IsVisible="{Binding IsListEmpty}" TextWrapping="Wrap"
+                       Foreground="{DynamicResource Shell.TextMuted}" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" />
+        </Panel>
+    </DockPanel>
+</UserControl>

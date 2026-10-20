@@ -61,7 +61,8 @@ public partial class ModsViewModel : ViewModelBase
         Collections = new ModCollectionsViewModel(this, defaults, applier, dialogs, clipboard);
         WorkshopSubscriptions = new WorkshopSubscriptionsViewModel(this, workshop, workshopActions, dialogs, clipboard, urls, workshopFavorites);
         WorkshopCollections = new WorkshopCollectionsViewModel(
-            this, workshop, workshopActions, dialogs, clipboard, urls, workshopHistory, workshopUserCollections, workshopFavorites);
+            this, workshop, workshopActions, dialogs, urls, workshopHistory, workshopUserCollections, workshopFavorites);
+        WorkshopFavorites = new WorkshopFavoritesViewModel(this, workshop, workshopActions, dialogs, clipboard, urls, workshopFavorites);
         _error = new LocalizedText(text => ErrorText = text);
 
         // Never unsubscribed: these are app-lifetime singletons.
@@ -79,6 +80,8 @@ public partial class ModsViewModel : ViewModelBase
 
     public WorkshopCollectionsViewModel WorkshopCollections { get; }
 
+    public WorkshopFavoritesViewModel WorkshopFavorites { get; }
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ShowsGameFiles))]
     public partial ModsSection Section { get; set; }
@@ -87,7 +90,7 @@ public partial class ModsViewModel : ViewModelBase
     public bool ShowsGameFiles => Section switch
     {
         ModsSection.Mods or ModsSection.Collections => true,
-        ModsSection.WorkshopSubscriptions or ModsSection.WorkshopCollections => false,
+        ModsSection.WorkshopSubscriptions or ModsSection.WorkshopCollections or ModsSection.WorkshopFavorites => false,
     };
 
     /// <summary><c>null</c> when the install in use is none or a dedicated server.</summary>
@@ -137,6 +140,7 @@ public partial class ModsViewModel : ViewModelBase
         ModsSection.Mods or ModsSection.Collections => ReloadAsync(),
         ModsSection.WorkshopSubscriptions => WorkshopSubscriptions.LoadAsync(),
         ModsSection.WorkshopCollections => WorkshopCollections.RefreshAsync(),
+        ModsSection.WorkshopFavorites => WorkshopFavorites.ShowAsync(),
     };
 
     // Steam may have changed the subscriptions since the last visit.
@@ -153,7 +157,16 @@ public partial class ModsViewModel : ViewModelBase
         ModsSection.Mods or ModsSection.Collections => Task.CompletedTask,
         ModsSection.WorkshopSubscriptions => WorkshopSubscriptions.LoadAsync(),
         ModsSection.WorkshopCollections => WorkshopCollections.ShowAsync(),
+        ModsSection.WorkshopFavorites => WorkshopFavorites.ShowAsync(),
     };
+
+    /// <summary>Shows the Workshop collections section with this collection open.</summary>
+    internal Task OpenWorkshopCollectionAsync(ulong id)
+    {
+        // Switched first: showing the section re-reads the collection open before, and the newer open supersedes that.
+        Section = ModsSection.WorkshopCollections;
+        return WorkshopCollections.LoadCollectionAsync(id);
+    }
 
     internal async Task ReloadAsync()
     {
@@ -271,6 +284,7 @@ public partial class ModsViewModel : ViewModelBase
         Collections.RenderTexts();
         WorkshopSubscriptions.RenderTexts();
         WorkshopCollections.RenderTexts();
+        WorkshopFavorites.RenderTexts();
     }
 
     private void OnInstallsPropertyChanged(object? sender, PropertyChangedEventArgs e)

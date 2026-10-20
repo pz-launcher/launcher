@@ -1,4 +1,5 @@
 using System.Globalization;
+using PzLauncher.Desktop.Services.Preferences;
 
 namespace PzLauncher.Desktop.ViewModels.Mods.Workshop;
 
@@ -8,4 +9,7 @@ namespace PzLauncher.Desktop.ViewModels.Mods.Workshop;
 public sealed record RememberedWorkshopCollectionRow(ulong Id, string Title, bool IsOpen, bool IsFavorite = false)
 {
     public string IdText => Id.ToString(CultureInfo.InvariantCulture);
+
+    internal static RememberedWorkshopCollectionRow Of(SavedWorkshopEntry saved, bool isOpen, bool isFavorite) =>
+        new(saved.Id, saved.Title ?? saved.Id.ToString(CultureInfo.InvariantCulture), isOpen, isFavorite);
 }

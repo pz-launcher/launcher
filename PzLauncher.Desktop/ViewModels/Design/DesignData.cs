@@ -98,6 +98,8 @@ public static class DesignData
 
     public static WorkshopCollectionsViewModel WorkshopCollections => Mods.WorkshopCollections;
 
+    public static WorkshopFavoritesViewModel WorkshopFavorites => Mods.WorkshopFavorites;
+
     public static WorkshopItemRow WorkshopRow => WorkshopSubscriptions.VisibleRows.First(row => row.IsDownloading);
 
     public static WorkshopActionViewModel WorkshopAction { get; } = CreateWorkshopAction();
@@ -186,6 +188,7 @@ public static class DesignData
         vm.WorkshopSubscriptions.VisibleRows.FirstOrDefault(row => row.NeedsUpdate)?.ShowDownload(36 * 1024 * 1024, 90 * 1024 * 1024);
         vm.WorkshopCollections.OpenRememberedCommand.Execute(vm.WorkshopCollections.Remembered[0]);
         _ = vm.WorkshopCollections.ShowAsync();
+        _ = vm.WorkshopFavorites.ShowAsync();
         return vm;
     }
 

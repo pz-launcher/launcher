@@ -6,4 +6,5 @@ public enum ModsSection
     Collections,
     WorkshopSubscriptions,
     WorkshopCollections,
+    WorkshopFavorites,
 }

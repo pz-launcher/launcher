@@ -122,6 +122,21 @@ public class ModsViewModelTests : UiTextCultureTest
         Assert.False(vm.CanWrite);
     }
 
+    [Theory]
+    [InlineData(ModsSection.Mods, true)]
+    [InlineData(ModsSection.Collections, true)]
+    [InlineData(ModsSection.WorkshopSubscriptions, false)]
+    [InlineData(ModsSection.WorkshopCollections, false)]
+    [InlineData(ModsSection.WorkshopFavorites, false)]
+    public async Task Section_OnlyTheGameFileSectionsShowThePagesLoadState(ModsSection section, bool showsGameFiles)
+    {
+        var vm = await CreateActivatedAsync();
+
+        vm.Section = section;
+
+        Assert.Equal(showsGameFiles, vm.ShowsGameFiles);
+    }
+
     // Installed mods
 
     [Fact]

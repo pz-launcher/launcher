@@ -29,6 +29,8 @@
                                   IsChecked="{Binding Section, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:ModsSection.WorkshopSubscriptions}}" />
                 <controls:NavItem Icon="Library" Content="{x:Static lang:UiText.Mods_SectionWorkshopCollections}"
                                   IsChecked="{Binding Section, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:ModsSection.WorkshopCollections}}" />
+                <controls:NavItem Icon="Star" Content="{x:Static lang:UiText.Mods_SectionWorkshopFavorites}"
+                                  IsChecked="{Binding Section, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:ModsSection.WorkshopFavorites}}" />
             </StackPanel>
         </Border>
 
@@ -43,6 +45,8 @@
                                IsVisible="{Binding Section, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:ModsSection.WorkshopSubscriptions}}" />
                     <TextBlock Grid.Column="0" Text="{x:Static lang:UiText.Mods_SectionWorkshopCollections}" Classes="pageTitle" VerticalAlignment="Center"
                                IsVisible="{Binding Section, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:ModsSection.WorkshopCollections}}" />
+                    <TextBlock Grid.Column="0" Text="{x:Static lang:UiText.Mods_SectionWorkshopFavorites}" Classes="pageTitle" VerticalAlignment="Center"
+                               IsVisible="{Binding Section, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:ModsSection.WorkshopFavorites}}" />
                     <Button Grid.Column="1" Content="{x:Static lang:UiText.Mods_Refresh}" Command="{Binding RefreshCommand}" />
                 </Grid>
 
@@ -73,6 +77,9 @@
                         </Panel>
                         <Panel IsVisible="{Binding Section, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:ModsSection.WorkshopCollections}}">
                             <workshop:WorkshopCollectionsView DataContext="{Binding WorkshopCollections}" />
+                        </Panel>
+                        <Panel IsVisible="{Binding Section, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:ModsSection.WorkshopFavorites}}">
+                            <workshop:WorkshopFavoritesView DataContext="{Binding WorkshopFavorites}" />
                         </Panel>
                     </Panel>
                 </Panel>

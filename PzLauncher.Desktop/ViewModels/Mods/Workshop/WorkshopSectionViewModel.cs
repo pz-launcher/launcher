@@ -115,6 +115,8 @@ public abstract partial class WorkshopSectionViewModel : ViewModelBase
 
     protected bool IsFavoriteItem(ulong id) => Favorites.IsFavorite(WorkshopFavoriteKind.Item, id);
 
+    protected bool IsFavoriteCollection(ulong id) => Favorites.IsFavorite(WorkshopFavoriteKind.Collection, id);
+
     protected void ShowFavorites(IEnumerable<WorkshopItemRow> rows)
     {
         foreach (var row in rows)

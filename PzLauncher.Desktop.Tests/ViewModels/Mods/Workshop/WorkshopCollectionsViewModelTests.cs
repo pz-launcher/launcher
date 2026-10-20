@@ -47,7 +47,7 @@ public class WorkshopCollectionsViewModelTests : UiTextCultureTest
     private readonly GameRunState _runState = new();
     private readonly ManualTimeProvider _time = new();
     private readonly FakeClipboardService _clipboard = new();
-    private WorkshopFavorites _favorites;
+    private readonly WorkshopFavorites _favorites;
     private SavedWorkshopUserCollections? _savedUserCollections;
 
     public WorkshopCollectionsViewModelTests()
@@ -735,50 +735,28 @@ public class WorkshopCollectionsViewModelTests : UiTextCultureTest
         Assert.Single(_runner.ListRuns);
     }
 
-    // Local favorites: collections
-
-    private const string SharedText = "#collections\n9000\n#items\n1001\n1005\n";
-
-    private static string Imported(int collections, int items, int skipped) =>
-        string.Format(CultureInfo.CurrentCulture, UiText.WorkshopFavorites_Imported, collections, items, skipped);
+    // Local favorites
 
     [Fact]
-    public async Task ToggleOpenCollectionFavorite_ListsItUnderLocalFavoritesWithItsTitle()
+    public async Task ToggleOpenCollectionFavorite_StarsItWithItsTitle()
     {
         var vm = await OpenPackAsync();
 
         vm.ToggleOpenCollectionFavoriteCommand.Execute(null);
 
         Assert.True(vm.IsOpenCollectionFavorite);
-        Assert.Equal([new RememberedWorkshopCollectionRow(Pack, "Survival Pack", IsOpen: true, IsFavorite: true)], vm.FavoriteCollections);
         Assert.True(Assert.Single(vm.Remembered).IsFavorite);
         Assert.Equal([new SavedWorkshopEntry(Pack, "Survival Pack")], _preferences.SavedWorkshopFavorites[^1].Collections);
     }
 
     [Fact]
-    public async Task FavoriteCollection_SavedEarlier_OpensFromLocalFavoritesAndRefreshesItsTitle()
-    {
-        _favorites = Favorites(_preferences, new SavedWorkshopFavorites([new SavedWorkshopEntry(Pack, null)], []));
-        var vm = await CreateAsync();
-        Assert.Equal("9000", vm.FavoriteCollections[0].Title);
-
-        await vm.OpenRememberedCommand.ExecuteAsync(vm.FavoriteCollections[0]);
-
-        Assert.Equal("Survival Pack", vm.Title);
-        Assert.True(vm.IsOpenCollectionFavorite);
-        Assert.Equal([new RememberedWorkshopCollectionRow(Pack, "Survival Pack", IsOpen: true, IsFavorite: true)], vm.FavoriteCollections);
-        Assert.Equal(Pack, Assert.Single(vm.Remembered).Id);
-    }
-
-    [Fact]
-    public async Task ToggleCollectionFavorite_Starred_RemovesItFromLocalFavorites()
+    public async Task ToggleCollectionFavorite_Starred_UnstarsIt()
     {
         var vm = await OpenPackAsync();
         vm.ToggleOpenCollectionFavoriteCommand.Execute(null);
 
-        vm.ToggleCollectionFavoriteCommand.Execute(vm.FavoriteCollections[0]);
+        vm.ToggleCollectionFavoriteCommand.Execute(vm.Remembered[0]);
 
-        Assert.Empty(vm.FavoriteCollections);
         Assert.False(vm.IsOpenCollectionFavorite);
         Assert.False(Assert.Single(vm.Remembered).IsFavorite);
         Assert.Empty(_preferences.SavedWorkshopFavorites[^1].Collections);
@@ -818,274 +796,5 @@ public class WorkshopCollectionsViewModelTests : UiTextCultureTest
         Assert.True(Row(vm, 1005).IsFavorite);
         Assert.Empty(_runner.Runs);
         Assert.Equal(lists, _runner.ListRuns.Count);
-    }
-
-    // Local favorites: starred items
-
-    [Fact]
-    public async Task FavoriteItems_StarredInBothSections_ListsThemWithTitlesAndStates()
-    {
-        var page = await CreatePageAsync();
-        page.Section = ModsSection.WorkshopSubscriptions;
-        var subscriptions = page.WorkshopSubscriptions;
-        subscriptions.ToggleFavoriteCommand.Execute(subscriptions.VisibleRows.Single(row => row.Id == 1003));
-        page.Section = ModsSection.WorkshopCollections;
-        var vm = page.WorkshopCollections;
-        vm.LinkText = PackLink;
-        await vm.OpenCommand.ExecuteAsync(null);
-        Assert.True(Row(vm, 1003).IsFavorite);
-        vm.ToggleFavoriteCommand.Execute(Row(vm, 1005));
-
-        await vm.OpenFavoriteItemsCommand.ExecuteAsync(null);
-
-        Assert.True(vm.IsFavoriteItemsView);
-        Assert.Equal((UiText.WorkshopFavorites_Items, (string?)null), (vm.Title, vm.IdText));
-        Assert.Equal([1005UL, 1003], vm.Rows.Select(row => row.Id));
-        Assert.Equal(("Weather", WorkshopItemState.NotSubscribed), (Row(vm, 1005).Title, Row(vm, 1005).Item.State));
-        Assert.Equal(("Vehicles", WorkshopItemState.NeedsUpdate), (Row(vm, 1003).Title, Row(vm, 1003).Item.State));
-        Assert.All(vm.Rows, row => Assert.True(row.IsFavorite));
-        Assert.DoesNotContain(vm.Remembered, row => row.IsOpen);
-        Assert.Equal(2, vm.FavoriteItemCount);
-    }
-
-    [Fact]
-    public async Task FavoriteItems_SubscribeMissing_SubscribesOnlyTheUnsubscribedOnes()
-    {
-        _favorites.Toggle(WorkshopFavoriteKind.Item, 1003, null);
-        _favorites.Toggle(WorkshopFavoriteKind.Item, 1005, null);
-        _favorites.Toggle(WorkshopFavoriteKind.Item, 1006, null);
-        _runner.Succeeded = (_, id) => _service.Items.Add(Item(id, manifest: null));
-        var vm = await CreateAsync();
-        await vm.OpenFavoriteItemsCommand.ExecuteAsync(null);
-
-        await vm.SubscribeMissingCommand.ExecuteAsync(null);
-
-        var run = Assert.Single(_runner.Runs);
-        Assert.Equal(WorkshopAction.Subscribe, run.Request.Action);
-        Assert.Equal([1006UL, 1005], run.Request.Ids);
-        Assert.True(vm.IsFavoriteItemsView);
-        Assert.Equal(0, vm.MissingCount);
-    }
-
-    [Fact]
-    public async Task FavoriteItems_OfferNoUnsubscribeAllNorCollectionPage()
-    {
-        _favorites.Toggle(WorkshopFavoriteKind.Item, 1001, null);
-        var vm = await CreateAsync();
-
-        await vm.OpenFavoriteItemsCommand.ExecuteAsync(null);
-
-        Assert.False(vm.ShowsSteamCollection);
-        Assert.Equal(1, vm.SubscribedCount);
-        Assert.True(vm.CanRunActions);
-        Assert.False(vm.UnsubscribeAllCommand.CanExecute(null));
-        Assert.False(vm.OpenCollectionInSteamCommand.CanExecute(null));
-        Assert.False(vm.ToggleOpenCollectionFavoriteCommand.CanExecute(null));
-    }
-
-    [Fact]
-    public async Task ShowsSteamCollection_SwitchingToAndFromTheStarredItems_Notifies()
-    {
-        var vm = await OpenPackAsync();
-        var notified = 0;
-        vm.PropertyChanged += (_, e) => notified += e.PropertyName == nameof(vm.ShowsSteamCollection) ? 1 : 0;
-
-        await vm.OpenFavoriteItemsCommand.ExecuteAsync(null);
-        var toStarred = (vm.ShowsSteamCollection, notified > 0);
-        notified = 0;
-        await vm.OpenRememberedCommand.ExecuteAsync(vm.Remembered[0]);
-
-        Assert.Equal((false, true), toStarred);
-        Assert.Equal((true, true), (vm.ShowsSteamCollection, notified > 0));
-    }
-
-    [Fact]
-    public async Task FavoriteItems_Unstarred_RowLeavesWithoutAskingAgain()
-    {
-        _favorites.Toggle(WorkshopFavoriteKind.Item, 1001, null);
-        _favorites.Toggle(WorkshopFavoriteKind.Item, 1005, null);
-        var vm = await CreateAsync();
-        await vm.OpenFavoriteItemsCommand.ExecuteAsync(null);
-        var asked = (_service.GetRequests.Count, _service.CheckRequests.Count);
-
-        vm.ToggleFavoriteCommand.Execute(Row(vm, 1005));
-
-        Assert.Equal([1001UL], vm.Rows.Select(row => row.Id));
-        Assert.Equal(1, vm.FavoriteItemCount);
-        Assert.Equal(asked, (_service.GetRequests.Count, _service.CheckRequests.Count));
-    }
-
-    [Fact]
-    public async Task FavoriteItems_NoneStarred_SaysHowToStarWithoutTheWebApi()
-    {
-        var vm = await CreateAsync();
-
-        await vm.OpenFavoriteItemsCommand.ExecuteAsync(null);
-
-        Assert.True(vm.IsFavoriteItemsEmpty);
-        Assert.False(vm.IsCollectionEmpty);
-        Assert.Empty(_service.CheckRequests);
-    }
-
-    [Fact]
-    public async Task FavoriteItems_TitleLookupFails_ListsThemByIdWithAWarning()
-    {
-        _favorites.Toggle(WorkshopFavoriteKind.Item, 1005, null);
-        var error = TestErrors.Create(ErrorCode.WorkshopNetworkFailed);
-        _service.CheckError = () => error;
-        var vm = await CreateAsync();
-
-        await vm.OpenFavoriteItemsCommand.ExecuteAsync(null);
-
-        Assert.Equal("1005", Row(vm, 1005).Title);
-        Assert.Equal([ErrorMessages.ToUserText(error)], vm.Warnings);
-    }
-
-    [Fact]
-    public async Task FavoriteItems_Generate_SuggestsTheLocalFavoritesName()
-    {
-        _favorites.Toggle(WorkshopFavoriteKind.Item, 1001, null);
-        _dialogs.Accept("Mine");
-        var vm = await CreateAsync();
-        await vm.OpenFavoriteItemsCommand.ExecuteAsync(null);
-
-        await vm.GenerateCommand.ExecuteAsync(null);
-
-        Assert.Equal(UiText.WorkshopFavorites_CollectionName, Assert.Single(_dialogs.Prompts).InitialText);
-        Assert.Equal(["Core"], Assert.Single(_collections.Saves).ModIds);
-    }
-
-    // Local favorites: share and import
-
-    [Fact]
-    public async Task ShareFavorites_CopiesTheIdsAndSaysHowMany()
-    {
-        _favorites.Toggle(WorkshopFavoriteKind.Collection, Pack, "Survival Pack");
-        _favorites.Toggle(WorkshopFavoriteKind.Item, 1001, null);
-        _favorites.Toggle(WorkshopFavoriteKind.Item, 1005, null);
-        var vm = await CreateAsync();
-
-        await vm.ShareFavoritesCommand.ExecuteAsync(null);
-
-        Assert.Equal("#collections\n9000\n#items\n1005\n1001\n", _clipboard.Text);
-        Assert.Equal(string.Format(CultureInfo.CurrentCulture, UiText.WorkshopFavorites_Shared, 1, 2), vm.FavoritesStatusText);
-    }
-
-    [Fact]
-    public async Task ShareFavorites_NothingStarred_IsDisabled()
-    {
-        var vm = await CreateAsync();
-
-        Assert.False(vm.ShareFavoritesCommand.CanExecute(null));
-
-        _favorites.Toggle(WorkshopFavoriteKind.Item, 1001, null);
-
-        Assert.True(vm.ShareFavoritesCommand.CanExecute(null));
-    }
-
-    [Fact]
-    public async Task ImportFavorites_SharedText_AddsTheIdsWithTitlesAndSaysHowMany()
-    {
-        _clipboard.Text = SharedText;
-        _dialogs.Accept(SharedText);
-        var vm = await CreateAsync();
-
-        await vm.ImportFavoritesCommand.ExecuteAsync(null);
-
-        var prompt = Assert.Single(_dialogs.Prompts);
-        Assert.Equal(SharedText.Trim(), prompt.InitialText);
-        Assert.True(prompt.IsMultiline);
-        Assert.Empty(_service.CollectionRequests);
-        Assert.Equal([new SavedWorkshopEntry(Pack, "Survival Pack")], _favorites.Collections);
-        Assert.Equal([new SavedWorkshopEntry(1001, "Core Library"), new SavedWorkshopEntry(1005, "Weather")], _favorites.Items);
-        Assert.Equal([new RememberedWorkshopCollectionRow(Pack, "Survival Pack", IsOpen: false, IsFavorite: true)], vm.FavoriteCollections);
-        Assert.Equal(Imported(1, 2, 0), vm.FavoritesStatusText);
-    }
-
-    [Fact]
-    public async Task ImportFavorites_Twice_AddsNothingTheSecondTimeAndKeepsEarlierFavorites()
-    {
-        _favorites.Toggle(WorkshopFavoriteKind.Item, 1003, "Vehicles");
-        var vm = await CreateAsync();
-        _dialogs.Accept(SharedText);
-        await vm.ImportFavoritesCommand.ExecuteAsync(null);
-
-        _dialogs.Accept(SharedText);
-        await vm.ImportFavoritesCommand.ExecuteAsync(null);
-
-        Assert.Equal([Pack], _favorites.Collections.Select(entry => entry.Id));
-        Assert.Equal([1001UL, 1005, 1003], _favorites.Items.Select(entry => entry.Id));
-        Assert.Equal(Imported(0, 0, 0), vm.FavoritesStatusText);
-    }
-
-    [Fact]
-    public async Task ImportFavorites_UnmarkedIds_AreSortedByAskingTheWebApi()
-    {
-        _dialogs.Accept("https://steamcommunity.com/sharedfiles/filedetails/?id=9000\n1005\nnot an id\n");
-        var vm = await CreateAsync();
-
-        await vm.ImportFavoritesCommand.ExecuteAsync(null);
-
-        Assert.Equal([Pack, 1005UL], _service.CollectionRequests);
-        Assert.Equal([new SavedWorkshopEntry(Pack, "Survival Pack")], _favorites.Collections);
-        Assert.Equal([new SavedWorkshopEntry(1005, "Weather")], _favorites.Items);
-        Assert.Equal(Imported(1, 1, 1), vm.FavoritesStatusText);
-    }
-
-    [Fact]
-    public async Task ImportFavorites_WebApiCannotSortAnId_SkipsItAndGuessesNothing()
-    {
-        _service.CollectionError = () => TestErrors.Create(ErrorCode.WorkshopNetworkFailed);
-        _dialogs.Accept("9000\n#items\n1005");
-        var vm = await CreateAsync();
-
-        await vm.ImportFavoritesCommand.ExecuteAsync(null);
-
-        Assert.Empty(_favorites.Collections);
-        Assert.Equal([1005UL], _favorites.Items.Select(entry => entry.Id));
-        Assert.Equal(Imported(0, 1, 1), vm.FavoritesStatusText);
-    }
-
-    [Fact]
-    public async Task ImportFavorites_UnmarkedIdsAlreadyStarred_AreNotAskedAgain()
-    {
-        _favorites.Toggle(WorkshopFavoriteKind.Collection, Pack, "Survival Pack");
-        _favorites.Toggle(WorkshopFavoriteKind.Item, 1005, "Weather");
-        _dialogs.Accept("9000\n1005\n");
-        var vm = await CreateAsync();
-
-        await vm.ImportFavoritesCommand.ExecuteAsync(null);
-
-        Assert.Empty(_service.CollectionRequests);
-        Assert.Equal(Imported(0, 0, 0), vm.FavoritesStatusText);
-    }
-
-    [Fact]
-    public async Task ImportFavorites_Prompt_RejectsTextWithoutAnIdAndIgnoresUnrelatedClipboardText()
-    {
-        _clipboard.Text = "survival pack:Core;Maps;";
-        var vm = await CreateAsync();
-
-        await vm.ImportFavoritesCommand.ExecuteAsync(null);
-
-        var prompt = Assert.Single(_dialogs.Prompts);
-        Assert.Equal("", prompt.InitialText);
-        Assert.Equal(UiText.WorkshopFavorites_ImportNothing, prompt.Validate("#collections\n#items\nno ids here"));
-        Assert.Null(prompt.Validate("1001"));
-        Assert.Empty(_preferences.SavedWorkshopFavorites);
-        Assert.Null(vm.FavoritesStatusText);
-    }
-
-    [Fact]
-    public async Task ImportFavorites_WhileStarredItemsAreShown_ListsTheNewOnes()
-    {
-        var vm = await CreateAsync();
-        await vm.OpenFavoriteItemsCommand.ExecuteAsync(null);
-        _dialogs.Accept("#items\n1005");
-
-        await vm.ImportFavoritesCommand.ExecuteAsync(null);
-
-        Assert.Equal([1005UL], vm.Rows.Select(row => row.Id));
-        Assert.Equal(WorkshopItemState.NotSubscribed, Row(vm, 1005).Item.State);
     }
 }

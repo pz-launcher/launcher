@@ -728,6 +728,9 @@
   <data name="Mods_SectionWorkshopCollections" xml:space="preserve">
     <value>工坊合集</value>
   </data>
+  <data name="Mods_SectionWorkshopFavorites" xml:space="preserve">
+    <value>收藏</value>
+  </data>
   <data name="Mods_Refresh" xml:space="preserve">
     <value>刷新</value>
   </data>
@@ -1172,11 +1175,11 @@
   <data name="WorkshopCollections_SkippedNoMods" xml:space="preserve">
     <value>不含模组</value>
   </data>
-  <data name="WorkshopFavorites_Title" xml:space="preserve">
-    <value>本地收藏</value>
-  </data>
   <data name="WorkshopFavorites_Items" xml:space="preserve">
     <value>本地收藏的物品</value>
+  </data>
+  <data name="WorkshopFavorites_Collections" xml:space="preserve">
+    <value>本地收藏的合集</value>
   </data>
   <data name="WorkshopFavorites_CollectionsEmpty" xml:space="preserve">
     <value>点亮星标的合集会列在这里。</value>
