@@ -38,12 +38,13 @@ public class MainViewModelTests : UiTextCultureTest
         var history = TestWorkshop.History();
         var userCollections = TestWorkshop.UserCollections();
         var favorites = TestWorkshop.Favorites();
+        var afterLaunch = new AfterLaunchSettings(store, new(null, null, null));
         return new(
             new HomeViewModel(
                 installs, launcher, overrides, dialogs, zombieBuddy, channels, new FakeZombieBuddyModsService(),
                 collections, defaults, applier, orderWriter, TestWorkshop.LaunchCheck(new FakeWorkshopService()),
-                new FakeWorkshopService(), new FakeWorkshopActionRunner(), runState, new AfterLaunchSettings(store, new(null, null, null)),
-                new FakeLauncherWindow(), new FakeAppLifetime(), new ManualTimeProvider()),
+                new FakeWorkshopService(), new FakeWorkshopActionRunner(), runState,
+                new AfterLaunchFlow(afterLaunch, new FakeLauncherWindow(), new FakeAppLifetime(), dialogs, launcher)),
             installs,
             new ModsViewModel(
                 installs, collections, overrides, defaults, applier, dialogs, new FakeClipboardService(), runState, orderWriter,
@@ -53,11 +54,12 @@ public class MainViewModelTests : UiTextCultureTest
                 new FakeThemeService(AppTheme.Light),
                 store,
                 new FakeWindowPlacementService(),
-                new AfterLaunchSettings(store, new(null, null, null)),
+                afterLaunch,
                 java,
                 new UpdateSettingsViewModel(updates, Localization),
                 TestProxy.ViewModel(Localization, store),
-                TestSteam.ViewModel(Localization, store)),
+                TestSteam.ViewModel(Localization, store),
+                Localization),
             new LaunchSettingsViewModel(
                 installs, launcher, overrides, java, zombieBuddy, channels, runState, dialogs, new FakePlatformEnvironment(), Localization),
             new LanguageMenuViewModel(Localization, store),

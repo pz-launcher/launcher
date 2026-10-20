@@ -1,5 +1,8 @@
+using System.Collections.ObjectModel;
+using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Services.Launch;
 using PzLauncher.Desktop.Services.Preferences;
 using PzLauncher.Desktop.Services.Shell;
@@ -10,29 +13,53 @@ using PzLauncher.Desktop.ViewModels.Update;
 
 namespace PzLauncher.Desktop.ViewModels.Settings;
 
-public partial class SettingsViewModel(
-    IThemeService themeService,
-    IPreferenceStore preferences,
-    IWindowPlacementService windowPlacement,
-    AfterLaunchSettings afterLaunch,
-    JavaRuntimesViewModel java,
-    UpdateSettingsViewModel updates,
-    ProxySettingsViewModel proxy,
-    SteamSettingsViewModel steam) : ViewModelBase
+public partial class SettingsViewModel : ViewModelBase
 {
-    public AfterLaunchSettings AfterLaunch { get; } = afterLaunch;
+    private readonly IThemeService _themeService;
+    private readonly IPreferenceStore _preferences;
+    private readonly IWindowPlacementService _windowPlacement;
+    private readonly AfterLaunchSettings _afterLaunch;
 
-    public JavaRuntimesViewModel Java { get; } = java;
+    public SettingsViewModel(
+        IThemeService themeService,
+        IPreferenceStore preferences,
+        IWindowPlacementService windowPlacement,
+        AfterLaunchSettings afterLaunch,
+        JavaRuntimesViewModel java,
+        UpdateSettingsViewModel updates,
+        ProxySettingsViewModel proxy,
+        SteamSettingsViewModel steam,
+        ILocalizationService localization)
+    {
+        _themeService = themeService;
+        _preferences = preferences;
+        _windowPlacement = windowPlacement;
+        _afterLaunch = afterLaunch;
+        Java = java;
+        Updates = updates;
+        Proxy = proxy;
+        Steam = steam;
+        Theme = themeService.Current;
+        RebuildAfterLaunchOptions();
 
-    public UpdateSettingsViewModel Updates { get; } = updates;
+        // Never unsubscribed: all of these are app-lifetime singletons.
+        afterLaunch.PropertyChanged += OnAfterLaunchPropertyChanged;
+        localization.LanguageChanged += (_, _) => RebuildAfterLaunchOptions();
+    }
 
-    public ProxySettingsViewModel Proxy { get; } = proxy;
+    public ObservableCollection<AfterLaunchOption> AfterLaunchOptions { get; } = [];
 
-    public SteamSettingsViewModel Steam { get; } = steam;
+    public JavaRuntimesViewModel Java { get; }
+
+    public UpdateSettingsViewModel Updates { get; }
+
+    public ProxySettingsViewModel Proxy { get; }
+
+    public SteamSettingsViewModel Steam { get; }
 
     [ObservableProperty] public partial SettingsSection Section { get; set; }
 
-    [ObservableProperty] public partial AppTheme Theme { get; set; } = themeService.Current;
+    [ObservableProperty] public partial AppTheme Theme { get; set; }
 
     partial void OnSectionChanged(SettingsSection value)
     {
@@ -56,17 +83,37 @@ public partial class SettingsViewModel(
 
     partial void OnThemeChanged(AppTheme value)
     {
-        if (value == themeService.Current)
+        if (value == _themeService.Current)
         {
             return;
         }
 
-        themeService.SetTheme(value);
+        _themeService.SetTheme(value);
 
         // SaveThemeAsync never throws for I/O, and a failed save must not undo the switch.
-        _ = preferences.SaveThemeAsync(value);
+        _ = _preferences.SaveThemeAsync(value);
     }
 
     [RelayCommand]
-    private void ResetWindowSize() => windowPlacement.ResetToDefault();
+    private void ResetWindowSize() => _windowPlacement.ResetToDefault();
+
+    private void RebuildAfterLaunchOptions()
+    {
+        AfterLaunchOptions.Clear();
+        foreach (var option in AfterLaunchSettings.Options())
+        {
+            AfterLaunchOptions.Add(new AfterLaunchOption(_afterLaunch, option));
+        }
+    }
+
+    private void OnAfterLaunchPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName is nameof(AfterLaunchSettings.Action))
+        {
+            foreach (var option in AfterLaunchOptions)
+            {
+                option.NotifyChecked();
+            }
+        }
+    }
 }

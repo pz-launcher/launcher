@@ -1,3 +1,4 @@
+using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Services.Launch;
 using PzLauncher.Desktop.Services.Preferences;
 using PzLauncher.Desktop.Tests.TestSupport;
@@ -24,7 +25,11 @@ public class SettingsViewModelTests : UiTextCultureTest
             TestJava.ViewModel(Localization, _java, _store),
             new UpdateSettingsViewModel(TestUpdates.Coordinator(new FakeUpdateService(), _store), Localization),
             TestProxy.ViewModel(Localization, _store),
-            TestSteam.ViewModel(Localization, _store, _steam));
+            TestSteam.ViewModel(Localization, _store, _steam),
+            Localization);
+
+    private static AfterLaunchAction[] Checked(SettingsViewModel vm) =>
+        [.. vm.AfterLaunchOptions.Where(option => option.IsChecked).Select(option => option.Value)];
 
     [Theory]
     [InlineData(AppTheme.Light)]
@@ -62,25 +67,41 @@ public class SettingsViewModelTests : UiTextCultureTest
     }
 
     [Fact]
-    public void AfterLaunch_NothingSaved_IsUnchosen()
+    public void AfterLaunchOptions_NothingSaved_ListsEveryChoiceWithNoneChecked()
     {
         var vm = CreateViewModel(new FakeThemeService(AppTheme.Light));
 
-        Assert.Null(vm.AfterLaunch.Action);
+        Assert.Equal(AfterLaunchSettings.Options().Select(option => option.Text), vm.AfterLaunchOptions.Select(option => option.Label));
+        Assert.Empty(Checked(vm));
     }
 
     [Fact]
-    public void AfterLaunch_Chosen_SavesEachChangeButNotTheLoadedValue()
+    public void AfterLaunchOptions_Checked_ChecksOnlyThatOne_SavingEachChangeButNotTheLoadedValue()
     {
         var vm = CreateViewModel(new FakeThemeService(AppTheme.Light), AfterLaunchAction.Minimize);
 
-        Assert.Equal(AfterLaunchAction.Minimize, vm.AfterLaunch.Action);
+        Assert.Equal([AfterLaunchAction.Minimize], Checked(vm));
         Assert.Empty(_store.SavedAfterLaunch);
 
-        vm.AfterLaunch.Action = AfterLaunchAction.Close;
-        vm.AfterLaunch.Action = AfterLaunchAction.Keep;
+        vm.AfterLaunchOptions.Single(option => option.Value == AfterLaunchAction.Close).IsChecked = true;
+        vm.AfterLaunchOptions.Single(option => option.Value == AfterLaunchAction.Minimize).IsChecked = false;
 
-        Assert.Equal([AfterLaunchAction.Close, AfterLaunchAction.Keep], _store.SavedAfterLaunch);
+        Assert.Equal([AfterLaunchAction.Close], Checked(vm));
+        Assert.Equal([AfterLaunchAction.Close], _store.SavedAfterLaunch);
+    }
+
+    [Fact]
+    public void AfterLaunchOptions_LanguageSwitched_ShowTheNewTextsAndKeepTheChoice()
+    {
+        var vm = CreateViewModel(new FakeThemeService(AppTheme.Light), AfterLaunchAction.Close);
+        string[] english = [.. vm.AfterLaunchOptions.Select(option => option.Label)];
+
+        Localization.SetLanguage(AppLanguage.Russian);
+
+        string[] russian = [.. vm.AfterLaunchOptions.Select(option => option.Label)];
+        Assert.Equal(AfterLaunchSettings.Options().Select(option => option.Text), russian);
+        Assert.NotEqual(english, russian);
+        Assert.Equal([AfterLaunchAction.Close], Checked(vm));
     }
 
     [Fact]

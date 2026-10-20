@@ -1,4 +1,3 @@
-using PzLauncher.Desktop.Services.Launch;
 using PzLauncher.Desktop.Services.Shell;
 using PzLauncher.Desktop.Themes;
 using PzLauncher.Desktop.ViewModels.Mods;
@@ -11,7 +10,7 @@ namespace PzLauncher.Desktop.Tests.TestSupport;
 /// The Workshop action dialog runs its action, as the real dialog does on open, unless <see cref="WorkshopActionHandler"/> says otherwise.
 /// The setup dialog returns <see cref="SetupResult"/>'s answer without running the operation unless the handler starts it.
 /// The mod pick dialog answers with <see cref="ModPickResult"/>, which may change the choices first.
-/// Prompts, confirms and the after-launch choice take their answers from the queues in order; an empty queue cancels.
+/// Prompts, confirms and single choices take their answers from the queues in order; an empty queue cancels.
 /// </summary>
 public sealed class FakeDialogService : IDialogService
 {
@@ -47,10 +46,11 @@ public sealed class FakeDialogService : IDialogService
 
     public Func<WorkshopModPickViewModel, bool> ModPickResult { get; set; } = _ => true;
 
-    public int AfterLaunchPrompts { get; private set; }
+    /// <summary>Each a <see cref="ChoicePrompt{T}"/>.</summary>
+    public List<object> SingleChoices { get; } = [];
 
-    /// <summary>An empty queue dismisses.</summary>
-    public Queue<AfterLaunchAction> AfterLaunchAnswers { get; } = new();
+    /// <summary>Values of the asked prompt's type; an empty queue dismisses.</summary>
+    public Queue<object> SingleChoiceAnswers { get; } = new();
 
     public event Action? Shown;
 
@@ -110,11 +110,12 @@ public sealed class FakeDialogService : IDialogService
         return Task.FromResult(ModPickResult(pick));
     }
 
-    public Task<AfterLaunchAction?> ChooseAfterLaunchAsync()
+    public Task<T?> ChooseOneAsync<T>(ChoicePrompt<T> prompt)
+        where T : struct
     {
-        AfterLaunchPrompts++;
+        SingleChoices.Add(prompt);
         Shown?.Invoke();
-        return Task.FromResult<AfterLaunchAction?>(AfterLaunchAnswers.Count > 0 ? AfterLaunchAnswers.Dequeue() : null);
+        return Task.FromResult<T?>(SingleChoiceAnswers.Count > 0 ? (T)SingleChoiceAnswers.Dequeue() : null);
     }
 
     /// <summary>Runs the operation as the real dialog does on open, then answers.</summary>
@@ -167,10 +168,10 @@ public sealed class FakeLauncherWindow : ILauncherWindow
 
     public void Minimize() => Calls.Add(nameof(Minimize));
 
-    public void HideToTray()
+    public void Hide()
     {
         IsHidden = true;
-        Calls.Add(nameof(HideToTray));
+        Calls.Add(nameof(Hide));
     }
 
     public void Restore()

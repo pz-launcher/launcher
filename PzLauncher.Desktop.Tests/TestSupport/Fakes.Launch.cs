@@ -5,7 +5,10 @@ using PzLauncher.Desktop.Services.Launch;
 
 namespace PzLauncher.Desktop.Tests.TestSupport;
 
-/// <summary>Each successful launch starts a game that runs until <see cref="Exit"/> completes.</summary>
+/// <summary>
+/// Each successful launch starts a game that runs until <see cref="Exit"/> completes, and outlives its early-exit window once
+/// <see cref="PastEarlyExit"/> is set; an exit before that counts as an early one.
+/// </summary>
 public sealed class FakeGameLaunchService : IGameLaunchService
 {
     public Func<string, Result<GameLaunchDefaults>> Defaults { get; set; } = _ => TestLaunch.Defaults();
@@ -22,6 +25,11 @@ public sealed class FakeGameLaunchService : IGameLaunchService
 
     public TaskCompletionSource<Result> Exit { get; private set; } = Exited();
 
+    public TaskCompletionSource<bool> PastEarlyExit { get; private set; } = Decided(false);
+
+    /// <summary>Sets <see cref="PastEarlyExit"/> as each game starts.</summary>
+    public bool OutlivesEarlyExit { get; set; }
+
     public Task<Result<GameLaunchDefaults>> GetDefaultsAsync(string installRoot, CancellationToken ct = default)
     {
         DefaultsRequests.Add(installRoot);
@@ -34,7 +42,15 @@ public sealed class FakeGameLaunchService : IGameLaunchService
         var result = Launch(request);
         if (result.IsSuccess)
         {
+            var pastEarlyExit = new TaskCompletionSource<bool>();
             Exit = new TaskCompletionSource<Result>();
+            Exit.Task.ContinueWith(_ => pastEarlyExit.TrySetResult(false), CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+            if (OutlivesEarlyExit)
+            {
+                pastEarlyExit.SetResult(true);
+            }
+
+            PastEarlyExit = pastEarlyExit;
         }
 
         return Task.FromResult(result);
@@ -48,11 +64,20 @@ public sealed class FakeGameLaunchService : IGameLaunchService
 
     public Task<Result> WaitForExitAsync(CancellationToken ct = default) => Exit.Task.WaitAsync(ct);
 
+    public Task<bool> WaitPastEarlyExitAsync(CancellationToken ct = default) => PastEarlyExit.Task.WaitAsync(ct);
+
     private static TaskCompletionSource<Result> Exited()
     {
         var exited = new TaskCompletionSource<Result>();
         exited.SetResult(Result.Ok());
         return exited;
+    }
+
+    private static TaskCompletionSource<bool> Decided(bool pastEarlyExit)
+    {
+        var decided = new TaskCompletionSource<bool>();
+        decided.SetResult(pastEarlyExit);
+        return decided;
     }
 }
 

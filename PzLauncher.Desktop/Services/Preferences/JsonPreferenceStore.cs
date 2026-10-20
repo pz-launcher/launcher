@@ -80,9 +80,7 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger,
             LogInvalidDefaultModCollections(logger, filePath);
         }
 
-        var updateSource = file.UpdateSource is { ValueKind: JsonValueKind.String } source
-            ? UpdateSourcePreferences.FromPreferenceName(source.GetString())
-            : null;
+        var updateSource = ToNamed(file.UpdateSource, UpdateSourcePreferences.FromPreferenceName);
         if (updateSource is null && file.UpdateSource is { ValueKind: not JsonValueKind.Null })
         {
             LogInvalidUpdateSource(logger, filePath);
@@ -100,9 +98,7 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger,
             LogInvalidSteamHookReminder(logger, filePath);
         }
 
-        var afterLaunch = file.AfterLaunch is { ValueKind: JsonValueKind.String } afterLaunchName
-            ? AfterLaunchPreferences.FromPreferenceName(afterLaunchName.GetString())
-            : null;
+        var afterLaunch = ToNamed(file.AfterLaunch, AfterLaunchPreferences.FromPreferenceName);
         if (afterLaunch is null && file.AfterLaunch is { ValueKind: not JsonValueKind.Null })
         {
             LogInvalidAfterLaunch(logger, filePath);
@@ -177,7 +173,7 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger,
 
     public Task SaveZombieBuddyChannelAsync(string installRoot, ZombieBuddyChannel channel, CancellationToken ct = default)
     {
-        var entry = JsonSerializer.SerializeToElement(channel.PreferenceName(), DesktopJsonContext.Default.String);
+        var entry = NameElement(channel.PreferenceName());
         return SaveAsync(file => file with { ZombieBuddyChannels = WithPerInstall(file.ZombieBuddyChannels, installRoot, entry) }, ct);
     }
 
@@ -189,7 +185,7 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger,
 
     public Task SaveUpdateSourceAsync(UpdateSource source, CancellationToken ct = default)
     {
-        var entry = JsonSerializer.SerializeToElement(source.PreferenceName(), DesktopJsonContext.Default.String);
+        var entry = NameElement(source.PreferenceName());
         return SaveAsync(file => file with { UpdateSource = entry }, ct);
     }
 
@@ -207,7 +203,7 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger,
 
     public Task SaveAfterLaunchAsync(AfterLaunchAction action, CancellationToken ct = default)
     {
-        var entry = JsonSerializer.SerializeToElement(action.PreferenceName(), DesktopJsonContext.Default.String);
+        var entry = NameElement(action.PreferenceName());
         return SaveAsync(file => file with { AfterLaunch = entry }, ct);
     }
 
@@ -311,6 +307,12 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger,
             JsonValueKind.False => false,
             _ => null,
         };
+
+    private static T? ToNamed<T>(JsonElement? element, Func<string?, T?> fromPreferenceName)
+        where T : struct =>
+        element is { ValueKind: JsonValueKind.String } name ? fromPreferenceName(name.GetString()) : null;
+
+    private static JsonElement NameElement(string preferenceName) => JsonSerializer.SerializeToElement(preferenceName, DesktopJsonContext.Default.String);
 
     private static List<string> ToManualJavaHomes(IReadOnlyList<JsonElement>? entries) =>
     [

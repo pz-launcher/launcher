@@ -1,16 +1,24 @@
+using System;
 using Avalonia.Controls;
+using PzLauncher.Desktop.Services.Shell;
 
 namespace PzLauncher.Desktop.Views;
 
-/// <summary>Minimizes, hides and brings back the main window: after a launch, from the tray, and when the launcher is started again.</summary>
-public sealed class LauncherWindow
+/// <summary>Minimizes, hides, brings back and closes the main window: after a launch, from the tray, and when the launcher is started again.</summary>
+public sealed class LauncherWindow : ILauncherWindow, IAppLifetime
 {
-    private readonly Window _window;
+    private Window? _window;
 
     // Restoring to Normal would drop a maximized state, so the last non-minimized state is kept.
     private WindowState _restoreTo;
 
-    private LauncherWindow(Window window)
+    public bool IsHidden => !Attached.IsVisible;
+
+    // Null until Attach: the container, and so the main window's view models, are built before the window.
+    private Window Attached => _window ?? throw new InvalidOperationException("The launcher window was used before the main window was attached.");
+
+    /// <summary>Call once, with the main window.</summary>
+    public void Attach(Window window)
     {
         _window = window;
         _restoreTo = window.WindowState == WindowState.Minimized ? WindowState.Normal : window.WindowState;
@@ -23,26 +31,24 @@ public sealed class LauncherWindow
         };
     }
 
-    public bool IsHidden => !_window.IsVisible;
+    public void Minimize() => Attached.WindowState = WindowState.Minimized;
 
-    public static LauncherWindow Attach(Window window) => new(window);
-
-    public void Minimize() => _window.WindowState = WindowState.Minimized;
-
-    public void Hide() => _window.Hide();
+    public void Hide() => Attached.Hide();
 
     public void Restore()
     {
-        if (!_window.IsVisible)
+        if (!Attached.IsVisible)
         {
-            _window.Show();
+            Attached.Show();
         }
 
-        if (_window.WindowState == WindowState.Minimized)
+        if (Attached.WindowState == WindowState.Minimized)
         {
-            _window.WindowState = _restoreTo;
+            Attached.WindowState = _restoreTo;
         }
 
-        _window.Activate();
+        Attached.Activate();
     }
+
+    public void Close() => Attached.Close();
 }

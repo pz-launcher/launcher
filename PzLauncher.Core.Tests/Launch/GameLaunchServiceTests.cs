@@ -349,6 +349,66 @@ public sealed class GameLaunchServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task WaitPastEarlyExitAsync_NoGame_ReturnsFalse() =>
+        Assert.False(await _service.WaitPastEarlyExitAsync(Ct));
+
+    [Fact]
+    public async Task WaitPastEarlyExitAsync_GameRunsThirtySeconds_ReturnsTrue()
+    {
+        ResultAssert.Ok(await LaunchAsync(_installs.CreateFlat("PZ", GameInstallBuilder.WindowsGameJson)));
+        var wait = _service.WaitPastEarlyExitAsync(Ct);
+        _time.Advance(TimeSpan.FromSeconds(29));
+        Assert.False(wait.IsCompleted);
+
+        _time.Advance(TimeSpan.FromSeconds(1));
+
+        Assert.True(await wait);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    public async Task WaitPastEarlyExitAsync_GameExitsWithinThirtySeconds_ReturnsFalse(int exitCode)
+    {
+        ResultAssert.Ok(await LaunchAsync(_installs.CreateFlat("PZ", GameInstallBuilder.WindowsGameJson)));
+        var wait = _service.WaitPastEarlyExitAsync(Ct);
+        _time.Advance(TimeSpan.FromSeconds(29));
+
+        await ExitAsync(exitCode);
+
+        Assert.False(await wait);
+    }
+
+    [Fact]
+    public async Task WaitPastEarlyExitAsync_Cancelled_ThrowsWhileGameKeepsRunning()
+    {
+        ResultAssert.Ok(await LaunchAsync(_installs.CreateFlat("PZ", GameInstallBuilder.WindowsGameJson)));
+        using var cts = new CancellationTokenSource();
+
+        var wait = _service.WaitPastEarlyExitAsync(cts.Token);
+        await cts.CancelAsync();
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => wait);
+        Assert.False(_service.WaitForExitAsync(Ct).IsCompleted);
+    }
+
+    [Fact]
+    public async Task WaitPastEarlyExitAsync_Relaunched_WaitsForTheNewGame()
+    {
+        var root = _installs.CreateFlat("PZ", GameInstallBuilder.WindowsGameJson);
+        ResultAssert.Ok(await LaunchAsync(root));
+        _time.Advance(TimeSpan.FromSeconds(30));
+        ResultAssert.Ok(await ExitAsync(1));
+
+        ResultAssert.Ok(await LaunchAsync(root));
+        var wait = _service.WaitPastEarlyExitAsync(Ct);
+
+        Assert.False(wait.IsCompleted);
+        ResultAssert.Failed(await ExitAsync(1), ErrorCode.LaunchGameExitedEarly);
+        Assert.False(await wait);
+    }
+
+    [Fact]
     public async Task GetDefaultsAsync_WindowsInstall_ReturnsJsonMemoryArgsBundledJavaAndSystemMemory()
     {
         var root = _installs.CreateFlat("PZ", GameInstallBuilder.WindowsGameJson);
