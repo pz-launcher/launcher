@@ -113,11 +113,7 @@ public partial class ModCollectionsViewModel : ViewModelBase
     [RelayCommand(CanExecute = nameof(CanWrite))]
     private async Task NewAsync()
     {
-        var prompt = NamePrompt(UiText.ModCollections_NewTitle, "", UiText.ModCollections_Create);
-        if (await AskNameAsync(prompt, original: null) is { } name)
-        {
-            await SaveAndSelectAsync(name, []);
-        }
+        await CreateAsync(UiText.ModCollections_NewTitle, "", []);
     }
 
     private bool CanCreateFromEnabled() => _page.CanWrite && _page.State is { ActiveIds.Count: > 0 };
@@ -130,11 +126,7 @@ public partial class ModCollectionsViewModel : ViewModelBase
             return;
         }
 
-        var prompt = NamePrompt(UiText.ModCollections_NewFromEnabledTitle, "", UiText.ModCollections_Create);
-        if (await AskNameAsync(prompt, original: null) is { } name)
-        {
-            await SaveAndSelectAsync(name, state.ActiveIds);
-        }
+        await CreateAsync(UiText.ModCollections_NewFromEnabledTitle, "", state.ActiveIds);
     }
 
     [RelayCommand(CanExecute = nameof(CanWrite))]
@@ -193,7 +185,7 @@ public partial class ModCollectionsViewModel : ViewModelBase
         }
 
         var original = row.Name;
-        var prompt = NamePrompt(UiText.ModCollections_RenameTitle, original, UiText.ModCollections_Rename);
+        var prompt = ModCollectionPrompts.NamePrompt(UiText.ModCollections_RenameTitle, original, UiText.ModCollections_Rename);
         if (await AskNameAsync(prompt, original) is not { } name || name == original)
         {
             return;
@@ -376,13 +368,23 @@ public partial class ModCollectionsViewModel : ViewModelBase
         await _page.WriteAsync((root, extraGameArgs) => _page.Service.SaveAsync(new SaveModCollectionRequest(root, extraGameArgs, name, name, ids)));
     }
 
-    private async Task SaveAndSelectAsync(string name, IReadOnlyList<string> ids)
+    /// <inheritdoc cref="ModsViewModel.CreateCollectionAsync"/>
+    internal async Task<string?> CreateAsync(string title, string initialName, IReadOnlyList<string> ids)
     {
-        if (await _page.WriteAsync((root, extraGameArgs) =>
+        var prompt = ModCollectionPrompts.NamePrompt(title, initialName, UiText.ModCollections_Create);
+        return await AskNameAsync(prompt, original: null) is { } name && await SaveAndSelectAsync(name, ids) ? name : null;
+    }
+
+    private async Task<bool> SaveAndSelectAsync(string name, IReadOnlyList<string> ids)
+    {
+        if (!await _page.WriteAsync((root, extraGameArgs) =>
                 _page.Service.SaveAsync(new SaveModCollectionRequest(root, extraGameArgs, null, name, ids))))
         {
-            SelectByName(name);
+            return false;
         }
+
+        SelectByName(name);
+        return true;
     }
 
     /// <summary>The trimmed name, or <c>null</c> when cancelled.</summary>
@@ -391,9 +393,6 @@ public partial class ModCollectionsViewModel : ViewModelBase
         await ModCollectionPrompts.AskNameAsync(_dialogs, prompt, name => name != original && Exists(name)) is TextPromptResult.Accepted accepted
             ? accepted.Text
             : null;
-
-    private static TextPrompt NamePrompt(string title, string initial, string accept) =>
-        new(title, UiText.ModCollections_NameMessage, initial, accept, ModCollectionPrompts.ValidateName);
 
     private static string? ValidateImport(string text)
     {

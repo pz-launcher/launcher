@@ -1,4 +1,3 @@
-using System;
 using System.ComponentModel;
 using System.Threading;
 using System.Threading.Tasks;
@@ -248,7 +247,8 @@ public sealed partial class UpdateCoordinator : ObservableObject
 
         DownloadPercent = null;
         Status = UpdateStatus.Downloading;
-        var progress = new ContextProgress<DownloadProgress>(report => DownloadPercent = Percent(report, release.Size));
+        var progress = new ContextProgress<DownloadProgress>(report =>
+            DownloadPercent = ProgressPercent.Of(report.Received, report.Total ?? release.Size));
         var downloaded = await _updates.DownloadAsync(release, progress, ct);
         if (!downloaded.IsSuccess)
         {
@@ -276,11 +276,6 @@ public sealed partial class UpdateCoordinator : ObservableObject
         Error = error;
         Status = UpdateStatus.Failed;
     }
-
-    private static int? Percent(DownloadProgress report, long? size) =>
-        (report.Total ?? size) is long total and > 0
-            ? (int)Math.Clamp(report.Received * 100 / total, 0, 100)
-            : null;
 
     private void OnRunStateChanged(object? sender, PropertyChangedEventArgs e)
     {

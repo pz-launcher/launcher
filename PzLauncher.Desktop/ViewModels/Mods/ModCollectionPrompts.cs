@@ -13,6 +13,9 @@ public static class ModCollectionPrompts
     public static string? ValidateName(string text) =>
         ModCollectionName.IsValid(text.Trim()) ? null : UiText.ModCollections_NameInvalid;
 
+    public static TextPrompt NamePrompt(string title, string initial, string accept) =>
+        new(title, UiText.ModCollections_NameMessage, initial, accept, ValidateName);
+
     /// <summary><see cref="TextPromptResult.Accepted"/> carries the trimmed name; a declined overwrite asks for the name again.</summary>
     /// <param name="clashes">Whether saving under the name would replace another collection.</param>
     public static async Task<TextPromptResult> AskNameAsync(IDialogService dialogs, TextPrompt prompt, Func<string, bool> clashes)

@@ -1,0 +1,28 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:PzLauncher.Desktop.ViewModels.Mods.Workshop"
+             xmlns:design="using:PzLauncher.Desktop.ViewModels.Design"
+             mc:Ignorable="d" d:DesignWidth="800"
+             x:Class="PzLauncher.Desktop.Views.Mods.Workshop.WorkshopSectionStatus"
+             x:DataType="vm:WorkshopSectionViewModel">
+
+    <Design.DataContext>
+        <x:Static Member="design:DesignData.WorkshopSubscriptions" />
+    </Design.DataContext>
+
+    <!-- A Workshop section's load: progress, the error that stopped it and the warnings it left. -->
+    <StackPanel>
+        <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsLoading}" Margin="0,0,0,8" />
+        <TextBlock Text="{Binding ErrorText}" Classes="error" TextWrapping="Wrap"
+                   IsVisible="{Binding ErrorText, Converter={x:Static ObjectConverters.IsNotNull}}" Margin="0,0,0,8" />
+        <ItemsControl ItemsSource="{Binding Warnings}" Margin="0,0,0,4">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="x:String">
+                    <TextBlock Text="{Binding}" Classes="warning" TextWrapping="Wrap" Margin="0,0,0,4" />
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </StackPanel>
+</UserControl>

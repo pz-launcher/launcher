@@ -1,0 +1,36 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:PzLauncher.Desktop.ViewModels.Mods.Workshop"
+             xmlns:design="using:PzLauncher.Desktop.ViewModels.Design"
+             xmlns:lang="using:PzLauncher.Desktop.Lang"
+             xmlns:ic="using:FluentIcons.Avalonia"
+             mc:Ignorable="d" d:DesignWidth="260"
+             x:Class="PzLauncher.Desktop.Views.Mods.Workshop.WorkshopCollectionRowView"
+             x:DataType="vm:WorkshopCollectionRow">
+
+    <Design.DataContext>
+        <x:Static Member="design:DesignData.WorkshopCollectionRow" />
+    </Design.DataContext>
+
+    <!-- A collection to open, in an ItemsControl of a Workshop item list section. A button, not a ListBox item: a click opens it. -->
+    <Grid ColumnDefinitions="*,Auto">
+        <Button Grid.Column="0" Theme="{StaticResource Shell.ListRow}" Classes.inUse="{Binding IsOpen}"
+                Command="{Binding $parent[ItemsControl].((vm:WorkshopItemListSectionViewModel)DataContext).OpenCollectionCommand}"
+                CommandParameter="{Binding}">
+            <StackPanel Spacing="2">
+                <TextBlock Text="{Binding DisplayTitle}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding DisplayTitle}" />
+                <TextBlock Text="{Binding ChildCount, StringFormat={x:Static lang:UiText.WorkshopCollections_ItemCountFormat}}"
+                           FontSize="12" Foreground="{DynamicResource Shell.TextMuted}" IsVisible="{Binding HasChildCount}" />
+                <TextBlock Text="{Binding IdText}" FontSize="12" Foreground="{DynamicResource Shell.TextMuted}" IsVisible="{Binding !HasChildCount}" />
+            </StackPanel>
+        </Button>
+        <Button Grid.Column="1" VerticalAlignment="Center" Margin="4,0,0,0" Classes.favorite="{Binding IsFavorite}"
+                Command="{Binding $parent[ItemsControl].((vm:WorkshopItemListSectionViewModel)DataContext).ToggleCollectionFavoriteCommand}"
+                CommandParameter="{Binding}"
+                ToolTip.Tip="{x:Static lang:UiText.Workshop_FavoriteToggle}" AutomationProperties.Name="{x:Static lang:UiText.Workshop_FavoriteToggle}">
+            <ic:FluentIcon Classes="favoriteStar" />
+        </Button>
+    </Grid>
+</UserControl>

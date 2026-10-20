@@ -5,6 +5,8 @@ using PzLauncher.Core.Launch;
 using PzLauncher.Core.Mod;
 using PzLauncher.Core.Mod.ZombieBuddy;
 using PzLauncher.Core.Net;
+using PzLauncher.Core.Steam.Workshop;
+using PzLauncher.Core.Steam.Workshop.Actions;
 using PzLauncher.Core.Update;
 using PzLauncher.Desktop.Lang;
 
@@ -23,6 +25,10 @@ public static class DisplayNames
     public static FuncValueConverter<ZombieBuddyChannel, string> ZombieBuddyChannelName { get; } = new(channel => Of(channel));
 
     public static FuncValueConverter<ZombieBuddyStep, string> ZombieBuddyStepName { get; } = new(step => Of(step));
+
+    public static FuncValueConverter<WorkshopItemState, string> WorkshopItemStateName { get; } = new(state => Of(state));
+
+    public static FuncValueConverter<WorkshopItemFailure, string> WorkshopItemFailureName { get; } = new(failure => Of(failure));
 
     public static string Of(PzInstallKind kind) => kind switch
     {
@@ -90,5 +96,24 @@ public static class DisplayNames
         ZombieBuddyStep.AddAgentArg => UiText.ZombieBuddyStep_AddAgentArg,
         ZombieBuddyStep.DeleteFiles => UiText.ZombieBuddyStep_DeleteFiles,
         ZombieBuddyStep.RemoveAgentArg => UiText.ZombieBuddyStep_RemoveAgentArg,
+    };
+
+    public static string Of(WorkshopItemState state) => state switch
+    {
+        WorkshopItemState.UpToDate => UiText.WorkshopItemState_UpToDate,
+        WorkshopItemState.NeedsUpdate => UiText.WorkshopItemState_NeedsUpdate,
+        WorkshopItemState.NotInstalled => UiText.WorkshopItemState_NotInstalled,
+        WorkshopItemState.DisabledLocally => UiText.WorkshopItemState_DisabledLocally,
+        WorkshopItemState.NotSubscribed => UiText.WorkshopItemState_NotSubscribed,
+    };
+
+    public static string Of(WorkshopItemFailure failure) => failure switch
+    {
+        WorkshopItemFailure.SubscribeFailed => UiText.WorkshopItemFailure_SubscribeFailed,
+        WorkshopItemFailure.UnsubscribeFailed => UiText.WorkshopItemFailure_UnsubscribeFailed,
+        WorkshopItemFailure.DownloadNotStarted => UiText.WorkshopItemFailure_DownloadNotStarted,
+        WorkshopItemFailure.DownloadFailed => UiText.WorkshopItemFailure_DownloadFailed,
+        WorkshopItemFailure.TimedOut => UiText.WorkshopItemFailure_TimedOut,
+        WorkshopItemFailure.NotReported => UiText.WorkshopItemFailure_NotReported,
     };
 }

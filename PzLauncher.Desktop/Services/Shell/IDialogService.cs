@@ -1,4 +1,6 @@
 using System.Threading.Tasks;
+using PzLauncher.Desktop.ViewModels.Mods;
+using PzLauncher.Desktop.ViewModels.Mods.Workshop;
 using PzLauncher.Desktop.ViewModels.ZombieBuddy;
 
 namespace PzLauncher.Desktop.Services.Shell;
@@ -14,8 +16,17 @@ public interface IDialogService
     /// <summary>Like <see cref="ConfirmAsync"/>, with a checkbox under the message whose state is returned however the dialog closes.</summary>
     Task<ConfirmOptionResult> ConfirmWithOptionAsync(ConfirmPrompt prompt, string optionText);
 
+    /// <summary>Like <see cref="ConfirmAsync"/>, with a second action button between confirm and cancel.</summary>
+    Task<ConfirmChoice> ChooseAsync(ConfirmPrompt prompt, string alternativeText);
+
     Task<TextPromptResult> PromptTextAsync(TextPrompt prompt);
 
     /// <summary>Starts the operation when it opens. <c>true</c> when the user chose to launch the game.</summary>
     Task<bool> ShowZombieBuddySetupAsync(ZombieBuddySetupViewModel setup);
+
+    /// <summary>Starts the Steam action when it opens; closing it cancels the action if it still runs.</summary>
+    Task ShowWorkshopActionAsync(WorkshopActionViewModel action);
+
+    /// <summary><c>true</c> only for the accept button; the choices stay on the view model.</summary>
+    Task<bool> PickWorkshopModsAsync(WorkshopModPickViewModel pick);
 }

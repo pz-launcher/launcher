@@ -27,8 +27,11 @@ internal static class SteamClientFiles
 
     public static string LoginUsersPath(string steamRoot) => Path.Combine(steamRoot, "config", "loginusers.vdf");
 
-    public static string LocalConfigPath(string steamRoot, uint accountId) =>
-        Path.Combine(steamRoot, "userdata", accountId.ToString(CultureInfo.InvariantCulture), "config", "localconfig.vdf");
+    /// <summary>The account's own files: its config, its Workshop subscription list.</summary>
+    public static string UserDataFolder(string steamRoot, uint accountId) =>
+        Path.Combine(steamRoot, "userdata", accountId.ToString(CultureInfo.InvariantCulture));
+
+    public static string LocalConfigPath(string steamRoot, uint accountId) => Path.Combine(UserDataFolder(steamRoot, accountId), "config", "localconfig.vdf");
 
     /// <summary>Where an app's per-account settings live in <c>localconfig.vdf</c>; keys match case-insensitively.</summary>
     public static IReadOnlyList<string> AppBlockPath(int appId) =>

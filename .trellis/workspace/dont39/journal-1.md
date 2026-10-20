@@ -409,3 +409,71 @@ Surveyed the repo for duplication and oversized folders (none needed moving; Fak
 ### Status
 
 [OK] **Completed**
+
+
+## Session 17: Steam Workshop management
+<!-- trellis-session: v=2 fp=9a42dbe67997efc2 -->
+
+**Date**: 2026-10-19
+**Task**: Steam Workshop management
+**Branch**: `feat/workshop-management`
+
+### Summary
+
+Added 工坊订阅 and 工坊合集 sections to the Mods tab: subscriptions from Steam's local files plus the keyless Web API; subscribe/unsubscribe/force update via a short-lived helper process loading PZ's own steam_api (Native AOT, no Valve binaries shipped); Steam collection open/subscribe-missing/generate launcher collection; pre-launch outdated-item check. Spike and live smoke test confirmed force update fetches items Steam hadn't noticed and RunningAppID returns to 0 after the helper exits. Tests: Core 1534, Desktop 1680 passing; AOT publish 0 warnings.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `ce67881` | Manage Steam Workshop subscriptions and collections in the launcher |
+
+### Status
+
+[OK] **Completed**
+
+
+## Session 18: Favorited and own Steam collections; Workshop reuse refactor
+<!-- trellis-session: v=2 fp=2aaedf0cb27f58a7 -->
+
+**Date**: 2026-10-19
+**Task**: Favorited and own Steam collections; Workshop reuse refactor
+**Branch**: `feat/workshop-management`
+
+### Summary
+
+Grouped Workshop files into Sources/Actions/Helper subfolders; shared duplicated Workshop code with existing helpers (HttpJson, SteamKeyValues read/parse, WorkshopItem.WithLatest, section/dialog base VMs, shared styles). Added favorited + own Steam collections to 工坊合集 via a read-only helper query (creator 0, consumer 108600, paged), cached per account, auto-fetched once per session plus 刷新; Steam-not-running doesn't consume the auto fetch. Live read-only check matched expected ids/counts with CJK titles. Tests: Core 1578, Desktop 1724.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `5288c3b` | Group Workshop files into Sources, Actions and Helper subfolders |
+| `2059178` | Share duplicated Workshop code with existing helpers |
+| `e3969a8` | List favorited and own Steam collections in 工坊合集 |
+
+### Status
+
+[OK] **Completed**
+
+
+## Session 19: Local Workshop favorites with share/import
+<!-- trellis-session: v=2 fp=81b54faf6c8ac47d -->
+
+**Date**: 2026-10-19
+**Task**: Local Workshop favorites with share/import
+**Branch**: `feat/workshop-management`
+
+### Summary
+
+Launcher-local stars for Steam collections and items (preference workshopFavorites, not per account); 本地收藏 group and 本地收藏的物品 pseudo-collection in 工坊合集; star column and filter in 工坊订阅; share as #collections/#items id text, import merges with Web API classification of unmarked ids. Tests: Core 1578, Desktop 1778; AOT 0 warnings.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `bcbc0af` | Star Workshop collections and items locally, and share them |
+
+### Status
+
+[OK] **Completed**

@@ -99,4 +99,28 @@ public sealed class FakePreferenceStore : IPreferenceStore
         SavedSteamHookReminders.Add(remind);
         return Task.CompletedTask;
     }
+
+    public List<IReadOnlyList<SavedWorkshopEntry>> SavedWorkshopCollections { get; } = [];
+
+    public Task SaveWorkshopCollectionsAsync(IReadOnlyList<SavedWorkshopEntry> collections, CancellationToken ct = default)
+    {
+        SavedWorkshopCollections.Add(collections);
+        return Task.CompletedTask;
+    }
+
+    public List<SavedWorkshopUserCollections> SavedWorkshopUserCollections { get; } = [];
+
+    public Task SaveWorkshopUserCollectionsAsync(SavedWorkshopUserCollections collections, CancellationToken ct = default)
+    {
+        SavedWorkshopUserCollections.Add(collections);
+        return Task.CompletedTask;
+    }
+
+    public List<SavedWorkshopFavorites> SavedWorkshopFavorites { get; } = [];
+
+    public Task SaveWorkshopFavoritesAsync(SavedWorkshopFavorites favorites, CancellationToken ct = default)
+    {
+        SavedWorkshopFavorites.Add(favorites);
+        return Task.CompletedTask;
+    }
 }

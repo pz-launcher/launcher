@@ -2,9 +2,13 @@ using PzLauncher.Core.Common;
 using PzLauncher.Core.Installs;
 using PzLauncher.Core.Launch;
 using PzLauncher.Core.Mod.ZombieBuddy;
+using PzLauncher.Core.Steam.Workshop.Actions;
+using PzLauncher.Core.Steam.Workshop;
+using PzLauncher.Desktop.Lang;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Services.Launch;
 using PzLauncher.Desktop.Services.Mods;
+using PzLauncher.Desktop.Services.Shell;
 using PzLauncher.Desktop.Tests.TestSupport;
 using PzLauncher.Desktop.ViewModels.Home;
 using PzLauncher.Desktop.ViewModels.Installs;
@@ -27,6 +31,8 @@ public class HomeViewModelTests : UiTextCultureTest
     private readonly FakeZombieBuddyModsService _zombieBuddyMods = new();
     private readonly FakeModCollectionDefaultsService _defaultCollections = new();
     private readonly FakeModCollectionService _collections = new();
+    private readonly FakeWorkshopService _workshop = new();
+    private readonly FakeWorkshopActionRunner _workshopActions = new();
     private readonly GameRunState _runState = new();
     private readonly ModCollectionOrderWriter _orderWriter;
 
@@ -41,7 +47,8 @@ public class HomeViewModelTests : UiTextCultureTest
     private HomeViewModel CreateViewModel() =>
         new(
             Installs, _launcher, _overrides, _dialogs, _zombieBuddy, _channels, _zombieBuddyMods, _collections, _defaultCollections,
-            new ModCollectionApplier(_collections, _dialogs), _orderWriter, _runState);
+            new ModCollectionApplier(_collections, _dialogs), _orderWriter, TestWorkshop.LaunchCheck(_workshop), _workshop,
+            _workshopActions, _runState);
 
     private async Task<HomeViewModel> CreateActivatedViewModelAsync(params PzInstall[] installs)
     {
@@ -538,6 +545,178 @@ public class HomeViewModelTests : UiTextCultureTest
 
         Assert.Equal([ErrorMessages.ToUserText(error)], _dialogs.Errors);
         Assert.Equal(["ModA", "ModB"], _collections.ActiveIds);
+        Assert.Single(_launcher.Launches);
+    }
+
+    // Workshop pre-launch check
+
+    // The current collection enables ModA from item 1, which has a newer version than the installed one.
+    private void ArrangeOutdatedWorkshopItem()
+    {
+        _collections.WithMods(TestMods.Mod("ModA", workshopId: 1)).WithCollection("Pack", "ModA");
+        _defaultCollections.Save(SteamGame.RootPath, "Pack");
+        _workshop.WithItem(TestWorkshop.Item(1, mods: ["ModA"])).WithPublished(1, "Alpha", "200");
+        _workshopActions.Succeeded = (_, id) => _workshop.Install(id, "200");
+    }
+
+    [Fact]
+    public async Task Launch_OutdatedWorkshopItem_AsksBeforeTheApply_ListingItByTitle()
+    {
+        ArrangeOutdatedWorkshopItem();
+        _dialogs.ChoiceAnswers.Enqueue(ConfirmChoice.Alternative);
+        var appliesWhenShown = new List<int>();
+        _dialogs.Shown += () => appliesWhenShown.Add(_collections.Applies.Count);
+        var vm = await CreateActivatedViewModelAsync(SteamGame);
+
+        await LaunchAndExitAsync(vm);
+
+        var (prompt, alternative) = Assert.Single(_dialogs.Choices);
+        Assert.Equal(["Alpha (1)"], prompt.Items);
+        Assert.Equal(UiText.WorkshopLaunch_LaunchNow, alternative);
+        Assert.Equal([0], appliesWhenShown);
+    }
+
+    [Fact]
+    public async Task Launch_OutdatedWorkshopItem_LaunchNow_LaunchesWithoutUpdating()
+    {
+        ArrangeOutdatedWorkshopItem();
+        _dialogs.ChoiceAnswers.Enqueue(ConfirmChoice.Alternative);
+        var vm = await CreateActivatedViewModelAsync(SteamGame);
+
+        await LaunchAndExitAsync(vm);
+
+        Assert.Empty(_workshopActions.Runs);
+        Assert.Single(_collections.Applies);
+        Assert.Single(_launcher.Launches);
+    }
+
+    [Fact]
+    public async Task Launch_OutdatedWorkshopItem_Cancel_NeitherAppliesNorLaunches()
+    {
+        ArrangeOutdatedWorkshopItem();
+        var vm = await CreateActivatedViewModelAsync(SteamGame);
+
+        await vm.LaunchCommand.ExecuteAsync(null);
+
+        Assert.Single(_dialogs.Choices);
+        Assert.Empty(_workshopActions.Runs);
+        Assert.Empty(_collections.Applies);
+        Assert.Empty(_zombieBuddy.StatusRequests);
+        Assert.Empty(_launcher.Launches);
+        Assert.True(vm.LaunchCommand.CanExecute(null));
+    }
+
+    [Fact]
+    public async Task Launch_OutdatedWorkshopItem_UpdateThenLaunch_UpdatesItThenAppliesAndLaunches()
+    {
+        ArrangeOutdatedWorkshopItem();
+        _dialogs.ChoiceAnswers.Enqueue(ConfirmChoice.Confirm);
+        var appliesWhenRun = new List<int>();
+        _dialogs.WorkshopActionHandler = action =>
+        {
+            appliesWhenRun.Add(_collections.Applies.Count);
+            return action.StartAsync();
+        };
+        var vm = await CreateActivatedViewModelAsync(SteamGame);
+
+        await LaunchAndExitAsync(vm);
+
+        var (root, request) = Assert.Single(_workshopActions.Runs);
+        Assert.Equal((SteamGame.RootPath, WorkshopAction.Update), (root, request.Action));
+        Assert.Equal([1ul], request.Ids);
+        Assert.Equal([0], appliesWhenRun);
+        Assert.Empty(_dialogs.Confirms);
+        Assert.Single(_collections.Applies);
+        Assert.Single(_launcher.Launches);
+    }
+
+    [Fact]
+    public async Task Launch_WorkshopUpdateFails_LaunchAnyway_Launches()
+    {
+        ArrangeOutdatedWorkshopItem();
+        _workshopActions.Failure = _ => WorkshopItemFailure.DownloadFailed;
+        _dialogs.ChoiceAnswers.Enqueue(ConfirmChoice.Confirm);
+        _dialogs.ConfirmAnswers.Enqueue(true);
+        var vm = await CreateActivatedViewModelAsync(SteamGame);
+
+        await LaunchAndExitAsync(vm);
+
+        var confirm = Assert.Single(_dialogs.Confirms);
+        Assert.Equal(["Alpha (1)"], confirm.Items);
+        Assert.Equal(UiText.WorkshopLaunch_LaunchNow, confirm.ConfirmText);
+        Assert.Single(_collections.Applies);
+        Assert.Single(_launcher.Launches);
+    }
+
+    [Fact]
+    public async Task Launch_WorkshopUpdateFails_Cancel_NeitherAppliesNorLaunches()
+    {
+        ArrangeOutdatedWorkshopItem();
+        _workshopActions.Failure = _ => WorkshopItemFailure.DownloadFailed;
+        _dialogs.ChoiceAnswers.Enqueue(ConfirmChoice.Confirm);
+        var vm = await CreateActivatedViewModelAsync(SteamGame);
+
+        await vm.LaunchCommand.ExecuteAsync(null);
+
+        Assert.Single(_dialogs.Confirms);
+        Assert.Empty(_collections.Applies);
+        Assert.Empty(_launcher.Launches);
+    }
+
+    [Fact]
+    public async Task Launch_WorkshopUpdateRunFails_AsksToLaunchAnyway()
+    {
+        ArrangeOutdatedWorkshopItem();
+        _workshopActions.RunError = _ => TestErrors.Create(ErrorCode.WorkshopSteamNotRunning);
+        _dialogs.ChoiceAnswers.Enqueue(ConfirmChoice.Confirm);
+        _dialogs.ConfirmAnswers.Enqueue(true);
+        var vm = await CreateActivatedViewModelAsync(SteamGame);
+
+        await LaunchAndExitAsync(vm);
+
+        Assert.Single(_dialogs.Confirms);
+        Assert.Single(_launcher.Launches);
+    }
+
+    [Fact]
+    public async Task Launch_WorkshopUpdateDialogClosedBeforeTheEnd_AsksToLaunchAnyway()
+    {
+        ArrangeOutdatedWorkshopItem();
+        _dialogs.ChoiceAnswers.Enqueue(ConfirmChoice.Confirm);
+        _dialogs.WorkshopActionHandler = _ => Task.CompletedTask;
+        var vm = await CreateActivatedViewModelAsync(SteamGame);
+
+        await vm.LaunchCommand.ExecuteAsync(null);
+
+        Assert.Single(_dialogs.Confirms);
+        Assert.Empty(_launcher.Launches);
+    }
+
+    [Fact]
+    public async Task Launch_WorkshopItemUpToDate_LaunchesWithoutAsking()
+    {
+        ArrangeOutdatedWorkshopItem();
+        _workshop.WithPublished(1, "Alpha", "100");
+        var vm = await CreateActivatedViewModelAsync(SteamGame);
+
+        await LaunchAndExitAsync(vm);
+
+        Assert.Single(_workshop.CheckRequests);
+        Assert.Empty(_dialogs.Choices);
+        Assert.Single(_launcher.Launches);
+    }
+
+    [Fact]
+    public async Task Launch_WorkshopCheckFails_LaunchesWithoutAskingOrAnError()
+    {
+        ArrangeOutdatedWorkshopItem();
+        _workshop.CheckError = () => TestErrors.Create(ErrorCode.WorkshopNetworkFailed);
+        var vm = await CreateActivatedViewModelAsync(SteamGame);
+
+        await LaunchAndExitAsync(vm);
+
+        Assert.Empty(_dialogs.Choices);
+        Assert.Empty(_dialogs.Errors);
         Assert.Single(_launcher.Launches);
     }
 

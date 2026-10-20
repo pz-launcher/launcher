@@ -7,15 +7,19 @@ using CommunityToolkit.Mvvm.Input;
 using PzLauncher.Core.Common;
 using PzLauncher.Core.Installs;
 using PzLauncher.Core.Mod.Collections;
+using PzLauncher.Core.Mod.Workshop;
+using PzLauncher.Core.Steam.Workshop;
+using PzLauncher.Core.Steam.Workshop.Actions;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Services.Launch;
 using PzLauncher.Desktop.Services.Mods;
 using PzLauncher.Desktop.Services.Shell;
 using PzLauncher.Desktop.ViewModels.Installs;
+using PzLauncher.Desktop.ViewModels.Mods.Workshop;
 
 namespace PzLauncher.Desktop.ViewModels.Mods;
 
-/// <summary>The mods page of the game install in use: both sections show one loaded state, and every write re-reads it.</summary>
+/// <summary>The mods page of the game install in use: the game-file sections share one loaded state that every write re-reads; the Workshop sections load their own.</summary>
 public partial class ModsViewModel : ViewModelBase
 {
     private readonly InstallsViewModel _installs;
@@ -40,16 +44,29 @@ public partial class ModsViewModel : ViewModelBase
         IClipboardService clipboard,
         GameRunState runState,
         IModCollectionOrderWriter orderWriter,
+        IWorkshopService workshop,
+        IWorkshopModsService workshopMods,
+        IWorkshopActionRunner workshopActions,
+        IUrlLauncher urls,
+        WorkshopCollectionHistory workshopHistory,
+        WorkshopUserCollectionsCache workshopUserCollections,
+        WorkshopFavorites workshopFavorites,
+        WorkshopTitles workshopTitles,
         ILocalizationService localization)
     {
         _installs = installs;
         Service = service;
+        WorkshopMods = workshopMods;
         _overrides = overrides;
         _dialogs = dialogs;
         _runState = runState;
         _orderWriter = orderWriter;
         Mods = new InstalledModsViewModel(this);
         Collections = new ModCollectionsViewModel(this, defaults, applier, dialogs, clipboard);
+        WorkshopSubscriptions = new WorkshopSubscriptionsViewModel(this, workshop, workshopActions, dialogs, clipboard, urls, workshopFavorites, workshopTitles);
+        WorkshopCollections = new WorkshopCollectionsViewModel(
+            this, workshop, workshopActions, dialogs, urls, workshopHistory, workshopUserCollections, workshopFavorites, workshopTitles);
+        WorkshopFavorites = new WorkshopFavoritesViewModel(this, workshop, workshopActions, dialogs, clipboard, urls, workshopFavorites, workshopTitles);
         _error = new LocalizedText(text => ErrorText = text);
 
         // Never unsubscribed: these are app-lifetime singletons.
@@ -63,7 +80,18 @@ public partial class ModsViewModel : ViewModelBase
 
     public ModCollectionsViewModel Collections { get; }
 
-    [ObservableProperty] public partial ModsSection Section { get; set; }
+    public WorkshopSubscriptionsViewModel WorkshopSubscriptions { get; }
+
+    public WorkshopCollectionsViewModel WorkshopCollections { get; }
+
+    public WorkshopFavoritesViewModel WorkshopFavorites { get; }
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowsGameFiles))]
+    public partial ModsSection Section { get; set; }
+
+    /// <summary>The section shows the game's mod files, whose load state and error are the page's own.</summary>
+    public bool ShowsGameFiles => WorkshopSection is null;
 
     /// <summary><c>null</c> when the install in use is none or a dedicated server.</summary>
     public PzInstall? Install => _installs.SelectedInstall is { Kind: PzInstallKind.Game } install ? install : null;
@@ -96,18 +124,55 @@ public partial class ModsViewModel : ViewModelBase
 
     internal IModCollectionService Service { get; }
 
+    internal IWorkshopModsService WorkshopMods { get; }
+
+    /// <summary>The Workshop section shown; <c>null</c> for a game-file section.</summary>
+    private WorkshopSectionViewModel? WorkshopSection => Section switch
+    {
+        ModsSection.Mods or ModsSection.Collections => null,
+        ModsSection.WorkshopSubscriptions => WorkshopSubscriptions,
+        ModsSection.WorkshopCollections => WorkshopCollections,
+        ModsSection.WorkshopFavorites => WorkshopFavorites,
+    };
+
+    private WorkshopSectionViewModel[] WorkshopSections => [WorkshopSubscriptions, WorkshopCollections, WorkshopFavorites];
+
     // The view calls this on every load: the files may have changed in-game since the last visit.
     [RelayCommand]
     private Task ActivateAsync()
     {
         _activated = true;
-        return ReloadAsync();
+        return Task.WhenAll(ReloadAsync(), ShowWorkshopSectionAsync());
     }
 
     private bool CanRefresh() => Install is not null && !IsBusy;
 
     [RelayCommand(CanExecute = nameof(CanRefresh))]
-    private Task RefreshAsync() => ReloadAsync();
+    private Task RefreshAsync() => WorkshopSection?.RefreshAsync() ?? ReloadAsync();
+
+    // Steam may have changed the subscriptions since the last visit.
+    partial void OnSectionChanged(ModsSection value)
+    {
+        if (_activated)
+        {
+            _ = ShowWorkshopSectionAsync();
+        }
+    }
+
+    private Task ShowWorkshopSectionAsync() => WorkshopSection?.ShowAsync() ?? Task.CompletedTask;
+
+    /// <summary>Shows the Workshop collections section with this collection open.</summary>
+    internal Task OpenWorkshopCollectionAsync(ulong id)
+    {
+        // Switched first: showing the section re-reads the collection open before, and the newer open supersedes that.
+        Section = ModsSection.WorkshopCollections;
+        return WorkshopCollections.LoadCollectionAsync(id);
+    }
+
+    /// <summary>Asks for a name, then saves a launcher mod collection of these mods and makes it the selected one.</summary>
+    /// <returns>The name saved under; <c>null</c> when cancelled or the save failed.</returns>
+    internal Task<string?> CreateCollectionAsync(string title, string initialName, IReadOnlyList<string> modIds) =>
+        Collections.CreateAsync(title, initialName, modIds);
 
     internal async Task ReloadAsync()
     {
@@ -217,12 +282,16 @@ public partial class ModsViewModel : ViewModelBase
         await ReloadAsync();
     }
 
-    private string ExtraGameArgs(PzInstall install) => _overrides.Get(install.RootPath).ExtraGameArgs;
+    internal string ExtraGameArgs(PzInstall install) => _overrides.Get(install.RootPath).ExtraGameArgs;
 
     private void RenderTexts()
     {
         _error.Render();
         Collections.RenderTexts();
+        foreach (var section in WorkshopSections)
+        {
+            section.RenderTexts();
+        }
     }
 
     private void OnInstallsPropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -238,10 +307,16 @@ public partial class ModsViewModel : ViewModelBase
         OnPropertyChanged(nameof(HasNoGameInstall));
         OnPropertyChanged(nameof(CanWrite));
         RefreshCommand.NotifyCanExecuteChanged();
+        foreach (var section in WorkshopSections)
+        {
+            section.Clear();
+        }
+
         if (_activated)
         {
-            // Fire and forget: the load reports its own errors.
+            // Fire and forget: the loads report their own errors.
             _ = ReloadAsync();
+            _ = ShowWorkshopSectionAsync();
         }
     }
 

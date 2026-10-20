@@ -1,6 +1,8 @@
 ﻿using Avalonia;
 using System;
 using System.Linq;
+using PzLauncher.Core.Steam.Workshop;
+using PzLauncher.Core.Steam.Workshop.Helper;
 using PzLauncher.Core.Update;
 using PzLauncher.Desktop.Services.Shell;
 
@@ -14,6 +16,12 @@ sealed class Program
     [STAThread]
     public static void Main(string[] args)
     {
+        if (args.Length > 0 && args[0] == LauncherArguments.SteamHelper)
+        {
+            Environment.ExitCode = SteamHelperHost.Run(Console.OpenStandardInput(), Console.OpenStandardOutput());
+            return;
+        }
+
         // Disposed on this thread after the app exits: the mutex belongs to the thread that took it.
         using var instance = SingleInstanceGuard.Acquire(AppContext.BaseDirectory, args.Contains(LauncherArguments.Restart));
         if (instance is null)

@@ -1,0 +1,11 @@
+{"file": ".trellis/spec/common/architecture.md", "reason": "Core owns Workshop files, Web API, helper; Desktop owns sections, dialogs, launch hook"}
+{"file": ".trellis/spec/common/coding-rules.md", "reason": "comments, nullability, async, AOT (source-generated JSON, function-pointer interop)"}
+{"file": ".trellis/spec/core/directory-structure.md", "reason": "new Steam/Workshop feature folder, PZ constants in one place"}
+{"file": ".trellis/spec/core/service-api.md", "reason": "IWorkshopService / IWorkshopActionRunner shape, DTOs, DI"}
+{"file": ".trellis/spec/core/error-handling.md", "reason": "WorkshopErrors codes; untrusted Steam files and Web API responses"}
+{"file": ".trellis/spec/desktop/directory-structure.md", "reason": "new section VMs/views, dialogs, composition root, Program dispatch"}
+{"file": ".trellis/spec/desktop/shell-and-theming.md", "reason": "Mods page sidebar sections, list rows, Shell brushes"}
+{"file": ".trellis/spec/desktop/preferences.md", "reason": "new remembered Steam collections field"}
+{"file": ".trellis/spec/desktop/localization.md", "reason": "new UI and error texts in all resx files"}
+{"file": ".trellis/spec/guides/code-reuse-thinking-guide.md", "reason": "reuse ModLocator, WorkshopLibraries, SteamLoginUsers, LauncherHttpClient"}
+{"file": ".trellis/tasks/10-18-workshop-management/research/steam-workshop-integration.md", "reason": "Steam file formats, Web API fields, Steamworks exports, packing, force-update sequence"}

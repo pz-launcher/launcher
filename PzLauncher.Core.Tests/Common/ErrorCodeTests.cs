@@ -10,6 +10,7 @@ using PzLauncher.Core.Net;
 using PzLauncher.Core.Platform;
 using PzLauncher.Core.Serialization;
 using PzLauncher.Core.Steam;
+using PzLauncher.Core.Steam.Workshop;
 using PzLauncher.Core.Update;
 
 namespace PzLauncher.Core.Tests.Common;
@@ -34,6 +35,20 @@ public partial class ErrorCodeTests
         [ErrorCode.SteamShutdownTimedOut] = (SteamErrors.ShutdownTimedOut(TimeSpan.FromSeconds(60)), ErrorKind.External),
         [ErrorCode.SteamShutdownUnconfirmed] = (SteamErrors.ShutdownUnconfirmed("r"), ErrorKind.External),
         [ErrorCode.SteamStartFailed] = (SteamErrors.StartFailed("p", "r"), ErrorKind.External),
+        [ErrorCode.WorkshopSubscriptionsUnreadable] = (WorkshopErrors.SubscriptionsUnreadable("p", "r"), ErrorKind.External),
+        [ErrorCode.WorkshopManifestUnreadable] = (WorkshopErrors.ManifestUnreadable("p", "r"), ErrorKind.External),
+        [ErrorCode.WorkshopNetworkFailed] = (WorkshopErrors.NetworkFailed("r"), ErrorKind.External),
+        [ErrorCode.WorkshopResponseInvalid] = (WorkshopErrors.ResponseInvalid("r"), ErrorKind.External),
+        [ErrorCode.WorkshopCollectionNotFound] = (WorkshopErrors.CollectionNotFound(5), ErrorKind.NotFound),
+        [ErrorCode.WorkshopSteamApiMissing] = (WorkshopErrors.SteamApiMissing("p"), ErrorKind.NotFound),
+        [ErrorCode.WorkshopSteamApiUnusable] = (WorkshopErrors.SteamApiUnusable("p", "r"), ErrorKind.External),
+        [ErrorCode.WorkshopSteamNotRunning] = (WorkshopErrors.SteamNotRunning(), ErrorKind.Conflict),
+        [ErrorCode.WorkshopSteamInitFailed] = (WorkshopErrors.SteamInitFailed("r"), ErrorKind.External),
+        [ErrorCode.WorkshopHelperStartFailed] = (WorkshopErrors.HelperStartFailed("p", "r"), ErrorKind.External),
+        [ErrorCode.WorkshopHelperFailed] = (WorkshopErrors.HelperFailed("r"), ErrorKind.External),
+        [ErrorCode.WorkshopHelperRequestRejected] = (WorkshopErrors.HelperRequestRejected("r"), ErrorKind.Unexpected),
+        [ErrorCode.WorkshopHelperTimedOut] = (WorkshopErrors.HelperTimedOut(TimeSpan.FromMinutes(3)), ErrorKind.External),
+        [ErrorCode.WorkshopCollectionsQueryFailed] = (WorkshopErrors.CollectionsQueryFailed("r"), ErrorKind.External),
         [ErrorCode.InstallFilesMissing] = (InstallErrors.FilesMissing("p", 1), ErrorKind.NotFound),
         [ErrorCode.InstallInvalidPath] = (InstallErrors.InvalidPath("p"), ErrorKind.Validation),
         [ErrorCode.InstallPathNotFound] = (InstallErrors.PathNotFound("p"), ErrorKind.NotFound),
@@ -129,6 +144,20 @@ public partial class ErrorCodeTests
     [InlineData(ErrorCode.SteamShutdownTimedOut, "steam.shutdown_timed_out")]
     [InlineData(ErrorCode.SteamShutdownUnconfirmed, "steam.shutdown_unconfirmed")]
     [InlineData(ErrorCode.SteamStartFailed, "steam.start_failed")]
+    [InlineData(ErrorCode.WorkshopSubscriptionsUnreadable, "workshop.subscriptions_unreadable")]
+    [InlineData(ErrorCode.WorkshopManifestUnreadable, "workshop.manifest_unreadable")]
+    [InlineData(ErrorCode.WorkshopNetworkFailed, "workshop.network_failed")]
+    [InlineData(ErrorCode.WorkshopResponseInvalid, "workshop.response_invalid")]
+    [InlineData(ErrorCode.WorkshopCollectionNotFound, "workshop.collection_not_found")]
+    [InlineData(ErrorCode.WorkshopSteamApiMissing, "workshop.steam_api_missing")]
+    [InlineData(ErrorCode.WorkshopSteamApiUnusable, "workshop.steam_api_unusable")]
+    [InlineData(ErrorCode.WorkshopSteamNotRunning, "workshop.steam_not_running")]
+    [InlineData(ErrorCode.WorkshopSteamInitFailed, "workshop.steam_init_failed")]
+    [InlineData(ErrorCode.WorkshopHelperStartFailed, "workshop.helper_start_failed")]
+    [InlineData(ErrorCode.WorkshopHelperFailed, "workshop.helper_failed")]
+    [InlineData(ErrorCode.WorkshopHelperRequestRejected, "workshop.helper_request_rejected")]
+    [InlineData(ErrorCode.WorkshopHelperTimedOut, "workshop.helper_timed_out")]
+    [InlineData(ErrorCode.WorkshopCollectionsQueryFailed, "workshop.collections_query_failed")]
     [InlineData(ErrorCode.InstallFilesMissing, "install.files_missing")]
     [InlineData(ErrorCode.InstallInvalidPath, "install.invalid_path")]
     [InlineData(ErrorCode.InstallPathNotFound, "install.path_not_found")]
@@ -208,6 +237,7 @@ public partial class ErrorCodeTests
     [InlineData(ErrorCode.ModCollectionCacheFolderUnresolved)]
     [InlineData(ErrorCode.ZombieBuddySourceFileMissing)]
     [InlineData(ErrorCode.ZombieBuddyNotInitialized)]
+    [InlineData(ErrorCode.WorkshopSteamApiMissing)]
     public void Factory_PathDetails_HoldOnlyThePath(ErrorCode code) =>
         Assert.Equal(new Dictionary<string, string> { ["path"] = "p" }, Factories[code].Error.Details);
 
@@ -218,6 +248,10 @@ public partial class ErrorCodeTests
     [InlineData(ErrorCode.SteamLocalConfigMalformed)]
     [InlineData(ErrorCode.SteamLocalConfigUnwritable)]
     [InlineData(ErrorCode.SteamStartFailed)]
+    [InlineData(ErrorCode.WorkshopSubscriptionsUnreadable)]
+    [InlineData(ErrorCode.WorkshopManifestUnreadable)]
+    [InlineData(ErrorCode.WorkshopSteamApiUnusable)]
+    [InlineData(ErrorCode.WorkshopHelperStartFailed)]
     [InlineData(ErrorCode.InstallPathUnreadable)]
     [InlineData(ErrorCode.JavaSourceUnreadable)]
     [InlineData(ErrorCode.JavaReleaseUnreadable)]
@@ -234,4 +268,16 @@ public partial class ErrorCodeTests
     [InlineData(ErrorCode.UpdateRestartFailed)]
     public void Factory_PathReasonDetails_HoldThePathAndReason(ErrorCode code) =>
         Assert.Equal(new Dictionary<string, string> { ["path"] = "p", ["reason"] = "r" }, Factories[code].Error.Details);
+
+    [Theory]
+    [InlineData(ErrorCode.SteamVdfMalformed)]
+    [InlineData(ErrorCode.SteamShutdownUnconfirmed)]
+    [InlineData(ErrorCode.WorkshopNetworkFailed)]
+    [InlineData(ErrorCode.WorkshopResponseInvalid)]
+    [InlineData(ErrorCode.WorkshopSteamInitFailed)]
+    [InlineData(ErrorCode.WorkshopHelperFailed)]
+    [InlineData(ErrorCode.WorkshopHelperRequestRejected)]
+    [InlineData(ErrorCode.WorkshopCollectionsQueryFailed)]
+    public void Factory_ReasonDetails_HoldTheReason(ErrorCode code) =>
+        Assert.Equal(new Dictionary<string, string> { ["reason"] = "r" }, Factories[code].Error.Details);
 }

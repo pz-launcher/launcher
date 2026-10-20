@@ -1,6 +1,5 @@
 using System;
 using System.Collections.ObjectModel;
-using System.Threading;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -8,22 +7,16 @@ using PzLauncher.Core.Common;
 using PzLauncher.Core.Mod.ZombieBuddy;
 using PzLauncher.Desktop.Lang;
 using PzLauncher.Desktop.Localization;
-using PzLauncher.Desktop.Services.Shell;
 
 namespace PzLauncher.Desktop.ViewModels.ZombieBuddy;
 
-/// <summary>One per dialog: the dialog starts the operation when it opens; closing it any way other than the launch button cancels.</summary>
+/// <summary>One per dialog: closing it any way other than the launch button cancels; the result is <c>true</c> when the game should launch now.</summary>
 public sealed partial class ZombieBuddySetupViewModel(
-    IZombieBuddyService service, ZombieBuddySetupMode mode, string installRoot, ZombieBuddyChannel channel, bool offersLaunch) : ViewModelBase
+    IZombieBuddyService service, ZombieBuddySetupMode mode, string installRoot, ZombieBuddyChannel channel, bool offersLaunch) : DialogOperationViewModel
 {
     private readonly IZombieBuddyService _service = service;
     private readonly string _installRoot = installRoot;
     private readonly ZombieBuddyChannel _channel = channel;
-    private readonly CancellationTokenSource _cancel = new();
-    private bool _started;
-
-    /// <summary>The argument is <c>true</c> when the game should launch now.</summary>
-    public event EventHandler<bool>? CloseRequested;
 
     public ZombieBuddySetupMode Mode { get; } = mode;
 
@@ -65,75 +58,24 @@ public sealed partial class ZombieBuddySetupViewModel(
     [NotifyCanExecuteChangedFor(nameof(RetryCommand))]
     public partial bool IsRunning { get; private set; }
 
-    public bool IsFailed => !IsRunning && !IsSucceeded && _started;
+    public bool IsFailed => !IsRunning && !IsSucceeded && IsStarted;
 
-    /// <summary>Runs once; later calls return at once.</summary>
-    public Task StartAsync()
+    protected override async Task RunAsync()
     {
-        if (_started)
-        {
-            return Task.CompletedTask;
-        }
-
-        _started = true;
-        return RunAsync();
-    }
-
-    /// <summary>Cancels an operation in progress between steps; for a dialog closed by the window's own close button.</summary>
-    public void Abort() => _cancel.Cancel();
-
-    [RelayCommand(CanExecute = nameof(IsSucceeded))]
-    private void Launch() => CloseRequested?.Invoke(this, true);
-
-    [RelayCommand(CanExecute = nameof(IsSucceeded))]
-    private void Confirm() => CloseRequested?.Invoke(this, false);
-
-    [RelayCommand]
-    private void Cancel()
-    {
-        Abort();
-        CloseRequested?.Invoke(this, false);
-    }
-
-    // Every step is idempotent, so a retry runs the whole operation again.
-    [RelayCommand(CanExecute = nameof(IsFailed))]
-    private Task RetryAsync() => RunAsync();
-
-    private async Task RunAsync()
-    {
-        var ct = _cancel.Token;
         Steps.Clear();
         Progress = 0;
         ErrorText = null;
         IsRunning = true;
-
-        // Reports posted before the result arrives are applied before it; anything later is ignored.
-        var finished = false;
-        var progress = new ContextProgress<ZombieBuddyProgress>(report =>
-        {
-            if (!finished)
-            {
-                OnProgress(report);
-            }
-        });
-
-        Result result;
-        try
-        {
-            result = await (Mode switch
+        var run = await RunWithProgressAsync<ZombieBuddyProgress, Result>(
+            (progress, ct) => Mode switch
             {
                 ZombieBuddySetupMode.Initialize => _service.InitializeAsync(_installRoot, _channel, progress, ct),
                 ZombieBuddySetupMode.Remove => _service.RemoveAsync(_installRoot, progress, ct),
-            });
-        }
-        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+            },
+            OnProgress);
+        if (run is not { } result)
         {
-            // The dialog is closing.
             return;
-        }
-        finally
-        {
-            finished = true;
         }
 
         if (result.IsSuccess)
@@ -161,6 +103,19 @@ public sealed partial class ZombieBuddySetupViewModel(
 
         IsRunning = false;
     }
+
+    [RelayCommand(CanExecute = nameof(IsSucceeded))]
+    private void Launch() => RequestClose(true);
+
+    [RelayCommand(CanExecute = nameof(IsSucceeded))]
+    private void Confirm() => RequestClose(false);
+
+    [RelayCommand]
+    private void Cancel() => AbortAndClose();
+
+    // Every step is idempotent, so a retry runs the whole operation again.
+    [RelayCommand(CanExecute = nameof(IsFailed))]
+    private Task RetryAsync() => RunAsync();
 
     private void OnProgress(ZombieBuddyProgress report)
     {

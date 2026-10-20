@@ -16,8 +16,7 @@ public partial class InstalledModsViewModel : ViewModelBase
 {
     private readonly ModsViewModel _page;
 
-    // By id, so a reload keeps what was ticked.
-    private readonly HashSet<string> _selectedIds = new(StringComparer.Ordinal);
+    private readonly RowSelection<string> _selection = new(StringComparer.Ordinal);
     private IReadOnlyList<InstalledModRow> _rows = [];
 
     internal InstalledModsViewModel(ModsViewModel page)
@@ -44,7 +43,7 @@ public partial class InstalledModsViewModel : ViewModelBase
 
     [ObservableProperty] public partial bool SortDescending { get; private set; }
 
-    public int SelectedCount => _selectedIds.Count;
+    public int SelectedCount => _selection.Count;
 
     public bool CanAddToCollection => _page.CanWrite && SelectedCount > 0 && AddTargets.Count > 0;
 
@@ -124,14 +123,14 @@ public partial class InstalledModsViewModel : ViewModelBase
 
         var enabled = state.ActiveIds.ToHashSet(StringComparer.Ordinal);
         var installedIds = state.InstalledMods.Select(mod => mod.Id).ToHashSet(StringComparer.Ordinal);
-        _selectedIds.IntersectWith(installedIds);
+        _selection.IntersectWith(installedIds);
         _rows =
         [
             .. state.InstalledMods.Select(mod => new InstalledModRow(
                 mod,
                 enabled.Contains(mod.Id),
                 string.Join(", ", state.Collections.Where(collection => collection.ModIds.Contains(mod.Id)).Select(collection => collection.Name)),
-                _selectedIds.Contains(mod.Id),
+                _selection.Contains(mod.Id),
                 OnRowSelectionChanged)),
         ];
         _rows = Sorted(_rows);
@@ -148,15 +147,7 @@ public partial class InstalledModsViewModel : ViewModelBase
 
     private void OnRowSelectionChanged(InstalledModRow row)
     {
-        if (row.IsSelected)
-        {
-            _selectedIds.Add(row.Mod.Id);
-        }
-        else
-        {
-            _selectedIds.Remove(row.Mod.Id);
-        }
-
+        _selection.Set(row.Mod.Id, row.IsSelected);
         OnPropertyChanged(nameof(SelectedCount));
         OnPropertyChanged(nameof(CanAddToCollection));
     }
@@ -167,30 +158,12 @@ public partial class InstalledModsViewModel : ViewModelBase
         VisibleRows = [.. _rows.Where(row => MatchesFilter(row) && Matches(row.Mod, search))];
     }
 
-    private InstalledModRow[] Sorted(IReadOnlyList<InstalledModRow> rows)
+    private InstalledModRow[] Sorted(IEnumerable<InstalledModRow> rows) =>
+        SortedRows.Sort(rows, SortColumn, SortDescending, IsBlank, CompareColumn, CompareByName);
+
+    private static int CompareByName(InstalledModRow x, InstalledModRow y)
     {
-        var column = SortColumn;
-        var sign = SortDescending ? -1 : 1;
-        return [.. rows.Order(Comparer<InstalledModRow>.Create((x, y) => CompareRows(x, y, column, sign)))];
-    }
-
-    private static int CompareRows(InstalledModRow x, InstalledModRow y, InstalledModsSortColumn column, int sign)
-    {
-        // Blank cells stay at the bottom in both directions.
-        var xBlank = IsBlank(x, column);
-        var yBlank = IsBlank(y, column);
-        if (xBlank != yBlank)
-        {
-            return xBlank ? 1 : -1;
-        }
-
-        var order = xBlank ? 0 : sign * CompareColumn(x, y, column);
-        if (order != 0)
-        {
-            return order;
-        }
-
-        order = StringComparer.CurrentCultureIgnoreCase.Compare(x.Mod.Name, y.Mod.Name);
+        var order = StringComparer.CurrentCultureIgnoreCase.Compare(x.Mod.Name, y.Mod.Name);
         return order != 0 ? order : StringComparer.Ordinal.Compare(x.Mod.Id, y.Mod.Id);
     }
 
@@ -198,7 +171,7 @@ public partial class InstalledModsViewModel : ViewModelBase
     {
         InstalledModsSortColumn.Name => false,
         InstalledModsSortColumn.Id => false,
-        InstalledModsSortColumn.WorkshopId => string.IsNullOrEmpty(row.Mod.WorkshopId),
+        InstalledModsSortColumn.WorkshopId => row.Mod.WorkshopId is null,
         InstalledModsSortColumn.Source => false,
         InstalledModsSortColumn.Enabled => false,
         InstalledModsSortColumn.Collections => row.CollectionNames.Length == 0,
@@ -208,25 +181,11 @@ public partial class InstalledModsViewModel : ViewModelBase
     {
         InstalledModsSortColumn.Name => StringComparer.CurrentCultureIgnoreCase.Compare(x.Mod.Name, y.Mod.Name),
         InstalledModsSortColumn.Id => StringComparer.CurrentCultureIgnoreCase.Compare(x.Mod.Id, y.Mod.Id),
-        InstalledModsSortColumn.WorkshopId => CompareWorkshopIds(x.Mod.WorkshopId ?? "", y.Mod.WorkshopId ?? ""),
+        InstalledModsSortColumn.WorkshopId => Nullable.Compare(x.Mod.WorkshopId, y.Mod.WorkshopId),
         InstalledModsSortColumn.Source => x.Mod.Source.CompareTo(y.Mod.Source),
         InstalledModsSortColumn.Enabled => y.IsEnabled.CompareTo(x.IsEnabled),
         InstalledModsSortColumn.Collections => StringComparer.CurrentCultureIgnoreCase.Compare(x.CollectionNames, y.CollectionNames),
     };
-
-    // A staged item's folder name can be any text: numbers compare by value, before other text.
-    private static int CompareWorkshopIds(string x, string y)
-    {
-        var xIsNumber = ulong.TryParse(x, NumberStyles.None, CultureInfo.InvariantCulture, out var xNumber);
-        var yIsNumber = ulong.TryParse(y, NumberStyles.None, CultureInfo.InvariantCulture, out var yNumber);
-        return (xIsNumber, yIsNumber) switch
-        {
-            (true, true) => xNumber.CompareTo(yNumber),
-            (true, false) => -1,
-            (false, true) => 1,
-            (false, false) => StringComparer.Ordinal.Compare(x, y),
-        };
-    }
 
     private bool MatchesFilter(InstalledModRow row) => Filter switch
     {
@@ -240,5 +199,5 @@ public partial class InstalledModsViewModel : ViewModelBase
         search.Length == 0
         || mod.Name.Contains(search, StringComparison.CurrentCultureIgnoreCase)
         || mod.Id.Contains(search, StringComparison.OrdinalIgnoreCase)
-        || (mod.WorkshopId?.Contains(search, StringComparison.Ordinal) ?? false);
+        || (mod.WorkshopId?.ToString(CultureInfo.InvariantCulture).Contains(search, StringComparison.Ordinal) ?? false);
 }

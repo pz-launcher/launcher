@@ -1,0 +1,5 @@
+{"file": ".trellis/spec/common/test-strategy.md", "reason": "test placement and fakes"}
+{"file": ".trellis/spec/common/coding-rules.md", "reason": "review against comment, async and AOT rules"}
+{"file": ".trellis/spec/desktop/preferences.md", "reason": "preferences contract for the new field"}
+{"file": ".trellis/spec/desktop/localization.md", "reason": "every new key in every resx"}
+{"file": ".trellis/tasks/10-19-workshop-favorite-collections/research/favorite-collections.md", "reason": "verify binding offsets and query parameters"}

@@ -216,6 +216,38 @@
         <Setter Property="Margin" Value="14,14,14,4" />
     </Style>
 
+    <!-- Sortable list columns. Border and padding hang outside the column so the label lines up with the cells below.
+         Each view sets the header tooltip: {x:Static} text here would not follow a language switch. -->
+    <Style Selector="Button.columnHeader">
+        <Setter Property="Theme" Value="{StaticResource Shell.ColumnHeader}" />
+        <Setter Property="Margin" Value="-7,0,1,0" />
+    </Style>
+    <Style Selector="ic|FluentIcon.sortArrow">
+        <Setter Property="Icon" Value="ArrowSortUp" />
+        <Setter Property="IconVariant" Value="Regular" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Grid.sortDescending ic|FluentIcon.sortArrow">
+        <Setter Property="Icon" Value="ArrowSortDown" />
+    </Style>
+    <Style Selector="TextBlock.cell">
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+        <Setter Property="Margin" Value="0,0,8,0" />
+    </Style>
+
+    <!-- Local favorite toggle: a Button with Classes.favorite bound to the starred state, holding an ic:FluentIcon.favoriteStar. -->
+    <Style Selector="ic|FluentIcon.favoriteStar">
+        <Setter Property="Icon" Value="Star" />
+        <Setter Property="IconVariant" Value="Regular" />
+        <Setter Property="FontSize" Value="14" />
+    </Style>
+    <Style Selector="Button.favorite ic|FluentIcon.favoriteStar">
+        <Setter Property="IconVariant" Value="Filled" />
+        <Setter Property="Foreground" Value="{DynamicResource Shell.Accent}" />
+    </Style>
+
     <!-- error and warning leave wrapping to each site: not every one wraps. -->
     <Style Selector="TextBlock.pageTitle">
         <Setter Property="FontSize" Value="22" />

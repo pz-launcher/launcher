@@ -1,0 +1,48 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:PzLauncher.Desktop.ViewModels.Mods.Workshop"
+             xmlns:local="using:PzLauncher.Desktop.Views.Mods.Workshop"
+             xmlns:design="using:PzLauncher.Desktop.ViewModels.Design"
+             xmlns:lang="using:PzLauncher.Desktop.Lang"
+             xmlns:ic="using:FluentIcons.Avalonia"
+             mc:Ignorable="d" d:DesignWidth="800"
+             x:Class="PzLauncher.Desktop.Views.Mods.Workshop.WorkshopItemListActions"
+             x:DataType="vm:WorkshopItemListSectionViewModel">
+
+    <Design.DataContext>
+        <x:Static Member="design:DesignData.WorkshopFavorites" />
+    </Design.DataContext>
+
+    <!-- The actions on a listed Workshop items' whole list, then what the last one did. -->
+    <StackPanel>
+        <WrapPanel Orientation="Horizontal" Margin="0,0,0,4">
+            <Button Command="{Binding SubscribeMissingCommand}" Margin="0,0,6,6">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <ic:FluentIcon Icon="Add" IconVariant="Regular" FontSize="16" VerticalAlignment="Center" />
+                    <TextBlock Text="{x:Static lang:UiText.WorkshopCollections_SubscribeMissing}" VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding MissingCount, StringFormat='({0})'}" VerticalAlignment="Center" />
+                </StackPanel>
+            </Button>
+            <Button Command="{Binding UpdateOutdatedCommand}" Margin="0,0,6,6">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <ic:FluentIcon Icon="ArrowDownload" IconVariant="Regular" FontSize="16" VerticalAlignment="Center" />
+                    <TextBlock Text="{x:Static lang:UiText.Workshop_UpdateAll}" VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding OutdatedCount, StringFormat='({0})'}" VerticalAlignment="Center" />
+                </StackPanel>
+            </Button>
+            <Button Command="{Binding GenerateCommand}" Margin="0,0,6,6"
+                    ToolTip.Tip="{x:Static lang:UiText.WorkshopCollections_GenerateHint}" ToolTip.ShowOnDisabled="True">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <ic:FluentIcon Icon="Collections" IconVariant="Regular" FontSize="16" VerticalAlignment="Center" />
+                    <TextBlock Text="{x:Static lang:UiText.WorkshopCollections_Generate}" VerticalAlignment="Center" />
+                </StackPanel>
+            </Button>
+            <ContentPresenter Content="{Binding $parent[local:WorkshopItemListActions].MoreActions}" />
+        </WrapPanel>
+
+        <TextBlock Text="{Binding StatusText}" Classes="hint" TextWrapping="Wrap"
+                   IsVisible="{Binding StatusText, Converter={x:Static ObjectConverters.IsNotNull}}" Margin="0,0,0,8" />
+    </StackPanel>
+</UserControl>

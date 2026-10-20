@@ -80,6 +80,11 @@ public partial class App : Application
             services.AddSingleton<IModCollectionDefaultsService, ModCollectionDefaultsService>();
             services.AddSingleton<ModCollectionApplier>();
             services.AddSingleton<IModCollectionOrderWriter, ModCollectionOrderWriter>();
+            services.AddSingleton<WorkshopCollectionHistory>();
+            services.AddSingleton<WorkshopUserCollectionsCache>();
+            services.AddSingleton<WorkshopFavorites>();
+            services.AddSingleton<WorkshopTitles>();
+            services.AddSingleton<WorkshopLaunchCheck>();
             services.AddSingleton<GameRunState>();
             services.AddSingleton<UpdateCoordinator>();
             // The apphost's path; Steam starts the launcher through it.

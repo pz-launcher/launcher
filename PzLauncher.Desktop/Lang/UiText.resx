@@ -314,6 +314,48 @@
   <data name="Error_NetworkTimeout" xml:space="preserve">
     <value>{0} didn't answer within {1} seconds.</value>
   </data>
+  <data name="Error_WorkshopSubscriptionsUnreadable" xml:space="preserve">
+    <value>Couldn't read Steam's Workshop subscription list {0}. Make sure Steam is installed and signed in, then refresh.</value>
+  </data>
+  <data name="Error_WorkshopManifestUnreadable" xml:space="preserve">
+    <value>Couldn't read Steam's list of installed Workshop items {0}. Items in that Steam library may show as not installed.</value>
+  </data>
+  <data name="Error_WorkshopNetworkFailed" xml:space="preserve">
+    <value>Couldn't reach the Steam Web API ({0}). Check your internet connection or proxy settings, then try again.</value>
+  </data>
+  <data name="Error_WorkshopResponseInvalid" xml:space="preserve">
+    <value>The Steam Web API sent a response the launcher can't read. Try again later.</value>
+  </data>
+  <data name="Error_WorkshopCollectionNotFound" xml:space="preserve">
+    <value>Workshop item {0} isn't a collection, or it's hidden or removed.</value>
+  </data>
+  <data name="Error_WorkshopSteamApiMissing" xml:space="preserve">
+    <value>Couldn't find the game's Steam library (steam_api) in {0}. Workshop actions need the Steam copy of the game.</value>
+  </data>
+  <data name="Error_WorkshopSteamApiUnusable" xml:space="preserve">
+    <value>The game's Steam library {0} couldn't be loaded. Update the game in Steam, then try again.</value>
+  </data>
+  <data name="Error_WorkshopSteamNotRunning" xml:space="preserve">
+    <value>Steam isn't running. Start Steam and sign in, then try again.</value>
+  </data>
+  <data name="Error_WorkshopSteamInitFailed" xml:space="preserve">
+    <value>Steam refused the Workshop action ({0}). Make sure Steam is up to date and signed in with an account that owns Project Zomboid, and that Steam and the launcher both run as administrator or both don't.</value>
+  </data>
+  <data name="Error_WorkshopHelperStartFailed" xml:space="preserve">
+    <value>Couldn't start the launcher's Steam helper {0}.</value>
+  </data>
+  <data name="Error_WorkshopHelperFailed" xml:space="preserve">
+    <value>The launcher's Steam helper stopped before it finished ({0}). Check the items in Steam, then try again.</value>
+  </data>
+  <data name="Error_WorkshopHelperRequestRejected" xml:space="preserve">
+    <value>The launcher's Steam helper couldn't read its request ({0}). Restart the launcher, then try again.</value>
+  </data>
+  <data name="Error_WorkshopHelperTimedOut" xml:space="preserve">
+    <value>Steam reported no progress for {0} seconds, so the Workshop action was stopped. Try again later.</value>
+  </data>
+  <data name="Error_WorkshopCollectionsQueryFailed" xml:space="preserve">
+    <value>Steam couldn't list your Workshop collections ({0}). Try again later.</value>
+  </data>
   <data name="Error_FolderNotLocal" xml:space="preserve">
     <value>{0} isn't a folder on this computer, so the launcher can't open it. Pick a local folder instead.</value>
   </data>
@@ -683,6 +725,15 @@
   <data name="Mods_SectionCollections" xml:space="preserve">
     <value>Collections</value>
   </data>
+  <data name="Mods_SectionWorkshopSubscriptions" xml:space="preserve">
+    <value>Workshop subscriptions</value>
+  </data>
+  <data name="Mods_SectionWorkshopCollections" xml:space="preserve">
+    <value>Workshop collections</value>
+  </data>
+  <data name="Mods_SectionWorkshopFavorites" xml:space="preserve">
+    <value>Local favorites</value>
+  </data>
   <data name="Mods_Refresh" xml:space="preserve">
     <value>Refresh</value>
   </data>
@@ -889,6 +940,300 @@
   </data>
   <data name="ModCollections_ImportNameInvalid" xml:space="preserve">
     <value>"{0}" can't be used as a collection name.</value>
+  </data>
+  <data name="Workshop_SearchPlaceholder" xml:space="preserve">
+    <value>Search by title, item ID or mod ID</value>
+  </data>
+  <data name="Workshop_FilterNeedsUpdate" xml:space="preserve">
+    <value>Needs update</value>
+  </data>
+  <data name="Workshop_FilterUnused" xml:space="preserve">
+    <value>Used by no collection</value>
+  </data>
+  <data name="Workshop_FilterFavorites" xml:space="preserve">
+    <value>Local favorites</value>
+  </data>
+  <data name="Workshop_FavoriteToggle" xml:space="preserve">
+    <value>Star or unstar in local favorites</value>
+  </data>
+  <data name="Workshop_ColumnTitle" xml:space="preserve">
+    <value>Title</value>
+  </data>
+  <data name="Workshop_ColumnItemId" xml:space="preserve">
+    <value>Item ID</value>
+  </data>
+  <data name="Workshop_ColumnMods" xml:space="preserve">
+    <value>Mod IDs</value>
+  </data>
+  <data name="Workshop_ColumnSize" xml:space="preserve">
+    <value>Size</value>
+  </data>
+  <data name="Workshop_ColumnUpdated" xml:space="preserve">
+    <value>Updated</value>
+  </data>
+  <data name="Workshop_ColumnState" xml:space="preserve">
+    <value>State</value>
+  </data>
+  <data name="Workshop_SizeFormat" xml:space="preserve">
+    <value>{0:N1} MB</value>
+  </data>
+  <data name="Workshop_Downloading" xml:space="preserve">
+    <value>Downloading</value>
+  </data>
+  <data name="Workshop_DownloadingFormat" xml:space="preserve">
+    <value>Downloading {0}%</value>
+  </data>
+  <data name="Workshop_Empty" xml:space="preserve">
+    <value>The Steam account in use has no Workshop subscriptions for Project Zomboid.</value>
+  </data>
+  <data name="Workshop_FilterEmpty" xml:space="preserve">
+    <value>No items match the search or filter.</value>
+  </data>
+  <data name="Workshop_Subscribe" xml:space="preserve">
+    <value>Subscribe…</value>
+  </data>
+  <data name="Workshop_Unsubscribe" xml:space="preserve">
+    <value>Unsubscribe</value>
+  </data>
+  <data name="Workshop_CheckUpdates" xml:space="preserve">
+    <value>Check for updates</value>
+  </data>
+  <data name="Workshop_UpdateAll" xml:space="preserve">
+    <value>Update all outdated</value>
+  </data>
+  <data name="Workshop_UpdateSelected" xml:space="preserve">
+    <value>Force update selected</value>
+  </data>
+  <data name="Workshop_OpenInSteam" xml:space="preserve">
+    <value>Open in Steam</value>
+  </data>
+  <data name="Workshop_OpenFailed" xml:space="preserve">
+    <value>The item page couldn't be opened. Check that Steam is installed.</value>
+  </data>
+  <data name="Workshop_SubscribeTitle" xml:space="preserve">
+    <value>Subscribe to a Workshop item</value>
+  </data>
+  <data name="Workshop_SubscribeMessage" xml:space="preserve">
+    <value>Paste the item's Steam Workshop link or its item ID:</value>
+  </data>
+  <data name="Workshop_SubscribeAccept" xml:space="preserve">
+    <value>Subscribe</value>
+  </data>
+  <data name="Workshop_LinkInvalid" xml:space="preserve">
+    <value>Enter a Steam Workshop item link or a numeric item ID.</value>
+  </data>
+  <data name="Workshop_UnsubscribeTitle" xml:space="preserve">
+    <value>Unsubscribe from Workshop items?</value>
+  </data>
+  <data name="Workshop_UnsubscribeMessage" xml:space="preserve">
+    <value>Unsubscribe from these {0} items? Steam removes their files once the action ends.</value>
+  </data>
+  <data name="Workshop_UnsubscribeUsedMessage" xml:space="preserve">
+    <value>Unsubscribe from these {0} items? Their mods are in these mod collections: {1}. The collections keep the mods, which will then be missing. Steam removes the files once the action ends.</value>
+  </data>
+  <data name="Workshop_CheckedAllCurrent" xml:space="preserve">
+    <value>All installed items are up to date.</value>
+  </data>
+  <data name="Workshop_CheckedOutdated" xml:space="preserve">
+    <value>{0} items need an update.</value>
+  </data>
+  <data name="Workshop_ActionSubscribeTitle" xml:space="preserve">
+    <value>Subscribing</value>
+  </data>
+  <data name="Workshop_ActionUnsubscribeTitle" xml:space="preserve">
+    <value>Unsubscribing</value>
+  </data>
+  <data name="Workshop_ActionUpdateTitle" xml:space="preserve">
+    <value>Updating Workshop items</value>
+  </data>
+  <data name="Workshop_ActionPlayingHint" xml:space="preserve">
+    <value>Steam shows you as playing Project Zomboid while this runs.</value>
+  </data>
+  <data name="Workshop_WaitingForSteam" xml:space="preserve">
+    <value>Waiting for Steam…</value>
+  </data>
+  <data name="Workshop_WaitingForEarlierAction" xml:space="preserve">
+    <value>Waiting for the previous Steam action to finish…</value>
+  </data>
+  <data name="Workshop_ActionSummary" xml:space="preserve">
+    <value>Done: {0} of {1}</value>
+  </data>
+  <data name="Workshop_StillOutdated" xml:space="preserve">
+    <value>Steam finished, but the installed copy still isn't the latest version. Try again in a few minutes.</value>
+  </data>
+  <data name="Workshop_SteamResultFormat" xml:space="preserve">
+    <value>Steam result code {0}</value>
+  </data>
+  <data name="Workshop_Close" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="WorkshopItemState_UpToDate" xml:space="preserve">
+    <value>Up to date</value>
+  </data>
+  <data name="WorkshopItemState_NeedsUpdate" xml:space="preserve">
+    <value>Needs update</value>
+  </data>
+  <data name="WorkshopItemState_NotInstalled" xml:space="preserve">
+    <value>Not installed</value>
+  </data>
+  <data name="WorkshopItemState_DisabledLocally" xml:space="preserve">
+    <value>Disabled locally</value>
+  </data>
+  <data name="WorkshopItemState_NotSubscribed" xml:space="preserve">
+    <value>Not subscribed</value>
+  </data>
+  <data name="WorkshopItemFailure_SubscribeFailed" xml:space="preserve">
+    <value>Steam couldn't subscribe to the item</value>
+  </data>
+  <data name="WorkshopItemFailure_UnsubscribeFailed" xml:space="preserve">
+    <value>Steam couldn't unsubscribe from the item</value>
+  </data>
+  <data name="WorkshopItemFailure_DownloadNotStarted" xml:space="preserve">
+    <value>Steam didn't start the download</value>
+  </data>
+  <data name="WorkshopItemFailure_DownloadFailed" xml:space="preserve">
+    <value>The download failed</value>
+  </data>
+  <data name="WorkshopItemFailure_TimedOut" xml:space="preserve">
+    <value>Steam stopped reporting progress</value>
+  </data>
+  <data name="WorkshopItemFailure_NotReported" xml:space="preserve">
+    <value>Steam reported no result</value>
+  </data>
+  <data name="WorkshopCollections_LinkPlaceholder" xml:space="preserve">
+    <value>Collection link or ID</value>
+  </data>
+  <data name="WorkshopCollections_Open" xml:space="preserve">
+    <value>Open</value>
+  </data>
+  <data name="WorkshopCollections_Remembered" xml:space="preserve">
+    <value>Opened collections</value>
+  </data>
+  <data name="WorkshopCollections_RememberedEmpty" xml:space="preserve">
+    <value>Collections you open are listed here.</value>
+  </data>
+  <data name="WorkshopCollections_Forget" xml:space="preserve">
+    <value>Remove from the list</value>
+  </data>
+  <data name="WorkshopCollections_Favorited" xml:space="preserve">
+    <value>Favorited collections</value>
+  </data>
+  <data name="WorkshopCollections_FavoritedEmpty" xml:space="preserve">
+    <value>You haven't favorited any collections for this game on Steam.</value>
+  </data>
+  <data name="WorkshopCollections_Published" xml:space="preserve">
+    <value>My collections</value>
+  </data>
+  <data name="WorkshopCollections_PublishedEmpty" xml:space="preserve">
+    <value>You haven't published any collections for this game on Steam.</value>
+  </data>
+  <data name="WorkshopCollections_RefreshHint" xml:space="preserve">
+    <value>Asks Steam for your favorited and published collections. Steam shows you as playing Project Zomboid for a few seconds.</value>
+  </data>
+  <data name="WorkshopCollections_UpdatedFormat" xml:space="preserve">
+    <value>Last updated {0}</value>
+  </data>
+  <data name="WorkshopCollections_NoneOpen" xml:space="preserve">
+    <value>Paste a Steam Workshop collection link or ID to see its items and which of them are subscribed.</value>
+  </data>
+  <data name="WorkshopCollections_ItemCountFormat" xml:space="preserve">
+    <value>{0} items</value>
+  </data>
+  <data name="WorkshopCollections_Empty" xml:space="preserve">
+    <value>This collection holds no items.</value>
+  </data>
+  <data name="WorkshopCollections_SubscribeMissing" xml:space="preserve">
+    <value>Subscribe to missing</value>
+  </data>
+  <data name="WorkshopCollections_UnsubscribeAll" xml:space="preserve">
+    <value>Unsubscribe from all</value>
+  </data>
+  <data name="WorkshopCollections_Generate" xml:space="preserve">
+    <value>Create mod collection</value>
+  </data>
+  <data name="WorkshopCollections_GenerateHint" xml:space="preserve">
+    <value>Creates a launcher mod collection from the mods of the installed items, in this collection's order.</value>
+  </data>
+  <data name="WorkshopCollections_GenerateTitle" xml:space="preserve">
+    <value>New collection from the Workshop collection</value>
+  </data>
+  <data name="WorkshopCollections_GenerateNothing" xml:space="preserve">
+    <value>None of this collection's installed items holds a mod to add. Subscribe to the missing items and let Steam download them first.</value>
+  </data>
+  <data name="WorkshopCollections_Generated" xml:space="preserve">
+    <value>Created "{0}" with {1} mods. It's in Collections.</value>
+  </data>
+  <data name="WorkshopCollections_PickTitle" xml:space="preserve">
+    <value>Choose the mods to add</value>
+  </data>
+  <data name="WorkshopCollections_PickMessage" xml:space="preserve">
+    <value>These items hold more than one mod. Untick the mods the new collection shouldn't hold.</value>
+  </data>
+  <data name="WorkshopCollections_PickConflict" xml:space="preserve">
+    <value>Incompatible with {0}</value>
+  </data>
+  <data name="WorkshopCollections_SkippedMessage" xml:space="preserve">
+    <value>These items are left out:</value>
+  </data>
+  <data name="WorkshopCollections_SkippedFormat" xml:space="preserve">
+    <value>{0}: {1}</value>
+  </data>
+  <data name="WorkshopCollections_SkippedNoMods" xml:space="preserve">
+    <value>No mods</value>
+  </data>
+  <data name="WorkshopFavorites_Items" xml:space="preserve">
+    <value>Items</value>
+  </data>
+  <data name="WorkshopFavorites_Collections" xml:space="preserve">
+    <value>Collections</value>
+  </data>
+  <data name="WorkshopFavorites_CollectionsEmpty" xml:space="preserve">
+    <value>Collections you star are listed here.</value>
+  </data>
+  <data name="WorkshopFavorites_ItemsEmpty" xml:space="preserve">
+    <value>No items are starred yet. Star items in Workshop subscriptions or in a collection.</value>
+  </data>
+  <data name="WorkshopFavorites_CollectionName" xml:space="preserve">
+    <value>Local favorites</value>
+  </data>
+  <data name="WorkshopFavorites_Share" xml:space="preserve">
+    <value>Copy the local favorites' IDs to share them</value>
+  </data>
+  <data name="WorkshopFavorites_Shared" xml:space="preserve">
+    <value>Copied {0} collections and {1} items to the clipboard.</value>
+  </data>
+  <data name="WorkshopFavorites_Import" xml:space="preserve">
+    <value>Import</value>
+  </data>
+  <data name="WorkshopFavorites_ImportTitle" xml:space="preserve">
+    <value>Import local favorites</value>
+  </data>
+  <data name="WorkshopFavorites_ImportMessage" xml:space="preserve">
+    <value>Paste local favorites shared from the launcher, or Workshop links and IDs, one per line. Favorites you already have are kept.</value>
+  </data>
+  <data name="WorkshopFavorites_ImportNothing" xml:space="preserve">
+    <value>No Workshop link or ID found.</value>
+  </data>
+  <data name="WorkshopFavorites_Imported" xml:space="preserve">
+    <value>Added {0} collections and {1} items; {2} lines skipped.</value>
+  </data>
+  <data name="WorkshopLaunch_Title" xml:space="preserve">
+    <value>Workshop updates available</value>
+  </data>
+  <data name="WorkshopLaunch_Message" xml:space="preserve">
+    <value>{0} Workshop items behind the mods this launch enables have a newer version than the one Steam installed. Update them before launching?</value>
+  </data>
+  <data name="WorkshopLaunch_Update" xml:space="preserve">
+    <value>Update, then launch</value>
+  </data>
+  <data name="WorkshopLaunch_LaunchNow" xml:space="preserve">
+    <value>Launch now</value>
+  </data>
+  <data name="WorkshopLaunch_FailedTitle" xml:space="preserve">
+    <value>Some items weren't updated</value>
+  </data>
+  <data name="WorkshopLaunch_FailedMessage" xml:space="preserve">
+    <value>{0} Workshop items are still not up to date. Launch with the versions installed now?</value>
   </data>
   <data name="ModApply_KeepTitle" xml:space="preserve">
     <value>Keep the current enabled list?</value>

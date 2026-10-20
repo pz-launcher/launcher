@@ -314,6 +314,48 @@
   <data name="Error_NetworkTimeout" xml:space="preserve">
     <value>{0} não respondeu em {1} segundos.</value>
   </data>
+  <data name="Error_WorkshopSubscriptionsUnreadable" xml:space="preserve">
+    <value>Não foi possível ler a lista de inscrições da Oficina da Steam {0}. Confira se a Steam está instalada e conectada, depois atualize.</value>
+  </data>
+  <data name="Error_WorkshopManifestUnreadable" xml:space="preserve">
+    <value>Não foi possível ler a lista de itens da Oficina instalados pela Steam {0}. Os itens dessa biblioteca da Steam podem aparecer como não instalados.</value>
+  </data>
+  <data name="Error_WorkshopNetworkFailed" xml:space="preserve">
+    <value>Não foi possível conectar à Web API da Steam ({0}). Verifique sua conexão com a internet ou as configurações de proxy e tente novamente.</value>
+  </data>
+  <data name="Error_WorkshopResponseInvalid" xml:space="preserve">
+    <value>A Web API da Steam enviou uma resposta que o launcher não consegue ler. Tente novamente mais tarde.</value>
+  </data>
+  <data name="Error_WorkshopCollectionNotFound" xml:space="preserve">
+    <value>O item da Oficina {0} não é uma coleção, ou está oculto ou foi removido.</value>
+  </data>
+  <data name="Error_WorkshopSteamApiMissing" xml:space="preserve">
+    <value>Não foi possível encontrar a biblioteca da Steam do jogo (steam_api) em {0}. As ações da Oficina precisam da cópia do jogo da Steam.</value>
+  </data>
+  <data name="Error_WorkshopSteamApiUnusable" xml:space="preserve">
+    <value>Não foi possível carregar a biblioteca da Steam do jogo {0}. Atualize o jogo na Steam e tente novamente.</value>
+  </data>
+  <data name="Error_WorkshopSteamNotRunning" xml:space="preserve">
+    <value>A Steam não está aberta. Abra a Steam, entre na sua conta e tente novamente.</value>
+  </data>
+  <data name="Error_WorkshopSteamInitFailed" xml:space="preserve">
+    <value>A Steam recusou a ação da Oficina ({0}). Confira se a Steam está atualizada e conectada a uma conta que tenha Project Zomboid, e se a Steam e o launcher rodam ambos como administrador ou nenhum dos dois.</value>
+  </data>
+  <data name="Error_WorkshopHelperStartFailed" xml:space="preserve">
+    <value>Não foi possível iniciar o auxiliar da Steam do launcher {0}.</value>
+  </data>
+  <data name="Error_WorkshopHelperFailed" xml:space="preserve">
+    <value>O auxiliar da Steam do launcher parou antes de terminar ({0}). Confira os itens na Steam e tente novamente.</value>
+  </data>
+  <data name="Error_WorkshopHelperRequestRejected" xml:space="preserve">
+    <value>O auxiliar da Steam do launcher não conseguiu ler a solicitação ({0}). Reinicie o launcher e tente novamente.</value>
+  </data>
+  <data name="Error_WorkshopHelperTimedOut" xml:space="preserve">
+    <value>A Steam não informou nenhum progresso em {0} segundos, então a ação da Oficina foi interrompida. Tente novamente mais tarde.</value>
+  </data>
+  <data name="Error_WorkshopCollectionsQueryFailed" xml:space="preserve">
+    <value>A Steam não conseguiu listar suas coleções da Oficina ({0}). Tente novamente mais tarde.</value>
+  </data>
   <data name="Error_FolderNotLocal" xml:space="preserve">
     <value>{0} não é uma pasta deste computador, então o launcher não pode abri-la. Escolha uma pasta local.</value>
   </data>
@@ -683,6 +725,15 @@
   <data name="Mods_SectionCollections" xml:space="preserve">
     <value>Coleções</value>
   </data>
+  <data name="Mods_SectionWorkshopSubscriptions" xml:space="preserve">
+    <value>Inscrições da Oficina</value>
+  </data>
+  <data name="Mods_SectionWorkshopCollections" xml:space="preserve">
+    <value>Coleções da Oficina</value>
+  </data>
+  <data name="Mods_SectionWorkshopFavorites" xml:space="preserve">
+    <value>Favoritos locais</value>
+  </data>
   <data name="Mods_Refresh" xml:space="preserve">
     <value>Atualizar</value>
   </data>
@@ -889,6 +940,300 @@
   </data>
   <data name="ModCollections_ImportNameInvalid" xml:space="preserve">
     <value>"{0}" não pode ser usado como nome de coleção.</value>
+  </data>
+  <data name="Workshop_SearchPlaceholder" xml:space="preserve">
+    <value>Pesquisar por título, ID do item ou ID do mod</value>
+  </data>
+  <data name="Workshop_FilterNeedsUpdate" xml:space="preserve">
+    <value>Precisa de atualização</value>
+  </data>
+  <data name="Workshop_FilterUnused" xml:space="preserve">
+    <value>Sem uso em coleções</value>
+  </data>
+  <data name="Workshop_FilterFavorites" xml:space="preserve">
+    <value>Favoritos locais</value>
+  </data>
+  <data name="Workshop_FavoriteToggle" xml:space="preserve">
+    <value>Adicionar aos favoritos locais ou remover deles</value>
+  </data>
+  <data name="Workshop_ColumnTitle" xml:space="preserve">
+    <value>Título</value>
+  </data>
+  <data name="Workshop_ColumnItemId" xml:space="preserve">
+    <value>ID do item</value>
+  </data>
+  <data name="Workshop_ColumnMods" xml:space="preserve">
+    <value>IDs dos mods</value>
+  </data>
+  <data name="Workshop_ColumnSize" xml:space="preserve">
+    <value>Tamanho</value>
+  </data>
+  <data name="Workshop_ColumnUpdated" xml:space="preserve">
+    <value>Atualizado</value>
+  </data>
+  <data name="Workshop_ColumnState" xml:space="preserve">
+    <value>Estado</value>
+  </data>
+  <data name="Workshop_SizeFormat" xml:space="preserve">
+    <value>{0:N1} MB</value>
+  </data>
+  <data name="Workshop_Downloading" xml:space="preserve">
+    <value>Baixando</value>
+  </data>
+  <data name="Workshop_DownloadingFormat" xml:space="preserve">
+    <value>Baixando {0}%</value>
+  </data>
+  <data name="Workshop_Empty" xml:space="preserve">
+    <value>A conta Steam em uso não tem inscrições na Oficina para Project Zomboid.</value>
+  </data>
+  <data name="Workshop_FilterEmpty" xml:space="preserve">
+    <value>Nenhum item corresponde à pesquisa ou ao filtro.</value>
+  </data>
+  <data name="Workshop_Subscribe" xml:space="preserve">
+    <value>Inscrever-se…</value>
+  </data>
+  <data name="Workshop_Unsubscribe" xml:space="preserve">
+    <value>Cancelar inscrição</value>
+  </data>
+  <data name="Workshop_CheckUpdates" xml:space="preserve">
+    <value>Verificar atualizações</value>
+  </data>
+  <data name="Workshop_UpdateAll" xml:space="preserve">
+    <value>Atualizar todos os desatualizados</value>
+  </data>
+  <data name="Workshop_UpdateSelected" xml:space="preserve">
+    <value>Forçar atualização dos selecionados</value>
+  </data>
+  <data name="Workshop_OpenInSteam" xml:space="preserve">
+    <value>Abrir na Steam</value>
+  </data>
+  <data name="Workshop_OpenFailed" xml:space="preserve">
+    <value>Não foi possível abrir a página do item. Confira se a Steam está instalada.</value>
+  </data>
+  <data name="Workshop_SubscribeTitle" xml:space="preserve">
+    <value>Inscrever-se em um item da Oficina</value>
+  </data>
+  <data name="Workshop_SubscribeMessage" xml:space="preserve">
+    <value>Cole o link da Oficina Steam do item ou o ID dele:</value>
+  </data>
+  <data name="Workshop_SubscribeAccept" xml:space="preserve">
+    <value>Inscrever-se</value>
+  </data>
+  <data name="Workshop_LinkInvalid" xml:space="preserve">
+    <value>Digite um link de item da Oficina Steam ou um ID numérico.</value>
+  </data>
+  <data name="Workshop_UnsubscribeTitle" xml:space="preserve">
+    <value>Cancelar a inscrição em itens da Oficina?</value>
+  </data>
+  <data name="Workshop_UnsubscribeMessage" xml:space="preserve">
+    <value>Cancelar a inscrição nestes {0} itens? A Steam apaga os arquivos deles quando a ação terminar.</value>
+  </data>
+  <data name="Workshop_UnsubscribeUsedMessage" xml:space="preserve">
+    <value>Cancelar a inscrição nestes {0} itens? Os mods deles estão nestas coleções: {1}. As coleções mantêm os mods, que passarão a faltar. A Steam apaga os arquivos quando a ação terminar.</value>
+  </data>
+  <data name="Workshop_CheckedAllCurrent" xml:space="preserve">
+    <value>Todos os itens instalados estão atualizados.</value>
+  </data>
+  <data name="Workshop_CheckedOutdated" xml:space="preserve">
+    <value>{0} itens precisam de atualização.</value>
+  </data>
+  <data name="Workshop_ActionSubscribeTitle" xml:space="preserve">
+    <value>Inscrevendo</value>
+  </data>
+  <data name="Workshop_ActionUnsubscribeTitle" xml:space="preserve">
+    <value>Cancelando inscrições</value>
+  </data>
+  <data name="Workshop_ActionUpdateTitle" xml:space="preserve">
+    <value>Atualizando itens da Oficina</value>
+  </data>
+  <data name="Workshop_ActionPlayingHint" xml:space="preserve">
+    <value>Enquanto isso roda, a Steam mostra que você está jogando Project Zomboid.</value>
+  </data>
+  <data name="Workshop_WaitingForSteam" xml:space="preserve">
+    <value>Aguardando a Steam…</value>
+  </data>
+  <data name="Workshop_WaitingForEarlierAction" xml:space="preserve">
+    <value>Aguardando a ação anterior da Steam terminar…</value>
+  </data>
+  <data name="Workshop_ActionSummary" xml:space="preserve">
+    <value>Concluídos: {0} de {1}</value>
+  </data>
+  <data name="Workshop_StillOutdated" xml:space="preserve">
+    <value>A Steam terminou, mas a cópia instalada ainda não é a versão mais recente. Tente novamente em alguns minutos.</value>
+  </data>
+  <data name="Workshop_SteamResultFormat" xml:space="preserve">
+    <value>Código de resultado da Steam {0}</value>
+  </data>
+  <data name="Workshop_Close" xml:space="preserve">
+    <value>Fechar</value>
+  </data>
+  <data name="WorkshopItemState_UpToDate" xml:space="preserve">
+    <value>Atualizado</value>
+  </data>
+  <data name="WorkshopItemState_NeedsUpdate" xml:space="preserve">
+    <value>Precisa de atualização</value>
+  </data>
+  <data name="WorkshopItemState_NotInstalled" xml:space="preserve">
+    <value>Não instalado</value>
+  </data>
+  <data name="WorkshopItemState_DisabledLocally" xml:space="preserve">
+    <value>Desativado localmente</value>
+  </data>
+  <data name="WorkshopItemState_NotSubscribed" xml:space="preserve">
+    <value>Não inscrito</value>
+  </data>
+  <data name="WorkshopItemFailure_SubscribeFailed" xml:space="preserve">
+    <value>A Steam não conseguiu se inscrever no item</value>
+  </data>
+  <data name="WorkshopItemFailure_UnsubscribeFailed" xml:space="preserve">
+    <value>A Steam não conseguiu cancelar a inscrição</value>
+  </data>
+  <data name="WorkshopItemFailure_DownloadNotStarted" xml:space="preserve">
+    <value>A Steam não iniciou o download</value>
+  </data>
+  <data name="WorkshopItemFailure_DownloadFailed" xml:space="preserve">
+    <value>O download falhou</value>
+  </data>
+  <data name="WorkshopItemFailure_TimedOut" xml:space="preserve">
+    <value>A Steam parou de informar o progresso</value>
+  </data>
+  <data name="WorkshopItemFailure_NotReported" xml:space="preserve">
+    <value>A Steam não informou nenhum resultado</value>
+  </data>
+  <data name="WorkshopCollections_LinkPlaceholder" xml:space="preserve">
+    <value>Link ou ID da coleção</value>
+  </data>
+  <data name="WorkshopCollections_Open" xml:space="preserve">
+    <value>Abrir</value>
+  </data>
+  <data name="WorkshopCollections_Remembered" xml:space="preserve">
+    <value>Coleções abertas</value>
+  </data>
+  <data name="WorkshopCollections_RememberedEmpty" xml:space="preserve">
+    <value>As coleções que você abrir aparecem aqui.</value>
+  </data>
+  <data name="WorkshopCollections_Forget" xml:space="preserve">
+    <value>Remover da lista</value>
+  </data>
+  <data name="WorkshopCollections_Favorited" xml:space="preserve">
+    <value>Coleções favoritas</value>
+  </data>
+  <data name="WorkshopCollections_FavoritedEmpty" xml:space="preserve">
+    <value>Você não tem coleções favoritas deste jogo na Steam.</value>
+  </data>
+  <data name="WorkshopCollections_Published" xml:space="preserve">
+    <value>Minhas coleções</value>
+  </data>
+  <data name="WorkshopCollections_PublishedEmpty" xml:space="preserve">
+    <value>Você ainda não publicou coleções deste jogo na Steam.</value>
+  </data>
+  <data name="WorkshopCollections_RefreshHint" xml:space="preserve">
+    <value>Consulta na Steam suas coleções favoritas e publicadas. Por alguns segundos, a Steam mostra que você está jogando Project Zomboid.</value>
+  </data>
+  <data name="WorkshopCollections_UpdatedFormat" xml:space="preserve">
+    <value>Última atualização: {0}</value>
+  </data>
+  <data name="WorkshopCollections_NoneOpen" xml:space="preserve">
+    <value>Cole o link ou o ID de uma coleção da Oficina Steam para ver os itens dela e em quais você está inscrito.</value>
+  </data>
+  <data name="WorkshopCollections_ItemCountFormat" xml:space="preserve">
+    <value>{0} itens</value>
+  </data>
+  <data name="WorkshopCollections_Empty" xml:space="preserve">
+    <value>Esta coleção não tem itens.</value>
+  </data>
+  <data name="WorkshopCollections_SubscribeMissing" xml:space="preserve">
+    <value>Inscrever-se nos que faltam</value>
+  </data>
+  <data name="WorkshopCollections_UnsubscribeAll" xml:space="preserve">
+    <value>Cancelar todas as inscrições</value>
+  </data>
+  <data name="WorkshopCollections_Generate" xml:space="preserve">
+    <value>Criar coleção de mods</value>
+  </data>
+  <data name="WorkshopCollections_GenerateHint" xml:space="preserve">
+    <value>Cria uma coleção do launcher com os mods dos itens instalados, na ordem desta coleção.</value>
+  </data>
+  <data name="WorkshopCollections_GenerateTitle" xml:space="preserve">
+    <value>Nova coleção a partir da coleção da Oficina</value>
+  </data>
+  <data name="WorkshopCollections_GenerateNothing" xml:space="preserve">
+    <value>Nenhum item instalado desta coleção tem mods para adicionar. Inscreva-se primeiro nos que faltam e deixe a Steam baixá-los.</value>
+  </data>
+  <data name="WorkshopCollections_Generated" xml:space="preserve">
+    <value>"{0}" criada com {1} mods. Ela está em Coleções.</value>
+  </data>
+  <data name="WorkshopCollections_PickTitle" xml:space="preserve">
+    <value>Escolha os mods a adicionar</value>
+  </data>
+  <data name="WorkshopCollections_PickMessage" xml:space="preserve">
+    <value>Estes itens têm mais de um mod. Desmarque os mods que a nova coleção não deve ter.</value>
+  </data>
+  <data name="WorkshopCollections_PickConflict" xml:space="preserve">
+    <value>Incompatível com {0}</value>
+  </data>
+  <data name="WorkshopCollections_SkippedMessage" xml:space="preserve">
+    <value>Estes itens ficam de fora:</value>
+  </data>
+  <data name="WorkshopCollections_SkippedFormat" xml:space="preserve">
+    <value>{0}: {1}</value>
+  </data>
+  <data name="WorkshopCollections_SkippedNoMods" xml:space="preserve">
+    <value>Sem mods</value>
+  </data>
+  <data name="WorkshopFavorites_Items" xml:space="preserve">
+    <value>Itens</value>
+  </data>
+  <data name="WorkshopFavorites_Collections" xml:space="preserve">
+    <value>Coleções</value>
+  </data>
+  <data name="WorkshopFavorites_CollectionsEmpty" xml:space="preserve">
+    <value>As coleções que você marcar com estrela aparecem aqui.</value>
+  </data>
+  <data name="WorkshopFavorites_ItemsEmpty" xml:space="preserve">
+    <value>Nenhum item favorito ainda. Marque itens com estrela em Inscrições da Oficina ou em uma coleção.</value>
+  </data>
+  <data name="WorkshopFavorites_CollectionName" xml:space="preserve">
+    <value>Favoritos locais</value>
+  </data>
+  <data name="WorkshopFavorites_Share" xml:space="preserve">
+    <value>Copiar os IDs dos favoritos locais para compartilhar</value>
+  </data>
+  <data name="WorkshopFavorites_Shared" xml:space="preserve">
+    <value>{0} coleções e {1} itens copiados para a área de transferência.</value>
+  </data>
+  <data name="WorkshopFavorites_Import" xml:space="preserve">
+    <value>Importar</value>
+  </data>
+  <data name="WorkshopFavorites_ImportTitle" xml:space="preserve">
+    <value>Importar favoritos locais</value>
+  </data>
+  <data name="WorkshopFavorites_ImportMessage" xml:space="preserve">
+    <value>Cole os favoritos locais compartilhados pelo launcher, ou links e IDs da Oficina, um por linha. Os favoritos que você já tem são mantidos.</value>
+  </data>
+  <data name="WorkshopFavorites_ImportNothing" xml:space="preserve">
+    <value>Nenhum link ou ID da Oficina encontrado.</value>
+  </data>
+  <data name="WorkshopFavorites_Imported" xml:space="preserve">
+    <value>{0} coleções e {1} itens adicionados; {2} linhas ignoradas.</value>
+  </data>
+  <data name="WorkshopLaunch_Title" xml:space="preserve">
+    <value>Há atualizações na Oficina</value>
+  </data>
+  <data name="WorkshopLaunch_Message" xml:space="preserve">
+    <value>{0} itens da Oficina com mods que este início ativa têm uma versão mais nova que a instalada pela Steam. Atualizá-los antes de iniciar?</value>
+  </data>
+  <data name="WorkshopLaunch_Update" xml:space="preserve">
+    <value>Atualizar e iniciar</value>
+  </data>
+  <data name="WorkshopLaunch_LaunchNow" xml:space="preserve">
+    <value>Iniciar agora</value>
+  </data>
+  <data name="WorkshopLaunch_FailedTitle" xml:space="preserve">
+    <value>Alguns itens não foram atualizados</value>
+  </data>
+  <data name="WorkshopLaunch_FailedMessage" xml:space="preserve">
+    <value>{0} itens da Oficina continuam desatualizados. Iniciar com as versões instaladas agora?</value>
   </data>
   <data name="ModApply_KeepTitle" xml:space="preserve">
     <value>Manter a lista ativada atual?</value>

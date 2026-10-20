@@ -1,15 +1,19 @@
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using PzLauncher.Core.Installs;
 using PzLauncher.Core.Java;
 using PzLauncher.Core.Launch;
 using PzLauncher.Core.Mod.Collections;
-using PzLauncher.Core.Mod.Zabric;
+using PzLauncher.Core.Mod.Workshop;
 using PzLauncher.Core.Mod.ZBSkipOnlineChecks;
+using PzLauncher.Core.Mod.Zabric;
 using PzLauncher.Core.Mod.ZombieBuddy;
 using PzLauncher.Core.Net;
 using PzLauncher.Core.Platform;
+using PzLauncher.Core.Steam.Workshop.Actions;
+using PzLauncher.Core.Steam.Workshop.Sources;
+using PzLauncher.Core.Steam.Workshop;
 using PzLauncher.Core.Steam;
 using PzLauncher.Core.Update;
 
@@ -44,6 +48,10 @@ public static class ServiceCollectionExtensions
         services.TryAddSingleton(_ => new SwitchableProxy(HttpClient.DefaultProxy));
         services.TryAddSingleton(provider => LauncherHttpClient.Create(currentVersion, provider.GetRequiredService<SwitchableProxy>()));
         services.TryAddSingleton<INetworkService, NetworkService>();
+        services.TryAddSingleton<WorkshopWebApi>();
+        services.TryAddSingleton<IWorkshopService, WorkshopService>();
+        services.TryAddSingleton<IWorkshopModsService, WorkshopModsService>();
+        services.TryAddSingleton<IWorkshopActionRunner, WorkshopActionRunner>();
         services.TryAddSingleton<IUpdateService>(provider => new UpdateService(
             currentVersion,
             provider.GetRequiredService<LauncherHttpClient>(),

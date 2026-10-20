@@ -9,9 +9,11 @@ internal static class SteamKeyValues
 {
     private static readonly KVSerializer Serializer = KVSerializer.Create(KVSerializationFormat.KeyValues1Text);
 
+    public static Result<KVObject> Parse(string text) => Parse(text, SteamErrors.VdfMalformed);
+
     // Root is wrapped in a collection so callers look it up by name like any child.
     // No file loader is set, so #include/#base fail instead of touching the file system.
-    public static Result<KVObject> Parse(string text)
+    public static Result<KVObject> Parse(string text, Func<string, Error> malformed)
     {
         KVDocument document;
         try
@@ -22,15 +24,27 @@ internal static class SteamKeyValues
         catch (KeyValueException ex)
         {
             // The only exception ValveKeyValue's KV1 text reader throws for bad input.
-            return SteamErrors.VdfMalformed(ex.Message);
+            return malformed(ex.Message);
         }
 
         if (document.Name is null)
         {
-            return SteamErrors.VdfMalformed("document has no root key");
+            return malformed("document has no root key");
         }
 
         return KVObject.ListCollection([new KeyValuePair<string, KVObject>(document.Name, document.Root)]);
+    }
+
+    public static Result<KVObject> ParseBlock(string text, string rootKey, Func<string, Error> unreadable)
+    {
+        var parsed = Parse(text, unreadable);
+        if (!parsed.IsSuccess)
+        {
+            return parsed.Error;
+        }
+
+        var root = parsed.Value.GetChild(rootKey);
+        return root is { IsCollection: true } ? root : unreadable($"missing \"{rootKey}\" block");
     }
 
     // Steam isn't consistent about key casing (BetaKey vs betakey); last duplicate wins.

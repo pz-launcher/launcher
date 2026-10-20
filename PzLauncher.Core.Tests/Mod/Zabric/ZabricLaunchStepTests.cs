@@ -5,6 +5,7 @@ using PzLauncher.Core.Mod.Zabric;
 using PzLauncher.Core.Mod.ZombieBuddy;
 using PzLauncher.Core.Platform;
 using PzLauncher.Core.Steam;
+using PzLauncher.Core.Steam.Workshop;
 using PzLauncher.Core.Tests.Mod.ZombieBuddy;
 using PzLauncher.Core.Tests.TestSupport;
 
@@ -44,7 +45,7 @@ public sealed class ZabricLaunchStepTests : IDisposable
         Installs.CreateFlat("ProjectZomboid", GameInstallBuilder.WindowsGameJsonWith(agentArg), withJre: false);
 
     private string SteamZabric(string? modInfo = null) =>
-        ZabricBuilder.Create(Path.Combine(WorkshopLibraries.ItemFolder(_library, "3820726385"), "mods", "Zabric"), modInfo: modInfo);
+        ZabricBuilder.Create(Path.Combine(WorkshopFiles.ItemFolder(_library, "3820726385"), "mods", "Zabric"), modInfo: modInfo);
 
     private static string StagedZabric(string cache, string classes = "v1") =>
         ZabricBuilder.Create(Path.Combine(cache, "Workshop", "Zabric", "Contents", "mods", "Zabric"), classes: classes);

@@ -1,0 +1,154 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:PzLauncher.Desktop.ViewModels.Mods.Workshop"
+             xmlns:local="using:PzLauncher.Desktop.Views.Mods.Workshop"
+             xmlns:design="using:PzLauncher.Desktop.ViewModels.Design"
+             xmlns:controls="using:PzLauncher.Desktop.Views.Controls"
+             xmlns:lang="using:PzLauncher.Desktop.Lang"
+             xmlns:ic="using:FluentIcons.Avalonia"
+             mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="560"
+             x:Class="PzLauncher.Desktop.Views.Mods.Workshop.WorkshopSubscriptionsView"
+             x:DataType="vm:WorkshopSubscriptionsViewModel">
+
+    <Design.DataContext>
+        <x:Static Member="design:DesignData.WorkshopSubscriptions" />
+    </Design.DataContext>
+
+    <UserControl.Styles>
+        <Style Selector="Button.columnHeader">
+            <Setter Property="ToolTip.Tip" Value="{x:Static lang:UiText.Mods_SortColumnTip}" />
+        </Style>
+    </UserControl.Styles>
+
+    <DockPanel>
+        <WrapPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,8">
+            <Button Command="{Binding SubscribeCommand}" Margin="0,0,6,6">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <ic:FluentIcon Icon="Add" IconVariant="Regular" FontSize="16" VerticalAlignment="Center" />
+                    <TextBlock Text="{x:Static lang:UiText.Workshop_Subscribe}" VerticalAlignment="Center" />
+                </StackPanel>
+            </Button>
+            <Button Command="{Binding CheckUpdatesCommand}" Margin="0,0,6,6">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <ic:FluentIcon Icon="ArrowSync" IconVariant="Regular" FontSize="16" VerticalAlignment="Center" />
+                    <TextBlock Text="{x:Static lang:UiText.Workshop_CheckUpdates}" VerticalAlignment="Center" />
+                </StackPanel>
+            </Button>
+            <Button Command="{Binding UpdateOutdatedCommand}" Margin="0,0,6,6">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <ic:FluentIcon Icon="ArrowDownload" IconVariant="Regular" FontSize="16" VerticalAlignment="Center" />
+                    <TextBlock Text="{x:Static lang:UiText.Workshop_UpdateAll}" VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding OutdatedCount, StringFormat='({0})'}" VerticalAlignment="Center" />
+                </StackPanel>
+            </Button>
+        </WrapPanel>
+
+        <WrapPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,12">
+            <TextBox Width="280" Text="{Binding SearchText}" PlaceholderText="{x:Static lang:UiText.Workshop_SearchPlaceholder}"
+                     VerticalAlignment="Center" Margin="0,0,16,4" />
+            <StackPanel Orientation="Horizontal" Spacing="16" VerticalAlignment="Center" Margin="0,0,16,4">
+                <RadioButton Content="{x:Static lang:UiText.Mods_FilterAll}"
+                             IsChecked="{Binding Filter, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:WorkshopSubscriptionsFilter.All}}" />
+                <RadioButton Content="{x:Static lang:UiText.Workshop_FilterNeedsUpdate}"
+                             IsChecked="{Binding Filter, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:WorkshopSubscriptionsFilter.NeedsUpdate}}" />
+                <RadioButton Content="{x:Static lang:UiText.Workshop_FilterUnused}"
+                             IsChecked="{Binding Filter, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:WorkshopSubscriptionsFilter.Unused}}" />
+                <RadioButton Content="{x:Static lang:UiText.Workshop_FilterFavorites}"
+                             IsChecked="{Binding Filter, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:WorkshopSubscriptionsFilter.Favorites}}" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" Margin="0,0,0,4">
+                <TextBlock Text="{Binding SelectedCount, StringFormat={x:Static lang:UiText.Mods_SelectedFormat}}" VerticalAlignment="Center"
+                           Foreground="{DynamicResource Shell.TextMuted}" />
+                <Button Content="{x:Static lang:UiText.Workshop_UpdateSelected}" Command="{Binding UpdateSelectedCommand}" />
+                <Button Content="{x:Static lang:UiText.Workshop_Unsubscribe}" Command="{Binding UnsubscribeCommand}" />
+                <Button Content="{x:Static lang:UiText.Mods_ClearSelection}" Command="{Binding ClearSelectionCommand}" />
+            </StackPanel>
+        </WrapPanel>
+
+        <local:WorkshopSectionStatus DockPanel.Dock="Top" />
+        <TextBlock DockPanel.Dock="Top" Text="{Binding StatusText}" Classes="hint" TextWrapping="Wrap"
+                   IsVisible="{Binding StatusText, Converter={x:Static ObjectConverters.IsNotNull}}" Margin="0,0,0,8" />
+
+        <Panel>
+            <TextBlock Text="{x:Static lang:UiText.Workshop_Empty}" IsVisible="{Binding IsEmpty}" TextWrapping="Wrap"
+                       Foreground="{DynamicResource Shell.TextMuted}" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" />
+            <TextBlock Text="{x:Static lang:UiText.Workshop_FilterEmpty}" IsVisible="{Binding IsFilterEmpty}" TextWrapping="Wrap"
+                       Foreground="{DynamicResource Shell.TextMuted}" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" />
+
+            <local:WorkshopItemListView Rows="{Binding VisibleRows}" ShowsSelection="True" ShowsUpdated="True">
+                <local:WorkshopItemListView.ColumnHeader>
+                    <local:WorkshopItemGrid Classes.sortDescending="{Binding SortDescending}">
+                        <Panel Grid.Column="0" Width="36" />
+                        <Button Grid.Column="1" Classes="columnHeader" Command="{Binding SortByCommand}"
+                                CommandParameter="{x:Static vm:WorkshopSubscriptionsSortColumn.Title}"
+                                AutomationProperties.Name="{x:Static lang:UiText.Workshop_ColumnTitle}">
+                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                <TextBlock Text="{x:Static lang:UiText.Workshop_ColumnTitle}" />
+                                <ic:FluentIcon Classes="sortArrow"
+                                               IsVisible="{Binding SortColumn, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:WorkshopSubscriptionsSortColumn.Title}}" />
+                            </StackPanel>
+                        </Button>
+                        <Button Grid.Column="2" Classes="columnHeader" Command="{Binding SortByCommand}"
+                                CommandParameter="{x:Static vm:WorkshopSubscriptionsSortColumn.Id}"
+                                AutomationProperties.Name="{x:Static lang:UiText.Workshop_ColumnItemId}">
+                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                <TextBlock Text="{x:Static lang:UiText.Workshop_ColumnItemId}" />
+                                <ic:FluentIcon Classes="sortArrow"
+                                               IsVisible="{Binding SortColumn, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:WorkshopSubscriptionsSortColumn.Id}}" />
+                            </StackPanel>
+                        </Button>
+                        <Button Grid.Column="3" Classes="columnHeader" Command="{Binding SortByCommand}"
+                                CommandParameter="{x:Static vm:WorkshopSubscriptionsSortColumn.Mods}"
+                                AutomationProperties.Name="{x:Static lang:UiText.Workshop_ColumnMods}">
+                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                <TextBlock Text="{x:Static lang:UiText.Workshop_ColumnMods}" />
+                                <ic:FluentIcon Classes="sortArrow"
+                                               IsVisible="{Binding SortColumn, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:WorkshopSubscriptionsSortColumn.Mods}}" />
+                            </StackPanel>
+                        </Button>
+                        <Button Grid.Column="4" Classes="columnHeader" Command="{Binding SortByCommand}"
+                                CommandParameter="{x:Static vm:WorkshopSubscriptionsSortColumn.Size}"
+                                AutomationProperties.Name="{x:Static lang:UiText.Workshop_ColumnSize}">
+                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                <TextBlock Text="{x:Static lang:UiText.Workshop_ColumnSize}" />
+                                <ic:FluentIcon Classes="sortArrow"
+                                               IsVisible="{Binding SortColumn, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:WorkshopSubscriptionsSortColumn.Size}}" />
+                            </StackPanel>
+                        </Button>
+                        <Panel Grid.Column="5" Width="130">
+                            <Button Classes="columnHeader" Command="{Binding SortByCommand}"
+                                    CommandParameter="{x:Static vm:WorkshopSubscriptionsSortColumn.Updated}"
+                                    AutomationProperties.Name="{x:Static lang:UiText.Workshop_ColumnUpdated}">
+                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                    <TextBlock Text="{x:Static lang:UiText.Workshop_ColumnUpdated}" />
+                                    <ic:FluentIcon Classes="sortArrow"
+                                                   IsVisible="{Binding SortColumn, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:WorkshopSubscriptionsSortColumn.Updated}}" />
+                                </StackPanel>
+                            </Button>
+                        </Panel>
+                        <Button Grid.Column="6" Classes="columnHeader" Command="{Binding SortByCommand}"
+                                CommandParameter="{x:Static vm:WorkshopSubscriptionsSortColumn.State}"
+                                AutomationProperties.Name="{x:Static lang:UiText.Workshop_ColumnState}">
+                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                <TextBlock Text="{x:Static lang:UiText.Workshop_ColumnState}" />
+                                <ic:FluentIcon Classes="sortArrow"
+                                               IsVisible="{Binding SortColumn, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:WorkshopSubscriptionsSortColumn.State}}" />
+                            </StackPanel>
+                        </Button>
+                        <Button Grid.Column="7" Classes="columnHeader" Command="{Binding SortByCommand}"
+                                CommandParameter="{x:Static vm:WorkshopSubscriptionsSortColumn.Collections}"
+                                AutomationProperties.Name="{x:Static lang:UiText.Mods_ColumnCollections}">
+                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                <TextBlock Text="{x:Static lang:UiText.Mods_ColumnCollections}" />
+                                <ic:FluentIcon Classes="sortArrow"
+                                               IsVisible="{Binding SortColumn, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:WorkshopSubscriptionsSortColumn.Collections}}" />
+                            </StackPanel>
+                        </Button>
+                    </local:WorkshopItemGrid>
+                </local:WorkshopItemListView.ColumnHeader>
+            </local:WorkshopItemListView>
+        </Panel>
+    </DockPanel>
+</UserControl>

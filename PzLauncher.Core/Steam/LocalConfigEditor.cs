@@ -34,20 +34,18 @@ internal sealed class LocalConfigEditor
 
     public static async Task<Result<LocalConfigEditor>> ReadAsync(string path, int appId, CancellationToken ct)
     {
-        byte[] bytes;
-        try
-        {
-            bytes = await File.ReadAllBytesAsync(path, ct).ConfigureAwait(false);
-        }
-        catch (Exception ex) when (ex is FileNotFoundException or DirectoryNotFoundException)
+        var read = await ReadFile.BytesIfExistsAsync(path, reason => SteamErrors.LocalConfigUnwritable(path, reason), ct).ConfigureAwait(false);
+        if (read is not { } result)
         {
             return SteamErrors.AppNotInLocalConfig(path, appId);
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+
+        if (!result.IsSuccess)
         {
-            return SteamErrors.LocalConfigUnwritable(path, ex.Message);
+            return result.Error;
         }
 
+        var bytes = result.Value;
         var decoded = Utf8TextFile.Decode(bytes, reason => SteamErrors.LocalConfigMalformed(path, reason));
         if (!decoded.IsSuccess)
         {

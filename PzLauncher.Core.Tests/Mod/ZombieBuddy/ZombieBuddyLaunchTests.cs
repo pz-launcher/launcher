@@ -3,6 +3,7 @@ using PzLauncher.Core.Common;
 using PzLauncher.Core.Mod.ZombieBuddy;
 using PzLauncher.Core.Platform;
 using PzLauncher.Core.Steam;
+using PzLauncher.Core.Steam.Workshop;
 using PzLauncher.Core.Tests.TestSupport;
 
 namespace PzLauncher.Core.Tests.Mod.ZombieBuddy;
@@ -34,7 +35,7 @@ public sealed class ZombieBuddyLaunchTests : IDisposable
     private string CreateGame() => Installs.CreateFlat("ProjectZomboid", GameInstallBuilder.WindowsGameJsonWith(AllowAll), withJre: false);
 
     private string SteamZabric(string? manifest = ZabricBuilder.PreloadManifest) =>
-        ZabricBuilder.Create(Path.Combine(WorkshopLibraries.ItemFolder(_library, "3820726385"), "mods", "Zabric"), manifest: manifest);
+        ZabricBuilder.Create(Path.Combine(WorkshopFiles.ItemFolder(_library, "3820726385"), "mods", "Zabric"), manifest: manifest);
 
     private Task<ZombieBuddyLaunch?> ResolveAsync(string root) =>
         ZombieBuddyLaunch.ResolveAsync(

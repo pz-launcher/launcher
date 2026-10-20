@@ -35,20 +35,18 @@ internal sealed class GameTextFile
     /// <summary>A missing file reads as empty, with <paramref name="newline"/> for the lines added to it.</summary>
     public static async Task<Result<GameTextFile>> ReadAsync(string path, string newline, CancellationToken ct)
     {
-        byte[] bytes;
-        try
-        {
-            bytes = await File.ReadAllBytesAsync(path, ct).ConfigureAwait(false);
-        }
-        catch (Exception ex) when (ex is FileNotFoundException or DirectoryNotFoundException)
+        var read = await ReadFile.BytesIfExistsAsync(path, reason => ModCollectionErrors.FileUnreadable(path, reason), ct).ConfigureAwait(false);
+        if (read is not { } result)
         {
             return new GameTextFile(path, null, false, [], newline);
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+
+        if (!result.IsSuccess)
         {
-            return ModCollectionErrors.FileUnreadable(path, ex.Message);
+            return result.Error;
         }
 
+        var bytes = result.Value;
         var decoded = Utf8TextFile.Decode(bytes, reason => ModCollectionErrors.FileMalformed(path, reason));
         if (!decoded.IsSuccess)
         {

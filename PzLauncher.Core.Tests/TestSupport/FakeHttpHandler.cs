@@ -34,10 +34,13 @@ public sealed class FakeHttpHandler : HttpMessageHandler
 
     public IReadOnlyList<string> RequestedHosts => [.. Requests.Select(request => request.Uri.Host)];
 
+    public static HttpResponseMessage JsonResponse(string json) =>
+        new(HttpStatusCode.OK) { Content = new StringContent(json, Encoding.UTF8, "application/json") };
+
     public void Respond(string url, Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> respond) => _routes[url] = respond;
 
     public void RespondJson(string url, string json) =>
-        Respond(url, (_, _) => Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(json, Encoding.UTF8, "application/json") }));
+        Respond(url, (_, _) => Task.FromResult(JsonResponse(json)));
 
     public void RespondBytes(string url, byte[] content) =>
         Respond(url, (_, _) => Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { Content = new ByteArrayContent(content) }));
@@ -64,7 +67,7 @@ public sealed class FakeHttpHandler : HttpMessageHandler
         Respond(url, async (_, ct) =>
         {
             await release.WaitAsync(ct);
-            return new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(json, Encoding.UTF8, "application/json") };
+            return JsonResponse(json);
         });
 
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)

@@ -76,21 +76,14 @@ internal static class ZombieBuddyPreloadConfig
     // A missing file reads as an empty root; Preload is null when the file has no preload_mods object.
     private static async Task<Result<Config>> ReadAsync(string path, string modId, CancellationToken ct)
     {
-        string json;
-        try
+        var read = await ReadFile.TextIfExistsAsync(path, reason => ZombieBuddyErrors.PreloadConfigIoFailed(modId, path, reason), ct)
+            .ConfigureAwait(false);
+        if (read is { } result && !result.IsSuccess)
         {
-            json = await File.ReadAllTextAsync(path, ct).ConfigureAwait(false);
-        }
-        catch (Exception ex) when (ex is FileNotFoundException or DirectoryNotFoundException)
-        {
-            json = "";
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-        {
-            return ZombieBuddyErrors.PreloadConfigIoFailed(modId, path, ex.Message);
+            return result.Error;
         }
 
-        var root = Parse(json, modId, path);
+        var root = Parse(read?.Value ?? "", modId, path);
         if (!root.IsSuccess)
         {
             return root.Error;

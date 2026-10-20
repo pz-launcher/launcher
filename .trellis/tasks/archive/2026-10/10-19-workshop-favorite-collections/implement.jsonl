@@ -1,0 +1,10 @@
+{"file": ".trellis/spec/common/coding-rules.md", "reason": "comments, async, AOT interop rules"}
+{"file": ".trellis/spec/core/directory-structure.md", "reason": "Steam/Workshop Helper/Actions placement, constants owner"}
+{"file": ".trellis/spec/core/service-api.md", "reason": "runner method shape, DTOs in CoreJsonContext"}
+{"file": ".trellis/spec/core/error-handling.md", "reason": "Result/error mapping for helper failures"}
+{"file": ".trellis/spec/desktop/directory-structure.md", "reason": "Workshop section VM/view layout"}
+{"file": ".trellis/spec/desktop/preferences.md", "reason": "new preferences field contract"}
+{"file": ".trellis/spec/desktop/localization.md", "reason": "new strings in every resx"}
+{"file": ".trellis/spec/desktop/shell-and-theming.md", "reason": "shared Shell styles for the new groups"}
+{"file": ".trellis/tasks/10-19-workshop-favorite-collections/research/favorite-collections.md", "reason": "query sequence, enum values, callback id, struct sizes and offsets from the spike"}
+{"file": ".trellis/tasks/archive/2026-10/10-18-workshop-management/research/steam-workshop-integration.md", "reason": "helper process model, packing, spike/smoke results"}

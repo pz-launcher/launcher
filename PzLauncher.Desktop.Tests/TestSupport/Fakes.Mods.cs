@@ -142,7 +142,7 @@ public sealed class FakeModCollectionService : IModCollectionService
 public static class TestMods
 {
     public static InstalledMod Mod(
-        string id, string? name = null, string? workshopId = null, InstalledModSource source = InstalledModSource.SteamWorkshop,
+        string id, string? name = null, ulong? workshopId = null, InstalledModSource source = InstalledModSource.SteamWorkshop,
         string[]? require = null, string[]? incompatible = null) =>
         new(id, name ?? id + " Name", workshopId, source, require ?? [], [], [], incompatible ?? []);
 }

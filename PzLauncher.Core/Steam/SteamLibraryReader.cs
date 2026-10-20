@@ -16,26 +16,20 @@ internal sealed class SteamLibraryReader
         var file = LibraryFoldersPath(steamRoot);
         Error Unreadable(string reason) => SteamErrors.LibraryUnreadable(file, reason);
 
-        var text = await ReadAsync(file, Unreadable, ct).ConfigureAwait(false);
+        var text = await ReadFile.TextAsync(file, Unreadable, ct).ConfigureAwait(false);
         if (!text.IsSuccess)
         {
             return text.Error;
         }
 
-        var parsed = SteamKeyValues.Parse(text.Value);
-        if (!parsed.IsSuccess)
+        var folders = SteamKeyValues.ParseBlock(text.Value, "libraryfolders", Unreadable);
+        if (!folders.IsSuccess)
         {
-            return Unreadable(ReasonOf(parsed.Error));
-        }
-
-        var folders = parsed.Value.GetChild("libraryfolders");
-        if (folders is null || !folders.IsCollection)
-        {
-            return Unreadable("missing \"libraryfolders\" block");
+            return folders.Error;
         }
 
         var paths = new List<string>();
-        foreach (var (key, entry) in folders.GetChildren())
+        foreach (var (key, entry) in folders.Value.GetChildren())
         {
             // Current format: "0" { "path" "..." }. Old format: "1" "D:\SteamLibrary".
             // Only numeric keys are libraries; others ("contentstatsid", ...) are metadata.
@@ -58,24 +52,19 @@ internal sealed class SteamLibraryReader
     {
         Error Unreadable(string reason) => SteamErrors.ManifestUnreadable(manifestPath, reason);
 
-        var text = await ReadAsync(manifestPath, Unreadable, ct).ConfigureAwait(false);
+        var text = await ReadFile.TextAsync(manifestPath, Unreadable, ct).ConfigureAwait(false);
         if (!text.IsSuccess)
         {
             return text.Error;
         }
 
-        var parsed = SteamKeyValues.Parse(text.Value);
-        if (!parsed.IsSuccess)
+        var block = SteamKeyValues.ParseBlock(text.Value, "AppState", Unreadable);
+        if (!block.IsSuccess)
         {
-            return Unreadable(ReasonOf(parsed.Error));
+            return block.Error;
         }
 
-        var state = parsed.Value.GetChild("AppState");
-        if (state is null || !state.IsCollection)
-        {
-            return Unreadable("missing \"AppState\" block");
-        }
-
+        var state = block.Value;
         var installDir = state.GetString("installdir");
         if (string.IsNullOrWhiteSpace(installDir)
             || PathNormalizer.HasInvalidPathChars(installDir)
@@ -97,19 +86,4 @@ internal sealed class SteamLibraryReader
 
         return new SteamAppManifest(installDir, buildId, branch);
     }
-
-    private static async Task<Result<string>> ReadAsync(string path, Func<string, Error> onFailure, CancellationToken ct)
-    {
-        try
-        {
-            return await File.ReadAllTextAsync(path, ct).ConfigureAwait(false);
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-        {
-            return onFailure(ex.Message);
-        }
-    }
-
-    private static string ReasonOf(Error error) =>
-        error.Details.TryGetValue("reason", out var reason) ? reason : error.Message;
 }

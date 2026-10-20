@@ -314,6 +314,48 @@
   <data name="Error_NetworkTimeout" xml:space="preserve">
     <value>{0} не ответил за {1} с.</value>
   </data>
+  <data name="Error_WorkshopSubscriptionsUnreadable" xml:space="preserve">
+    <value>Не удалось прочитать список подписок Мастерской Steam {0}. Проверьте, что Steam установлен и вы вошли в аккаунт, затем обновите список.</value>
+  </data>
+  <data name="Error_WorkshopManifestUnreadable" xml:space="preserve">
+    <value>Не удалось прочитать список установленных предметов Мастерской Steam {0}. Предметы из этой библиотеки Steam могут отображаться как не установленные.</value>
+  </data>
+  <data name="Error_WorkshopNetworkFailed" xml:space="preserve">
+    <value>Не удалось подключиться к Steam Web API ({0}). Проверьте подключение к интернету или настройки прокси и попробуйте снова.</value>
+  </data>
+  <data name="Error_WorkshopResponseInvalid" xml:space="preserve">
+    <value>Steam Web API вернул ответ, который лаунчер не может прочитать. Попробуйте позже.</value>
+  </data>
+  <data name="Error_WorkshopCollectionNotFound" xml:space="preserve">
+    <value>Предмет Мастерской {0} не является коллекцией либо скрыт или удалён.</value>
+  </data>
+  <data name="Error_WorkshopSteamApiMissing" xml:space="preserve">
+    <value>Не найдена библиотека Steam игры (steam_api) в {0}. Для действий с Мастерской нужна версия игры из Steam.</value>
+  </data>
+  <data name="Error_WorkshopSteamApiUnusable" xml:space="preserve">
+    <value>Не удалось загрузить библиотеку Steam игры {0}. Обновите игру в Steam и повторите попытку.</value>
+  </data>
+  <data name="Error_WorkshopSteamNotRunning" xml:space="preserve">
+    <value>Steam не запущен. Запустите Steam, войдите в аккаунт и повторите попытку.</value>
+  </data>
+  <data name="Error_WorkshopSteamInitFailed" xml:space="preserve">
+    <value>Steam отклонил действие с Мастерской ({0}). Убедитесь, что Steam обновлён и вы вошли в аккаунт, которому принадлежит Project Zomboid, а Steam и лаунчер оба запущены от имени администратора или оба без этого.</value>
+  </data>
+  <data name="Error_WorkshopHelperStartFailed" xml:space="preserve">
+    <value>Не удалось запустить вспомогательный процесс Steam лаунчера {0}.</value>
+  </data>
+  <data name="Error_WorkshopHelperFailed" xml:space="preserve">
+    <value>Вспомогательный процесс Steam лаунчера остановился, не завершив работу ({0}). Проверьте предметы в Steam и повторите попытку.</value>
+  </data>
+  <data name="Error_WorkshopHelperRequestRejected" xml:space="preserve">
+    <value>Вспомогательный процесс Steam лаунчера не смог прочитать запрос ({0}). Перезапустите лаунчер и повторите попытку.</value>
+  </data>
+  <data name="Error_WorkshopHelperTimedOut" xml:space="preserve">
+    <value>Steam не сообщал о ходе работы {0} с, поэтому действие с Мастерской остановлено. Повторите попытку позже.</value>
+  </data>
+  <data name="Error_WorkshopCollectionsQueryFailed" xml:space="preserve">
+    <value>Steam не смог получить список ваших коллекций Мастерской ({0}). Повторите попытку позже.</value>
+  </data>
   <data name="Error_FolderNotLocal" xml:space="preserve">
     <value>{0} — не папка на этом компьютере, поэтому лаунчер не может её открыть. Выберите локальную папку.</value>
   </data>
@@ -683,6 +725,15 @@
   <data name="Mods_SectionCollections" xml:space="preserve">
     <value>Сборки</value>
   </data>
+  <data name="Mods_SectionWorkshopSubscriptions" xml:space="preserve">
+    <value>Подписки Мастерской</value>
+  </data>
+  <data name="Mods_SectionWorkshopCollections" xml:space="preserve">
+    <value>Коллекции Мастерской</value>
+  </data>
+  <data name="Mods_SectionWorkshopFavorites" xml:space="preserve">
+    <value>Локальное избранное</value>
+  </data>
   <data name="Mods_Refresh" xml:space="preserve">
     <value>Обновить</value>
   </data>
@@ -889,6 +940,300 @@
   </data>
   <data name="ModCollections_ImportNameInvalid" xml:space="preserve">
     <value>«{0}» нельзя использовать как имя сборки.</value>
+  </data>
+  <data name="Workshop_SearchPlaceholder" xml:space="preserve">
+    <value>Поиск по названию, ID предмета или ID мода</value>
+  </data>
+  <data name="Workshop_FilterNeedsUpdate" xml:space="preserve">
+    <value>Нужно обновить</value>
+  </data>
+  <data name="Workshop_FilterUnused" xml:space="preserve">
+    <value>Не используется в сборках</value>
+  </data>
+  <data name="Workshop_FilterFavorites" xml:space="preserve">
+    <value>Локальное избранное</value>
+  </data>
+  <data name="Workshop_FavoriteToggle" xml:space="preserve">
+    <value>Добавить в локальное избранное или убрать из него</value>
+  </data>
+  <data name="Workshop_ColumnTitle" xml:space="preserve">
+    <value>Название</value>
+  </data>
+  <data name="Workshop_ColumnItemId" xml:space="preserve">
+    <value>ID предмета</value>
+  </data>
+  <data name="Workshop_ColumnMods" xml:space="preserve">
+    <value>ID модов</value>
+  </data>
+  <data name="Workshop_ColumnSize" xml:space="preserve">
+    <value>Размер</value>
+  </data>
+  <data name="Workshop_ColumnUpdated" xml:space="preserve">
+    <value>Обновлён</value>
+  </data>
+  <data name="Workshop_ColumnState" xml:space="preserve">
+    <value>Состояние</value>
+  </data>
+  <data name="Workshop_SizeFormat" xml:space="preserve">
+    <value>{0:N1} МБ</value>
+  </data>
+  <data name="Workshop_Downloading" xml:space="preserve">
+    <value>Загрузка</value>
+  </data>
+  <data name="Workshop_DownloadingFormat" xml:space="preserve">
+    <value>Загрузка {0} %</value>
+  </data>
+  <data name="Workshop_Empty" xml:space="preserve">
+    <value>У текущего аккаунта Steam нет подписок Мастерской для Project Zomboid.</value>
+  </data>
+  <data name="Workshop_FilterEmpty" xml:space="preserve">
+    <value>Нет предметов, подходящих под поиск или фильтр.</value>
+  </data>
+  <data name="Workshop_Subscribe" xml:space="preserve">
+    <value>Подписаться…</value>
+  </data>
+  <data name="Workshop_Unsubscribe" xml:space="preserve">
+    <value>Отписаться</value>
+  </data>
+  <data name="Workshop_CheckUpdates" xml:space="preserve">
+    <value>Проверить обновления</value>
+  </data>
+  <data name="Workshop_UpdateAll" xml:space="preserve">
+    <value>Обновить все устаревшие</value>
+  </data>
+  <data name="Workshop_UpdateSelected" xml:space="preserve">
+    <value>Принудительно обновить выбранные</value>
+  </data>
+  <data name="Workshop_OpenInSteam" xml:space="preserve">
+    <value>Открыть в Steam</value>
+  </data>
+  <data name="Workshop_OpenFailed" xml:space="preserve">
+    <value>Не удалось открыть страницу предмета. Проверьте, что Steam установлен.</value>
+  </data>
+  <data name="Workshop_SubscribeTitle" xml:space="preserve">
+    <value>Подписка на предмет Мастерской</value>
+  </data>
+  <data name="Workshop_SubscribeMessage" xml:space="preserve">
+    <value>Вставьте ссылку на предмет в Мастерской Steam или его ID:</value>
+  </data>
+  <data name="Workshop_SubscribeAccept" xml:space="preserve">
+    <value>Подписаться</value>
+  </data>
+  <data name="Workshop_LinkInvalid" xml:space="preserve">
+    <value>Введите ссылку на предмет Мастерской Steam или числовой ID предмета.</value>
+  </data>
+  <data name="Workshop_UnsubscribeTitle" xml:space="preserve">
+    <value>Отписаться от предметов Мастерской?</value>
+  </data>
+  <data name="Workshop_UnsubscribeMessage" xml:space="preserve">
+    <value>Отписаться от выбранных предметов ({0})? Steam удалит их файлы после завершения действия.</value>
+  </data>
+  <data name="Workshop_UnsubscribeUsedMessage" xml:space="preserve">
+    <value>Отписаться от выбранных предметов ({0})? Их моды входят в сборки: {1}. Сборки сохранят эти моды, но они станут отсутствующими. Steam удалит файлы после завершения действия.</value>
+  </data>
+  <data name="Workshop_CheckedAllCurrent" xml:space="preserve">
+    <value>Все установленные предметы актуальны.</value>
+  </data>
+  <data name="Workshop_CheckedOutdated" xml:space="preserve">
+    <value>Предметов, которым нужно обновление: {0}.</value>
+  </data>
+  <data name="Workshop_ActionSubscribeTitle" xml:space="preserve">
+    <value>Подписка</value>
+  </data>
+  <data name="Workshop_ActionUnsubscribeTitle" xml:space="preserve">
+    <value>Отписка</value>
+  </data>
+  <data name="Workshop_ActionUpdateTitle" xml:space="preserve">
+    <value>Обновление предметов Мастерской</value>
+  </data>
+  <data name="Workshop_ActionPlayingHint" xml:space="preserve">
+    <value>Пока идёт действие, Steam показывает, что вы играете в Project Zomboid.</value>
+  </data>
+  <data name="Workshop_WaitingForSteam" xml:space="preserve">
+    <value>Ожидание Steam…</value>
+  </data>
+  <data name="Workshop_WaitingForEarlierAction" xml:space="preserve">
+    <value>Ожидание завершения предыдущего действия Steam…</value>
+  </data>
+  <data name="Workshop_ActionSummary" xml:space="preserve">
+    <value>Готово: {0} из {1}</value>
+  </data>
+  <data name="Workshop_StillOutdated" xml:space="preserve">
+    <value>Steam завершил работу, но установленная версия всё ещё не последняя. Повторите попытку через несколько минут.</value>
+  </data>
+  <data name="Workshop_SteamResultFormat" xml:space="preserve">
+    <value>Код результата Steam {0}</value>
+  </data>
+  <data name="Workshop_Close" xml:space="preserve">
+    <value>Закрыть</value>
+  </data>
+  <data name="WorkshopItemState_UpToDate" xml:space="preserve">
+    <value>Актуален</value>
+  </data>
+  <data name="WorkshopItemState_NeedsUpdate" xml:space="preserve">
+    <value>Нужно обновить</value>
+  </data>
+  <data name="WorkshopItemState_NotInstalled" xml:space="preserve">
+    <value>Не установлен</value>
+  </data>
+  <data name="WorkshopItemState_DisabledLocally" xml:space="preserve">
+    <value>Отключён локально</value>
+  </data>
+  <data name="WorkshopItemState_NotSubscribed" xml:space="preserve">
+    <value>Нет подписки</value>
+  </data>
+  <data name="WorkshopItemFailure_SubscribeFailed" xml:space="preserve">
+    <value>Steam не смог подписаться на предмет</value>
+  </data>
+  <data name="WorkshopItemFailure_UnsubscribeFailed" xml:space="preserve">
+    <value>Steam не смог отписаться от предмета</value>
+  </data>
+  <data name="WorkshopItemFailure_DownloadNotStarted" xml:space="preserve">
+    <value>Steam не начал загрузку</value>
+  </data>
+  <data name="WorkshopItemFailure_DownloadFailed" xml:space="preserve">
+    <value>Загрузка не удалась</value>
+  </data>
+  <data name="WorkshopItemFailure_TimedOut" xml:space="preserve">
+    <value>Steam перестал сообщать о ходе работы</value>
+  </data>
+  <data name="WorkshopItemFailure_NotReported" xml:space="preserve">
+    <value>Steam не сообщил результат</value>
+  </data>
+  <data name="WorkshopCollections_LinkPlaceholder" xml:space="preserve">
+    <value>Ссылка на коллекцию или ID</value>
+  </data>
+  <data name="WorkshopCollections_Open" xml:space="preserve">
+    <value>Открыть</value>
+  </data>
+  <data name="WorkshopCollections_Remembered" xml:space="preserve">
+    <value>Открытые коллекции</value>
+  </data>
+  <data name="WorkshopCollections_RememberedEmpty" xml:space="preserve">
+    <value>Здесь появятся коллекции, которые вы открывали.</value>
+  </data>
+  <data name="WorkshopCollections_Forget" xml:space="preserve">
+    <value>Убрать из списка</value>
+  </data>
+  <data name="WorkshopCollections_Favorited" xml:space="preserve">
+    <value>Избранные коллекции</value>
+  </data>
+  <data name="WorkshopCollections_FavoritedEmpty" xml:space="preserve">
+    <value>В Steam нет избранных коллекций для этой игры.</value>
+  </data>
+  <data name="WorkshopCollections_Published" xml:space="preserve">
+    <value>Мои коллекции</value>
+  </data>
+  <data name="WorkshopCollections_PublishedEmpty" xml:space="preserve">
+    <value>Вы ещё не публиковали в Steam коллекции для этой игры.</value>
+  </data>
+  <data name="WorkshopCollections_RefreshHint" xml:space="preserve">
+    <value>Запрашивает у Steam ваши избранные и опубликованные коллекции. Несколько секунд Steam показывает, что вы играете в Project Zomboid.</value>
+  </data>
+  <data name="WorkshopCollections_UpdatedFormat" xml:space="preserve">
+    <value>Обновлено: {0}</value>
+  </data>
+  <data name="WorkshopCollections_NoneOpen" xml:space="preserve">
+    <value>Вставьте ссылку на коллекцию Мастерской Steam или её ID, чтобы увидеть её предметы и ваши подписки.</value>
+  </data>
+  <data name="WorkshopCollections_ItemCountFormat" xml:space="preserve">
+    <value>Предметов: {0}</value>
+  </data>
+  <data name="WorkshopCollections_Empty" xml:space="preserve">
+    <value>В этой коллекции нет предметов.</value>
+  </data>
+  <data name="WorkshopCollections_SubscribeMissing" xml:space="preserve">
+    <value>Подписаться на недостающие</value>
+  </data>
+  <data name="WorkshopCollections_UnsubscribeAll" xml:space="preserve">
+    <value>Отписаться от всех</value>
+  </data>
+  <data name="WorkshopCollections_Generate" xml:space="preserve">
+    <value>Создать сборку</value>
+  </data>
+  <data name="WorkshopCollections_GenerateHint" xml:space="preserve">
+    <value>Создаёт сборку лаунчера из модов установленных предметов в порядке этой коллекции.</value>
+  </data>
+  <data name="WorkshopCollections_GenerateTitle" xml:space="preserve">
+    <value>Новая сборка из коллекции Мастерской</value>
+  </data>
+  <data name="WorkshopCollections_GenerateNothing" xml:space="preserve">
+    <value>Среди установленных предметов коллекции нет модов для сборки. Сначала подпишитесь на недостающие предметы и дождитесь, пока Steam их скачает.</value>
+  </data>
+  <data name="WorkshopCollections_Generated" xml:space="preserve">
+    <value>Сборка «{0}» создана, модов — {1}. Она в разделе «Сборки».</value>
+  </data>
+  <data name="WorkshopCollections_PickTitle" xml:space="preserve">
+    <value>Выберите моды</value>
+  </data>
+  <data name="WorkshopCollections_PickMessage" xml:space="preserve">
+    <value>Эти предметы содержат несколько модов. Снимите флажки с модов, которых не должно быть в новой сборке.</value>
+  </data>
+  <data name="WorkshopCollections_PickConflict" xml:space="preserve">
+    <value>Несовместим с {0}</value>
+  </data>
+  <data name="WorkshopCollections_SkippedMessage" xml:space="preserve">
+    <value>Эти предметы не войдут в сборку:</value>
+  </data>
+  <data name="WorkshopCollections_SkippedFormat" xml:space="preserve">
+    <value>{0}: {1}</value>
+  </data>
+  <data name="WorkshopCollections_SkippedNoMods" xml:space="preserve">
+    <value>Нет модов</value>
+  </data>
+  <data name="WorkshopFavorites_Items" xml:space="preserve">
+    <value>Предметы</value>
+  </data>
+  <data name="WorkshopFavorites_Collections" xml:space="preserve">
+    <value>Коллекции</value>
+  </data>
+  <data name="WorkshopFavorites_CollectionsEmpty" xml:space="preserve">
+    <value>Здесь появятся коллекции, отмеченные звёздочкой.</value>
+  </data>
+  <data name="WorkshopFavorites_ItemsEmpty" xml:space="preserve">
+    <value>Избранных предметов пока нет. Отметьте предметы звёздочкой в подписках Мастерской или в коллекции.</value>
+  </data>
+  <data name="WorkshopFavorites_CollectionName" xml:space="preserve">
+    <value>Локальное избранное</value>
+  </data>
+  <data name="WorkshopFavorites_Share" xml:space="preserve">
+    <value>Скопировать ID из локального избранного, чтобы поделиться</value>
+  </data>
+  <data name="WorkshopFavorites_Shared" xml:space="preserve">
+    <value>Скопировано в буфер обмена: коллекций — {0}, предметов — {1}.</value>
+  </data>
+  <data name="WorkshopFavorites_Import" xml:space="preserve">
+    <value>Импорт</value>
+  </data>
+  <data name="WorkshopFavorites_ImportTitle" xml:space="preserve">
+    <value>Импорт локального избранного</value>
+  </data>
+  <data name="WorkshopFavorites_ImportMessage" xml:space="preserve">
+    <value>Вставьте локальное избранное, которым поделились из лаунчера, или ссылки и ID Мастерской, по одному в строке. Уже добавленное избранное сохранится.</value>
+  </data>
+  <data name="WorkshopFavorites_ImportNothing" xml:space="preserve">
+    <value>Ссылки или ID Мастерской не найдены.</value>
+  </data>
+  <data name="WorkshopFavorites_Imported" xml:space="preserve">
+    <value>Добавлено коллекций: {0}, предметов: {1}. Пропущено строк: {2}.</value>
+  </data>
+  <data name="WorkshopLaunch_Title" xml:space="preserve">
+    <value>Доступны обновления Мастерской</value>
+  </data>
+  <data name="WorkshopLaunch_Message" xml:space="preserve">
+    <value>У предметов Мастерской ({0}), из которых взяты моды этого запуска, есть версия новее установленной в Steam. Обновить их перед запуском?</value>
+  </data>
+  <data name="WorkshopLaunch_Update" xml:space="preserve">
+    <value>Обновить и запустить</value>
+  </data>
+  <data name="WorkshopLaunch_LaunchNow" xml:space="preserve">
+    <value>Запустить сейчас</value>
+  </data>
+  <data name="WorkshopLaunch_FailedTitle" xml:space="preserve">
+    <value>Не все предметы обновлены</value>
+  </data>
+  <data name="WorkshopLaunch_FailedMessage" xml:space="preserve">
+    <value>Предметы Мастерской ({0}) всё ещё не обновлены. Запустить с установленными сейчас версиями?</value>
   </data>
   <data name="ModApply_KeepTitle" xml:space="preserve">
     <value>Сохранить текущий список включённых?</value>

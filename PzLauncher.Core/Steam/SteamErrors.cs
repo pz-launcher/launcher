@@ -24,7 +24,7 @@ internal static class SteamErrors
     public static Error VdfMalformed(string reason) =>
         new(ErrorCode.SteamVdfMalformed, $"Malformed VDF: {reason}", ErrorKind.Validation)
         {
-            Details = new Dictionary<string, string> { ["reason"] = reason },
+            Details = ErrorDetails.Reason(reason),
         };
 
     public static Error PlatformUnsupported(PlatformKind os) =>
@@ -66,7 +66,7 @@ internal static class SteamErrors
     public static Error ShutdownUnconfirmed(string reason) =>
         new(ErrorCode.SteamShutdownUnconfirmed, $"Steam's exit could not be checked: {reason}", ErrorKind.External)
         {
-            Details = new Dictionary<string, string> { ["reason"] = reason },
+            Details = ErrorDetails.Reason(reason),
         };
 
     public static Error StartFailed(string path, string reason) =>

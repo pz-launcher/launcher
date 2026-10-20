@@ -26,7 +26,7 @@ All codes are members of `ErrorCode` (`PzLauncher.Core/Common/ErrorCode.cs`).
 - Wire name `<feature>.<snake_case_reason>` is a **public contract**: never change one.
 - Logs use the wire name (`ToWireName()`), never `ToString()`.
 - Each feature builds errors in one factory class, e.g. `PzLauncher.Core/Installs/InstallErrors.cs`. A code belongs to the feature whose code produces it, not to its caller: `Launch/PzLaunchConfigEditor` returns `launch.*` codes although only ZombieBuddy calls it.
-- `Details` with exactly `path`, or `path` + `reason`, come from `ErrorDetails.Path` (`PzLauncher.Core/Common/ErrorDetails.cs`), which owns those key names; other key sets are written inline.
+- `Details` with exactly `path`, `reason`, or `path` + `reason` come from `ErrorDetails` (`PzLauncher.Core/Common/ErrorDetails.cs`), which owns those key names; other key sets are written inline.
 - `Message` is for developers and logs. Users see text from `Code` + `Details` via the desktop `ErrorMessages`.
 
 Adding a code:

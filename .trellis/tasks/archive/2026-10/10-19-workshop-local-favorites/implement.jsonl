@@ -1,0 +1,6 @@
+{"file": ".trellis/spec/common/coding-rules.md", "reason": "comments, async, nullability"}
+{"file": ".trellis/spec/desktop/directory-structure.md", "reason": "Workshop VMs, services, views layout"}
+{"file": ".trellis/spec/desktop/preferences.md", "reason": "new workshopFavorites field contract"}
+{"file": ".trellis/spec/desktop/shell-and-theming.md", "reason": "list rows, sibling buttons, shared styles"}
+{"file": ".trellis/spec/desktop/localization.md", "reason": "new strings in every resx"}
+{"file": ".trellis/spec/guides/code-reuse-thinking-guide.md", "reason": "reuse history save code and collection merge path"}

@@ -36,6 +36,13 @@ public sealed record UserPreferences(AppLanguage? Language, AppTheme? Theme, Win
     /// <summary>Whether to remind at startup while Steam's Play button doesn't open the launcher.</summary>
     public bool? SteamHookReminder { get; init; }
 
+    /// <summary>Most recent first; empty when none are saved.</summary>
+    public IReadOnlyList<SavedWorkshopEntry> WorkshopCollections { get; init; } = [];
+
+    public SavedWorkshopUserCollections? WorkshopUserCollections { get; init; }
+
+    public SavedWorkshopFavorites WorkshopFavorites { get; init; } = SavedWorkshopFavorites.None;
+
     // Compares the collections by content; the generated equality would compare references.
     public bool Equals(UserPreferences? other) =>
         other is not null
@@ -46,7 +53,10 @@ public sealed record UserPreferences(AppLanguage? Language, AppTheme? Theme, Win
         && AutoCheckUpdates == other.AutoCheckUpdates
         && Proxy == other.Proxy
         && SteamHookReminder == other.SteamHookReminder
+        && WorkshopUserCollections == other.WorkshopUserCollections
+        && WorkshopFavorites == other.WorkshopFavorites
         && ManualJavaHomes.SequenceEqual(other.ManualJavaHomes, StringComparer.Ordinal)
+        && WorkshopCollections.SequenceEqual(other.WorkshopCollections)
         && InstallOverrides.Count == other.InstallOverrides.Count
         && InstallOverrides.All(entry => other.InstallOverrides.TryGetValue(entry.Key, out var value) && entry.Value == value)
         && ZombieBuddyChannels.Count == other.ZombieBuddyChannels.Count
@@ -56,8 +66,10 @@ public sealed record UserPreferences(AppLanguage? Language, AppTheme? Theme, Win
 
     public override int GetHashCode() =>
         HashCode.Combine(
-            HashCode.Combine(Language, Theme, Window, UpdateSource, AutoCheckUpdates, Proxy, SteamHookReminder),
+            HashCode.Combine(Language, Theme, Window, UpdateSource, AutoCheckUpdates, Proxy, SteamHookReminder, WorkshopUserCollections),
+            WorkshopFavorites,
             ManualJavaHomes.Count,
+            WorkshopCollections.Count,
             InstallOverrides.Count,
             ZombieBuddyChannels.Count,
             DefaultModCollections.Count);
@@ -100,4 +112,13 @@ public interface IPreferenceStore
 
     /// <inheritdoc cref="SaveLanguageAsync"/>
     Task SaveSteamHookReminderAsync(bool remind, CancellationToken ct = default);
+
+    /// <inheritdoc cref="SaveLanguageAsync"/>
+    Task SaveWorkshopCollectionsAsync(IReadOnlyList<SavedWorkshopEntry> collections, CancellationToken ct = default);
+
+    /// <inheritdoc cref="SaveLanguageAsync"/>
+    Task SaveWorkshopUserCollectionsAsync(SavedWorkshopUserCollections collections, CancellationToken ct = default);
+
+    /// <inheritdoc cref="SaveLanguageAsync"/>
+    Task SaveWorkshopFavoritesAsync(SavedWorkshopFavorites favorites, CancellationToken ct = default);
 }

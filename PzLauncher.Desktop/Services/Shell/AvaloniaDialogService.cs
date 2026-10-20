@@ -5,7 +5,10 @@ using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
 using PzLauncher.Desktop.Lang;
+using PzLauncher.Desktop.ViewModels;
+using PzLauncher.Desktop.ViewModels.Mods.Workshop;
 using PzLauncher.Desktop.ViewModels.ZombieBuddy;
+using PzLauncher.Desktop.Views.Mods.Workshop;
 using PzLauncher.Desktop.Views.ZombieBuddy;
 
 namespace PzLauncher.Desktop.Services.Shell;
@@ -34,10 +37,17 @@ public sealed class AvaloniaDialogService(Func<Window?> owner) : IDialogService
         await dialog.ShowDialog(window);
     }
 
-    public async Task<bool> ConfirmAsync(ConfirmPrompt prompt) => (await ShowConfirmAsync(prompt, optionText: null)).Confirmed;
+    public async Task<bool> ConfirmAsync(ConfirmPrompt prompt) =>
+        (await ShowConfirmAsync(prompt, optionText: null, alternativeText: null)).Choice == ConfirmChoice.Confirm;
 
-    public Task<ConfirmOptionResult> ConfirmWithOptionAsync(ConfirmPrompt prompt, string optionText) =>
-        ShowConfirmAsync(prompt, optionText);
+    public async Task<ConfirmOptionResult> ConfirmWithOptionAsync(ConfirmPrompt prompt, string optionText)
+    {
+        var (choice, optionChecked) = await ShowConfirmAsync(prompt, optionText, alternativeText: null);
+        return new ConfirmOptionResult(choice == ConfirmChoice.Confirm, optionChecked);
+    }
+
+    public async Task<ConfirmChoice> ChooseAsync(ConfirmPrompt prompt, string alternativeText) =>
+        (await ShowConfirmAsync(prompt, optionText: null, alternativeText)).Choice;
 
     public async Task<TextPromptResult> PromptTextAsync(TextPrompt prompt)
     {
@@ -103,37 +113,53 @@ public sealed class AvaloniaDialogService(Func<Window?> owner) : IDialogService
         return result;
     }
 
-    public async Task<bool> ShowZombieBuddySetupAsync(ZombieBuddySetupViewModel setup)
+    public Task<bool> ShowZombieBuddySetupAsync(ZombieBuddySetupViewModel setup) =>
+        ShowOperationDialogAsync(setup, setup.Title, 480, () => new ZombieBuddySetupView { DataContext = setup });
+
+    public Task ShowWorkshopActionAsync(WorkshopActionViewModel action) =>
+        ShowOperationDialogAsync(action, action.Title, 520, () => new WorkshopActionView { DataContext = action });
+
+    public Task<bool> PickWorkshopModsAsync(WorkshopModPickViewModel pick) =>
+        ShowViewDialogAsync(pick, UiText.WorkshopCollections_PickTitle, 520, () => new WorkshopModPickView { DataContext = pick });
+
+    private Task<bool> ShowOperationDialogAsync(DialogOperationViewModel operation, string title, double width, Func<Control> view) =>
+        ShowViewDialogAsync(operation, title, width, view, dialog =>
+        {
+            dialog.Opened += (_, _) => _ = operation.StartAsync();
+
+            // Covers the window's own close button; after a close request there is nothing left to cancel.
+            dialog.Closed += (_, _) => operation.Abort();
+        });
+
+    private async Task<bool> ShowViewDialogAsync(DialogViewModel viewModel, string title, double width, Func<Control> view, Action<Window>? setUp = null)
     {
         if (owner() is not { } window)
         {
             return false;
         }
 
-        var dialog = CreateDialog(setup.Title, 480, new ZombieBuddySetupView { DataContext = setup });
-        var launch = false;
-        setup.CloseRequested += (_, launchGame) =>
+        var dialog = CreateDialog(title, width, view());
+        var result = false;
+        viewModel.CloseRequested += (_, closeResult) =>
         {
-            launch = launchGame;
+            result = closeResult;
             dialog.Close();
         };
-        dialog.Opened += (_, _) => _ = setup.StartAsync();
-
-        // Covers the window's own close button; after a launch or close request there is nothing left to cancel.
-        dialog.Closed += (_, _) => setup.Abort();
+        setUp?.Invoke(dialog);
         await dialog.ShowDialog(window);
-        return launch;
+        return result;
     }
 
-    // Without option text, no option is shown and OptionChecked is false.
-    private async Task<ConfirmOptionResult> ShowConfirmAsync(ConfirmPrompt prompt, string? optionText)
+    // Without option text, no option is shown and OptionChecked is false; without alternative text, no second button.
+    private async Task<(ConfirmChoice Choice, bool OptionChecked)> ShowConfirmAsync(ConfirmPrompt prompt, string? optionText, string? alternativeText)
     {
         if (owner() is not { } window)
         {
-            return new ConfirmOptionResult(false, false);
+            return (ConfirmChoice.Cancel, false);
         }
 
         var confirm = new Button { Content = prompt.ConfirmText, Classes = { "accent" } };
+        var alternative = alternativeText is null ? null : new Button { Content = alternativeText };
         var cancel = new Button { Content = prompt.CancelText, IsCancel = true };
         var content = new StackPanel { Margin = new Thickness(16), Spacing = 12 };
         content.Children.Add(new TextBlock { Text = prompt.Message, TextWrapping = TextWrapping.Wrap });
@@ -152,13 +178,18 @@ public sealed class AvaloniaDialogService(Func<Window?> owner) : IDialogService
             content.Children.Add(option);
         }
 
-        content.Children.Add(Buttons(confirm, cancel));
+        content.Children.Add(alternative is null ? Buttons(confirm, cancel) : Buttons(confirm, alternative, cancel));
         var dialog = CreateDialog(prompt.Title, 460, content);
-        var confirmed = false;
-        CloseOnClick(confirm, dialog, () => confirmed = true);
+        var choice = ConfirmChoice.Cancel;
+        CloseOnClick(confirm, dialog, () => choice = ConfirmChoice.Confirm);
+        if (alternative is not null)
+        {
+            CloseOnClick(alternative, dialog, () => choice = ConfirmChoice.Alternative);
+        }
+
         CloseOnClick(cancel, dialog);
         await dialog.ShowDialog(window);
-        return new ConfirmOptionResult(confirmed, option?.IsChecked == true);
+        return (choice, option?.IsChecked == true);
     }
 
     private static void CloseOnClick(Button button, Window dialog, Action? setResult = null) =>

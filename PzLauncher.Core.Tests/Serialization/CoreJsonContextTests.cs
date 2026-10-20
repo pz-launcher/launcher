@@ -3,11 +3,14 @@ using PzLauncher.Core.Common;
 using PzLauncher.Core.Installs;
 using PzLauncher.Core.Java;
 using PzLauncher.Core.Launch;
-using PzLauncher.Core.Mod;
 using PzLauncher.Core.Mod.Collections;
+using PzLauncher.Core.Mod.Workshop;
 using PzLauncher.Core.Mod.ZombieBuddy;
+using PzLauncher.Core.Mod;
 using PzLauncher.Core.Net;
 using PzLauncher.Core.Serialization;
+using PzLauncher.Core.Steam.Workshop.Actions;
+using PzLauncher.Core.Steam.Workshop;
 using PzLauncher.Core.Steam;
 using PzLauncher.Core.Update;
 
@@ -255,7 +258,7 @@ public class CoreJsonContextTests
             @"C:\Users\u\Zomboid",
             [new ModCollection("B42·20通用合集", ["ModA", "Missing"], IsActive: true, IsActiveInOrder: false)],
             [
-                new InstalledMod("ModA", "Mod A", "2000", InstalledModSource.SteamWorkshop, ["damnlib"], ["B"], ["C"], ["D"]),
+                new InstalledMod("ModA", "Mod A", 18446744073709551615, InstalledModSource.SteamWorkshop, ["damnlib"], ["B"], ["C"], ["D"]),
                 new InstalledMod("Local", "Local", null, InstalledModSource.Local, [], [], [], []),
             ],
             ["ModA"],
@@ -266,6 +269,7 @@ public class CoreJsonContextTests
 
         Assert.Contains("\"source\":\"SteamWorkshop\"", json, StringComparison.Ordinal);
         Assert.Contains("\"workshopId\":null", json, StringComparison.Ordinal);
+        Assert.Contains("\"workshopId\":18446744073709551615", json, StringComparison.Ordinal);
         Assert.NotNull(copy);
         Assert.Equal((original.CacheFolder, original.ActiveMatchesCollection), (copy.CacheFolder, copy.ActiveMatchesCollection));
         Assert.Equal(original.ActiveIds, copy.ActiveIds);
@@ -472,5 +476,160 @@ public class CoreJsonContextTests
         Assert.NotNull(copy);
         Assert.Equal(original.Status, copy.Status);
         Assert.Equal(ErrorCode.SteamStartFailed, Assert.Single(copy.Warnings).Code);
+    }
+
+    [Fact]
+    public void WorkshopSubscriptions_RoundTrips_WithStringEnumsAndLargeManifests()
+    {
+        var latest = new WorkshopItemDetails(3811390574, "Example Mod", "987951682342026743", DateTimeOffset.FromUnixTimeSeconds(1792336800), 253378238);
+        var original = new WorkshopSubscriptions(
+            [
+                new WorkshopItem(
+                    3811390574,
+                    DateTimeOffset.FromUnixTimeSeconds(1792336673),
+                    DisabledLocally: false,
+                    new WorkshopInstall(@"E:\SteamLibrary\steamapps\workshop\content\108600\3811390574", "14459181659745603925", DateTimeOffset.FromUnixTimeSeconds(1792336500), 253378238),
+                    latest,
+                    WorkshopItemState.NeedsUpdate),
+                new WorkshopItem(2409333430, DateTimeOffset.FromUnixTimeSeconds(1), DisabledLocally: true, null, null, WorkshopItemState.DisabledLocally),
+            ],
+            [new Error(ErrorCode.WorkshopManifestUnreadable, "msg", ErrorKind.External) { Details = new Dictionary<string, string> { ["path"] = "p", ["reason"] = "r" } }]);
+
+        var json = JsonSerializer.Serialize(original, CoreJsonContext.Default.WorkshopSubscriptions);
+        var copy = JsonSerializer.Deserialize(json, CoreJsonContext.Default.WorkshopSubscriptions);
+
+        Assert.Contains("\"state\":\"NeedsUpdate\"", json, StringComparison.Ordinal);
+        Assert.Contains("\"manifest\":\"14459181659745603925\"", json, StringComparison.Ordinal);
+        Assert.Contains("\"code\":\"workshop.manifest_unreadable\"", json, StringComparison.Ordinal);
+        Assert.NotNull(copy);
+        Assert.Equal(2, copy.Items.Count);
+        var item = copy.Items[0];
+        Assert.Equal(
+            (original.Items[0].Id, original.Items[0].Subscribed, original.Items[0].Installed, original.Items[0].Latest, original.Items[0].State),
+            (item.Id, item.Subscribed, item.Installed, item.Latest, item.State));
+        Assert.Equal((true, (WorkshopInstall?)null, (WorkshopItemDetails?)null), (copy.Items[1].DisabledLocally, copy.Items[1].Installed, copy.Items[1].Latest));
+        Assert.Equal(ErrorCode.WorkshopManifestUnreadable, Assert.Single(copy.Warnings).Code);
+    }
+
+    [Fact]
+    public void WorkshopModSubscriptions_RoundTrips()
+    {
+        var item = new WorkshopItem(3811390574, DateTimeOffset.FromUnixTimeSeconds(1792336673), false, null, null, WorkshopItemState.NotInstalled);
+        var original = new WorkshopModSubscriptions(
+            [new WorkshopModItem(item, [new InstalledMod("ModA", "Mod A", 3811390574, InstalledModSource.SteamWorkshop, [], [], [], ["ModB"])], ["pack"])],
+            [new Error(ErrorCode.ModCollectionCacheFolderUnresolved, "msg", ErrorKind.NotFound) { Details = new Dictionary<string, string> { ["path"] = "p" } }]);
+
+        var json = JsonSerializer.Serialize(original, CoreJsonContext.Default.WorkshopModSubscriptions);
+        var copy = JsonSerializer.Deserialize(json, CoreJsonContext.Default.WorkshopModSubscriptions);
+
+        Assert.NotNull(copy);
+        var joined = Assert.Single(copy.Items);
+        Assert.Equal(item, joined.Item);
+        Assert.Equal(["ModB"], Assert.Single(joined.Mods).Incompatible);
+        Assert.Equal(["pack"], joined.Collections);
+        Assert.Equal(ErrorCode.ModCollectionCacheFolderUnresolved, Assert.Single(copy.Warnings).Code);
+    }
+
+    [Fact]
+    public void WorkshopIdKinds_RoundTrip()
+    {
+        IReadOnlyList<WorkshopIdKind> original = [new WorkshopIdKind(3623026433, true, "Pack"), new WorkshopIdKind(18446744073709551615, false, null)];
+
+        var json = JsonSerializer.Serialize(original, CoreJsonContext.Default.IReadOnlyListWorkshopIdKind);
+
+        Assert.Equal(original, JsonSerializer.Deserialize(json, CoreJsonContext.Default.IReadOnlyListWorkshopIdKind));
+    }
+
+    [Fact]
+    public void SharedWorkshopFavorites_RoundTrips()
+    {
+        var original = new SharedWorkshopFavorites([9000], [1001, 18446744073709551615], [42], 2);
+
+        var copy = JsonSerializer.Deserialize(
+            JsonSerializer.Serialize(original, CoreJsonContext.Default.SharedWorkshopFavorites), CoreJsonContext.Default.SharedWorkshopFavorites);
+
+        Assert.NotNull(copy);
+        Assert.Equal(original.Collections, copy.Collections);
+        Assert.Equal(original.Items, copy.Items);
+        Assert.Equal(original.Unmarked, copy.Unmarked);
+        Assert.Equal(2, copy.SkippedLines);
+    }
+
+    [Fact]
+    public void WorkshopCollection_RoundTrips()
+    {
+        var original = new WorkshopCollection(
+            3814445384,
+            "Example pack",
+            [
+                new WorkshopCollectionItem(1, new WorkshopItemDetails(1, "One", "11", DateTimeOffset.FromUnixTimeSeconds(5), 7)),
+                new WorkshopCollectionItem(2, null),
+            ]);
+
+        var json = JsonSerializer.Serialize(original, CoreJsonContext.Default.WorkshopCollection);
+        var copy = JsonSerializer.Deserialize(json, CoreJsonContext.Default.WorkshopCollection);
+
+        Assert.NotNull(copy);
+        Assert.Equal((original.Id, original.Title), (copy.Id, copy.Title));
+        Assert.Equal(original.Items, copy.Items);
+    }
+
+    [Fact]
+    public void WorkshopActionRequestAndOutcome_RoundTrip()
+    {
+        var request = new WorkshopActionRequest(WorkshopAction.Unsubscribe, [3811390574, 2409333430]);
+        var outcome = new WorkshopActionOutcome(
+            [new WorkshopItemOutcome(3811390574, null, 0), new WorkshopItemOutcome(2409333430, WorkshopItemFailure.TimedOut, 0)]);
+
+        var requestJson = JsonSerializer.Serialize(request, CoreJsonContext.Default.WorkshopActionRequest);
+        var outcomeJson = JsonSerializer.Serialize(outcome, CoreJsonContext.Default.WorkshopActionOutcome);
+        var requestCopy = JsonSerializer.Deserialize(requestJson, CoreJsonContext.Default.WorkshopActionRequest);
+        var outcomeCopy = JsonSerializer.Deserialize(outcomeJson, CoreJsonContext.Default.WorkshopActionOutcome);
+
+        Assert.Contains("\"action\":\"Unsubscribe\"", requestJson, StringComparison.Ordinal);
+        Assert.Contains("\"failure\":\"TimedOut\"", outcomeJson, StringComparison.Ordinal);
+        Assert.NotNull(requestCopy);
+        Assert.Equal(request.Action, requestCopy.Action);
+        Assert.Equal(request.Ids, requestCopy.Ids);
+        Assert.NotNull(outcomeCopy);
+        Assert.Equal(outcome.Items, outcomeCopy.Items);
+    }
+
+    [Fact]
+    public void WorkshopUserCollections_RoundTrips()
+    {
+        var original = new WorkshopUserCollections(
+            12345678,
+            [new WorkshopCollectionSummary(3623026433, "Example pack", 201), new WorkshopCollectionSummary(18446744073709551615, null, 0)],
+            [new WorkshopCollectionSummary(3815132834, "Mine", 214)]);
+
+        var json = JsonSerializer.Serialize(original, CoreJsonContext.Default.WorkshopUserCollections);
+        var copy = JsonSerializer.Deserialize(json, CoreJsonContext.Default.WorkshopUserCollections);
+
+        Assert.Contains("\"childCount\":201", json, StringComparison.Ordinal);
+        Assert.NotNull(copy);
+        Assert.Equal(original.AccountId, copy.AccountId);
+        Assert.Equal(original.Favorited, copy.Favorited);
+        Assert.Equal(original.Published, copy.Published);
+    }
+
+    [Fact]
+    public void WorkshopActionEvent_RoundTrips_WithItsKind()
+    {
+        WorkshopActionEvent[] events =
+        [
+            new WorkshopActionWaiting(),
+            new WorkshopActionStarted(),
+            new WorkshopItemProgress(1, 10, 100),
+            new WorkshopItemFinished(new WorkshopItemOutcome(1, WorkshopItemFailure.DownloadFailed, 15)),
+        ];
+
+        foreach (var e in events)
+        {
+            var json = JsonSerializer.Serialize(e, CoreJsonContext.Default.WorkshopActionEvent);
+
+            Assert.StartsWith("{\"event\":", json, StringComparison.Ordinal);
+            Assert.Equal(e, JsonSerializer.Deserialize(json, CoreJsonContext.Default.WorkshopActionEvent));
+        }
     }
 }

@@ -1,7 +1,5 @@
-using System.Globalization;
-using System.Net.Http.Headers;
-using System.Text.Json;
 using PzLauncher.Core.Common;
+using PzLauncher.Core.Net;
 
 namespace PzLauncher.Core.Update;
 
@@ -15,35 +13,16 @@ internal sealed class ReleaseFeed(ReleaseFeedEndpoint endpoint, HttpClient http)
 
     public async Task<Result<LatestRelease>> GetLatestAsync(string rid, TimeSpan timeout, CancellationToken ct)
     {
-        using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
-        timeoutCts.CancelAfter(timeout);
-        try
-        {
-            using var request = new HttpRequestMessage(HttpMethod.Get, endpoint.LatestReleaseUrl);
-            request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-            using var response = await http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, timeoutCts.Token).ConfigureAwait(false);
-            if (!response.IsSuccessStatusCode)
-            {
-                return UpdateErrors.NetworkFailed(Source, string.Create(CultureInfo.InvariantCulture, $"HTTP {(int)response.StatusCode}"));
-            }
-
-            var body = await response.Content.ReadAsStreamAsync(timeoutCts.Token).ConfigureAwait(false);
-            await using var _ = body.ConfigureAwait(false);
-            var json = await JsonSerializer.DeserializeAsync(body, UpdateJsonContext.Default.ReleaseJson, timeoutCts.Token).ConfigureAwait(false);
-            return json is null ? UpdateErrors.ReleaseInfoInvalid(Source, "empty body") : ToLatest(json, rid);
-        }
-        catch (OperationCanceledException) when (!ct.IsCancellationRequested)
-        {
-            return UpdateErrors.NetworkFailed(Source, "timed out");
-        }
-        catch (Exception ex) when (ex is HttpRequestException or IOException)
-        {
-            return UpdateErrors.NetworkFailed(Source, ex.Message);
-        }
-        catch (JsonException ex)
-        {
-            return UpdateErrors.ReleaseInfoInvalid(Source, ex.Message);
-        }
+        using var request = new HttpRequestMessage(HttpMethod.Get, endpoint.LatestReleaseUrl);
+        var json = await HttpJson.SendAsync(
+            http,
+            request,
+            UpdateJsonContext.Default.ReleaseJson,
+            timeout,
+            reason => UpdateErrors.NetworkFailed(Source, reason),
+            reason => UpdateErrors.ReleaseInfoInvalid(Source, reason),
+            ct).ConfigureAwait(false);
+        return json.IsSuccess ? ToLatest(json.Value, rid) : json.Error;
     }
 
     private Result<LatestRelease> ToLatest(ReleaseJson json, string rid)

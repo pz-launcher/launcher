@@ -3,10 +3,13 @@ using PzLauncher.Core.Common;
 using PzLauncher.Core.Installs;
 using PzLauncher.Core.Java;
 using PzLauncher.Core.Launch;
-using PzLauncher.Core.Mod;
 using PzLauncher.Core.Mod.Collections;
+using PzLauncher.Core.Mod.Workshop;
 using PzLauncher.Core.Mod.ZombieBuddy;
+using PzLauncher.Core.Mod;
 using PzLauncher.Core.Net;
+using PzLauncher.Core.Steam.Workshop.Actions;
+using PzLauncher.Core.Steam.Workshop;
 using PzLauncher.Core.Steam;
 using PzLauncher.Core.Update;
 
@@ -59,4 +62,26 @@ namespace PzLauncher.Core.Serialization;
 [JsonSerializable(typeof(SteamLaunchHookState))]
 [JsonSerializable(typeof(SteamLaunchHookStatus))]
 [JsonSerializable(typeof(SteamLaunchHookApplied))]
+[JsonSerializable(typeof(WorkshopItemState))]
+[JsonSerializable(typeof(WorkshopInstall))]
+[JsonSerializable(typeof(WorkshopItemDetails))]
+[JsonSerializable(typeof(IReadOnlyList<WorkshopItemDetails>))]
+[JsonSerializable(typeof(WorkshopItem))]
+[JsonSerializable(typeof(IReadOnlyList<WorkshopItem>))]
+[JsonSerializable(typeof(WorkshopSubscriptions))]
+[JsonSerializable(typeof(WorkshopCollection))]
+[JsonSerializable(typeof(WorkshopCollectionItem))]
+[JsonSerializable(typeof(WorkshopIdKind))]
+[JsonSerializable(typeof(IReadOnlyList<WorkshopIdKind>))]
+[JsonSerializable(typeof(SharedWorkshopFavorites))]
+[JsonSerializable(typeof(WorkshopModItem))]
+[JsonSerializable(typeof(WorkshopModSubscriptions))]
+[JsonSerializable(typeof(WorkshopAction))]
+[JsonSerializable(typeof(WorkshopActionRequest))]
+[JsonSerializable(typeof(WorkshopItemFailure))]
+[JsonSerializable(typeof(WorkshopItemOutcome))]
+[JsonSerializable(typeof(WorkshopActionOutcome))]
+[JsonSerializable(typeof(WorkshopActionEvent))]
+[JsonSerializable(typeof(WorkshopCollectionSummary))]
+[JsonSerializable(typeof(WorkshopUserCollections))]
 public sealed partial class CoreJsonContext : JsonSerializerContext;
