@@ -80,9 +80,9 @@
         <TextBlock DockPanel.Dock="Top" Text="{Binding StatusText}" Classes="hint" TextWrapping="Wrap"
                    IsVisible="{Binding StatusText, Converter={x:Static ObjectConverters.IsNotNull}}" Margin="0,0,0,8" />
 
-        <Grid DockPanel.Dock="Top" ColumnDefinitions="36,32,2*,120,1.5*,90,130,130,1.5*,40" Margin="13,0,13,4"
+        <Grid DockPanel.Dock="Top" ColumnDefinitions="36,2*,120,1.5*,90,130,130,1.5*,32,40" Margin="13,0,13,4"
               Classes.sortDescending="{Binding SortDescending}">
-            <Button Grid.Column="2" Classes="columnHeader" Command="{Binding SortByCommand}"
+            <Button Grid.Column="1" Classes="columnHeader" Command="{Binding SortByCommand}"
                     CommandParameter="{x:Static vm:WorkshopSubscriptionsSortColumn.Title}"
                     AutomationProperties.Name="{x:Static lang:UiText.Workshop_ColumnTitle}">
                 <StackPanel Orientation="Horizontal" Spacing="4">
@@ -91,7 +91,7 @@
                                    IsVisible="{Binding SortColumn, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:WorkshopSubscriptionsSortColumn.Title}}" />
                 </StackPanel>
             </Button>
-            <Button Grid.Column="3" Classes="columnHeader" Command="{Binding SortByCommand}"
+            <Button Grid.Column="2" Classes="columnHeader" Command="{Binding SortByCommand}"
                     CommandParameter="{x:Static vm:WorkshopSubscriptionsSortColumn.Id}"
                     AutomationProperties.Name="{x:Static lang:UiText.Workshop_ColumnItemId}">
                 <StackPanel Orientation="Horizontal" Spacing="4">
@@ -100,7 +100,7 @@
                                    IsVisible="{Binding SortColumn, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:WorkshopSubscriptionsSortColumn.Id}}" />
                 </StackPanel>
             </Button>
-            <Button Grid.Column="4" Classes="columnHeader" Command="{Binding SortByCommand}"
+            <Button Grid.Column="3" Classes="columnHeader" Command="{Binding SortByCommand}"
                     CommandParameter="{x:Static vm:WorkshopSubscriptionsSortColumn.Mods}"
                     AutomationProperties.Name="{x:Static lang:UiText.Workshop_ColumnMods}">
                 <StackPanel Orientation="Horizontal" Spacing="4">
@@ -109,7 +109,7 @@
                                    IsVisible="{Binding SortColumn, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:WorkshopSubscriptionsSortColumn.Mods}}" />
                 </StackPanel>
             </Button>
-            <Button Grid.Column="5" Classes="columnHeader" Command="{Binding SortByCommand}"
+            <Button Grid.Column="4" Classes="columnHeader" Command="{Binding SortByCommand}"
                     CommandParameter="{x:Static vm:WorkshopSubscriptionsSortColumn.Size}"
                     AutomationProperties.Name="{x:Static lang:UiText.Workshop_ColumnSize}">
                 <StackPanel Orientation="Horizontal" Spacing="4">
@@ -118,7 +118,7 @@
                                    IsVisible="{Binding SortColumn, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:WorkshopSubscriptionsSortColumn.Size}}" />
                 </StackPanel>
             </Button>
-            <Button Grid.Column="6" Classes="columnHeader" Command="{Binding SortByCommand}"
+            <Button Grid.Column="5" Classes="columnHeader" Command="{Binding SortByCommand}"
                     CommandParameter="{x:Static vm:WorkshopSubscriptionsSortColumn.Updated}"
                     AutomationProperties.Name="{x:Static lang:UiText.Workshop_ColumnUpdated}">
                 <StackPanel Orientation="Horizontal" Spacing="4">
@@ -127,7 +127,7 @@
                                    IsVisible="{Binding SortColumn, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:WorkshopSubscriptionsSortColumn.Updated}}" />
                 </StackPanel>
             </Button>
-            <Button Grid.Column="7" Classes="columnHeader" Command="{Binding SortByCommand}"
+            <Button Grid.Column="6" Classes="columnHeader" Command="{Binding SortByCommand}"
                     CommandParameter="{x:Static vm:WorkshopSubscriptionsSortColumn.State}"
                     AutomationProperties.Name="{x:Static lang:UiText.Workshop_ColumnState}">
                 <StackPanel Orientation="Horizontal" Spacing="4">
@@ -136,7 +136,7 @@
                                    IsVisible="{Binding SortColumn, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:WorkshopSubscriptionsSortColumn.State}}" />
                 </StackPanel>
             </Button>
-            <Button Grid.Column="8" Classes="columnHeader" Command="{Binding SortByCommand}"
+            <Button Grid.Column="7" Classes="columnHeader" Command="{Binding SortByCommand}"
                     CommandParameter="{x:Static vm:WorkshopSubscriptionsSortColumn.Collections}"
                     AutomationProperties.Name="{x:Static lang:UiText.Mods_ColumnCollections}">
                 <StackPanel Orientation="Horizontal" Spacing="4">
@@ -163,26 +163,26 @@
                     <ItemsControl.ItemTemplate>
                         <DataTemplate x:DataType="vm:WorkshopItemRow">
                             <Border Padding="12,6" Margin="0,0,0,4" CornerRadius="4" BorderThickness="1" BorderBrush="{DynamicResource Shell.Border}">
-                                <Grid ColumnDefinitions="36,32,2*,120,1.5*,90,130,130,1.5*,40">
+                                <Grid ColumnDefinitions="36,2*,120,1.5*,90,130,130,1.5*,32,40">
                                     <CheckBox Grid.Column="0" IsChecked="{Binding IsSelected}" VerticalAlignment="Center" MinWidth="0"
                                               AutomationProperties.Name="{Binding Title}" />
-                                    <Button Grid.Column="1" VerticalAlignment="Center" Classes.favorite="{Binding IsFavorite}"
+                                    <TextBlock Grid.Column="1" Classes="cell" Text="{Binding Title}" FontWeight="SemiBold" ToolTip.Tip="{Binding Title}" />
+                                    <TextBlock Grid.Column="2" Classes="cell" Text="{Binding IdText}" Foreground="{DynamicResource Shell.TextMuted}" />
+                                    <TextBlock Grid.Column="3" Classes="cell" Text="{Binding ModIds}" ToolTip.Tip="{Binding ModIds}" />
+                                    <TextBlock Grid.Column="4" Classes="cell" Text="{Binding SizeMb, StringFormat={x:Static lang:UiText.Workshop_SizeFormat}}"
+                                               Foreground="{DynamicResource Shell.TextMuted}"
+                                               IsVisible="{Binding SizeMb, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                                    <TextBlock Grid.Column="5" Classes="cell" Text="{Binding Updated, StringFormat='{}{0:g}'}"
+                                               Foreground="{DynamicResource Shell.TextMuted}"
+                                               IsVisible="{Binding Updated, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                                    <local:WorkshopItemStateCell Grid.Column="6" />
+                                    <TextBlock Grid.Column="7" Classes="cell" Text="{Binding CollectionNames}" ToolTip.Tip="{Binding CollectionNames}" />
+                                    <Button Grid.Column="8" VerticalAlignment="Center" Classes.favorite="{Binding IsFavorite}"
                                             Command="{Binding $parent[ItemsControl].((vm:WorkshopSubscriptionsViewModel)DataContext).ToggleFavoriteCommand}"
                                             CommandParameter="{Binding}"
                                             ToolTip.Tip="{x:Static lang:UiText.Workshop_FavoriteToggle}" AutomationProperties.Name="{x:Static lang:UiText.Workshop_FavoriteToggle}">
                                         <ic:FluentIcon Classes="favoriteStar" />
                                     </Button>
-                                    <TextBlock Grid.Column="2" Classes="cell" Text="{Binding Title}" FontWeight="SemiBold" ToolTip.Tip="{Binding Title}" />
-                                    <TextBlock Grid.Column="3" Classes="cell" Text="{Binding IdText}" Foreground="{DynamicResource Shell.TextMuted}" />
-                                    <TextBlock Grid.Column="4" Classes="cell" Text="{Binding ModIds}" ToolTip.Tip="{Binding ModIds}" />
-                                    <TextBlock Grid.Column="5" Classes="cell" Text="{Binding SizeMb, StringFormat={x:Static lang:UiText.Workshop_SizeFormat}}"
-                                               Foreground="{DynamicResource Shell.TextMuted}"
-                                               IsVisible="{Binding SizeMb, Converter={x:Static ObjectConverters.IsNotNull}}" />
-                                    <TextBlock Grid.Column="6" Classes="cell" Text="{Binding Updated, StringFormat='{}{0:g}'}"
-                                               Foreground="{DynamicResource Shell.TextMuted}"
-                                               IsVisible="{Binding Updated, Converter={x:Static ObjectConverters.IsNotNull}}" />
-                                    <local:WorkshopItemStateCell Grid.Column="7" />
-                                    <TextBlock Grid.Column="8" Classes="cell" Text="{Binding CollectionNames}" ToolTip.Tip="{Binding CollectionNames}" />
                                     <Button Grid.Column="9" HorizontalAlignment="Right" VerticalAlignment="Center"
                                             Command="{Binding $parent[ItemsControl].((vm:WorkshopSubscriptionsViewModel)DataContext).OpenInSteamCommand}"
                                             CommandParameter="{Binding}"
