@@ -347,6 +347,9 @@
   <data name="Error_WorkshopHelperFailed" xml:space="preserve">
     <value>Вспомогательный процесс Steam лаунчера остановился, не завершив работу ({0}). Проверьте предметы в Steam и повторите попытку.</value>
   </data>
+  <data name="Error_WorkshopHelperRequestRejected" xml:space="preserve">
+    <value>Вспомогательный процесс Steam лаунчера не смог прочитать запрос ({0}). Перезапустите лаунчер и повторите попытку.</value>
+  </data>
   <data name="Error_WorkshopHelperTimedOut" xml:space="preserve">
     <value>Steam не сообщал о ходе работы {0} с, поэтому действие с Мастерской остановлено. Повторите попытку позже.</value>
   </data>
@@ -1048,6 +1051,9 @@
   </data>
   <data name="Workshop_WaitingForSteam" xml:space="preserve">
     <value>Ожидание Steam…</value>
+  </data>
+  <data name="Workshop_WaitingForEarlierAction" xml:space="preserve">
+    <value>Ожидание завершения предыдущего действия Steam…</value>
   </data>
   <data name="Workshop_ActionSummary" xml:space="preserve">
     <value>Готово: {0} из {1}</value>

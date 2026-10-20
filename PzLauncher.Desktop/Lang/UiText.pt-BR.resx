@@ -347,6 +347,9 @@
   <data name="Error_WorkshopHelperFailed" xml:space="preserve">
     <value>O auxiliar da Steam do launcher parou antes de terminar ({0}). Confira os itens na Steam e tente novamente.</value>
   </data>
+  <data name="Error_WorkshopHelperRequestRejected" xml:space="preserve">
+    <value>O auxiliar da Steam do launcher não conseguiu ler a solicitação ({0}). Reinicie o launcher e tente novamente.</value>
+  </data>
   <data name="Error_WorkshopHelperTimedOut" xml:space="preserve">
     <value>A Steam não informou nenhum progresso em {0} segundos, então a ação da Oficina foi interrompida. Tente novamente mais tarde.</value>
   </data>
@@ -1048,6 +1051,9 @@
   </data>
   <data name="Workshop_WaitingForSteam" xml:space="preserve">
     <value>Aguardando a Steam…</value>
+  </data>
+  <data name="Workshop_WaitingForEarlierAction" xml:space="preserve">
+    <value>Aguardando a ação anterior da Steam terminar…</value>
   </data>
   <data name="Workshop_ActionSummary" xml:space="preserve">
     <value>Concluídos: {0} de {1}</value>

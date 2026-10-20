@@ -22,7 +22,7 @@ internal static class SteamLoginUsers
 
     public static async Task<Result<SteamAccount>> ReadCurrentAsync(string path, CancellationToken ct)
     {
-        var text = await SteamKeyValues.ReadTextAsync(path, reason => SteamErrors.NoCurrentAccount(path, reason), ct).ConfigureAwait(false);
+        var text = await ReadFile.TextAsync(path, reason => SteamErrors.NoCurrentAccount(path, reason), ct).ConfigureAwait(false);
         return text.IsSuccess ? ParseCurrent(text.Value, path) : text.Error;
     }
 

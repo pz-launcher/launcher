@@ -1,8 +1,8 @@
-using PzLauncher.Desktop.Services.Mods;
+using PzLauncher.Core.Steam.Workshop;
 
-namespace PzLauncher.Desktop.Tests.Services.Mods;
+namespace PzLauncher.Core.Tests.Steam.Workshop;
 
-public class WorkshopFavoritesShareTextTests
+public sealed class WorkshopFavoritesShareTextTests
 {
     [Fact]
     public void Format_WritesBothSectionsWithOneIdPerLine()

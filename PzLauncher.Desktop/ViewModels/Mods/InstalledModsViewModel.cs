@@ -171,7 +171,7 @@ public partial class InstalledModsViewModel : ViewModelBase
     {
         InstalledModsSortColumn.Name => false,
         InstalledModsSortColumn.Id => false,
-        InstalledModsSortColumn.WorkshopId => string.IsNullOrEmpty(row.Mod.WorkshopId),
+        InstalledModsSortColumn.WorkshopId => row.Mod.WorkshopId is null,
         InstalledModsSortColumn.Source => false,
         InstalledModsSortColumn.Enabled => false,
         InstalledModsSortColumn.Collections => row.CollectionNames.Length == 0,
@@ -181,25 +181,11 @@ public partial class InstalledModsViewModel : ViewModelBase
     {
         InstalledModsSortColumn.Name => StringComparer.CurrentCultureIgnoreCase.Compare(x.Mod.Name, y.Mod.Name),
         InstalledModsSortColumn.Id => StringComparer.CurrentCultureIgnoreCase.Compare(x.Mod.Id, y.Mod.Id),
-        InstalledModsSortColumn.WorkshopId => CompareWorkshopIds(x.Mod.WorkshopId ?? "", y.Mod.WorkshopId ?? ""),
+        InstalledModsSortColumn.WorkshopId => Nullable.Compare(x.Mod.WorkshopId, y.Mod.WorkshopId),
         InstalledModsSortColumn.Source => x.Mod.Source.CompareTo(y.Mod.Source),
         InstalledModsSortColumn.Enabled => y.IsEnabled.CompareTo(x.IsEnabled),
         InstalledModsSortColumn.Collections => StringComparer.CurrentCultureIgnoreCase.Compare(x.CollectionNames, y.CollectionNames),
     };
-
-    // A staged item's folder name can be any text: numbers compare by value, before other text.
-    private static int CompareWorkshopIds(string x, string y)
-    {
-        var xIsNumber = ulong.TryParse(x, NumberStyles.None, CultureInfo.InvariantCulture, out var xNumber);
-        var yIsNumber = ulong.TryParse(y, NumberStyles.None, CultureInfo.InvariantCulture, out var yNumber);
-        return (xIsNumber, yIsNumber) switch
-        {
-            (true, true) => xNumber.CompareTo(yNumber),
-            (true, false) => -1,
-            (false, true) => 1,
-            (false, false) => StringComparer.Ordinal.Compare(x, y),
-        };
-    }
 
     private bool MatchesFilter(InstalledModRow row) => Filter switch
     {
@@ -213,5 +199,5 @@ public partial class InstalledModsViewModel : ViewModelBase
         search.Length == 0
         || mod.Name.Contains(search, StringComparison.CurrentCultureIgnoreCase)
         || mod.Id.Contains(search, StringComparison.OrdinalIgnoreCase)
-        || (mod.WorkshopId?.Contains(search, StringComparison.Ordinal) ?? false);
+        || (mod.WorkshopId?.ToString(CultureInfo.InvariantCulture).Contains(search, StringComparison.Ordinal) ?? false);
 }

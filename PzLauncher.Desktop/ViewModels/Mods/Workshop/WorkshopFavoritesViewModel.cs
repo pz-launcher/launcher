@@ -10,7 +10,6 @@ using PzLauncher.Core.Steam.Workshop.Actions;
 using PzLauncher.Desktop.Lang;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Services.Mods;
-using PzLauncher.Desktop.Services.Preferences;
 using PzLauncher.Desktop.Services.Shell;
 
 namespace PzLauncher.Desktop.ViewModels.Mods.Workshop;
@@ -31,8 +30,9 @@ public sealed partial class WorkshopFavoritesViewModel : WorkshopItemListSection
         IDialogService dialogs,
         IClipboardService clipboard,
         IUrlLauncher urls,
-        WorkshopFavorites favorites)
-        : base(page, service, runner, dialogs, urls, favorites)
+        WorkshopFavorites favorites,
+        WorkshopTitles titles)
+        : base(page, service, runner, dialogs, urls, favorites, titles)
     {
         _clipboard = clipboard;
         _favoritesStatus = new LocalizedText(text => FavoritesStatusText = text);
@@ -43,7 +43,7 @@ public sealed partial class WorkshopFavoritesViewModel : WorkshopItemListSection
     /// <summary>The starred collections, most recent first.</summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasCollections))]
-    public partial IReadOnlyList<RememberedWorkshopCollectionRow> Collections { get; private set; }
+    public partial IReadOnlyList<WorkshopCollectionRow> Collections { get; private set; }
 
     public bool HasCollections => Collections.Count > 0;
 
@@ -55,24 +55,14 @@ public sealed partial class WorkshopFavoritesViewModel : WorkshopItemListSection
     protected override string GeneratedCollectionName => UiText.WorkshopFavorites_CollectionName;
 
     /// <summary>Lists the starred items again, so ones starred elsewhere since appear.</summary>
-    internal Task ShowAsync() => LoadItemsAsync();
+    internal override Task ShowAsync() => LoadItemsAsync();
+
+    internal override Task RefreshAsync() => LoadItemsAsync();
 
     internal override void RenderTexts()
     {
         base.RenderTexts();
         _favoritesStatus.Render();
-    }
-
-    [RelayCommand]
-    private Task OpenCollectionAsync(RememberedWorkshopCollectionRow row) => Page.OpenWorkshopCollectionAsync(row.Id);
-
-    [RelayCommand]
-    private void UnstarCollection(RememberedWorkshopCollectionRow row)
-    {
-        if (IsFavoriteCollection(row.Id))
-        {
-            Favorites.Toggle(WorkshopFavoriteKind.Collection, row.Id, null);
-        }
     }
 
     private bool CanShareFavorites() => Favorites.Collections.Count > 0 || Favorites.Items.Count > 0;
@@ -111,24 +101,24 @@ public sealed partial class WorkshopFavoritesViewModel : WorkshopItemListSection
         _favoritesStatus.Clear();
         try
         {
-            List<SavedWorkshopEntry> collections = [.. shared.Collections.Select(id => new SavedWorkshopEntry(id, null))];
-            List<SavedWorkshopEntry> items = [.. shared.Items.Select(id => new SavedWorkshopEntry(id, null))];
+            List<WorkshopEntry> collections = [.. shared.Collections.Select(id => new WorkshopEntry(id, null))];
+            List<WorkshopEntry> items = [.. shared.Items.Select(id => new WorkshopEntry(id, null))];
             var skipped = shared.SkippedLines;
-            foreach (var id in shared.Unmarked.Where(id => !IsFavoriteCollection(id) && !IsFavoriteItem(id)))
+            List<ulong> unmarked = [.. shared.Unmarked.Where(id => !IsFavoriteCollection(id) && !IsFavoriteItem(id))];
+            if (unmarked.Count > 0)
             {
-                // Nothing is guessed: an id the Web API can't classify is skipped.
-                var collection = await Service.GetCollectionAsync(id);
-                if (collection.IsSuccess)
+                // Nothing is guessed: ids the Web API can't classify are skipped.
+                var kinds = await Service.ClassifyAsync(unmarked);
+                if (kinds.IsSuccess)
                 {
-                    collections.Add(new SavedWorkshopEntry(id, collection.Value.Title));
-                }
-                else if (collection.Error.Code == ErrorCode.WorkshopCollectionNotFound)
-                {
-                    items.Add(new SavedWorkshopEntry(id, null));
+                    foreach (var kind in kinds.Value)
+                    {
+                        (kind.IsCollection ? collections : items).Add(new WorkshopEntry(kind.Id, kind.Title));
+                    }
                 }
                 else
                 {
-                    skipped++;
+                    skipped += unmarked.Count;
                 }
             }
 
@@ -148,7 +138,7 @@ public sealed partial class WorkshopFavoritesViewModel : WorkshopItemListSection
     {
         // An unstarred item leaves the list at once, without asking Steam or the Web API again.
         KeepItems(IsFavoriteItem);
-        ShowFavorites(Rows);
+        ShowRowFavorites();
         ShareFavoritesCommand.NotifyCanExecuteChanged();
         RefreshCollections();
     }
@@ -204,12 +194,10 @@ public sealed partial class WorkshopFavoritesViewModel : WorkshopItemListSection
             return;
         }
 
-        Favorites.UpdateTitles(
-            WorkshopFavoriteKind.Collection, details.Value.Where(item => collections.Contains(item.Id)).Select(item => new SavedWorkshopEntry(item.Id, item.Title)));
-        Favorites.UpdateTitles(
-            WorkshopFavoriteKind.Item, details.Value.Where(item => items.Contains(item.Id)).Select(item => new SavedWorkshopEntry(item.Id, item.Title)));
+        Titles.SeenCollections(details.Value.Where(item => collections.Contains(item.Id)).Select(item => new WorkshopEntry(item.Id, item.Title)));
+        Titles.SeenItems(details.Value.Where(item => items.Contains(item.Id)).Select(item => new WorkshopEntry(item.Id, item.Title)));
     }
 
     private void RefreshCollections() =>
-        Collections = [.. Favorites.Collections.Select(saved => RememberedWorkshopCollectionRow.Of(saved, isOpen: false, isFavorite: true))];
+        Collections = [.. Favorites.Collections.Select(entry => new WorkshopCollectionRow(entry.Id, entry.Title, null, IsOpen: false, IsFavorite: true))];
 }

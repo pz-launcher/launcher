@@ -16,7 +16,7 @@ internal sealed class SteamLibraryReader
         var file = LibraryFoldersPath(steamRoot);
         Error Unreadable(string reason) => SteamErrors.LibraryUnreadable(file, reason);
 
-        var text = await SteamKeyValues.ReadTextAsync(file, Unreadable, ct).ConfigureAwait(false);
+        var text = await ReadFile.TextAsync(file, Unreadable, ct).ConfigureAwait(false);
         if (!text.IsSuccess)
         {
             return text.Error;
@@ -52,7 +52,7 @@ internal sealed class SteamLibraryReader
     {
         Error Unreadable(string reason) => SteamErrors.ManifestUnreadable(manifestPath, reason);
 
-        var text = await SteamKeyValues.ReadTextAsync(manifestPath, Unreadable, ct).ConfigureAwait(false);
+        var text = await ReadFile.TextAsync(manifestPath, Unreadable, ct).ConfigureAwait(false);
         if (!text.IsSuccess)
         {
             return text.Error;

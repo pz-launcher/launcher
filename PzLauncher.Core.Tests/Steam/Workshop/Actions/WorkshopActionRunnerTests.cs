@@ -70,6 +70,7 @@ public sealed class WorkshopActionRunnerTests : IDisposable
         var sent = SentRequest(process);
         Assert.Equal((SteamHelperAction.Update, SteamApi), (sent.Action, sent.SteamApiPath));
         Assert.Equal([1UL, 2UL], sent.Ids);
+        Assert.Equal(SteamHelperTimeouts.Default, sent.Timeouts);
         Assert.True(process.IsDisposed);
         Assert.False(process.Killed);
     }
@@ -95,7 +96,7 @@ public sealed class WorkshopActionRunnerTests : IDisposable
             new SteamHelperProgress(2, 10, 100),
             new SteamHelperProgress(2, 100, 100),
             new SteamHelperItemDone(2),
-            new SteamHelperItemFailed(1, WorkshopItemFailure.DownloadFailed, 15),
+            new SteamHelperItemFailed(1, SteamHelperItemFailure.DownloadFailed, 15),
             new SteamHelperFinished());
         var progress = new ListProgress<WorkshopActionEvent>();
 
@@ -237,7 +238,7 @@ public sealed class WorkshopActionRunnerTests : IDisposable
     [InlineData(nameof(SteamHelperFailure.VersionMismatch), ErrorCode.WorkshopSteamInitFailed)]
     [InlineData(nameof(SteamHelperFailure.LibraryNotLoaded), ErrorCode.WorkshopSteamApiUnusable)]
     [InlineData(nameof(SteamHelperFailure.ExportMissing), ErrorCode.WorkshopSteamApiUnusable)]
-    [InlineData(nameof(SteamHelperFailure.BadRequest), ErrorCode.WorkshopHelperFailed)]
+    [InlineData(nameof(SteamHelperFailure.BadRequest), ErrorCode.WorkshopHelperRequestRejected)]
     [InlineData(nameof(SteamHelperFailure.QueryFailed), ErrorCode.WorkshopCollectionsQueryFailed)]
     public async Task RunAsync_HelperFailure_MapsToItsError(string reason, ErrorCode expected)
     {
@@ -347,6 +348,43 @@ public sealed class WorkshopActionRunnerTests : IDisposable
     }
 
     [Fact]
+    public async Task RunAsync_SecondCall_ReportsThatItWaits()
+    {
+        var runner = Runner();
+        var progress = new ListProgress<WorkshopActionEvent>();
+        _processes.OnStartPiped = process =>
+        {
+            if (_processes.PipedProcesses.Count > 1)
+            {
+                process.Output(Line(new SteamHelperStarted()), Line(new SteamHelperItemDone(2)), Line(new SteamHelperFinished()));
+                process.Finish();
+            }
+        };
+
+        var first = runner.RunAsync(_root, Update(1), null, Ct);
+        var second = runner.RunAsync(_root, Update(2), progress, Ct);
+
+        Assert.Equal([new WorkshopActionWaiting()], progress.Reports);
+        var running = _processes.PipedProcesses[0];
+        running.Output(Line(new SteamHelperStarted()), Line(new SteamHelperItemDone(1)), Line(new SteamHelperFinished()));
+        running.Finish();
+        ResultAssert.Ok(await first);
+        ResultAssert.Ok(await second);
+        Assert.Equal(new WorkshopActionStarted(), progress.Reports[1]);
+    }
+
+    [Fact]
+    public async Task RunAsync_NothingRunning_DoesNotReportWaiting()
+    {
+        Script(new SteamHelperStarted(), new SteamHelperItemDone(1), new SteamHelperFinished());
+        var progress = new ListProgress<WorkshopActionEvent>();
+
+        ResultAssert.Ok(await Runner().RunAsync(_root, Update(1), progress, Ct));
+
+        Assert.DoesNotContain(new WorkshopActionWaiting(), progress.Reports);
+    }
+
+    [Fact]
     public async Task RunAsync_RelativeInstallRoot_IsInvalid()
     {
         ResultAssert.Failed(await Runner().RunAsync("relative", Update(1), null, Ct), ErrorCode.InstallInvalidPath);
@@ -355,17 +393,23 @@ public sealed class WorkshopActionRunnerTests : IDisposable
     [Fact]
     public async Task ListCollectionsAsync_StartsTheHelperWithTheListRequest_AndReturnsItsCollections()
     {
-        var listed = new WorkshopUserCollections(
+        var listed = new SteamHelperCollections(
             12345678,
-            [new WorkshopCollectionSummary(3623026433, "Pack", 201), new WorkshopCollectionSummary(2690796635, null, 71)],
-            [new WorkshopCollectionSummary(3815132834, "Mine", 214)]);
-        Script(new SteamHelperStarted(), new SteamHelperCollections(listed), new SteamHelperFinished());
+            [new SteamHelperCollection(3623026433, "Pack", 201), new SteamHelperCollection(2690796635, null, 71)],
+            [new SteamHelperCollection(3815132834, "Mine", 214)]);
+        Script(
+            new SteamHelperStarted(),
+            new SteamHelperPageRead(SteamUserUgcList.Favorited, 1),
+            new SteamHelperPageRead(SteamUserUgcList.Published, 1),
+            listed,
+            new SteamHelperFinished());
 
-        var collections = ResultAssert.Ok(await Runner().ListCollectionsAsync(_root, Ct));
+        var collections = ResultAssert.Ok(await Runner().ListCollectionsAsync(_root, null, Ct));
 
-        Assert.Equal(listed.AccountId, collections.AccountId);
-        Assert.Equal(listed.Favorited, collections.Favorited);
-        Assert.Equal(listed.Published, collections.Published);
+        Assert.Equal(12345678u, collections.AccountId);
+        Assert.Equal(
+            [new WorkshopCollectionSummary(3623026433, "Pack", 201), new WorkshopCollectionSummary(2690796635, null, 71)], collections.Favorited);
+        Assert.Equal([new WorkshopCollectionSummary(3815132834, "Mine", 214)], collections.Published);
         var start = Assert.Single(_processes.Requests);
         Assert.Equal([LauncherArguments.SteamHelper], start.Arguments);
         Assert.Equal("108600", start.Environment["SteamAppId"]);
@@ -382,15 +426,15 @@ public sealed class WorkshopActionRunnerTests : IDisposable
     {
         Script(new SteamHelperStarted(), new SteamHelperFinished());
 
-        ResultAssert.Failed(await Runner().ListCollectionsAsync(_root, Ct), ErrorCode.WorkshopHelperFailed);
+        ResultAssert.Failed(await Runner().ListCollectionsAsync(_root, null, Ct), ErrorCode.WorkshopHelperFailed);
     }
 
     [Fact]
     public async Task ListCollectionsAsync_CollectionsWithoutFinished_Fails()
     {
-        Script(new SteamHelperStarted(), new SteamHelperCollections(new WorkshopUserCollections(1, [], [])));
+        Script(new SteamHelperStarted(), new SteamHelperCollections(1, [], []));
 
-        ResultAssert.Failed(await Runner().ListCollectionsAsync(_root, Ct), ErrorCode.WorkshopHelperFailed);
+        ResultAssert.Failed(await Runner().ListCollectionsAsync(_root, null, Ct), ErrorCode.WorkshopHelperFailed);
     }
 
     [Theory]
@@ -402,7 +446,7 @@ public sealed class WorkshopActionRunnerTests : IDisposable
     {
         Script(new SteamHelperFailed(Enum.Parse<SteamHelperFailure>(reason), "Favorited page 2: EResult 2"));
 
-        ResultAssert.Failed(await Runner().ListCollectionsAsync(_root, Ct), expected);
+        ResultAssert.Failed(await Runner().ListCollectionsAsync(_root, null, Ct), expected);
     }
 
     [Fact]
@@ -410,7 +454,7 @@ public sealed class WorkshopActionRunnerTests : IDisposable
     {
         Script(new SteamHelperStarted(), new SteamHelperFailed(SteamHelperFailure.QueryFailed, "Favorited page 2: EResult 2"));
 
-        var error = ResultAssert.Failed(await Runner().ListCollectionsAsync(_root, Ct), ErrorCode.WorkshopCollectionsQueryFailed);
+        var error = ResultAssert.Failed(await Runner().ListCollectionsAsync(_root, null, Ct), ErrorCode.WorkshopCollectionsQueryFailed);
 
         Assert.Equal("Favorited page 2: EResult 2", error.Details["reason"]);
     }
@@ -420,14 +464,14 @@ public sealed class WorkshopActionRunnerTests : IDisposable
     {
         File.Delete(SteamApi);
 
-        ResultAssert.Failed(await Runner().ListCollectionsAsync(_root, Ct), ErrorCode.WorkshopSteamApiMissing);
+        ResultAssert.Failed(await Runner().ListCollectionsAsync(_root, null, Ct), ErrorCode.WorkshopSteamApiMissing);
         Assert.Empty(_processes.Requests);
     }
 
     [Fact]
     public async Task ListCollectionsAsync_RelativeInstallRoot_IsInvalid()
     {
-        ResultAssert.Failed(await Runner().ListCollectionsAsync("relative", Ct), ErrorCode.InstallInvalidPath);
+        ResultAssert.Failed(await Runner().ListCollectionsAsync("relative", null, Ct), ErrorCode.InstallInvalidPath);
         Assert.Empty(_processes.Requests);
     }
 
@@ -436,7 +480,7 @@ public sealed class WorkshopActionRunnerTests : IDisposable
     {
         _processes.OnStartPiped = process => process.Output(Line(new SteamHelperStarted()));
 
-        ResultAssert.Failed(await Runner(new SteppingTimeProvider()).ListCollectionsAsync(_root, Ct), ErrorCode.WorkshopHelperTimedOut);
+        ResultAssert.Failed(await Runner(new SteppingTimeProvider()).ListCollectionsAsync(_root, null, Ct), ErrorCode.WorkshopHelperTimedOut);
 
         Assert.True(Assert.Single(_processes.PipedProcesses).Killed);
     }
@@ -450,15 +494,17 @@ public sealed class WorkshopActionRunnerTests : IDisposable
             if (_processes.PipedProcesses.Count > 1)
             {
                 process.Output(
-                    Line(new SteamHelperStarted()), Line(new SteamHelperCollections(new WorkshopUserCollections(1, [], []))), Line(new SteamHelperFinished()));
+                    Line(new SteamHelperStarted()), Line(new SteamHelperCollections(1, [], [])), Line(new SteamHelperFinished()));
                 process.Finish();
             }
         };
 
+        var progress = new ListProgress<WorkshopActionEvent>();
         var action = runner.RunAsync(_root, Update(1), null, Ct);
-        var list = runner.ListCollectionsAsync(_root, Ct);
+        var list = runner.ListCollectionsAsync(_root, progress, Ct);
 
         Assert.Single(_processes.Requests);
+        Assert.Equal([new WorkshopActionWaiting()], progress.Reports);
         Assert.False(list.IsCompleted);
         var running = _processes.PipedProcesses[0];
         running.Output(Line(new SteamHelperStarted()), Line(new SteamHelperItemDone(1)), Line(new SteamHelperFinished()));

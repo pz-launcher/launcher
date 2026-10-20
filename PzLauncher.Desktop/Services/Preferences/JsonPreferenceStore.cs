@@ -304,43 +304,26 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger,
             .Where(IsAbsolutePath),
     ];
 
-    // A later entry with an id already read is dropped.
     private static List<SavedWorkshopEntry> ToWorkshopEntries(JsonElement? element, out bool valid)
     {
-        var result = new List<SavedWorkshopEntry>();
         if (element is not { ValueKind: JsonValueKind.Array } array)
         {
             valid = element is null or { ValueKind: JsonValueKind.Null };
-            return result;
+            return [];
         }
 
         valid = true;
-        foreach (var entry in array.EnumerateArray())
-        {
-            if (ToWorkshopEntry(entry) is { } read && !result.Exists(saved => saved.Id == read.Id))
-            {
-                result.Add(read);
-            }
-            else
-            {
-                valid = false;
-            }
-        }
-
-        return result;
+        return ReadById<SavedWorkshopEntry>(array.EnumerateArray(), TryReadWorkshopEntry, entry => entry.Id, ref valid);
     }
 
-    private static SavedWorkshopEntry? ToWorkshopEntry(JsonElement element)
+    private static bool TryReadWorkshopEntry(JsonElement element, [MaybeNullWhen(false)] out SavedWorkshopEntry entry)
     {
-        if (element.ValueKind != JsonValueKind.Object)
-        {
-            return null;
-        }
-
-        return TryDeserialize(element, DesktopJsonContext.Default.WorkshopEntryFile) is { } entry
-            && ulong.TryParse(entry.Id, NumberStyles.None, CultureInfo.InvariantCulture, out var id) && id != 0
-            ? new SavedWorkshopEntry(id, entry.Title is { Length: > 0 } title ? title : null)
-            : null;
+        entry = element.ValueKind == JsonValueKind.Object
+            && TryDeserialize(element, DesktopJsonContext.Default.WorkshopEntryFile) is { } read
+            && TryReadWorkshopId(read.Id, out var id)
+                ? new SavedWorkshopEntry(id, read.Title is { Length: > 0 } title ? title : null)
+                : null;
+        return entry is not null;
     }
 
     // A non-object loads none; a list that is missing loads empty, one that isn't an array or a bad entry is dropped.
@@ -380,19 +363,35 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger,
             return null;
         }
 
-        var favorited = ToCollectionSummaries(favoritedEntries, ref valid);
-        var published = ToCollectionSummaries(publishedEntries, ref valid);
+        var favorited = ReadById<WorkshopCollectionSummary>(favoritedEntries, TryReadCollectionSummary, summary => summary.Id, ref valid);
+        var published = ReadById<WorkshopCollectionSummary>(publishedEntries, TryReadCollectionSummary, summary => summary.Id, ref valid);
         return new SavedWorkshopUserCollections(fetchedAt, new WorkshopUserCollections(accountId, favorited, published));
     }
 
-    private static List<WorkshopCollectionSummary> ToCollectionSummaries(IReadOnlyList<JsonElement> entries, ref bool valid)
+    private static bool TryReadCollectionSummary(JsonElement element, [MaybeNullWhen(false)] out WorkshopCollectionSummary summary)
     {
-        var result = new List<WorkshopCollectionSummary>();
-        foreach (var entry in entries)
+        summary = element.ValueKind == JsonValueKind.Object
+            && TryDeserialize(element, DesktopJsonContext.Default.WorkshopUserCollectionFile) is { ChildCount: { } childCount } read
+            && TryReadWorkshopId(read.Id, out var id)
+                ? new WorkshopCollectionSummary(id, read.Title is { Length: > 0 } title ? title : null, childCount)
+                : null;
+        return summary is not null;
+    }
+
+    // Decimal text, never zero.
+    private static bool TryReadWorkshopId(string? text, out ulong id) =>
+        ulong.TryParse(text, NumberStyles.None, CultureInfo.InvariantCulture, out id) && id != 0;
+
+    // An entry that can't be read, or repeats an id read before, is dropped and makes the list invalid.
+    private static List<T> ReadById<T>(IEnumerable<JsonElement> entries, EntryReader<T> tryRead, Func<T, ulong> idOf, ref bool valid)
+    {
+        var result = new List<T>();
+        var ids = new HashSet<ulong>();
+        foreach (var element in entries)
         {
-            if (ToCollectionSummary(entry) is { } summary && !result.Exists(saved => saved.Id == summary.Id))
+            if (tryRead(element, out var value) && ids.Add(idOf(value)))
             {
-                result.Add(summary);
+                result.Add(value);
             }
             else
             {
@@ -401,19 +400,6 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger,
         }
 
         return result;
-    }
-
-    private static WorkshopCollectionSummary? ToCollectionSummary(JsonElement element)
-    {
-        if (element.ValueKind != JsonValueKind.Object)
-        {
-            return null;
-        }
-
-        return TryDeserialize(element, DesktopJsonContext.Default.WorkshopUserCollectionFile) is { ChildCount: { } childCount } entry
-            && ulong.TryParse(entry.Id, NumberStyles.None, CultureInfo.InvariantCulture, out var id) && id != 0
-            ? new WorkshopCollectionSummary(id, entry.Title is { Length: > 0 } title ? title : null, childCount)
-            : null;
     }
 
     private static Dictionary<string, T> ReadPerInstall<T>(IReadOnlyDictionary<string, JsonElement>? entries, EntryReader<T> tryRead)

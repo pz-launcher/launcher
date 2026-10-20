@@ -47,7 +47,7 @@ public class HomeViewModelTests : UiTextCultureTest
     private HomeViewModel CreateViewModel() =>
         new(
             Installs, _launcher, _overrides, _dialogs, _zombieBuddy, _channels, _zombieBuddyMods, _collections, _defaultCollections,
-            new ModCollectionApplier(_collections, _dialogs), _orderWriter, TestWorkshop.LaunchCheck(_workshop, _collections), _workshop,
+            new ModCollectionApplier(_collections, _dialogs), _orderWriter, TestWorkshop.LaunchCheck(_workshop), _workshop,
             _workshopActions, _runState);
 
     private async Task<HomeViewModel> CreateActivatedViewModelAsync(params PzInstall[] installs)
@@ -553,7 +553,7 @@ public class HomeViewModelTests : UiTextCultureTest
     // The current collection enables ModA from item 1, which has a newer version than the installed one.
     private void ArrangeOutdatedWorkshopItem()
     {
-        _collections.WithMods(TestMods.Mod("ModA", workshopId: "1")).WithCollection("Pack", "ModA");
+        _collections.WithMods(TestMods.Mod("ModA", workshopId: 1)).WithCollection("Pack", "ModA");
         _defaultCollections.Save(SteamGame.RootPath, "Pack");
         _workshop.WithItem(TestWorkshop.Item(1, mods: ["ModA"])).WithPublished(1, "Alpha", "200");
         _workshopActions.Succeeded = (_, id) => _workshop.Install(id, "200");

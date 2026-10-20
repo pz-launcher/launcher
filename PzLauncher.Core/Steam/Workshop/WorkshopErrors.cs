@@ -63,7 +63,14 @@ internal static class WorkshopErrors
         };
 
     public static Error HelperFailed(string reason) =>
-        new(ErrorCode.WorkshopHelperFailed, $"The Steam helper stopped without a result ({reason})", ErrorKind.Unexpected)
+        new(ErrorCode.WorkshopHelperFailed, $"The Steam helper stopped without a result ({reason})", ErrorKind.External)
+        {
+            Details = ErrorDetails.Reason(reason),
+        };
+
+    /// <summary>The helper couldn't read the request the launcher sent: a launcher bug, not Steam's.</summary>
+    public static Error HelperRequestRejected(string reason) =>
+        new(ErrorCode.WorkshopHelperRequestRejected, $"The Steam helper rejected its request ({reason})", ErrorKind.Unexpected)
         {
             Details = ErrorDetails.Reason(reason),
         };

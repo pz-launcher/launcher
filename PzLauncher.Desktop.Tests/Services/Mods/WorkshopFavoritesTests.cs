@@ -8,6 +8,8 @@ public class WorkshopFavoritesTests
 {
     private readonly FakePreferenceStore _store = new();
 
+    private static WorkshopTitles Titles(WorkshopFavorites favorites) => new(TestWorkshop.History(), TestWorkshop.UserCollections(), favorites);
+
     private WorkshopFavorites Create(params SavedWorkshopEntry[] items) =>
         TestWorkshop.Favorites(_store, new SavedWorkshopFavorites([new SavedWorkshopEntry(9000, "Pack")], items));
 
@@ -49,30 +51,28 @@ public class WorkshopFavoritesTests
     }
 
     [Fact]
-    public void UpdateTitles_KeepsNewTitlesOfStarredIdsInPlaceAndSavesOnce()
+    public void SeenTitles_KeepsNewTitlesOfStarredIdsInPlaceAndSavesOnce()
     {
         var favorites = Create(new SavedWorkshopEntry(1001, null), new SavedWorkshopEntry(1002, "Old"), new SavedWorkshopEntry(1003, "Same"));
         var raised = 0;
         favorites.Changed += (_, _) => raised++;
 
-        favorites.UpdateTitles(
-            WorkshopFavoriteKind.Item,
-            [new(1001, "Core"), new(1002, "New"), new(1003, "Same"), new(1004, "Not starred"), new(1002, null)]);
+        Titles(favorites).SeenItems([new(1001, "Core"), new(1002, "New"), new(1003, "Same"), new(1004, "Not starred"), new(1002, null)]);
 
-        Assert.Equal([new SavedWorkshopEntry(1001, "Core"), new SavedWorkshopEntry(1002, "New"), new SavedWorkshopEntry(1003, "Same")], favorites.Items);
+        Assert.Equal([new WorkshopEntry(1001, "Core"), new WorkshopEntry(1002, "New"), new WorkshopEntry(1003, "Same")], favorites.Items);
         Assert.Single(_store.SavedWorkshopFavorites);
         Assert.Equal(1, raised);
     }
 
     [Fact]
-    public void UpdateTitles_NothingNew_SavesNothingAndRaisesNothing()
+    public void SeenTitles_NothingNew_SavesNothingAndRaisesNothing()
     {
         var favorites = Create(new SavedWorkshopEntry(1001, "Core"));
         var raised = 0;
         favorites.Changed += (_, _) => raised++;
 
-        favorites.UpdateTitles(WorkshopFavoriteKind.Item, [new(1001, "Core"), new(1001, null)]);
-        favorites.UpdateTitles(WorkshopFavoriteKind.Collection, [new(1001, "Core")]);
+        Titles(favorites).SeenItems([new(1001, "Core"), new(1001, null)]);
+        Titles(favorites).SeenCollections([new(1001, "Core")]);
 
         Assert.Empty(_store.SavedWorkshopFavorites);
         Assert.Equal(0, raised);
@@ -88,9 +88,9 @@ public class WorkshopFavoritesTests
             [new(1002, null), new(1001, null), new(1003, "Weather"), new(1002, "Repeated")]);
 
         Assert.Equal((1, 2), added);
-        Assert.Equal([new SavedWorkshopEntry(9100, "Vehicles Pack"), new SavedWorkshopEntry(9000, "Pack")], favorites.Collections);
+        Assert.Equal([new WorkshopEntry(9100, "Vehicles Pack"), new WorkshopEntry(9000, "Pack")], favorites.Collections);
         Assert.Equal(
-            [new SavedWorkshopEntry(1002, null), new SavedWorkshopEntry(1003, "Weather"), new SavedWorkshopEntry(1001, "Core")],
+            [new WorkshopEntry(1002, null), new WorkshopEntry(1003, "Weather"), new WorkshopEntry(1001, "Core")],
             favorites.Items);
         Assert.Single(_store.SavedWorkshopFavorites);
     }

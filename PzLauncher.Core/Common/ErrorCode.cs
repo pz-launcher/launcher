@@ -41,6 +41,7 @@ public enum ErrorCode
     [JsonStringEnumMemberName("workshop.steam_init_failed")] WorkshopSteamInitFailed,
     [JsonStringEnumMemberName("workshop.helper_start_failed")] WorkshopHelperStartFailed,
     [JsonStringEnumMemberName("workshop.helper_failed")] WorkshopHelperFailed,
+    [JsonStringEnumMemberName("workshop.helper_request_rejected")] WorkshopHelperRequestRejected,
     [JsonStringEnumMemberName("workshop.helper_timed_out")] WorkshopHelperTimedOut,
     [JsonStringEnumMemberName("workshop.collections_query_failed")] WorkshopCollectionsQueryFailed,
 

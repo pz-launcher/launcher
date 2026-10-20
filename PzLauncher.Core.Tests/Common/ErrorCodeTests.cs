@@ -45,7 +45,8 @@ public partial class ErrorCodeTests
         [ErrorCode.WorkshopSteamNotRunning] = (WorkshopErrors.SteamNotRunning(), ErrorKind.Conflict),
         [ErrorCode.WorkshopSteamInitFailed] = (WorkshopErrors.SteamInitFailed("r"), ErrorKind.External),
         [ErrorCode.WorkshopHelperStartFailed] = (WorkshopErrors.HelperStartFailed("p", "r"), ErrorKind.External),
-        [ErrorCode.WorkshopHelperFailed] = (WorkshopErrors.HelperFailed("r"), ErrorKind.Unexpected),
+        [ErrorCode.WorkshopHelperFailed] = (WorkshopErrors.HelperFailed("r"), ErrorKind.External),
+        [ErrorCode.WorkshopHelperRequestRejected] = (WorkshopErrors.HelperRequestRejected("r"), ErrorKind.Unexpected),
         [ErrorCode.WorkshopHelperTimedOut] = (WorkshopErrors.HelperTimedOut(TimeSpan.FromMinutes(3)), ErrorKind.External),
         [ErrorCode.WorkshopCollectionsQueryFailed] = (WorkshopErrors.CollectionsQueryFailed("r"), ErrorKind.External),
         [ErrorCode.InstallFilesMissing] = (InstallErrors.FilesMissing("p", 1), ErrorKind.NotFound),
@@ -154,6 +155,7 @@ public partial class ErrorCodeTests
     [InlineData(ErrorCode.WorkshopSteamInitFailed, "workshop.steam_init_failed")]
     [InlineData(ErrorCode.WorkshopHelperStartFailed, "workshop.helper_start_failed")]
     [InlineData(ErrorCode.WorkshopHelperFailed, "workshop.helper_failed")]
+    [InlineData(ErrorCode.WorkshopHelperRequestRejected, "workshop.helper_request_rejected")]
     [InlineData(ErrorCode.WorkshopHelperTimedOut, "workshop.helper_timed_out")]
     [InlineData(ErrorCode.WorkshopCollectionsQueryFailed, "workshop.collections_query_failed")]
     [InlineData(ErrorCode.InstallFilesMissing, "install.files_missing")]
@@ -274,6 +276,7 @@ public partial class ErrorCodeTests
     [InlineData(ErrorCode.WorkshopResponseInvalid)]
     [InlineData(ErrorCode.WorkshopSteamInitFailed)]
     [InlineData(ErrorCode.WorkshopHelperFailed)]
+    [InlineData(ErrorCode.WorkshopHelperRequestRejected)]
     [InlineData(ErrorCode.WorkshopCollectionsQueryFailed)]
     public void Factory_ReasonDetails_HoldTheReason(ErrorCode code) =>
         Assert.Equal(new Dictionary<string, string> { ["reason"] = "r" }, Factories[code].Error.Details);

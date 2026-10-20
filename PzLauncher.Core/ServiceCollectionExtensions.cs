@@ -5,6 +5,7 @@ using PzLauncher.Core.Installs;
 using PzLauncher.Core.Java;
 using PzLauncher.Core.Launch;
 using PzLauncher.Core.Mod.Collections;
+using PzLauncher.Core.Mod.Workshop;
 using PzLauncher.Core.Mod.ZBSkipOnlineChecks;
 using PzLauncher.Core.Mod.Zabric;
 using PzLauncher.Core.Mod.ZombieBuddy;
@@ -49,6 +50,7 @@ public static class ServiceCollectionExtensions
         services.TryAddSingleton<INetworkService, NetworkService>();
         services.TryAddSingleton<WorkshopWebApi>();
         services.TryAddSingleton<IWorkshopService, WorkshopService>();
+        services.TryAddSingleton<IWorkshopModsService, WorkshopModsService>();
         services.TryAddSingleton<IWorkshopActionRunner, WorkshopActionRunner>();
         services.TryAddSingleton<IUpdateService>(provider => new UpdateService(
             currentVersion,

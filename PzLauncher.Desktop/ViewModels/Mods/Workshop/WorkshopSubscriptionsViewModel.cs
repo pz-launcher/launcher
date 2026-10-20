@@ -5,6 +5,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using PzLauncher.Core.Common;
+using PzLauncher.Core.Mod.Workshop;
 using PzLauncher.Core.Steam.Workshop;
 using PzLauncher.Core.Steam.Workshop.Actions;
 using PzLauncher.Desktop.Lang;
@@ -19,11 +21,7 @@ public partial class WorkshopSubscriptionsViewModel : WorkshopSectionViewModel
 {
     private readonly IClipboardService _clipboard;
     private readonly RowSelection<ulong> _selection = new();
-    private IReadOnlyList<WorkshopItemRow> _rows = [];
     private bool _loaded;
-
-    // A newer load supersedes one still in flight.
-    private int _loadVersion;
 
     internal WorkshopSubscriptionsViewModel(
         ModsViewModel page,
@@ -32,11 +30,13 @@ public partial class WorkshopSubscriptionsViewModel : WorkshopSectionViewModel
         IDialogService dialogs,
         IClipboardService clipboard,
         IUrlLauncher urls,
-        WorkshopFavorites favorites)
-        : base(page, service, runner, dialogs, urls, favorites)
+        WorkshopFavorites favorites,
+        WorkshopTitles titles)
+        : base(page, service, runner, dialogs, urls, favorites, titles)
     {
         _clipboard = clipboard;
         VisibleRows = [];
+        AddStateCommands(SubscribeCommand, UnsubscribeCommand, UpdateSelectedCommand, CheckUpdatesCommand);
     }
 
     [ObservableProperty]
@@ -51,117 +51,21 @@ public partial class WorkshopSubscriptionsViewModel : WorkshopSectionViewModel
 
     [ObservableProperty] public partial bool SortDescending { get; private set; }
 
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(ShowsProgress))]
-    public partial bool IsLoading { get; private set; }
-
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(ShowsProgress))]
-    [NotifyCanExecuteChangedFor(nameof(CheckUpdatesCommand))]
-    public partial bool IsChecking { get; private set; }
-
-    public bool ShowsProgress => IsLoading || IsChecking;
-
     public int SelectedCount => _selection.Count;
 
-    public int OutdatedCount => _rows.Count(row => row.Item.State == WorkshopItemState.NeedsUpdate);
-
     /// <summary>Loaded, and the account has no subscription.</summary>
-    public bool IsEmpty => _loaded && _rows.Count == 0;
+    public bool IsEmpty => _loaded && Rows.Count == 0;
 
-    public bool IsFilterEmpty => _rows.Count > 0 && VisibleRows.Count == 0;
+    public bool IsFilterEmpty => Rows.Count > 0 && VisibleRows.Count == 0;
 
-    /// <summary>Reads Steam's local files, then fetches titles the Web API hasn't given this session.</summary>
-    internal async Task LoadAsync()
-    {
-        var version = ++_loadVersion;
-        if (Page.Install is not { } install)
-        {
-            Clear();
-            return;
-        }
+    internal override Task ShowAsync() => LoadAsync();
 
-        var root = install.RootPath;
-        var extraGameArgs = Page.ExtraGameArgs(install);
-        IsLoading = true;
-        try
-        {
-            var result = await Service.GetSubscriptionsAsync(root, extraGameArgs);
-            if (version != _loadVersion)
-            {
-                return;
-            }
-
-            if (!result.IsSuccess)
-            {
-                Show(null);
-                ShownError.Show(result.Error);
-                return;
-            }
-
-            ShownError.Clear();
-            Show(result.Value);
-            List<ulong> untitled = [.. result.Value.Items.Where(item => item.Latest is null).Select(item => item.Id)];
-            if (untitled.Count == 0)
-            {
-                return;
-            }
-
-            var details = await Service.CheckUpdatesAsync(untitled);
-            if (version != _loadVersion)
-            {
-                return;
-            }
-
-            if (!details.IsSuccess)
-            {
-                AddWarning(details.Error);
-                return;
-            }
-
-            // Items the Web API doesn't show stay untitled; reading again would change nothing.
-            if (details.Value.Count == 0)
-            {
-                return;
-            }
-
-            result = await Service.GetSubscriptionsAsync(root, extraGameArgs);
-            if (version != _loadVersion)
-            {
-                return;
-            }
-
-            if (result.IsSuccess)
-            {
-                Show(result.Value);
-            }
-            else
-            {
-                ShownError.Show(result.Error);
-            }
-        }
-        finally
-        {
-            if (version == _loadVersion)
-            {
-                IsLoading = false;
-            }
-        }
-    }
-
-    internal void Clear()
-    {
-        ++_loadVersion;
-        IsLoading = false;
-        ShownError.Clear();
-        ShownStatus.Clear();
-        Show(null);
-    }
+    internal override Task RefreshAsync() => LoadAsync();
 
     [RelayCommand]
     private void ClearSelection()
     {
-        foreach (var row in _rows)
+        foreach (var row in Rows)
         {
             row.IsSelected = false;
         }
@@ -172,40 +76,42 @@ public partial class WorkshopSubscriptionsViewModel : WorkshopSectionViewModel
     {
         SortDescending = column == SortColumn && !SortDescending;
         SortColumn = column;
-        _rows = Sorted(_rows);
+        Rows = Sorted(Rows);
         RefreshVisibleRows();
     }
 
-    private bool CanCheckUpdates() => Page.Install is not null && !IsChecking && !IsActionRunning;
+    private bool CanCheckUpdates() => Page.Install is not null && !IsActionRunning;
 
     [RelayCommand(CanExecute = nameof(CanCheckUpdates))]
     private async Task CheckUpdatesAsync()
     {
-        List<ulong> ids = [.. _rows.Where(row => row.Item.Installed is not null).Select(row => row.Id)];
-        IsChecking = true;
-        try
+        List<ulong> ids = [.. Rows.Where(row => row.Item.Installed is not null).Select(row => row.Id)];
+        if (ids.Count > 0)
         {
-            if (ids.Count > 0)
+            Error? error = null;
+            await RunLoadAsync(async _ =>
             {
                 var result = await Service.CheckUpdatesAsync(ids);
-                if (!result.IsSuccess)
+                if (result.IsSuccess)
                 {
-                    await Dialogs.ShowErrorAsync(ErrorMessages.ToUserText(result.Error));
-                    return;
+                    await LoadAsync();
                 }
-
-                await LoadAsync();
+                else
+                {
+                    error = result.Error;
+                }
+            });
+            if (error is not null)
+            {
+                await Dialogs.ShowErrorAsync(ErrorMessages.ToUserText(error));
+                return;
             }
+        }
 
-            var outdated = OutdatedCount;
-            ShownStatus.Show(() => outdated == 0
-                ? UiText.Workshop_CheckedAllCurrent
-                : string.Format(CultureInfo.CurrentCulture, UiText.Workshop_CheckedOutdated, outdated));
-        }
-        finally
-        {
-            IsChecking = false;
-        }
+        var outdated = OutdatedCount;
+        ShownStatus.Show(() => outdated == 0
+            ? UiText.Workshop_CheckedAllCurrent
+            : string.Format(CultureInfo.CurrentCulture, UiText.Workshop_CheckedOutdated, outdated));
     }
 
     [RelayCommand(CanExecute = nameof(CanRunActions))]
@@ -225,7 +131,7 @@ public partial class WorkshopSubscriptionsViewModel : WorkshopSectionViewModel
             return;
         }
 
-        var name = _rows.FirstOrDefault(row => row.Id == id)?.Title ?? id.ToString(CultureInfo.InvariantCulture);
+        var name = Rows.FirstOrDefault(row => row.Id == id)?.Title ?? id.ToString(CultureInfo.InvariantCulture);
         await RunAsync(WorkshopAction.Subscribe, [new WorkshopActionItemRow(id, name)]);
     }
 
@@ -242,58 +148,112 @@ public partial class WorkshopSubscriptionsViewModel : WorkshopSectionViewModel
 
         if (await WorkshopActionFlow.ConfirmUnsubscribeAsync(Dialogs, selected))
         {
-            await RunAsync(WorkshopAction.Unsubscribe, WorkshopActionFlow.ActionItems(selected));
+            await RunAsync(WorkshopAction.Unsubscribe, selected);
         }
     }
 
-    private bool CanUpdateAll() => CanRunActions && OutdatedCount > 0;
-
-    [RelayCommand(CanExecute = nameof(CanUpdateAll))]
-    private Task UpdateAllAsync() =>
-        RunAsync(WorkshopAction.Update, WorkshopActionFlow.ActionItems(_rows.Where(row => row.Item.State == WorkshopItemState.NeedsUpdate)));
-
     [RelayCommand(CanExecute = nameof(CanRunOnSelection))]
-    private Task UpdateSelectedAsync() => RunAsync(WorkshopAction.Update, WorkshopActionFlow.ActionItems(SelectedRows()));
+    private Task UpdateSelectedAsync() => RunAsync(WorkshopAction.Update, SelectedRows());
 
     partial void OnSearchTextChanged(string value) => RefreshVisibleRows();
 
     partial void OnFilterChanged(WorkshopSubscriptionsFilter value) => RefreshVisibleRows();
 
-    protected override void NotifyActionCommands()
-    {
-        SubscribeCommand.NotifyCanExecuteChanged();
-        UnsubscribeCommand.NotifyCanExecuteChanged();
-        UpdateAllCommand.NotifyCanExecuteChanged();
-        UpdateSelectedCommand.NotifyCanExecuteChanged();
-        CheckUpdatesCommand.NotifyCanExecuteChanged();
-    }
-
     protected override void OnFavoritesChanged()
     {
-        ShowFavorites(_rows);
+        ShowRowFavorites();
         if (Filter == WorkshopSubscriptionsFilter.Favorites)
         {
             RefreshVisibleRows();
         }
     }
 
-    private Task RunAsync(WorkshopAction action, IReadOnlyList<WorkshopActionItemRow> items) => RunActionAsync(action, items, () => _rows, LoadAsync);
+    protected override Task ShowAgainAsync() => LoadAsync();
 
-    private List<WorkshopItemRow> SelectedRows() => [.. _rows.Where(row => row.IsSelected)];
+    protected override void ClearRows() => ShowSubscriptions(null);
 
-    private void Show(WorkshopSubscriptions? subscriptions)
+    /// <summary>Reads Steam's local files, then fetches titles the Web API hasn't given this session.</summary>
+    private Task LoadAsync()
+    {
+        if (Page.Install is not { } install)
+        {
+            Clear();
+            return Task.CompletedTask;
+        }
+
+        var root = install.RootPath;
+        var extraGameArgs = Page.ExtraGameArgs(install);
+        return RunLoadAsync(async version =>
+        {
+            var result = await Page.WorkshopMods.GetSubscriptionsAsync(root, extraGameArgs);
+            if (!IsLatest(version))
+            {
+                return;
+            }
+
+            if (!result.IsSuccess)
+            {
+                ShowSubscriptions(null);
+                ShownError.Show(result.Error);
+                return;
+            }
+
+            ShownError.Clear();
+            ShowSubscriptions(result.Value);
+            List<ulong> untitled = [.. result.Value.Items.Where(item => item.Item.Latest is null).Select(item => item.Item.Id)];
+            if (untitled.Count == 0)
+            {
+                return;
+            }
+
+            var details = await Service.CheckUpdatesAsync(untitled);
+            if (!IsLatest(version))
+            {
+                return;
+            }
+
+            if (!details.IsSuccess)
+            {
+                AddWarning(details.Error);
+                return;
+            }
+
+            // Items the Web API doesn't show stay untitled; reading again would change nothing.
+            if (details.Value.Count == 0)
+            {
+                return;
+            }
+
+            result = await Page.WorkshopMods.GetSubscriptionsAsync(root, extraGameArgs);
+            if (!IsLatest(version))
+            {
+                return;
+            }
+
+            if (result.IsSuccess)
+            {
+                ShowSubscriptions(result.Value);
+            }
+            else
+            {
+                ShownError.Show(result.Error);
+            }
+        });
+    }
+
+    private List<WorkshopItemRow> SelectedRows() => [.. Rows.Where(row => row.IsSelected)];
+
+    private void ShowSubscriptions(WorkshopModSubscriptions? subscriptions)
     {
         _loaded = subscriptions is not null;
         ShowWarnings(subscriptions?.Warnings ?? []);
-        IReadOnlyList<WorkshopItem> items = subscriptions?.Items ?? [];
-        _selection.IntersectWith(items.Select(item => item.Id));
-        _rows = Sorted(items.Select(item => new WorkshopItemRow(item, _selection.Contains(item.Id), IsFavoriteItem(item.Id), OnRowSelectionChanged)));
+        IReadOnlyList<WorkshopModItem> items = subscriptions?.Items ?? [];
+        _selection.IntersectWith(items.Select(item => item.Item.Id));
+        ShowRows(Sorted(items.Select(item =>
+            new WorkshopItemRow(item, _selection.Contains(item.Item.Id), IsFavoriteItem(item.Item.Id), OnRowSelectionChanged))));
         RefreshVisibleRows();
         OnPropertyChanged(nameof(IsEmpty));
         OnPropertyChanged(nameof(SelectedCount));
-        OnPropertyChanged(nameof(OutdatedCount));
-        NotifyActionCommands();
-        RememberTitles(_rows);
     }
 
     private void OnRowSelectionChanged(WorkshopItemRow row)
@@ -307,14 +267,14 @@ public partial class WorkshopSubscriptionsViewModel : WorkshopSectionViewModel
     private void RefreshVisibleRows()
     {
         var search = SearchText.Trim();
-        VisibleRows = [.. _rows.Where(row => MatchesFilter(row) && Matches(row, search))];
+        VisibleRows = [.. Rows.Where(row => MatchesFilter(row) && Matches(row, search))];
     }
 
     private bool MatchesFilter(WorkshopItemRow row) => Filter switch
     {
         WorkshopSubscriptionsFilter.All => true,
         WorkshopSubscriptionsFilter.NeedsUpdate => row.Item.State == WorkshopItemState.NeedsUpdate,
-        WorkshopSubscriptionsFilter.Unused => row.Item.Collections.Count == 0,
+        WorkshopSubscriptionsFilter.Unused => row.Collections.Count == 0,
         WorkshopSubscriptionsFilter.Favorites => row.IsFavorite,
     };
 
@@ -323,7 +283,7 @@ public partial class WorkshopSubscriptionsViewModel : WorkshopSectionViewModel
         search.Length == 0
         || row.Title.Contains(search, StringComparison.CurrentCultureIgnoreCase)
         || row.IdText.Contains(search, StringComparison.Ordinal)
-        || row.Item.Mods.Any(mod => mod.Id.Contains(search, StringComparison.OrdinalIgnoreCase));
+        || row.Mods.Any(mod => mod.Id.Contains(search, StringComparison.OrdinalIgnoreCase));
 
     private WorkshopItemRow[] Sorted(IEnumerable<WorkshopItemRow> rows) =>
         SortedRows.Sort(rows, SortColumn, SortDescending, IsBlank, CompareColumn, CompareByTitle);

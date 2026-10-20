@@ -4,6 +4,7 @@ using PzLauncher.Core.Installs;
 using PzLauncher.Core.Java;
 using PzLauncher.Core.Launch;
 using PzLauncher.Core.Mod.Collections;
+using PzLauncher.Core.Mod.Workshop;
 using PzLauncher.Core.Mod.ZombieBuddy;
 using PzLauncher.Core.Mod;
 using PzLauncher.Core.Net;
@@ -66,9 +67,15 @@ namespace PzLauncher.Core.Serialization;
 [JsonSerializable(typeof(WorkshopItemDetails))]
 [JsonSerializable(typeof(IReadOnlyList<WorkshopItemDetails>))]
 [JsonSerializable(typeof(WorkshopItem))]
+[JsonSerializable(typeof(IReadOnlyList<WorkshopItem>))]
 [JsonSerializable(typeof(WorkshopSubscriptions))]
 [JsonSerializable(typeof(WorkshopCollection))]
 [JsonSerializable(typeof(WorkshopCollectionItem))]
+[JsonSerializable(typeof(WorkshopIdKind))]
+[JsonSerializable(typeof(IReadOnlyList<WorkshopIdKind>))]
+[JsonSerializable(typeof(SharedWorkshopFavorites))]
+[JsonSerializable(typeof(WorkshopModItem))]
+[JsonSerializable(typeof(WorkshopModSubscriptions))]
 [JsonSerializable(typeof(WorkshopAction))]
 [JsonSerializable(typeof(WorkshopActionRequest))]
 [JsonSerializable(typeof(WorkshopItemFailure))]

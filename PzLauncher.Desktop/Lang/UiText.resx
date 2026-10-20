@@ -347,6 +347,9 @@
   <data name="Error_WorkshopHelperFailed" xml:space="preserve">
     <value>The launcher's Steam helper stopped before it finished ({0}). Check the items in Steam, then try again.</value>
   </data>
+  <data name="Error_WorkshopHelperRequestRejected" xml:space="preserve">
+    <value>The launcher's Steam helper couldn't read its request ({0}). Restart the launcher, then try again.</value>
+  </data>
   <data name="Error_WorkshopHelperTimedOut" xml:space="preserve">
     <value>Steam reported no progress for {0} seconds, so the Workshop action was stopped. Try again later.</value>
   </data>
@@ -1048,6 +1051,9 @@
   </data>
   <data name="Workshop_WaitingForSteam" xml:space="preserve">
     <value>Waiting for Steam…</value>
+  </data>
+  <data name="Workshop_WaitingForEarlierAction" xml:space="preserve">
+    <value>Waiting for the previous Steam action to finish…</value>
   </data>
   <data name="Workshop_ActionSummary" xml:space="preserve">
     <value>Done: {0} of {1}</value>

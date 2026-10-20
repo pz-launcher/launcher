@@ -36,9 +36,9 @@ public class ModsViewModelTests : UiTextCultureTest
         Installs = new(_detection, new FakeFolderPicker(), new FakePlatformEnvironment(), Localization);
         _service
             .WithMods(
-                Mod("Core", name: "Core Library", workshopId: "1001"),
-                Mod("Maps", name: "Map Pack", workshopId: "1002", require: ["Core"]),
-                Mod("Cars", name: "Vehicles", workshopId: "1003"),
+                Mod("Core", name: "Core Library", workshopId: 1001),
+                Mod("Maps", name: "Map Pack", workshopId: 1002, require: ["Core"]),
+                Mod("Cars", name: "Vehicles", workshopId: 1003),
                 Mod("Tweaks", name: "Tweaks", source: InstalledModSource.Local))
             .WithCollection("Survival", "Maps", "Core", "Gone")
             .WithCollection("Driving", "Cars");
@@ -51,10 +51,14 @@ public class ModsViewModelTests : UiTextCultureTest
     {
         _detection.ScanResults.Enqueue(FakeInstallDetectionService.Found(installs.Length == 0 ? [SteamGame] : installs));
         await Installs.ActivateCommand.ExecuteAsync(null);
+        var workshop = new FakeWorkshopService();
+        var history = TestWorkshop.History();
+        var userCollections = TestWorkshop.UserCollections();
+        var favorites = TestWorkshop.Favorites();
         var vm = new ModsViewModel(
             Installs, _service, _overrides, _defaults, new ModCollectionApplier(_service, _dialogs), _dialogs, _clipboard, _runState, _orderWriter,
-            new FakeWorkshopService(), new FakeWorkshopActionRunner(), new FakeUrlLauncher(), TestWorkshop.History(), TestWorkshop.UserCollections(),
-            TestWorkshop.Favorites(), Localization);
+            workshop, workshop, new FakeWorkshopActionRunner(), new FakeUrlLauncher(), history, userCollections, favorites,
+            new WorkshopTitles(history, userCollections, favorites), Localization);
         await vm.ActivateCommand.ExecuteAsync(null);
         return vm;
     }
@@ -236,8 +240,8 @@ public class ModsViewModelTests : UiTextCultureTest
     private async Task<ModsViewModel> CreateWithSortModsAsync()
     {
         _service.WithMods(
-            Mod("Atlas", name: "Map Pack", workshopId: "999", source: InstalledModSource.StagedWorkshop),
-            Mod("draft", name: "Alpha", workshopId: "draft-item", source: InstalledModSource.StagedWorkshop));
+            Mod("Atlas", name: "Map Pack", workshopId: 999, source: InstalledModSource.StagedWorkshop),
+            Mod("draft", name: "Alpha", workshopId: ulong.MaxValue, source: InstalledModSource.StagedWorkshop));
         return await CreateActivatedAsync();
     }
 

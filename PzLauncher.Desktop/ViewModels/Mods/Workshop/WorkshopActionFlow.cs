@@ -21,7 +21,6 @@ internal static class WorkshopActionFlow
         IWorkshopService service,
         IDialogService dialogs,
         string root,
-        string extraGameArgs,
         WorkshopAction action,
         IReadOnlyList<WorkshopActionItemRow> items,
         Func<IReadOnlyList<WorkshopItemRow>> rows)
@@ -34,7 +33,7 @@ internal static class WorkshopActionFlow
                 action,
                 items,
                 report => ShowEvent(rows(), report),
-                action == WorkshopAction.Update ? ct => StillOutdatedAsync(service, root, extraGameArgs, ct) : null);
+                action == WorkshopAction.Update ? ct => StillOutdatedAsync(service, root, ct) : null);
             await dialogs.ShowWorkshopActionAsync(dialog);
         }
         finally
@@ -51,7 +50,7 @@ internal static class WorkshopActionFlow
     {
         List<string> collections =
         [
-            .. rows.SelectMany(row => row.Item.Collections).Distinct(StringComparer.Ordinal).Order(StringComparer.CurrentCultureIgnoreCase),
+            .. rows.SelectMany(row => row.Collections).Distinct(StringComparer.Ordinal).Order(StringComparer.CurrentCultureIgnoreCase),
         ];
         var message = collections.Count == 0
             ? string.Format(CultureInfo.CurrentCulture, UiText.Workshop_UnsubscribeMessage, rows.Count)
@@ -97,9 +96,9 @@ internal static class WorkshopActionFlow
     }
 
     // A read that fails verifies nothing; the dialog then trusts Steam's own report.
-    private static async Task<IReadOnlySet<ulong>> StillOutdatedAsync(IWorkshopService service, string root, string extraGameArgs, CancellationToken ct)
+    private static async Task<IReadOnlySet<ulong>> StillOutdatedAsync(IWorkshopService service, string root, CancellationToken ct)
     {
-        var result = await service.GetSubscriptionsAsync(root, extraGameArgs, ct);
+        var result = await service.GetSubscriptionsAsync(root, ct);
         return result.IsSuccess
             ? result.Value.Items.Where(item => item.State == WorkshopItemState.NeedsUpdate).Select(item => item.Id).ToHashSet()
             : new HashSet<ulong>();

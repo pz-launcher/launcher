@@ -1,21 +1,20 @@
-using PzLauncher.Core.Mod;
-
 namespace PzLauncher.Core.Steam.Workshop;
 
-/// <summary>A subscribed Workshop item.</summary>
+/// <summary>A Workshop item as the account's subscriptions and Steam's install list show it.</summary>
+/// <param name="Subscribed"><c>default</c> for an item that isn't subscribed.</param>
 /// <param name="Latest"><c>null</c> until a check or collection lookup fetched it, or when the Web API doesn't show the item.</param>
-/// <param name="Mods">The mods in the installed copy, in folder order.</param>
-/// <param name="Collections">Names of the install's mod collections that list one of <paramref name="Mods"/>.</param>
 public sealed record WorkshopItem(
     ulong Id,
     DateTimeOffset Subscribed,
     bool DisabledLocally,
     WorkshopInstall? Installed,
     WorkshopItemDetails? Latest,
-    IReadOnlyList<InstalledMod> Mods,
-    IReadOnlyList<string> Collections,
     WorkshopItemState State)
 {
+    /// <summary>An item the account isn't subscribed to, e.g. one a collection lists.</summary>
+    public static WorkshopItem NotSubscribed(ulong id, WorkshopItemDetails? latest) =>
+        new(id, default, false, null, latest, WorkshopItemState.NotSubscribed);
+
     /// <summary>This item with <paramref name="latest"/> as its latest version and the state that follows from it.</summary>
     public WorkshopItem WithLatest(WorkshopItemDetails latest) => this with
     {

@@ -15,9 +15,12 @@ public static class SteamHelperHost
         void Write(SteamHelperEvent e) => writer.WriteLine(JsonSerializer.Serialize(e, SteamHelperJsonContext.Default.SteamHelperEvent));
 
         var request = ReadRequest(reader.ReadLine());
-        if (request is null || !Path.IsPathFullyQualified(request.SteamApiPath))
+        if (request is null
+            || !Path.IsPathFullyQualified(request.SteamApiPath)
+            || request.Timeouts.CallResult <= TimeSpan.Zero
+            || request.Timeouts.Stall <= TimeSpan.Zero)
         {
-            Write(new SteamHelperFailed(SteamHelperFailure.BadRequest, "expected one JSON request line with an absolute steamApiPath"));
+            Write(new SteamHelperFailed(SteamHelperFailure.BadRequest, "expected one JSON request line with an absolute steamApiPath and positive timeouts"));
             return 1;
         }
 
@@ -56,7 +59,7 @@ public static class SteamHelperHost
             }
 
             Write(new SteamHelperStarted());
-            var session = new SteamHelperSession(api, Write, TimeProvider.System);
+            var session = new SteamHelperSession(api, Write, request.Timeouts, TimeProvider.System);
             switch (request.Action)
             {
                 case SteamHelperAction.Subscribe:

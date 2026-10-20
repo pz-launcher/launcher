@@ -118,4 +118,17 @@ public class ModLoadOrderTests
         Assert.Equal(
             ["B", "Missing1", "Missing2"],
             ModLoadOrder.AutoSort(["Missing1", "B", "Missing2"], [Mod("B", require: ["Other"]), Mod("Other")]));
+
+    [Fact]
+    public void Conflicts_EitherSideNamingTheOther_CountsOnceInListOrder()
+    {
+        var mod = Mod("A", incompatible: ["C"]);
+        InstalledMod[] mods = [mod, Mod("B"), Mod("C"), Mod("D", incompatible: ["A"]), Mod("C")];
+
+        Assert.Equal(["C", "D"], ModLoadOrder.Conflicts(mod, mods));
+    }
+
+    [Fact]
+    public void Conflicts_ACopyOfTheSameMod_IsNoConflict() =>
+        Assert.Empty(ModLoadOrder.Conflicts(Mod("A", incompatible: ["A"]), [Mod("A")]));
 }

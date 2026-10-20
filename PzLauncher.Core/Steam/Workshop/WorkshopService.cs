@@ -2,8 +2,6 @@ using System.Collections.Concurrent;
 using Microsoft.Extensions.Logging;
 using PzLauncher.Core.Common;
 using PzLauncher.Core.Installs;
-using PzLauncher.Core.Mod;
-using PzLauncher.Core.Mod.Collections;
 using PzLauncher.Core.Steam.Workshop.Sources;
 
 namespace PzLauncher.Core.Steam.Workshop;
@@ -12,7 +10,6 @@ internal sealed partial class WorkshopService(
     SteamLocator locator,
     WorkshopLibraries workshop,
     WorkshopWebApi api,
-    IModCollectionService modCollections,
     TimeProvider time,
     ILogger<WorkshopService> logger) : IWorkshopService
 {
@@ -24,7 +21,7 @@ internal sealed partial class WorkshopService(
 
     private readonly ConcurrentDictionary<ulong, CachedDetails> _cache = new();
 
-    public async Task<Result<WorkshopSubscriptions>> GetSubscriptionsAsync(string installRoot, string extraGameArgs, CancellationToken ct = default)
+    public async Task<Result<WorkshopSubscriptions>> GetSubscriptionsAsync(string installRoot, CancellationToken ct = default)
     {
         ct.ThrowIfCancellationRequested();
         if (!PathNormalizer.TryNormalizeAbsolute(installRoot, out var root))
@@ -47,25 +44,10 @@ internal sealed partial class WorkshopService(
 
         var libraries = await workshop.CandidatesAsync(root, ct).ConfigureAwait(false);
         var manifest = await WorkshopManifestFile.ReadAsync(libraries, logger, ct).ConfigureAwait(false);
-        var warnings = new List<Error>(manifest.Warnings);
-        IReadOnlyList<ModCollection> collections = [];
-        var state = await modCollections.GetAsync(root, extraGameArgs, ct).ConfigureAwait(false);
-        if (state.IsSuccess)
-        {
-            collections = state.Value.Collections;
-        }
-        else
-        {
-            warnings.Add(state.Error);
-        }
-
         var items = new List<WorkshopItem>();
         foreach (var subscription in subscriptions.Value)
         {
             var installed = manifest.Items.GetValueOrDefault(subscription.Id) is { } entry && Directory.Exists(entry.Install.Folder) ? entry : null;
-            var mods = installed is null
-                ? []
-                : await ModCatalog.ReadRootAsync(ModLocator.ModRoot.ForWorkshopItem(installed.Install.Folder), logger, ct).ConfigureAwait(false);
             var latest = _cache.GetValueOrDefault(subscription.Id)?.Details;
             items.Add(new WorkshopItem(
                 subscription.Id,
@@ -73,13 +55,11 @@ internal sealed partial class WorkshopService(
                 subscription.DisabledLocally,
                 installed?.Install,
                 latest,
-                mods,
-                UsedBy(mods, collections),
                 // Before a check, Steam's own latest manifest is the best known; it lags the Web API.
                 WorkshopItem.StateOf(subscription.DisabledLocally, installed?.Install, latest?.Manifest ?? installed?.LatestManifest)));
         }
 
-        return new WorkshopSubscriptions(items, warnings);
+        return new WorkshopSubscriptions(items, manifest.Warnings);
     }
 
     public async Task<Result<IReadOnlyList<WorkshopItemDetails>>> CheckUpdatesAsync(IReadOnlyList<ulong> ids, CancellationToken ct = default)
@@ -119,22 +99,33 @@ internal sealed partial class WorkshopService(
             itemIds.ConvertAll(itemId => new WorkshopCollectionItem(itemId, details.Value.GetValueOrDefault(itemId))));
     }
 
+    public async Task<Result<IReadOnlyList<WorkshopIdKind>>> ClassifyAsync(IReadOnlyList<ulong> ids, CancellationToken ct = default)
+    {
+        ct.ThrowIfCancellationRequested();
+        var distinct = ids.Distinct().ToList();
+        var children = await api.GetCollectionChildrenAsync(distinct, ct).ConfigureAwait(false);
+        if (!children.IsSuccess)
+        {
+            return children.Error;
+        }
+
+        var collections = distinct.Where(id => children.Value.GetValueOrDefault(id) is not null).ToHashSet();
+        var details = await DetailsAsync([.. collections], ct).ConfigureAwait(false);
+        if (!details.IsSuccess)
+        {
+            return details.Error;
+        }
+
+        return distinct.ConvertAll(id => collections.Contains(id)
+            ? new WorkshopIdKind(id, true, details.Value.GetValueOrDefault(id)?.Title)
+            : new WorkshopIdKind(id, false, null));
+    }
+
     public async Task<Result<SteamAccount>> GetCurrentAccountAsync(CancellationToken ct = default)
     {
         ct.ThrowIfCancellationRequested();
         var login = await SteamLoginUsers.LocateCurrentAsync(locator, ct).ConfigureAwait(false);
         return login.IsSuccess ? login.Value.Account : Logged(login.Error);
-    }
-
-    private static List<string> UsedBy(IReadOnlyList<InstalledMod> mods, IReadOnlyList<ModCollection> collections)
-    {
-        if (mods.Count == 0)
-        {
-            return [];
-        }
-
-        var ids = mods.Select(mod => mod.Id).ToHashSet(StringComparer.Ordinal);
-        return [.. collections.Where(collection => collection.ModIds.Any(ids.Contains)).Select(collection => collection.Name)];
     }
 
     private async Task<Result<IReadOnlyDictionary<ulong, WorkshopItemDetails?>>> DetailsAsync(IReadOnlyList<ulong> ids, CancellationToken ct)

@@ -145,6 +145,17 @@ public static class ModLoadOrder
         return sorted;
     }
 
+    /// <summary>The ids of <paramref name="mods"/> the game won't enable together with <paramref name="mod"/>, in their order, each once.</summary>
+    public static IReadOnlyList<string> Conflicts(InstalledMod mod, IReadOnlyList<InstalledMod> mods)
+    {
+        if (!IncompatibilityMap(mods.Append(mod)).TryGetValue(mod.Id, out var incompatible))
+        {
+            return [];
+        }
+
+        return [.. mods.Select(other => other.Id).Where(id => id != mod.Id && incompatible.Contains(id)).Distinct(StringComparer.Ordinal)];
+    }
+
     private static Dictionary<string, InstalledMod> ById(IReadOnlyList<InstalledMod> installedMods)
     {
         var mods = new Dictionary<string, InstalledMod>(StringComparer.Ordinal);

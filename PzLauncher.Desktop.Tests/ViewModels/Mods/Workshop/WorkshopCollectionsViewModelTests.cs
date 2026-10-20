@@ -81,10 +81,12 @@ public class WorkshopCollectionsViewModelTests : UiTextCultureTest
         _detection.ScanResults.Enqueue(FakeInstallDetectionService.Found(SteamGame));
         await Installs.ActivateCommand.ExecuteAsync(null);
         var orderWriter = new ModCollectionOrderWriter(_collections, _runState, new FakePlatformEnvironment(), new ManualTimeProvider());
+        var history = History(_preferences, saved);
+        var userCollections = UserCollections(_preferences, _savedUserCollections, _time);
         return new ModsViewModel(
             Installs, _collections, _overrides, new FakeModCollectionDefaultsService(), new ModCollectionApplier(_collections, _dialogs), _dialogs,
-            _clipboard, _runState, orderWriter, _service, _runner, _urls, History(_preferences, saved),
-            UserCollections(_preferences, _savedUserCollections, _time), _favorites, Localization)
+            _clipboard, _runState, orderWriter, _service, _service, _runner, _urls, history, userCollections, _favorites,
+            new WorkshopTitles(history, userCollections, _favorites), Localization)
         {
             Section = ModsSection.WorkshopCollections,
         };
@@ -195,7 +197,7 @@ public class WorkshopCollectionsViewModelTests : UiTextCultureTest
         page.WorkshopCollections.LinkText = PackLink;
         await page.WorkshopCollections.OpenCommand.ExecuteAsync(null);
         var reads = _service.GetRequests.Count;
-        _service.Items.RemoveAll(item => item.Id == 1001);
+        _service.Items.RemoveAll(item => item.Item.Id == 1001);
 
         page.Section = ModsSection.Mods;
         page.Section = ModsSection.WorkshopCollections;
@@ -207,6 +209,8 @@ public class WorkshopCollectionsViewModelTests : UiTextCultureTest
 
     // Remembered collections
 
+    private static WorkshopCollectionRow RememberedRow(ulong id, string? title, bool isOpen = false) => new(id, title, null, isOpen, IsFavorite: false);
+
     [Fact]
     public async Task Open_RemembersTheCollectionMostRecentFirst()
     {
@@ -217,7 +221,7 @@ public class WorkshopCollectionsViewModelTests : UiTextCultureTest
 
         Assert.Equal([new SavedWorkshopEntry(Pack, "Survival Pack"), new SavedWorkshopEntry(9100, "Vehicles Pack")], _preferences.SavedWorkshopCollections[^1]);
         Assert.Equal(
-            [new RememberedWorkshopCollectionRow(Pack, "Survival Pack", IsOpen: true), new RememberedWorkshopCollectionRow(9100, "Vehicles Pack", IsOpen: false)],
+            [RememberedRow(Pack, "Survival Pack", isOpen: true), RememberedRow(9100, "Vehicles Pack")],
             vm.WorkshopCollections.Remembered);
     }
 
@@ -225,12 +229,12 @@ public class WorkshopCollectionsViewModelTests : UiTextCultureTest
     public async Task OpenRemembered_OpensThatCollection()
     {
         var vm = (await CreatePageAsync(new SavedWorkshopEntry(Pack, null))).WorkshopCollections;
-        Assert.Equal("9000", vm.Remembered[0].Title);
+        Assert.Equal("9000", vm.Remembered[0].DisplayTitle);
 
-        await vm.OpenRememberedCommand.ExecuteAsync(vm.Remembered[0]);
+        await vm.OpenCollectionCommand.ExecuteAsync(vm.Remembered[0]);
 
         Assert.Equal("Survival Pack", vm.Title);
-        Assert.Equal("Survival Pack", vm.Remembered[0].Title);
+        Assert.Equal("Survival Pack", vm.Remembered[0].DisplayTitle);
     }
 
     [Fact]
@@ -424,10 +428,10 @@ public class WorkshopCollectionsViewModelTests : UiTextCultureTest
     [Fact]
     public async Task Generate_IncompatibleMods_AreMarkedOnBothSides()
     {
-        var index = _service.Items.FindIndex(item => item.Id == 1002);
+        var index = _service.Items.FindIndex(item => item.Item.Id == 1002);
         _service.Items[index] = _service.Items[index] with
         {
-            Mods = [TestMods.Mod("Maps", workshopId: "1002"), TestMods.Mod("MapsLite", workshopId: "1002", incompatible: ["Maps"])],
+            Mods = [TestMods.Mod("Maps", workshopId: 1002), TestMods.Mod("MapsLite", workshopId: 1002, incompatible: ["Maps"])],
         };
         _dialogs.ModPickResult = _ => false;
         var vm = await OpenPackAsync();
@@ -505,7 +509,7 @@ public class WorkshopCollectionsViewModelTests : UiTextCultureTest
     private static string UpdatedText(DateTimeOffset at) =>
         string.Format(CultureInfo.CurrentCulture, UiText.WorkshopCollections_UpdatedFormat, at.LocalDateTime.ToString("g", CultureInfo.CurrentCulture));
 
-    private static WorkshopUserCollectionRow UserRow(ulong id, string title, uint count, bool isOpen = false, bool isFavorite = false) =>
+    private static WorkshopCollectionRow UserRow(ulong id, string? title, uint count, bool isOpen = false, bool isFavorite = false) =>
         new(id, title, count, isOpen, isFavorite);
 
     [Fact]
@@ -516,7 +520,7 @@ public class WorkshopCollectionsViewModelTests : UiTextCultureTest
         var vm = await CreateAsync();
 
         Assert.Equal([SteamGame.RootPath], _runner.ListRuns);
-        Assert.Equal([UserRow(3623026433, "Favorite Pack", 201), UserRow(2690796635, "2690796635", 71)], vm.Favorited);
+        Assert.Equal([UserRow(3623026433, "Favorite Pack", 201), UserRow(2690796635, null, 71)], vm.Favorited);
         Assert.Equal([UserRow(3815132834, "my", 214)], vm.Published);
         Assert.False(vm.IsFavoritedEmpty);
         Assert.Equal(UpdatedText(_time.GetUtcNow()), vm.UserCollectionsUpdatedText);
@@ -727,7 +731,7 @@ public class WorkshopCollectionsViewModelTests : UiTextCultureTest
         _runner.Collections = new WorkshopUserCollections(Account, [new WorkshopCollectionSummary(Pack, "Survival Pack", 6)], []);
         var vm = await CreateAsync();
 
-        await vm.OpenUserCollectionCommand.ExecuteAsync(vm.Favorited[0]);
+        await vm.OpenCollectionCommand.ExecuteAsync(vm.Favorited[0]);
 
         Assert.Equal("Survival Pack", vm.Title);
         Assert.Equal(Pack, Assert.Single(vm.Remembered).Id);
@@ -768,12 +772,12 @@ public class WorkshopCollectionsViewModelTests : UiTextCultureTest
         _runner.Collections = SteamCollections;
         var vm = await CreateAsync();
 
-        vm.ToggleUserCollectionFavoriteCommand.Execute(vm.Favorited[0]);
-        vm.ToggleUserCollectionFavoriteCommand.Execute(vm.Favorited[1]);
+        vm.ToggleCollectionFavoriteCommand.Execute(vm.Favorited[0]);
+        vm.ToggleCollectionFavoriteCommand.Execute(vm.Favorited[1]);
 
-        Assert.Equal([new SavedWorkshopEntry(2690796635, null), new SavedWorkshopEntry(3623026433, "Favorite Pack")], _favorites.Collections);
+        Assert.Equal([new WorkshopEntry(2690796635, null), new WorkshopEntry(3623026433, "Favorite Pack")], _favorites.Collections);
         Assert.Equal(
-            [UserRow(3623026433, "Favorite Pack", 201, isFavorite: true), UserRow(2690796635, "2690796635", 71, isFavorite: true)],
+            [UserRow(3623026433, "Favorite Pack", 201, isFavorite: true), UserRow(2690796635, null, 71, isFavorite: true)],
             vm.Favorited);
     }
 
@@ -788,7 +792,7 @@ public class WorkshopCollectionsViewModelTests : UiTextCultureTest
         Assert.True(vm.ToggleOpenCollectionFavoriteCommand.CanExecute(null));
         vm.ToggleOpenCollectionFavoriteCommand.Execute(null);
         vm.ToggleFavoriteCommand.Execute(Row(vm, 1005));
-        vm.ToggleUserCollectionFavoriteCommand.Execute(vm.Favorited[0]);
+        vm.ToggleCollectionFavoriteCommand.Execute(vm.Favorited[0]);
         vm.ToggleCollectionFavoriteCommand.Execute(vm.Remembered[0]);
 
         Assert.Equal([3623026433UL], _favorites.Collections.Select(entry => entry.Id));

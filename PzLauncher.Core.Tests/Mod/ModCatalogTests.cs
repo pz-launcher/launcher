@@ -31,7 +31,7 @@ public sealed class ModCatalogTests : IDisposable
         var mods = await ReadAsync();
 
         Assert.Equal(
-            [("StagedMod", InstalledModSource.StagedWorkshop, null), ("SteamMod", InstalledModSource.SteamWorkshop, "2000"), ("LocalMod", InstalledModSource.Local, null)],
+            [("StagedMod", InstalledModSource.StagedWorkshop, null), ("SteamMod", InstalledModSource.SteamWorkshop, (ulong?)2000), ("LocalMod", InstalledModSource.Local, null)],
             mods.Select(mod => (mod.Id, mod.Source, mod.WorkshopId)));
     }
 
@@ -147,7 +147,7 @@ public sealed class ModCatalogTests : IDisposable
 
         var mod = Assert.Single(await ReadAsync());
 
-        Assert.Equal(("Steam copy", "2000"), (mod.Name, mod.WorkshopId));
+        Assert.Equal(("Steam copy", (ulong?)2000), (mod.Name, mod.WorkshopId));
     }
 
     [Fact]

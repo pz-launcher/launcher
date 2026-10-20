@@ -1,37 +1,46 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
+using PzLauncher.Core.Mod;
+using PzLauncher.Core.Mod.Workshop;
 using PzLauncher.Core.Steam.Workshop;
 using PzLauncher.Desktop.Services.Shell;
 
 namespace PzLauncher.Desktop.ViewModels.Mods.Workshop;
 
 /// <param name="isFavorite">Starred in the launcher's local favorites.</param>
-public sealed partial class WorkshopItemRow(WorkshopItem item, bool isSelected, bool isFavorite, Action<WorkshopItemRow> selectionChanged) : ObservableObject
+public sealed partial class WorkshopItemRow(WorkshopModItem joined, bool isSelected, bool isFavorite, Action<WorkshopItemRow> selectionChanged)
+    : ObservableObject
 {
     private const double BytesPerMegabyte = 1024 * 1024;
 
-    public WorkshopItem Item { get; } = item;
+    public WorkshopItem Item { get; } = joined.Item;
+
+    public IReadOnlyList<InstalledMod> Mods { get; } = joined.Mods;
+
+    /// <summary>The launcher mod collections that use one of <see cref="Mods"/>.</summary>
+    public IReadOnlyList<string> Collections { get; } = joined.Collections;
 
     public ulong Id => Item.Id;
 
-    public string IdText { get; } = item.Id.ToString(CultureInfo.InvariantCulture);
+    public string IdText { get; } = joined.Item.Id.ToString(CultureInfo.InvariantCulture);
 
     /// <summary>The Web API title, else the item id.</summary>
-    public string Title { get; } = TitleOf(item);
+    public string Title { get; } = TitleOf(joined.Item);
 
     public bool HasTitle => WebTitle(Item) is not null;
 
-    public string ModIds { get; } = string.Join(", ", item.Mods.Select(mod => mod.Id));
+    public string ModIds { get; } = string.Join(", ", joined.Mods.Select(mod => mod.Id));
 
     /// <summary><c>null</c> when not installed.</summary>
-    public double? SizeMb { get; } = item.Installed is { } installed ? installed.Size / BytesPerMegabyte : null;
+    public double? SizeMb { get; } = joined.Item.Installed is { } installed ? installed.Size / BytesPerMegabyte : null;
 
     /// <summary>The installed copy's version, else the latest one known; local time.</summary>
-    public DateTime? Updated { get; } = (item.Installed?.Updated ?? item.Latest?.Updated)?.LocalDateTime;
+    public DateTime? Updated { get; } = (joined.Item.Installed?.Updated ?? joined.Item.Latest?.Updated)?.LocalDateTime;
 
-    public string CollectionNames { get; } = string.Join(", ", item.Collections);
+    public string CollectionNames { get; } = string.Join(", ", joined.Collections);
 
     public bool NeedsUpdate => Item.State == WorkshopItemState.NeedsUpdate;
 

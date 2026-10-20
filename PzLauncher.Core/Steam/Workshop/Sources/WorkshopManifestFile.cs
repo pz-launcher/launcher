@@ -19,7 +19,7 @@ internal static partial class WorkshopManifestFile
         foreach (var library in libraries)
         {
             var path = WorkshopFiles.ManifestPath(library);
-            var text = await SteamKeyValues.ReadTextIfExistsAsync(path, reason => WorkshopErrors.ManifestUnreadable(path, reason), ct)
+            var text = await ReadFile.TextIfExistsAsync(path, reason => WorkshopErrors.ManifestUnreadable(path, reason), ct)
                 .ConfigureAwait(false);
             if (text is not { } read)
             {
@@ -67,7 +67,7 @@ internal static partial class WorkshopManifestFile
             var latest = WorkshopIds.TryParseManifest(details?.GetChild(key)?.GetString(WorkshopFiles.LatestManifestKey), out var value)
                 ? value
                 : null;
-            var install = new WorkshopInstall(WorkshopLibraries.ItemFolder(library, key), manifest, updated, size);
+            var install = new WorkshopInstall(WorkshopFiles.ItemFolder(library, key), manifest, updated, size);
             items.Add(new KeyValuePair<ulong, WorkshopManifestEntry>(id, new WorkshopManifestEntry(install, latest)));
         }
 

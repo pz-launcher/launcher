@@ -269,7 +269,7 @@ public partial class HomeViewModel : ViewModelBase
         // The items are on no page here, so no row shows their download.
         var items = WorkshopActionFlow.ActionItems(outdated);
         await WorkshopActionFlow.RunAsync(
-            _workshopActions, _workshop, _dialogs, installRoot, extraGameArgs, WorkshopAction.Update, items, () => []);
+            _workshopActions, _workshop, _dialogs, installRoot, WorkshopAction.Update, items, () => []);
 
         // Closing the progress dialog early leaves the unfinished items short of Done too.
         var names = outdated.ToDictionary(item => item.Id, WorkshopActionFlow.NameWithId);

@@ -1,21 +1,16 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using PzLauncher.Core.Common;
-using PzLauncher.Core.Mod.Collections;
+using PzLauncher.Core.Mod.Workshop;
 using PzLauncher.Core.Steam.Workshop;
 
 namespace PzLauncher.Desktop.Services.Mods;
 
 /// <summary>Before a launch: the subscribed Workshop items behind the mods the launch will enable whose installed copy isn't the latest version.</summary>
-public sealed partial class WorkshopLaunchCheck(
-    IWorkshopService workshop,
-    IModCollectionService collections,
-    TimeProvider time,
-    ILogger<WorkshopLaunchCheck> logger)
+public sealed partial class WorkshopLaunchCheck(IWorkshopModsService workshop, TimeProvider time, ILogger<WorkshopLaunchCheck> logger)
 {
     private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(10);
 
@@ -26,74 +21,20 @@ public sealed partial class WorkshopLaunchCheck(
         using var timeout = new CancellationTokenSource(Timeout, time);
         try
         {
-            return await FindAsync(installRoot, extraGameArgs, collection, timeout.Token);
+            var outdated = await workshop.FindOutdatedForLaunchAsync(installRoot, extraGameArgs, collection, timeout.Token);
+            if (outdated.IsSuccess)
+            {
+                return outdated.Value;
+            }
+
+            LogSkipped(logger, outdated.Error.Code.ToWireName());
+            return [];
         }
         catch (OperationCanceledException) when (timeout.IsCancellationRequested)
         {
             LogTimedOut(logger, Timeout.TotalSeconds);
             return [];
         }
-    }
-
-    private async Task<IReadOnlyList<WorkshopItem>> FindAsync(string installRoot, string extraGameArgs, string? collection, CancellationToken ct)
-    {
-        var state = await collections.GetAsync(installRoot, extraGameArgs, ct);
-        if (!state.IsSuccess)
-        {
-            return Skipped(state.Error);
-        }
-
-        var enabled = EnabledIds(state.Value, collection);
-        if (enabled.Count == 0)
-        {
-            return [];
-        }
-
-        var subscriptions = await workshop.GetSubscriptionsAsync(installRoot, extraGameArgs, ct);
-        if (!subscriptions.IsSuccess)
-        {
-            return Skipped(subscriptions.Error);
-        }
-
-        List<WorkshopItem> used =
-        [
-            .. subscriptions.Value.Items.Where(item =>
-                (item.State is WorkshopItemState.UpToDate or WorkshopItemState.NeedsUpdate) && item.Mods.Any(mod => enabled.Contains(mod.Id))),
-        ];
-        if (used.Count == 0)
-        {
-            return [];
-        }
-
-        var latest = await workshop.CheckUpdatesAsync([.. used.Select(item => item.Id)], ct);
-        if (!latest.IsSuccess)
-        {
-            return Skipped(latest.Error);
-        }
-
-        var details = latest.Value.ToDictionary(item => item.Id);
-
-        // An item the Web API doesn't show keeps what Steam itself knows.
-        return
-        [
-            .. used
-                .Select(item => details.GetValueOrDefault(item.Id) is { } current ? item.WithLatest(current) : item)
-                .Where(item => item.State == WorkshopItemState.NeedsUpdate),
-        ];
-    }
-
-    // A current collection gone from the file isn't applied (the apply reports it), so the enabled list stays as it is.
-    private static HashSet<string> EnabledIds(ModCollectionState state, string? collection)
-    {
-        var target = collection is null ? null : state.Collections.FirstOrDefault(candidate => candidate.Name == collection);
-        var ids = target is null ? state.ActiveIds : ModLoadOrder.Resolve(target.ModIds, state.InstalledMods).EnabledIds;
-        return ids.ToHashSet(StringComparer.Ordinal);
-    }
-
-    private List<WorkshopItem> Skipped(Error error)
-    {
-        LogSkipped(logger, error.Code.ToWireName());
-        return [];
     }
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Workshop pre-launch check skipped ({Code}); launching without it")]

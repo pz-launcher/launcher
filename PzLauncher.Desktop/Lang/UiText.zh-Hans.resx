@@ -347,6 +347,9 @@
   <data name="Error_WorkshopHelperFailed" xml:space="preserve">
     <value>启动器的 Steam 辅助进程在完成前停止了（{0}）。请在 Steam 中检查这些物品，然后重试。</value>
   </data>
+  <data name="Error_WorkshopHelperRequestRejected" xml:space="preserve">
+    <value>启动器的 Steam 辅助进程无法读取其请求（{0}）。请重启启动器，然后重试。</value>
+  </data>
   <data name="Error_WorkshopHelperTimedOut" xml:space="preserve">
     <value>Steam 在 {0} 秒内没有报告任何进度，创意工坊操作已停止。请稍后重试。</value>
   </data>
@@ -1048,6 +1051,9 @@
   </data>
   <data name="Workshop_WaitingForSteam" xml:space="preserve">
     <value>正在等待 Steam…</value>
+  </data>
+  <data name="Workshop_WaitingForEarlierAction" xml:space="preserve">
+    <value>等待上一个 Steam 操作完成…</value>
   </data>
   <data name="Workshop_ActionSummary" xml:space="preserve">
     <value>已完成：{0} / {1}</value>

@@ -9,7 +9,7 @@
              xmlns:ic="using:FluentIcons.Avalonia"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="300"
              x:Class="PzLauncher.Desktop.Views.Mods.Workshop.WorkshopItemListView"
-             x:DataType="vm:WorkshopItemListSectionViewModel">
+             x:DataType="vm:WorkshopSectionViewModel">
 
     <Design.DataContext>
         <x:Static Member="design:DesignData.WorkshopCollections" />
@@ -22,19 +22,22 @@
         </Style>
     </UserControl.Styles>
 
-    <!-- A Workshop section's listed items: one row per item, with its state, star and Steam page. -->
+    <!-- A Workshop section's item rows, with each item's state, star and Steam page. -->
     <DockPanel>
-        <Grid DockPanel.Dock="Top" ColumnDefinitions="2*,110,1.5*,80,120,1.5*,32,40" Margin="13,0,13,4">
-            <TextBlock Grid.Column="0" Classes="columnHeader" Text="{x:Static lang:UiText.Workshop_ColumnTitle}" />
-            <TextBlock Grid.Column="1" Classes="columnHeader" Text="{x:Static lang:UiText.Workshop_ColumnItemId}" />
-            <TextBlock Grid.Column="2" Classes="columnHeader" Text="{x:Static lang:UiText.Workshop_ColumnMods}" />
-            <TextBlock Grid.Column="3" Classes="columnHeader" Text="{x:Static lang:UiText.Workshop_ColumnSize}" />
-            <TextBlock Grid.Column="4" Classes="columnHeader" Text="{x:Static lang:UiText.Workshop_ColumnState}" />
-            <TextBlock Grid.Column="5" Classes="columnHeader" Text="{x:Static lang:UiText.Mods_ColumnCollections}" />
-        </Grid>
+        <Panel DockPanel.Dock="Top" Margin="13,0,13,4">
+            <local:WorkshopItemGrid IsVisible="{Binding $parent[local:WorkshopItemListView].ColumnHeader, Converter={x:Static ObjectConverters.IsNull}}">
+                <TextBlock Grid.Column="1" Classes="columnHeader" Text="{x:Static lang:UiText.Workshop_ColumnTitle}" />
+                <TextBlock Grid.Column="2" Classes="columnHeader" Text="{x:Static lang:UiText.Workshop_ColumnItemId}" />
+                <TextBlock Grid.Column="3" Classes="columnHeader" Text="{x:Static lang:UiText.Workshop_ColumnMods}" />
+                <TextBlock Grid.Column="4" Classes="columnHeader" Text="{x:Static lang:UiText.Workshop_ColumnSize}" />
+                <TextBlock Grid.Column="6" Classes="columnHeader" Text="{x:Static lang:UiText.Workshop_ColumnState}" />
+                <TextBlock Grid.Column="7" Classes="columnHeader" Text="{x:Static lang:UiText.Mods_ColumnCollections}" />
+            </local:WorkshopItemGrid>
+            <ContentPresenter Content="{Binding $parent[local:WorkshopItemListView].ColumnHeader}" />
+        </Panel>
 
         <ScrollViewer>
-            <ItemsControl ItemsSource="{Binding Rows}">
+            <ItemsControl ItemsSource="{Binding $parent[local:WorkshopItemListView].Rows}">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
                         <VirtualizingStackPanel />
@@ -43,28 +46,36 @@
                 <ItemsControl.ItemTemplate>
                     <DataTemplate x:DataType="vm:WorkshopItemRow">
                         <Border Padding="12,6" Margin="0,0,0,4" CornerRadius="4" BorderThickness="1" BorderBrush="{DynamicResource Shell.Border}">
-                            <Grid ColumnDefinitions="2*,110,1.5*,80,120,1.5*,32,40">
-                                <TextBlock Grid.Column="0" Classes="cell" Text="{Binding Title}" FontWeight="SemiBold" ToolTip.Tip="{Binding Title}" />
-                                <TextBlock Grid.Column="1" Classes="cell" Text="{Binding IdText}" Foreground="{DynamicResource Shell.TextMuted}" />
-                                <TextBlock Grid.Column="2" Classes="cell" Text="{Binding ModIds}" ToolTip.Tip="{Binding ModIds}" />
-                                <TextBlock Grid.Column="3" Classes="cell" Text="{Binding SizeMb, StringFormat={x:Static lang:UiText.Workshop_SizeFormat}}"
+                            <local:WorkshopItemGrid>
+                                <CheckBox Grid.Column="0" Width="36" IsChecked="{Binding IsSelected}" VerticalAlignment="Center" MinWidth="0"
+                                          AutomationProperties.Name="{Binding Title}"
+                                          IsVisible="{Binding $parent[local:WorkshopItemListView].ShowsSelection}" />
+                                <TextBlock Grid.Column="1" Classes="cell" Text="{Binding Title}" FontWeight="SemiBold" ToolTip.Tip="{Binding Title}" />
+                                <TextBlock Grid.Column="2" Classes="cell" Text="{Binding IdText}" Foreground="{DynamicResource Shell.TextMuted}" />
+                                <TextBlock Grid.Column="3" Classes="cell" Text="{Binding ModIds}" ToolTip.Tip="{Binding ModIds}" />
+                                <TextBlock Grid.Column="4" Classes="cell" Text="{Binding SizeMb, StringFormat={x:Static lang:UiText.Workshop_SizeFormat}}"
                                            Foreground="{DynamicResource Shell.TextMuted}"
                                            IsVisible="{Binding SizeMb, Converter={x:Static ObjectConverters.IsNotNull}}" />
-                                <local:WorkshopItemStateCell Grid.Column="4" />
-                                <TextBlock Grid.Column="5" Classes="cell" Text="{Binding CollectionNames}" ToolTip.Tip="{Binding CollectionNames}" />
-                                <Button Grid.Column="6" VerticalAlignment="Center" Classes.favorite="{Binding IsFavorite}"
-                                        Command="{Binding $parent[ItemsControl].((vm:WorkshopItemListSectionViewModel)DataContext).ToggleFavoriteCommand}"
+                                <Panel Grid.Column="5" Width="130" IsVisible="{Binding $parent[local:WorkshopItemListView].ShowsUpdated}">
+                                    <TextBlock Classes="cell" Text="{Binding Updated, StringFormat='{}{0:g}'}"
+                                               Foreground="{DynamicResource Shell.TextMuted}"
+                                               IsVisible="{Binding Updated, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                                </Panel>
+                                <local:WorkshopItemStateCell Grid.Column="6" />
+                                <TextBlock Grid.Column="7" Classes="cell" Text="{Binding CollectionNames}" ToolTip.Tip="{Binding CollectionNames}" />
+                                <Button Grid.Column="8" VerticalAlignment="Center" Classes.favorite="{Binding IsFavorite}"
+                                        Command="{Binding $parent[local:WorkshopItemListView].((vm:WorkshopSectionViewModel)DataContext).ToggleFavoriteCommand}"
                                         CommandParameter="{Binding}"
                                         ToolTip.Tip="{x:Static lang:UiText.Workshop_FavoriteToggle}" AutomationProperties.Name="{x:Static lang:UiText.Workshop_FavoriteToggle}">
                                     <ic:FluentIcon Classes="favoriteStar" />
                                 </Button>
-                                <Button Grid.Column="7" HorizontalAlignment="Right" VerticalAlignment="Center"
-                                        Command="{Binding $parent[ItemsControl].((vm:WorkshopItemListSectionViewModel)DataContext).OpenInSteamCommand}"
+                                <Button Grid.Column="9" HorizontalAlignment="Right" VerticalAlignment="Center"
+                                        Command="{Binding $parent[local:WorkshopItemListView].((vm:WorkshopSectionViewModel)DataContext).OpenInSteamCommand}"
                                         CommandParameter="{Binding}"
                                         ToolTip.Tip="{x:Static lang:UiText.Workshop_OpenInSteam}" AutomationProperties.Name="{x:Static lang:UiText.Workshop_OpenInSteam}">
                                     <ic:FluentIcon Icon="Globe" IconVariant="Regular" FontSize="14" />
                                 </Button>
-                            </Grid>
+                            </local:WorkshopItemGrid>
                         </Border>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>

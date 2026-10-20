@@ -1,12 +1,9 @@
-using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
-using PzLauncher.Core.Steam.Workshop;
 
-namespace PzLauncher.Desktop.Services.Mods;
+namespace PzLauncher.Core.Steam.Workshop;
 
-/// <summary>Local Workshop favorites as share text: <see cref="CollectionsMarker"/> and one collection id per line, then <see cref="ItemsMarker"/> and the item ids.</summary>
+/// <summary>Starred Workshop collections and items as share text: <see cref="CollectionsMarker"/> and one collection id per line, then <see cref="ItemsMarker"/> and the item ids.</summary>
 public static class WorkshopFavoritesShareText
 {
     // Fixed ASCII, never localized: text shared from any UI language imports in any other.

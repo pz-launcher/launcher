@@ -39,15 +39,23 @@ public sealed partial class WorkshopActionViewModel(
     public IReadOnlyList<WorkshopActionItemRow> Items { get; } = items;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsWaitingForSteam))]
+    [NotifyPropertyChangedFor(nameof(IsWaitingForSteam), nameof(ShowsWaitingForSteam))]
     public partial bool IsRunning { get; private set; }
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsWaitingForSteam))]
+    [NotifyPropertyChangedFor(nameof(IsWaitingForSteam), nameof(ShowsWaitingForSteam))]
     public partial bool IsSteamStarted { get; private set; }
 
-    /// <summary>The helper runs, but Steam hasn't accepted it yet.</summary>
+    /// <summary>An earlier Steam action from this launcher still runs; this one starts after it.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowsWaitingForSteam))]
+    public partial bool IsWaitingForEarlierAction { get; private set; }
+
+    /// <summary>Started, and Steam hasn't accepted it yet.</summary>
     public bool IsWaitingForSteam => IsRunning && !IsSteamStarted;
+
+    /// <summary>Waiting for Steam, and not for an earlier action first.</summary>
+    public bool ShowsWaitingForSteam => IsWaitingForSteam && !IsWaitingForEarlierAction;
 
     [ObservableProperty] public partial bool IsFinished { get; private set; }
 
@@ -105,6 +113,7 @@ public sealed partial class WorkshopActionViewModel(
         }
 
         var done = Items.Count(item => item.State == WorkshopActionItemState.Done);
+        IsWaitingForEarlierAction = false;
         Progress = 1;
         SummaryText = string.Format(CultureInfo.CurrentCulture, UiText.Workshop_ActionSummary, done, Items.Count);
         IsRunning = false;
@@ -116,6 +125,7 @@ public sealed partial class WorkshopActionViewModel(
 
     private void OnEvent(WorkshopActionEvent report)
     {
+        IsWaitingForEarlierAction = report is WorkshopActionWaiting;
         switch (report)
         {
             case WorkshopActionStarted:

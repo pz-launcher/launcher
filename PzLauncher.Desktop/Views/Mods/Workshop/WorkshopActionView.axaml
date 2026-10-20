@@ -54,7 +54,8 @@
 
         <ProgressBar Minimum="0" Maximum="1" Value="{Binding Progress}" IsIndeterminate="{Binding IsWaitingForSteam}" />
 
-        <TextBlock Text="{x:Static lang:UiText.Workshop_WaitingForSteam}" Classes="hint" IsVisible="{Binding IsWaitingForSteam}" />
+        <TextBlock Text="{x:Static lang:UiText.Workshop_WaitingForEarlierAction}" Classes="hint" TextWrapping="Wrap" IsVisible="{Binding IsWaitingForEarlierAction}" />
+        <TextBlock Text="{x:Static lang:UiText.Workshop_WaitingForSteam}" Classes="hint" IsVisible="{Binding ShowsWaitingForSteam}" />
         <TextBlock Text="{Binding SummaryText}" FontWeight="SemiBold" IsVisible="{Binding IsFinished}" />
         <TextBlock Text="{Binding ErrorText}" Classes="error" TextWrapping="Wrap"
                    IsVisible="{Binding ErrorText, Converter={x:Static ObjectConverters.IsNotNull}}" />

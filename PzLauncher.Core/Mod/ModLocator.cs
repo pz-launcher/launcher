@@ -2,7 +2,7 @@ using System.Globalization;
 using Microsoft.Extensions.Logging;
 using PzLauncher.Core.Common;
 using PzLauncher.Core.Launch;
-using PzLauncher.Core.Steam;
+using PzLauncher.Core.Steam.Workshop;
 
 namespace PzLauncher.Core.Mod;
 
@@ -69,7 +69,7 @@ internal static partial class ModLocator
 
         foreach (var library in libraries)
         {
-            var items = Subfolders(WorkshopLibraries.ContentFolder(library), logger);
+            var items = Subfolders(WorkshopFiles.ContentFolder(library), logger);
             foreach (var item in items.OrderBy(item => !string.Equals(Path.GetFileName(item), preferredItemId, StringComparison.Ordinal)))
             {
                 yield return ModRoot.ForWorkshopItem(item);
@@ -172,10 +172,14 @@ internal static partial class ModLocator
         return x.Length.CompareTo(y.Length);
     }
 
-    internal readonly record struct ModRoot(string ModsFolder, InstalledModSource Source, string? WorkshopId)
+    internal readonly record struct ModRoot(string ModsFolder, InstalledModSource Source, ulong? WorkshopId)
     {
+        // Steam names each item folder by its id; another folder there has no item.
         public static ModRoot ForWorkshopItem(string itemFolder) =>
-            new(ModFolders.WorkshopModsFolder(itemFolder), InstalledModSource.SteamWorkshop, Path.GetFileName(itemFolder));
+            new(
+                ModFolders.WorkshopModsFolder(itemFolder),
+                InstalledModSource.SteamWorkshop,
+                WorkshopIds.TryParse(Path.GetFileName(itemFolder), out var id) ? id : null);
     }
 
     [LoggerMessage(Level = LogLevel.Debug, Message = "Mod lookup skipped {Path}: {Detail}")]

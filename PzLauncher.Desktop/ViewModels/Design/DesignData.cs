@@ -12,6 +12,7 @@ using PzLauncher.Core.Java;
 using PzLauncher.Core.Launch;
 using PzLauncher.Core.Mod;
 using PzLauncher.Core.Mod.Collections;
+using PzLauncher.Core.Mod.Workshop;
 using PzLauncher.Core.Mod.ZombieBuddy;
 using PzLauncher.Core.Net;
 using PzLauncher.Core.Platform;
@@ -102,6 +103,8 @@ public static class DesignData
 
     public static WorkshopItemRow WorkshopRow => WorkshopSubscriptions.VisibleRows.First(row => row.IsDownloading);
 
+    public static WorkshopCollectionRow WorkshopCollectionRow => WorkshopCollections.Remembered[0];
+
     public static WorkshopActionViewModel WorkshopAction { get; } = CreateWorkshopAction();
 
     public static WorkshopModPickViewModel WorkshopModPick { get; } = CreateWorkshopModPick();
@@ -169,7 +172,7 @@ public static class DesignData
         var vm = new HomeViewModel(
             Installs, GameLaunch, InstallOverrides, new NoDialogs(), ZombieBuddySample, ZombieBuddyChannels, new SampleZombieBuddyMods(),
             ModCollectionsSample, ModCollectionDefaults, Applier, OrderWriter,
-            new WorkshopLaunchCheck(workshop, ModCollectionsSample, TimeProvider.System, NullLogger<WorkshopLaunchCheck>.Instance),
+            new WorkshopLaunchCheck(workshop, TimeProvider.System, NullLogger<WorkshopLaunchCheck>.Instance),
             workshop, new SampleWorkshopActions(), RunState);
         vm.ActivateCommand.Execute(null);
         return vm;
@@ -177,16 +180,20 @@ public static class DesignData
 
     private static ModsViewModel CreateMods()
     {
+        var workshop = new SampleWorkshop();
+        var history = CreateWorkshopHistory();
+        var userCollections = CreateWorkshopUserCollections();
+        var favorites = CreateWorkshopFavorites();
         var vm = new ModsViewModel(
             Installs, ModCollectionsSample, InstallOverrides, ModCollectionDefaults, Applier, new NoDialogs(), new NoClipboard(), RunState, OrderWriter,
-            new SampleWorkshop(), new SampleWorkshopActions(), new NoUrlLauncher(), CreateWorkshopHistory(), CreateWorkshopUserCollections(),
-            CreateWorkshopFavorites(), Localization);
+            workshop, workshop, new SampleWorkshopActions(), new NoUrlLauncher(), history, userCollections, favorites,
+            new WorkshopTitles(history, userCollections, favorites), Localization);
         vm.ActivateCommand.Execute(null);
 
         // Completes synchronously: the sample answers at once. One outdated item shows as downloading.
-        _ = vm.WorkshopSubscriptions.LoadAsync();
+        _ = vm.WorkshopSubscriptions.ShowAsync();
         vm.WorkshopSubscriptions.VisibleRows.FirstOrDefault(row => row.NeedsUpdate)?.ShowDownload(36 * 1024 * 1024, 90 * 1024 * 1024);
-        vm.WorkshopCollections.OpenRememberedCommand.Execute(vm.WorkshopCollections.Remembered[0]);
+        _ = vm.WorkshopCollections.LoadCollectionAsync(vm.WorkshopCollections.Remembered[0].Id);
         _ = vm.WorkshopCollections.ShowAsync();
         _ = vm.WorkshopFavorites.ShowAsync();
         return vm;
@@ -210,8 +217,8 @@ public static class DesignData
 
     private static WorkshopModPickViewModel CreateWorkshopModPick()
     {
-        var cars = new InstalledMod("ExampleCars", "Example Vehicles", "1000103", InstalledModSource.SteamWorkshop, [], [], [], ["ExampleCarsLite"]);
-        var carsLite = new InstalledMod("ExampleCarsLite", "Example Vehicles Lite", "1000103", InstalledModSource.SteamWorkshop, [], [], [], []);
+        var cars = new InstalledMod("ExampleCars", "Example Vehicles", 1000103, InstalledModSource.SteamWorkshop, [], [], [], ["ExampleCarsLite"]);
+        var carsLite = new InstalledMod("ExampleCarsLite", "Example Vehicles Lite", 1000103, InstalledModSource.SteamWorkshop, [], [], [], []);
         return new WorkshopModPickViewModel(
             [
                 new WorkshopModPickItem(
@@ -386,10 +393,10 @@ public static class DesignData
     {
         private static readonly InstalledMod[] Installed =
         [
-            Mod("ExampleCore", "Example Core Library", "1000101", InstalledModSource.SteamWorkshop),
-            Mod("ExampleMaps", "Example Map Pack", "1000102", InstalledModSource.SteamWorkshop, require: ["ExampleCore"]),
-            Mod("ExampleCars", "Example Vehicles", "1000103", InstalledModSource.SteamWorkshop, incompatible: ["ExampleCarsLite"]),
-            Mod("ExampleCarsLite", "Example Vehicles Lite", "1000104", InstalledModSource.StagedWorkshop),
+            Mod("ExampleCore", "Example Core Library", 1000101, InstalledModSource.SteamWorkshop),
+            Mod("ExampleMaps", "Example Map Pack", 1000102, InstalledModSource.SteamWorkshop, require: ["ExampleCore"]),
+            Mod("ExampleCars", "Example Vehicles", 1000103, InstalledModSource.SteamWorkshop, incompatible: ["ExampleCarsLite"]),
+            Mod("ExampleCarsLite", "Example Vehicles Lite", null, InstalledModSource.StagedWorkshop),
             Mod("ExampleTweaks", "Example Tweaks", null, InstalledModSource.Local),
         ];
 
@@ -413,17 +420,30 @@ public static class DesignData
             Task.FromResult<Result<ApplyModCollectionResult>>(new ApplyModCollectionResult([], [], []));
 
         private static InstalledMod Mod(
-            string id, string name, string? workshopId, InstalledModSource source, string[]? require = null, string[]? incompatible = null) =>
+            string id, string name, ulong? workshopId, InstalledModSource source, string[]? require = null, string[]? incompatible = null) =>
             new(id, name, workshopId, source, require ?? [], [], [], incompatible ?? []);
     }
 
     // Fictional items in every state; the mods match SampleModCollections.
-    private sealed class SampleWorkshop : IWorkshopService
+    private sealed class SampleWorkshop : IWorkshopService, IWorkshopModsService
     {
         private static readonly DateTimeOffset Subscribed = new(2026, 3, 1, 12, 0, 0, TimeSpan.Zero);
 
-        public Task<Result<WorkshopSubscriptions>> GetSubscriptionsAsync(string installRoot, string extraGameArgs, CancellationToken ct = default) =>
-            Task.FromResult<Result<WorkshopSubscriptions>>(new WorkshopSubscriptions(
+        public Task<Result<WorkshopSubscriptions>> GetSubscriptionsAsync(string installRoot, CancellationToken ct = default) =>
+            Task.FromResult<Result<WorkshopSubscriptions>>(new WorkshopSubscriptions([.. Joined().Items.Select(item => item.Item)], Joined().Warnings));
+
+        public Task<Result<WorkshopModSubscriptions>> GetSubscriptionsAsync(string installRoot, string extraGameArgs, CancellationToken ct = default) =>
+            Task.FromResult<Result<WorkshopModSubscriptions>>(Joined());
+
+        public Task<Result<IReadOnlyList<WorkshopItem>>> FindOutdatedForLaunchAsync(
+            string installRoot, string extraGameArgs, string? collection, CancellationToken ct = default) =>
+            Task.FromResult<Result<IReadOnlyList<WorkshopItem>>>(Array.Empty<WorkshopItem>());
+
+        public Task<Result<IReadOnlyList<WorkshopIdKind>>> ClassifyAsync(IReadOnlyList<ulong> ids, CancellationToken ct = default) =>
+            Task.FromResult<Result<IReadOnlyList<WorkshopIdKind>>>(ids.Select(id => new WorkshopIdKind(id, false, null)).ToList());
+
+        private static WorkshopModSubscriptions Joined() =>
+            new(
                 [
                     Item(1000101, "Example Core Library", WorkshopItemState.UpToDate, ["ExampleCore"], ["Survival", "Survival, tweaks first"]),
                     Item(1000102, "Example Map Pack", WorkshopItemState.NeedsUpdate, ["ExampleMaps"], ["Survival", "Survival, tweaks first"]),
@@ -431,7 +451,7 @@ public static class DesignData
                     Item(1000105, "Example Weather", WorkshopItemState.DisabledLocally, ["ExampleWeather"], []),
                     Item(1000106, null, WorkshopItemState.NotInstalled, [], []),
                 ],
-                [new Error(ErrorCode.WorkshopManifestUnreadable, "sample", ErrorKind.External)]));
+                [new Error(ErrorCode.WorkshopManifestUnreadable, "sample", ErrorKind.External)]);
 
         public Task<Result<IReadOnlyList<WorkshopItemDetails>>> CheckUpdatesAsync(IReadOnlyList<ulong> ids, CancellationToken ct = default) =>
             Task.FromResult<Result<IReadOnlyList<WorkshopItemDetails>>>(Array.Empty<WorkshopItemDetails>());
@@ -452,21 +472,16 @@ public static class DesignData
         public Task<Result<SteamAccount>> GetCurrentAccountAsync(CancellationToken ct = default) =>
             Task.FromResult<Result<SteamAccount>>(new SteamAccount(12345678, "Survivor"));
 
-        private static WorkshopItem Item(ulong id, string? title, WorkshopItemState state, string[] modIds, string[] collections)
+        private static WorkshopModItem Item(ulong id, string? title, WorkshopItemState state, string[] modIds, string[] collections)
         {
             var updated = new DateTimeOffset(2026, 9, 1, 18, 30, 0, TimeSpan.Zero).AddDays(id % 30);
             var folder = Path.Combine(SampleSecondLibrary, "steamapps", "workshop", "content", "108600", id.ToString(CultureInfo.InvariantCulture));
             var installed = state == WorkshopItemState.NotInstalled ? null : new WorkshopInstall(folder, "1000" + id, updated, (long)(id % 97) * 1024 * 1024);
             var latest = title is null ? null : new WorkshopItemDetails(id, title, state == WorkshopItemState.NeedsUpdate ? "2000" + id : "1000" + id, updated, 0);
-            return new WorkshopItem(
-                id,
-                Subscribed,
-                state == WorkshopItemState.DisabledLocally,
-                installed,
-                latest,
-                [.. modIds.Select(modId => new InstalledMod(modId, modId, id.ToString(CultureInfo.InvariantCulture), InstalledModSource.SteamWorkshop, [], [], [], []))],
-                collections,
-                state);
+            return new WorkshopModItem(
+                new WorkshopItem(id, Subscribed, state == WorkshopItemState.DisabledLocally, installed, latest, state),
+                [.. modIds.Select(modId => new InstalledMod(modId, modId, id, InstalledModSource.SteamWorkshop, [], [], [], []))],
+                collections);
         }
     }
 
@@ -486,7 +501,8 @@ public static class DesignData
             return new TaskCompletionSource<Result<WorkshopActionOutcome>>().Task;
         }
 
-        public Task<Result<WorkshopUserCollections>> ListCollectionsAsync(string installRoot, CancellationToken ct = default) =>
+        public Task<Result<WorkshopUserCollections>> ListCollectionsAsync(
+            string installRoot, IProgress<WorkshopActionEvent>? progress = null, CancellationToken ct = default) =>
             Task.FromResult<Result<WorkshopUserCollections>>(new WorkshopUserCollections(
                 12345678,
                 [new WorkshopCollectionSummary(1000201, "Example Survival Pack", 42), new WorkshopCollectionSummary(1000202, null, 7)],

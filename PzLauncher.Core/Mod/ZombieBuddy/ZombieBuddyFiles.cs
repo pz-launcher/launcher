@@ -1,5 +1,5 @@
 using PzLauncher.Core.Platform;
-using PzLauncher.Core.Steam;
+using PzLauncher.Core.Steam.Workshop;
 
 namespace PzLauncher.Core.Mod.ZombieBuddy;
 
@@ -59,7 +59,7 @@ internal static class ZombieBuddyFiles
         ZombieBuddyChannel.Beta => BetaItemId,
     };
 
-    public static string ItemFolder(string library, ZombieBuddyChannel channel) => WorkshopLibraries.ItemFolder(library, ItemId(channel));
+    public static string ItemFolder(string library, ZombieBuddyChannel channel) => WorkshopFiles.ItemFolder(library, ItemId(channel));
 
     public static string LibsFolder(string item) => Path.Combine(ModFolders.WorkshopModsFolder(item), ModId, "libs");
 

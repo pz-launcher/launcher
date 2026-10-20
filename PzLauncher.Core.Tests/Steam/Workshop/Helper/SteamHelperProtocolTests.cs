@@ -14,7 +14,10 @@ public sealed class SteamHelperProtocolTests
     public void Request_RoundTrips_WithStringAction()
     {
         var original = new SteamHelperRequest(
-            SteamHelperAction.Unsubscribe, @"E:\SteamLibrary\steamapps\common\ProjectZomboid\steam_api64.dll", [3811390574, 18446744073709551615]);
+            SteamHelperAction.Unsubscribe,
+            @"E:\SteamLibrary\steamapps\common\ProjectZomboid\steam_api64.dll",
+            [3811390574, 18446744073709551615],
+            new SteamHelperTimeouts(TimeSpan.FromSeconds(45), TimeSpan.FromMinutes(5)));
 
         var json = JsonSerializer.Serialize(original, SteamHelperJsonContext.Default.SteamHelperRequest);
         var copy = JsonSerializer.Deserialize(json, SteamHelperJsonContext.Default.SteamHelperRequest);
@@ -24,15 +27,19 @@ public sealed class SteamHelperProtocolTests
         Assert.NotNull(copy);
         Assert.Equal((original.Action, original.SteamApiPath), (copy.Action, copy.SteamApiPath));
         Assert.Equal(original.Ids, copy.Ids);
+        Assert.Equal(original.Timeouts, copy.Timeouts);
     }
 
     [Fact]
     public void Request_ListCollections_HasNoIds()
     {
         var json = JsonSerializer.Serialize(
-            new SteamHelperRequest(SteamHelperAction.ListCollections, "/pz/libsteam_api.so", []), SteamHelperJsonContext.Default.SteamHelperRequest);
+            new SteamHelperRequest(SteamHelperAction.ListCollections, "/pz/libsteam_api.so", [], SteamHelperTimeouts.Default),
+            SteamHelperJsonContext.Default.SteamHelperRequest);
 
-        Assert.Equal("""{"action":"ListCollections","steamApiPath":"/pz/libsteam_api.so","ids":[]}""", json);
+        Assert.Equal(
+            """{"action":"ListCollections","steamApiPath":"/pz/libsteam_api.so","ids":[],"timeouts":{"callResult":"00:00:30","stall":"00:02:00"}}""",
+            json);
     }
 
     [Theory]
@@ -50,7 +57,8 @@ public sealed class SteamHelperProtocolTests
             (new SteamHelperStarted(), "started"),
             (new SteamHelperProgress(1, 38999824, 253378238), "progress"),
             (new SteamHelperItemDone(2), "itemDone"),
-            (new SteamHelperItemFailed(3, WorkshopItemFailure.UnsubscribeFailed, 2), "itemFailed"),
+            (new SteamHelperItemFailed(3, SteamHelperItemFailure.UnsubscribeFailed, 2), "itemFailed"),
+            (new SteamHelperPageRead(SteamUserUgcList.Published, 2), "pageRead"),
             (new SteamHelperFailed(SteamHelperFailure.SteamNotRunning, "no Steam"), "failed"),
             (new SteamHelperFailed(SteamHelperFailure.QueryFailed, "Favorited page 1: EResult 2"), "failed"),
             (new SteamHelperFinished(), "finished"),
@@ -68,23 +76,23 @@ public sealed class SteamHelperProtocolTests
     [Fact]
     public void Collections_RoundTrips()
     {
-        var original = new SteamHelperCollections(new WorkshopUserCollections(
-            12345678, [new WorkshopCollectionSummary(3623026433, "合集 Pack", 201), new WorkshopCollectionSummary(2690796635, null, 71)], []));
+        var original = new SteamHelperCollections(
+            12345678, [new SteamHelperCollection(3623026433, "合集 Pack", 201), new SteamHelperCollection(2690796635, null, 71)], []);
 
         var json = JsonSerializer.Serialize<SteamHelperEvent>(original, SteamHelperJsonContext.Default.SteamHelperEvent);
         var copy = Assert.IsType<SteamHelperCollections>(JsonSerializer.Deserialize(json, SteamHelperJsonContext.Default.SteamHelperEvent));
 
-        Assert.StartsWith("""{"event":"collections","collections":{"accountId":12345678,""", json, StringComparison.Ordinal);
-        Assert.Equal(original.Collections.AccountId, copy.Collections.AccountId);
-        Assert.Equal(original.Collections.Favorited, copy.Collections.Favorited);
-        Assert.Empty(copy.Collections.Published);
+        Assert.StartsWith("""{"event":"collections","accountId":12345678,""", json, StringComparison.Ordinal);
+        Assert.Equal(original.AccountId, copy.AccountId);
+        Assert.Equal(original.Favorited, copy.Favorited);
+        Assert.Empty(copy.Published);
     }
 
     [Fact]
     public void ItemFailed_WritesTheReasonAsText()
     {
         var json = JsonSerializer.Serialize<SteamHelperEvent>(
-            new SteamHelperItemFailed(3, WorkshopItemFailure.DownloadFailed, 15), SteamHelperJsonContext.Default.SteamHelperEvent);
+            new SteamHelperItemFailed(3, SteamHelperItemFailure.DownloadFailed, 15), SteamHelperJsonContext.Default.SteamHelperEvent);
 
         Assert.Equal("""{"event":"itemFailed","id":3,"reason":"DownloadFailed","steamResult":15}""", json);
     }
@@ -153,7 +161,7 @@ public sealed class SteamHelperProtocolTests
     public void ReadAllPages_ReadsUntilAShortPage()
     {
         List<uint> asked = [];
-        List<WorkshopCollectionSummary> collections = [];
+        List<SteamHelperCollection> collections = [];
 
         var failed = SteamHelperSession.ReadAllPages(
             SteamUserUgcList.Favorited,
@@ -167,7 +175,7 @@ public sealed class SteamHelperProtocolTests
         Assert.Null(failed);
         Assert.Equal([1u, 2u], asked);
         Assert.Equal(Enumerable.Range(1, 70).Select(id => (ulong)id), collections.Select(collection => collection.Id));
-        Assert.Equal(new WorkshopCollectionSummary(51, "Collection 51", 51), collections[50]);
+        Assert.Equal(new SteamHelperCollection(51, "Collection 51", 51), collections[50]);
     }
 
     [Fact]
@@ -209,7 +217,7 @@ public sealed class SteamHelperProtocolTests
     [Fact]
     public void ReadAllPages_SkipsFailedItemsNonCollectionsAndRepeats_AndKeepsAnUntitledOne()
     {
-        List<WorkshopCollectionSummary> collections = [];
+        List<SteamHelperCollection> collections = [];
         UgcDetails[] items =
         [
             new(1, 1, 2, "", 3),
@@ -220,7 +228,7 @@ public sealed class SteamHelperProtocolTests
 
         Assert.Null(SteamHelperSession.ReadAllPages(SteamUserUgcList.Favorited, _ => Page(4, items), collections));
 
-        Assert.Equal([new WorkshopCollectionSummary(1, null, 3)], collections);
+        Assert.Equal([new SteamHelperCollection(1, null, 3)], collections);
     }
 
     [Fact]
@@ -248,8 +256,10 @@ public sealed class SteamHelperProtocolTests
     [Theory]
     [InlineData("")]
     [InlineData("not json")]
-    [InlineData("""{"action":"Update","steamApiPath":"relative/steam_api64.dll","ids":[1]}""")]
-    [InlineData("""{"action":"Update","steamApiPath":"/pz/libsteam_api.so"}""")]
+    [InlineData("""{"action":"Update","steamApiPath":"relative/steam_api64.dll","ids":[1],"timeouts":{"callResult":"00:00:30","stall":"00:02:00"}}""")]
+    [InlineData("""{"action":"Update","steamApiPath":"/pz/libsteam_api.so","timeouts":{"callResult":"00:00:30","stall":"00:02:00"}}""")]
+    [InlineData("""{"action":"Update","steamApiPath":"/pz/libsteam_api.so","ids":[1]}""")]
+    [InlineData("""{"action":"Update","steamApiPath":"/pz/libsteam_api.so","ids":[1],"timeouts":{"callResult":"00:00:00","stall":"00:02:00"}}""")]
     public void Host_BadRequest_WritesFailedAndReturnsOne(string request)
     {
         var (exitCode, events) = RunHost(request);
@@ -266,7 +276,7 @@ public sealed class SteamHelperProtocolTests
         var action = Enum.Parse<SteamHelperAction>(actionName);
         using var temp = new TempDirectory();
         var request = JsonSerializer.Serialize(
-            new SteamHelperRequest(action, Path.Combine(temp.Path, "steam_api64.dll"), action == SteamHelperAction.Update ? [1] : []),
+            new SteamHelperRequest(action, Path.Combine(temp.Path, "steam_api64.dll"), action == SteamHelperAction.Update ? [1] : [], SteamHelperTimeouts.Default),
             SteamHelperJsonContext.Default.SteamHelperRequest);
 
         var (exitCode, events) = RunHost(request);

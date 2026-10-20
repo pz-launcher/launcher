@@ -1,9 +1,6 @@
 using Microsoft.Extensions.Logging.Abstractions;
 using PzLauncher.Core.Common;
-using PzLauncher.Core.Mod;
-using PzLauncher.Core.Mod.Collections;
 using PzLauncher.Core.Net;
-using PzLauncher.Core.Platform;
 using PzLauncher.Core.Steam;
 using PzLauncher.Core.Steam.Workshop;
 using PzLauncher.Core.Steam.Workshop.Sources;
@@ -19,33 +16,14 @@ public sealed class WorkshopServiceTests : IDisposable
     private readonly FakeWorkshopApi _api = new();
     private readonly LauncherHttpClient _http;
     private readonly ManualTimeProvider _time = new();
-    private readonly FakeModCollections _collections = new();
-    private readonly FakePlatformEnvironment _platform;
+    private readonly WorkshopTestLayout _layout;
     private readonly WorkshopService _service;
-    private readonly ModBuilder _mods;
-    private readonly string _steamRoot;
-    private readonly string _library;
-    private readonly string _root;
 
     public WorkshopServiceTests()
     {
-        var steam = new SteamLayoutBuilder(_temp.Path);
-        _library = steam.CreateLibrary("Library");
-        _steamRoot = steam.CreateSteamRoot(_library);
-        _platform = FakePlatformEnvironment.WithRegistrySteam(_steamRoot);
-        _platform.HomeDirectory = _temp.CreateDirectory("home");
-        SteamLayoutBuilder.WriteRaw(SteamClientFiles.LoginUsersPath(_steamRoot), Fixtures.Read("Steam", "loginusers.vdf"));
+        _layout = new WorkshopTestLayout(_temp);
         _http = new LauncherHttpClient(_api.Handler, V("0.2.0"));
-        _service = new WorkshopService(
-            new SteamLocator(_platform),
-            ZombieBuddyServiceTests.CreateWorkshopLibraries(_platform),
-            new WorkshopWebApi(_http, NullLogger<WorkshopWebApi>.Instance),
-            _collections,
-            _time,
-            NullLogger<WorkshopService>.Instance);
-        _root = new GameInstallBuilder(Path.Combine(_library, "steamapps", "common"), PlatformKind.Windows)
-            .CreateFlat("ProjectZomboid", GameInstallBuilder.WindowsGameJson, withJre: false);
-        _mods = new ModBuilder(Path.Combine(_platform.HomeDirectory, "Zomboid"), _library);
+        _service = Create(_layout, _http, _time);
     }
 
     public void Dispose()
@@ -56,48 +34,27 @@ public sealed class WorkshopServiceTests : IDisposable
 
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
-    private string SubscriptionsPath
-    {
-        get
-        {
-            var account = ResultAssert.Ok(SteamLoginUsers.ParseCurrent(Fixtures.Read("Steam", "loginusers.vdf"), "p"));
-            return WorkshopFiles.SubscriptionsPath(_steamRoot, account.AccountId);
-        }
-    }
+    private string Root => _layout.Root;
 
-    private void Subscribe(params (ulong Id, bool Disabled)[] items)
-    {
-        var entries = string.Concat(items.Select((item, i) =>
-            $$"""
-                "{{i}}" { "publishedfileid" "{{item.Id}}" "time_subscribed" "{{1000 + i}}" "disabled_locally" "{{(item.Disabled ? 1 : 0)}}" }
+    internal static WorkshopService Create(WorkshopTestLayout layout, LauncherHttpClient http, TimeProvider time) =>
+        new(
+            new SteamLocator(layout.Platform),
+            ZombieBuddyServiceTests.CreateWorkshopLibraries(layout.Platform),
+            new WorkshopWebApi(http, NullLogger<WorkshopWebApi>.Instance),
+            time,
+            NullLogger<WorkshopService>.Instance);
 
-            """));
-        SteamLayoutBuilder.WriteRaw(SubscriptionsPath, $"\"subscribedfiles\"\n{{\n\t\"appid\"\t\t\"108600\"\n{entries}}}\n");
-    }
+    private void Subscribe(params (ulong Id, bool Disabled)[] items) => _layout.Subscribe(items);
 
-    private void Install(params (ulong Id, string Manifest, string Latest)[] items)
-    {
-        var installed = string.Concat(items.Select(item => $$"""    "{{item.Id}}" { "size" "42" "timeupdated" "500" "manifest" "{{item.Manifest}}" }""" + "\n"));
-        var details = string.Concat(items.Select(item => $$"""    "{{item.Id}}" { "manifest" "{{item.Manifest}}" "latest_manifest" "{{item.Latest}}" }""" + "\n"));
-        SteamLayoutBuilder.WriteRaw(
-            WorkshopFiles.ManifestPath(_library),
-            $"\"AppWorkshop\"\n{{\n\"WorkshopItemsInstalled\"\n{{\n{installed}}}\n\"WorkshopItemDetails\"\n{{\n{details}}}\n}}\n");
-        foreach (var item in items)
-        {
-            Directory.CreateDirectory(WorkshopLibraries.ItemFolder(_library, item.Id.ToString(System.Globalization.CultureInfo.InvariantCulture)));
-        }
-    }
+    private void Install(params (ulong Id, string Manifest, string Latest)[] items) => _layout.Install(items);
 
-    private async Task<WorkshopSubscriptions> GetAsync() => ResultAssert.Ok(await _service.GetSubscriptionsAsync(_root, "", Ct));
+    private async Task<WorkshopSubscriptions> GetAsync() => ResultAssert.Ok(await _service.GetSubscriptionsAsync(Root, Ct));
 
     [Fact]
-    public async Task GetSubscriptionsAsync_JoinsSubscriptionsInstallsModsAndCollections()
+    public async Task GetSubscriptionsAsync_JoinsSubscriptionsAndInstalls()
     {
         Subscribe((100, false), (200, false), (300, true));
         Install((100, "11", "11"), (300, "33", "33"));
-        _mods.Steam("100", "ModA");
-        _mods.Steam("100", "ModB", ModBuilder.ModInfo("ModB", name: "Mod B", incompatible: "ModA"));
-        _collections.Collections = [new ModCollection("pack", ["ModB", "Other"], false, false), new ModCollection("other", ["Other"], false, false)];
 
         var subscriptions = await GetAsync();
 
@@ -105,31 +62,11 @@ public sealed class WorkshopServiceTests : IDisposable
         Assert.Equal([100UL, 200UL, 300UL], subscriptions.Items.Select(item => item.Id));
         var first = subscriptions.Items[0];
         Assert.Equal(DateTimeOffset.FromUnixTimeSeconds(1000), first.Subscribed);
-        Assert.Equal(
-            new WorkshopInstall(WorkshopLibraries.ItemFolder(_library, "100"), "11", DateTimeOffset.FromUnixTimeSeconds(500), 42),
-            first.Installed);
+        Assert.Equal(new WorkshopInstall(_layout.ItemFolder(100), "11", DateTimeOffset.FromUnixTimeSeconds(500), 42), first.Installed);
         Assert.Null(first.Latest);
-        Assert.Equal(["ModA", "ModB"], first.Mods.Select(mod => mod.Id));
-        Assert.Equal(("Mod B", "100", InstalledModSource.SteamWorkshop), (first.Mods[1].Name, first.Mods[1].WorkshopId, first.Mods[1].Source));
-        Assert.Equal(["ModA"], first.Mods[1].Incompatible);
-        Assert.Equal(["pack"], first.Collections);
         Assert.Equal(
             [WorkshopItemState.UpToDate, WorkshopItemState.NotInstalled, WorkshopItemState.DisabledLocally],
             subscriptions.Items.Select(item => item.State));
-        Assert.Empty(subscriptions.Items[1].Mods);
-    }
-
-    [Fact]
-    public async Task GetSubscriptionsAsync_ModIdSharedWithAnotherItem_IsListedForBoth()
-    {
-        Subscribe((100, false), (200, false));
-        Install((100, "1", "1"), (200, "2", "2"));
-        _mods.Steam("100", "Shared");
-        _mods.Steam("200", "Shared");
-
-        var subscriptions = await GetAsync();
-
-        Assert.All(subscriptions.Items, item => Assert.Equal(["Shared"], item.Mods.Select(mod => mod.Id)));
     }
 
     [Fact]
@@ -137,7 +74,7 @@ public sealed class WorkshopServiceTests : IDisposable
     {
         Subscribe((100, false));
         Install((100, "1", "1"));
-        Directory.Delete(WorkshopLibraries.ItemFolder(_library, "100"));
+        Directory.Delete(_layout.ItemFolder(100));
 
         var item = Assert.Single((await GetAsync()).Items);
 
@@ -174,22 +111,10 @@ public sealed class WorkshopServiceTests : IDisposable
         Assert.Empty((await GetAsync()).Items);
 
     [Fact]
-    public async Task GetSubscriptionsAsync_CollectionsFail_WarnsAndListsItems()
-    {
-        Subscribe((100, false));
-        _collections.Error = ModCollectionErrors.CacheFolderUnresolved("p");
-
-        var subscriptions = await GetAsync();
-
-        Assert.Single(subscriptions.Items);
-        Assert.Equal(ErrorCode.ModCollectionCacheFolderUnresolved, Assert.Single(subscriptions.Warnings).Code);
-    }
-
-    [Fact]
     public async Task GetSubscriptionsAsync_UnreadableInstallList_Warns()
     {
         Subscribe((100, false));
-        SteamLayoutBuilder.WriteRaw(WorkshopFiles.ManifestPath(_library), "\"AppWorkshop\"\n{\n");
+        SteamLayoutBuilder.WriteRaw(WorkshopFiles.ManifestPath(_layout.Library), "\"AppWorkshop\"\n{\n");
 
         var subscriptions = await GetAsync();
 
@@ -200,30 +125,30 @@ public sealed class WorkshopServiceTests : IDisposable
     [Fact]
     public async Task GetSubscriptionsAsync_MalformedSubscriptionFile_Fails()
     {
-        SteamLayoutBuilder.WriteRaw(SubscriptionsPath, "\"subscribedfiles\"\n{\n");
+        SteamLayoutBuilder.WriteRaw(_layout.SubscriptionsPath, "\"subscribedfiles\"\n{\n");
 
-        ResultAssert.Failed(await _service.GetSubscriptionsAsync(_root, "", Ct), ErrorCode.WorkshopSubscriptionsUnreadable);
+        ResultAssert.Failed(await _service.GetSubscriptionsAsync(Root, Ct), ErrorCode.WorkshopSubscriptionsUnreadable);
     }
 
     [Fact]
     public async Task GetSubscriptionsAsync_NoSteam_IsSteamNotInstalled()
     {
-        _platform.SteamRegistryPath = null;
+        _layout.Platform.SteamRegistryPath = null;
 
-        ResultAssert.Failed(await _service.GetSubscriptionsAsync(_root, "", Ct), ErrorCode.SteamNotInstalled);
+        ResultAssert.Failed(await _service.GetSubscriptionsAsync(Root, Ct), ErrorCode.SteamNotInstalled);
     }
 
     [Fact]
     public async Task GetSubscriptionsAsync_NoLoginUsers_IsNoCurrentAccount()
     {
-        File.Delete(SteamClientFiles.LoginUsersPath(_steamRoot));
+        File.Delete(SteamClientFiles.LoginUsersPath(_layout.SteamRoot));
 
-        ResultAssert.Failed(await _service.GetSubscriptionsAsync(_root, "", Ct), ErrorCode.SteamNoCurrentAccount);
+        ResultAssert.Failed(await _service.GetSubscriptionsAsync(Root, Ct), ErrorCode.SteamNoCurrentAccount);
     }
 
     [Fact]
     public async Task GetSubscriptionsAsync_RelativeInstallRoot_IsInvalidPath() =>
-        ResultAssert.Failed(await _service.GetSubscriptionsAsync("relative", "", Ct), ErrorCode.InstallInvalidPath);
+        ResultAssert.Failed(await _service.GetSubscriptionsAsync("relative", Ct), ErrorCode.InstallInvalidPath);
 
     [Fact]
     public async Task GetCurrentAccountAsync_ReadsTheSignedInAccount()
@@ -236,7 +161,7 @@ public sealed class WorkshopServiceTests : IDisposable
     [Fact]
     public async Task GetCurrentAccountAsync_NoSteam_IsSteamNotInstalled()
     {
-        _platform.SteamRegistryPath = null;
+        _layout.Platform.SteamRegistryPath = null;
 
         ResultAssert.Failed(await _service.GetCurrentAccountAsync(Ct), ErrorCode.SteamNotInstalled);
     }
@@ -244,7 +169,7 @@ public sealed class WorkshopServiceTests : IDisposable
     [Fact]
     public async Task GetCurrentAccountAsync_NoLoginUsers_IsNoCurrentAccount()
     {
-        File.Delete(SteamClientFiles.LoginUsersPath(_steamRoot));
+        File.Delete(SteamClientFiles.LoginUsersPath(_layout.SteamRoot));
 
         ResultAssert.Failed(await _service.GetCurrentAccountAsync(Ct), ErrorCode.SteamNoCurrentAccount);
     }
@@ -347,22 +272,34 @@ public sealed class WorkshopServiceTests : IDisposable
         ResultAssert.Failed(await _service.GetCollectionAsync(10, Ct), ErrorCode.WorkshopNetworkFailed);
     }
 
-    private sealed class FakeModCollections : IModCollectionService
+    [Fact]
+    public async Task ClassifyAsync_AsksOnceForAllIds_AndTitlesTheCollections()
     {
-        public IReadOnlyList<ModCollection> Collections { get; set; } = [];
+        _api.AddCollection(10, "Pack", (1, 0));
+        _api.AddItem(1, "One");
 
-        public Error? Error { get; set; }
+        var kinds = ResultAssert.Ok(await _service.ClassifyAsync([10, 1, 99, 10], Ct));
 
-        public Task<Result<ModCollectionState>> GetAsync(string installRoot, string extraGameArgs, CancellationToken ct = default) =>
-            Task.FromResult(Error is { } error
-                ? Result<ModCollectionState>.Fail(error)
-                : Result<ModCollectionState>.Ok(new ModCollectionState("cache", Collections, [], [], true)));
+        Assert.Equal([new WorkshopIdKind(10, true, "Pack"), new WorkshopIdKind(1, false, null), new WorkshopIdKind(99, false, null)], kinds);
+        Assert.Equal<IReadOnlyList<ulong>>([[10, 1, 99]], _api.CollectionRequests);
+        Assert.Equal<IReadOnlyList<ulong>>([[10]], _api.DetailRequests);
+    }
 
-        public Task<Result> SaveAsync(SaveModCollectionRequest request, CancellationToken ct = default) => throw new NotSupportedException();
+    [Fact]
+    public async Task ClassifyAsync_NoCollection_FetchesNoDetails()
+    {
+        _api.AddItem(1, "One");
 
-        public Task<Result> DeleteAsync(string installRoot, string extraGameArgs, string name, CancellationToken ct = default) => throw new NotSupportedException();
+        ResultAssert.Ok(await _service.ClassifyAsync([1], Ct));
 
-        public Task<Result<ApplyModCollectionResult>> ApplyAsync(string installRoot, string extraGameArgs, string name, CancellationToken ct = default) =>
-            throw new NotSupportedException();
+        Assert.Empty(_api.DetailRequests);
+    }
+
+    [Fact]
+    public async Task ClassifyAsync_NetworkFails_IsNetworkFailed()
+    {
+        _api.Handler.Throw(WorkshopFiles.CollectionDetailsUrl);
+
+        ResultAssert.Failed(await _service.ClassifyAsync([1], Ct), ErrorCode.WorkshopNetworkFailed);
     }
 }

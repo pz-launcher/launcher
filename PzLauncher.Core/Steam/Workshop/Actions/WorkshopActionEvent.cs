@@ -3,10 +3,14 @@ using System.Text.Json.Serialization;
 namespace PzLauncher.Core.Steam.Workshop.Actions;
 
 [JsonPolymorphic(TypeDiscriminatorPropertyName = "event")]
+[JsonDerivedType(typeof(WorkshopActionWaiting), "waiting")]
 [JsonDerivedType(typeof(WorkshopActionStarted), "started")]
 [JsonDerivedType(typeof(WorkshopItemProgress), "progress")]
 [JsonDerivedType(typeof(WorkshopItemFinished), "itemFinished")]
 public abstract record WorkshopActionEvent;
+
+/// <summary>An earlier Steam action from this launcher still runs; this one starts after it.</summary>
+public sealed record WorkshopActionWaiting : WorkshopActionEvent;
 
 /// <summary>Steam accepted the helper; items follow.</summary>
 public sealed record WorkshopActionStarted : WorkshopActionEvent;

@@ -51,9 +51,12 @@ public class WorkshopSubscriptionsViewModelTests : UiTextCultureTest
         _detection.ScanResults.Enqueue(FakeInstallDetectionService.Found(installs.Length == 0 ? [SteamGame] : installs));
         await Installs.ActivateCommand.ExecuteAsync(null);
         var orderWriter = new ModCollectionOrderWriter(_collections, _runState, new FakePlatformEnvironment(), new ManualTimeProvider());
+        var history = TestWorkshop.History();
+        var userCollections = TestWorkshop.UserCollections();
         var page = new ModsViewModel(
             Installs, _collections, _overrides, new FakeModCollectionDefaultsService(), new ModCollectionApplier(_collections, _dialogs), _dialogs,
-            _clipboard, _runState, orderWriter, _service, _runner, _urls, TestWorkshop.History(), TestWorkshop.UserCollections(), _favorites, Localization)
+            _clipboard, _runState, orderWriter, _service, _service, _runner, _urls, history, userCollections, _favorites,
+            new WorkshopTitles(history, userCollections, _favorites), Localization)
         {
             Section = section,
         };
@@ -315,7 +318,7 @@ public class WorkshopSubscriptionsViewModelTests : UiTextCultureTest
         _runner.Succeeded = (_, id) => _service.Install(id, "300");
         var reads = _service.GetRequests.Count;
 
-        await vm.UpdateAllCommand.ExecuteAsync(null);
+        await vm.UpdateOutdatedCommand.ExecuteAsync(null);
 
         var run = Assert.Single(_runner.Runs);
         Assert.Equal(SteamGame.RootPath, run.Root);
@@ -334,7 +337,7 @@ public class WorkshopSubscriptionsViewModelTests : UiTextCultureTest
     {
         var vm = await CreateAsync();
 
-        await vm.UpdateAllCommand.ExecuteAsync(null);
+        await vm.UpdateOutdatedCommand.ExecuteAsync(null);
 
         var row = Assert.Single(Assert.Single(_dialogs.WorkshopActions).Items);
         Assert.True(row.IsStillOutdated);
@@ -361,7 +364,7 @@ public class WorkshopSubscriptionsViewModelTests : UiTextCultureTest
         var vm = await CreateAsync();
         _runner.Gate = new TaskCompletionSource();
 
-        var running = vm.UpdateAllCommand.ExecuteAsync(null);
+        var running = vm.UpdateOutdatedCommand.ExecuteAsync(null);
 
         Assert.True(vm.IsActionRunning);
         Assert.True(Row(vm, 1003).IsDownloading);
@@ -394,7 +397,7 @@ public class WorkshopSubscriptionsViewModelTests : UiTextCultureTest
         var error = TestErrors.Create(ErrorCode.WorkshopSteamNotRunning);
         _runner.RunError = _ => error;
 
-        await vm.UpdateAllCommand.ExecuteAsync(null);
+        await vm.UpdateOutdatedCommand.ExecuteAsync(null);
 
         var dialog = Assert.Single(_dialogs.WorkshopActions);
         Assert.Equal(ErrorMessages.ToUserText(error), dialog.ErrorText);
@@ -414,7 +417,7 @@ public class WorkshopSubscriptionsViewModelTests : UiTextCultureTest
             return started;
         };
 
-        await vm.UpdateAllCommand.ExecuteAsync(null);
+        await vm.UpdateOutdatedCommand.ExecuteAsync(null);
 
         var dialog = Assert.Single(_dialogs.WorkshopActions);
         Assert.False(dialog.IsFinished);
@@ -510,7 +513,7 @@ public class WorkshopSubscriptionsViewModelTests : UiTextCultureTest
         Assert.False(vm.CanRunActions);
         Assert.False(vm.SubscribeCommand.CanExecute(null));
         Assert.False(vm.UnsubscribeCommand.CanExecute(null));
-        Assert.False(vm.UpdateAllCommand.CanExecute(null));
+        Assert.False(vm.UpdateOutdatedCommand.CanExecute(null));
         Assert.False(vm.UpdateSelectedCommand.CanExecute(null));
         Assert.True(vm.CheckUpdatesCommand.CanExecute(null));
     }
@@ -577,7 +580,7 @@ public class WorkshopSubscriptionsViewModelTests : UiTextCultureTest
 
         Assert.True(Row(vm, 1001).IsFavorite);
         Assert.False(Row(vm, 1002).IsFavorite);
-        Assert.Equal([new SavedWorkshopEntry(1001, "Core Library")], _favorites.Items);
+        Assert.Equal([new WorkshopEntry(1001, "Core Library")], _favorites.Items);
     }
 
     [Fact]

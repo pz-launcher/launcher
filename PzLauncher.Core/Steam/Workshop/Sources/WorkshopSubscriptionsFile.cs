@@ -15,7 +15,7 @@ internal static partial class WorkshopSubscriptionsFile
     // A missing file is an account that never subscribed to anything.
     public static async Task<Result<IReadOnlyList<WorkshopSubscription>>> ReadAsync(string path, ILogger logger, CancellationToken ct)
     {
-        var text = await SteamKeyValues.ReadTextIfExistsAsync(path, reason => WorkshopErrors.SubscriptionsUnreadable(path, reason), ct)
+        var text = await ReadFile.TextIfExistsAsync(path, reason => WorkshopErrors.SubscriptionsUnreadable(path, reason), ct)
             .ConfigureAwait(false);
         if (text is not { } read)
         {

@@ -6,7 +6,7 @@ namespace PzLauncher.Core.Steam.Workshop.Helper;
 
 /// <summary>Steamworks flat API of a <c>steam_api</c> library loaded from a path (the game install's own copy).</summary>
 /// <remarks>Not thread-safe: one thread inits, pumps callbacks and shuts down.</remarks>
-internal sealed unsafe class SteamApi : IDisposable
+internal sealed unsafe class SteamApi : ISteamUgcClient, IDisposable
 {
     private const int ErrMsgSize = 1024;
 
@@ -64,7 +64,6 @@ internal sealed unsafe class SteamApi : IDisposable
         _getSteamId = (delegate* unmanaged[Cdecl]<nint, ulong>)NativeLibrary.GetExport(library, "SteamAPI_ISteamUser_GetSteamID");
     }
 
-    /// <summary>Callback structs use pack 8 on Windows and pack 4 elsewhere (VALVE_CALLBACK_PACK_LARGE / SMALL).</summary>
     public bool LargeCallbackPack { get; } = HostRuntime.IsWindows;
 
     /// <exception cref="DllNotFoundException">The library is missing or can't be loaded.</exception>
@@ -91,26 +90,20 @@ internal sealed unsafe class SteamApi : IDisposable
 
     public SteamItemState GetItemState(ulong id) => (SteamItemState)_getItemState(_ugc, id);
 
-    /// <returns>(0, 0) when Steam has no download info for the item.</returns>
     public (ulong Downloaded, ulong Total) GetItemDownloadInfo(ulong id)
     {
         ulong downloaded = 0, total = 0;
         return _getItemDownloadInfo(_ugc, id, &downloaded, &total) != 0 ? (downloaded, total) : (0, 0);
     }
 
-    /// <returns>The call handle, 0 when Steam refused the call.</returns>
     public ulong SubscribeItem(ulong id) => _subscribeItem(_ugc, id);
 
-    /// <returns>The call handle, 0 when Steam refused the call.</returns>
     public ulong UnsubscribeItem(ulong id) => _unsubscribeItem(_ugc, id);
 
     public bool DownloadItem(ulong id, bool highPriority) => _downloadItem(_ugc, id, highPriority ? (byte)1 : (byte)0) != 0;
 
-    /// <summary>The signed-in account: the low 32 bits of its SteamID64.</summary>
     public uint GetAccountId() => (uint)(_getSteamId(_user) & 0xFFFFFFFF);
 
-    /// <summary>One page of the account's collections of the game, with child counts.</summary>
-    /// <returns>The query handle, <see cref="SteamUgcQuery.InvalidHandle"/> when Steam refused it; release every other one.</returns>
     public ulong CreateUserCollectionsQuery(uint accountId, SteamUserUgcList list, uint page)
     {
         var handle = _createQueryUserUgcRequest(
@@ -123,10 +116,8 @@ internal sealed unsafe class SteamApi : IDisposable
         return handle;
     }
 
-    /// <returns>The call handle, 0 when Steam refused the call.</returns>
     public ulong SendQuery(ulong handle) => _sendQueryUgcRequest(_ugc, handle);
 
-    /// <returns><c>null</c> when Steam has no result at this index.</returns>
     public UgcDetails? GetQueryResult(ulong handle, uint index)
     {
         // Allocated at the larger (Windows) size so the library never writes past it under either packing.
@@ -144,7 +135,6 @@ internal sealed unsafe class SteamApi : IDisposable
 
     public void ReleaseQuery(ulong handle) => _releaseQueryUgcRequest(_ugc, handle);
 
-    /// <summary>Runs one dispatch frame and returns every callback and finished call result it produced.</summary>
     public List<SteamCallback> Pump()
     {
         var callbacks = new List<SteamCallback>();

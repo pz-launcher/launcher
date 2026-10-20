@@ -70,14 +70,17 @@ internal static class WorkshopFiles
     };
 
     public static string SubscriptionsPath(string steamRoot, uint accountId) =>
-        Path.Combine(
-            steamRoot,
-            "userdata",
-            accountId.ToString(CultureInfo.InvariantCulture),
-            "ugc",
-            $"{PzSteamApps.Game.ToString(CultureInfo.InvariantCulture)}_subscriptions.vdf");
+        Path.Combine(SteamClientFiles.UserDataFolder(steamRoot, accountId), "ugc", $"{GameId}_subscriptions.vdf");
 
     // The library's file; a stale copy inside the game folder is never read.
-    public static string ManifestPath(string library) =>
-        Path.Combine(library, "steamapps", "workshop", $"appworkshop_{PzSteamApps.Game.ToString(CultureInfo.InvariantCulture)}.acf");
+    public static string ManifestPath(string library) => Path.Combine(LibraryWorkshopFolder(library), $"appworkshop_{GameId}.acf");
+
+    /// <summary>Where Steam installs the game's Workshop items in a library, one folder per item id.</summary>
+    public static string ContentFolder(string library) => Path.Combine(LibraryWorkshopFolder(library), "content", GameId);
+
+    public static string ItemFolder(string library, string itemId) => Path.Combine(ContentFolder(library), itemId);
+
+    private static string GameId => PzSteamApps.Game.ToString(CultureInfo.InvariantCulture);
+
+    private static string LibraryWorkshopFolder(string library) => Path.Combine(library, "steamapps", "workshop");
 }

@@ -61,9 +61,12 @@ public class WorkshopFavoritesViewModelTests : UiTextCultureTest
         _detection.ScanResults.Enqueue(FakeInstallDetectionService.Found(SteamGame));
         await Installs.ActivateCommand.ExecuteAsync(null);
         var orderWriter = new ModCollectionOrderWriter(_collections, _runState, new FakePlatformEnvironment(), new ManualTimeProvider());
+        var history = History(_preferences);
+        var userCollections = UserCollections(_preferences);
         var page = new ModsViewModel(
             Installs, _collections, _overrides, new FakeModCollectionDefaultsService(), new ModCollectionApplier(_collections, _dialogs), _dialogs,
-            _clipboard, _runState, orderWriter, _service, _runner, _urls, History(_preferences), UserCollections(_preferences), _favorites, Localization)
+            _clipboard, _runState, orderWriter, _service, _service, _runner, _urls, history, userCollections, _favorites,
+            new WorkshopTitles(history, userCollections, _favorites), Localization)
         {
             Section = section,
         };
@@ -89,7 +92,7 @@ public class WorkshopFavoritesViewModelTests : UiTextCultureTest
 
         page.WorkshopCollections.ToggleOpenCollectionFavoriteCommand.Execute(null);
 
-        Assert.Equal([new RememberedWorkshopCollectionRow(Pack, "Survival Pack", IsOpen: false, IsFavorite: true)], page.WorkshopFavorites.Collections);
+        Assert.Equal([new WorkshopCollectionRow(Pack, "Survival Pack", null, IsOpen: false, IsFavorite: true)], page.WorkshopFavorites.Collections);
         Assert.True(page.WorkshopFavorites.HasCollections);
     }
 
@@ -99,7 +102,7 @@ public class WorkshopFavoritesViewModelTests : UiTextCultureTest
         _favorites = Favorites(_preferences, new SavedWorkshopFavorites([new SavedWorkshopEntry(Pack, null)], []));
         var page = await CreatePageAsync();
         var vm = page.WorkshopFavorites;
-        Assert.Equal("9000", vm.Collections[0].Title);
+        Assert.Equal("9000", vm.Collections[0].DisplayTitle);
 
         await vm.OpenCollectionCommand.ExecuteAsync(vm.Collections[0]);
 
@@ -110,7 +113,7 @@ public class WorkshopFavoritesViewModelTests : UiTextCultureTest
         Assert.True(collections.IsOpenCollectionFavorite);
         Assert.Equal(Pack, Assert.Single(collections.Remembered).Id);
         Assert.False(collections.IsLoading);
-        Assert.Equal("Survival Pack", vm.Collections[0].Title);
+        Assert.Equal("Survival Pack", vm.Collections[0].DisplayTitle);
     }
 
     [Fact]
@@ -137,7 +140,7 @@ public class WorkshopFavoritesViewModelTests : UiTextCultureTest
         _favorites.Toggle(WorkshopFavoriteKind.Collection, Pack, "Survival Pack");
         var vm = await CreateAsync();
 
-        vm.UnstarCollectionCommand.Execute(vm.Collections[0]);
+        vm.ToggleCollectionFavoriteCommand.Execute(vm.Collections[0]);
 
         Assert.Empty(vm.Collections);
         Assert.False(vm.HasCollections);
@@ -291,9 +294,9 @@ public class WorkshopFavoritesViewModelTests : UiTextCultureTest
         Assert.Equal(SharedText.Trim(), prompt.InitialText);
         Assert.True(prompt.IsMultiline);
         Assert.Empty(_service.CollectionRequests);
-        Assert.Equal([new SavedWorkshopEntry(Pack, "Survival Pack")], _favorites.Collections);
-        Assert.Equal([new SavedWorkshopEntry(1001, "Core Library"), new SavedWorkshopEntry(1005, "Weather")], _favorites.Items);
-        Assert.Equal([new RememberedWorkshopCollectionRow(Pack, "Survival Pack", IsOpen: false, IsFavorite: true)], vm.Collections);
+        Assert.Equal([new WorkshopEntry(Pack, "Survival Pack")], _favorites.Collections);
+        Assert.Equal([new WorkshopEntry(1001, "Core Library"), new WorkshopEntry(1005, "Weather")], _favorites.Items);
+        Assert.Equal([new WorkshopCollectionRow(Pack, "Survival Pack", null, IsOpen: false, IsFavorite: true)], vm.Collections);
         Assert.Equal(Imported(1, 2, 0), vm.FavoritesStatusText);
     }
 
@@ -321,9 +324,9 @@ public class WorkshopFavoritesViewModelTests : UiTextCultureTest
 
         await vm.ImportFavoritesCommand.ExecuteAsync(null);
 
-        Assert.Equal([Pack, 1005UL], _service.CollectionRequests);
-        Assert.Equal([new SavedWorkshopEntry(Pack, "Survival Pack")], _favorites.Collections);
-        Assert.Equal([new SavedWorkshopEntry(1005, "Weather")], _favorites.Items);
+        Assert.Equal<IReadOnlyList<ulong>>([[Pack, 1005]], _service.ClassifyRequests);
+        Assert.Equal([new WorkshopEntry(Pack, "Survival Pack")], _favorites.Collections);
+        Assert.Equal([new WorkshopEntry(1005, "Weather")], _favorites.Items);
         Assert.Equal(Imported(1, 1, 1), vm.FavoritesStatusText);
     }
 
@@ -351,7 +354,7 @@ public class WorkshopFavoritesViewModelTests : UiTextCultureTest
 
         await vm.ImportFavoritesCommand.ExecuteAsync(null);
 
-        Assert.Empty(_service.CollectionRequests);
+        Assert.Empty(_service.ClassifyRequests);
         Assert.Equal(Imported(0, 0, 0), vm.FavoritesStatusText);
     }
 

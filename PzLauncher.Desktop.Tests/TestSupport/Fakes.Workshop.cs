@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Logging.Abstractions;
 using PzLauncher.Core.Common;
-using PzLauncher.Core.Mod.Collections;
+using PzLauncher.Core.Mod.Workshop;
 using PzLauncher.Core.Steam;
 using PzLauncher.Core.Steam.Workshop;
 using PzLauncher.Core.Steam.Workshop.Actions;
@@ -10,15 +10,15 @@ using PzLauncher.Desktop.Services.Preferences;
 namespace PzLauncher.Desktop.Tests.TestSupport;
 
 /// <summary>
-/// Steam's local files are <see cref="Items"/>; the Web API answers from <see cref="Published"/> and <see cref="Collections"/>. An item's
-/// state follows its installed manifest and the latest one known, the one a check or collection lookup fetched before the item's own, as
-/// the real service does.
+/// Steam's local files are <see cref="Items"/>, already joined with their mods; the Web API answers from <see cref="Published"/> and
+/// <see cref="Collections"/>. An item's state follows its installed manifest and the latest one known, the one a check or collection lookup
+/// fetched before the item's own, as the real service does. The pre-launch check takes every installed item with a mod as used.
 /// </summary>
-public sealed class FakeWorkshopService : IWorkshopService
+public sealed class FakeWorkshopService : IWorkshopService, IWorkshopModsService
 {
     private readonly Dictionary<ulong, WorkshopItemDetails> _fetched = [];
 
-    public List<WorkshopItem> Items { get; } = [];
+    public List<WorkshopModItem> Items { get; } = [];
 
     public List<Error> Warnings { get; } = [];
 
@@ -31,7 +31,12 @@ public sealed class FakeWorkshopService : IWorkshopService
     /// <summary>Holds every check open, after recording it, until set.</summary>
     public TaskCompletionSource? CheckGate { get; set; }
 
+    /// <summary>Reads of the subscriptions joined with mods.</summary>
     public List<(string Root, string ExtraGameArgs)> GetRequests { get; } = [];
+
+    public List<(string Root, string ExtraGameArgs, string? Collection)> LaunchRequests { get; } = [];
+
+    public List<IReadOnlyList<ulong>> ClassifyRequests { get; } = [];
 
     public List<IReadOnlyList<ulong>> CheckRequests { get; } = [];
 
@@ -46,7 +51,7 @@ public sealed class FakeWorkshopService : IWorkshopService
 
     public Func<Error?> AccountError { get; set; } = () => null;
 
-    public FakeWorkshopService WithItem(WorkshopItem item)
+    public FakeWorkshopService WithItem(WorkshopModItem item)
     {
         Items.Add(item);
         return this;
@@ -61,20 +66,70 @@ public sealed class FakeWorkshopService : IWorkshopService
     /// <summary>Steam installed the latest version, as a finished update leaves the library's acf.</summary>
     public void Install(ulong id, string manifest)
     {
-        var index = Items.FindIndex(item => item.Id == id);
-        Items[index] = Items[index] with { Installed = Items[index].Installed! with { Manifest = manifest } };
+        var index = Items.FindIndex(item => item.Item.Id == id);
+        var item = Items[index].Item;
+        Items[index] = Items[index] with { Item = item with { Installed = item.Installed! with { Manifest = manifest } } };
     }
 
-    public Task<Result<WorkshopSubscriptions>> GetSubscriptionsAsync(string installRoot, string extraGameArgs, CancellationToken ct = default)
+    public Task<Result<WorkshopSubscriptions>> GetSubscriptionsAsync(string installRoot, CancellationToken ct = default) =>
+        Task.FromResult(GetError() is { } error
+            ? (Result<WorkshopSubscriptions>)error
+            : new WorkshopSubscriptions([.. Joined().Select(item => item.Item)], [.. Warnings]));
+
+    public Task<Result<WorkshopModSubscriptions>> GetSubscriptionsAsync(string installRoot, string extraGameArgs, CancellationToken ct = default)
     {
         GetRequests.Add((installRoot, extraGameArgs));
+        return Task.FromResult(GetError() is { } error ? (Result<WorkshopModSubscriptions>)error : new WorkshopModSubscriptions(Joined(), [.. Warnings]));
+    }
+
+    public async Task<Result<IReadOnlyList<WorkshopItem>>> FindOutdatedForLaunchAsync(
+        string installRoot, string extraGameArgs, string? collection, CancellationToken ct = default)
+    {
+        LaunchRequests.Add((installRoot, extraGameArgs, collection));
         if (GetError() is { } error)
         {
-            return Task.FromResult<Result<WorkshopSubscriptions>>(error);
+            return error;
         }
 
-        List<WorkshopItem> items = [.. Items.Select(item => (_fetched.GetValueOrDefault(item.Id) ?? item.Latest) is { } latest ? item.WithLatest(latest) : item)];
-        return Task.FromResult<Result<WorkshopSubscriptions>>(new WorkshopSubscriptions(items, [.. Warnings]));
+        List<WorkshopItem> used =
+        [
+            .. Joined()
+                .Where(item => item.Mods.Count > 0 && item.Item.State is WorkshopItemState.UpToDate or WorkshopItemState.NeedsUpdate)
+                .Select(item => item.Item),
+        ];
+        if (used.Count == 0)
+        {
+            return Array.Empty<WorkshopItem>();
+        }
+
+        var latest = await CheckUpdatesAsync([.. used.Select(item => item.Id)], ct);
+        if (!latest.IsSuccess)
+        {
+            return latest.Error;
+        }
+
+        var details = latest.Value.ToDictionary(item => item.Id);
+        return used
+            .Select(item => details.GetValueOrDefault(item.Id) is { } current ? item.WithLatest(current) : item)
+            .Where(item => item.State == WorkshopItemState.NeedsUpdate)
+            .ToList();
+    }
+
+    public Task<Result<IReadOnlyList<WorkshopIdKind>>> ClassifyAsync(IReadOnlyList<ulong> ids, CancellationToken ct = default)
+    {
+        ClassifyRequests.Add(ids);
+        if (CollectionError() is { } error)
+        {
+            return Task.FromResult<Result<IReadOnlyList<WorkshopIdKind>>>(error);
+        }
+
+        List<WorkshopIdKind> kinds =
+        [
+            .. ids.Distinct().Select(id => Collections.ContainsKey(id)
+                ? new WorkshopIdKind(id, true, Published.GetValueOrDefault(id)?.Title)
+                : new WorkshopIdKind(id, false, null)),
+        ];
+        return Task.FromResult<Result<IReadOnlyList<WorkshopIdKind>>>(kinds);
     }
 
     public async Task<Result<IReadOnlyList<WorkshopItemDetails>>> CheckUpdatesAsync(IReadOnlyList<ulong> ids, CancellationToken ct = default)
@@ -123,6 +178,12 @@ public sealed class FakeWorkshopService : IWorkshopService
 
     public Task<Result<SteamAccount>> GetCurrentAccountAsync(CancellationToken ct = default) =>
         Task.FromResult(AccountError() is { } error ? (Result<SteamAccount>)error : Account);
+
+    private List<WorkshopModItem> Joined() =>
+    [
+        .. Items.Select(item =>
+            (_fetched.GetValueOrDefault(item.Item.Id) ?? item.Item.Latest) is { } latest ? item with { Item = item.Item.WithLatest(latest) } : item),
+    ];
 }
 
 /// <summary>
@@ -189,7 +250,8 @@ public sealed class FakeWorkshopActionRunner : IWorkshopActionRunner
         return new WorkshopActionOutcome(outcomes);
     }
 
-    public async Task<Result<WorkshopUserCollections>> ListCollectionsAsync(string installRoot, CancellationToken ct = default)
+    public async Task<Result<WorkshopUserCollections>> ListCollectionsAsync(
+        string installRoot, IProgress<WorkshopActionEvent>? progress = null, CancellationToken ct = default)
     {
         ListRuns.Add(installRoot);
         if (ListGate is { } gate)
@@ -208,7 +270,7 @@ public static class TestWorkshop
     public static readonly DateTimeOffset Updated = new(2026, 9, 1, 18, 30, 0, TimeSpan.Zero);
 
     /// <param name="manifest">The installed copy's; <c>null</c> for an item Steam hasn't installed.</param>
-    public static WorkshopItem Item(
+    public static WorkshopModItem Item(
         ulong id,
         string? manifest = "100",
         string[]? mods = null,
@@ -217,19 +279,20 @@ public static class TestWorkshop
         WorkshopItemDetails? latest = null,
         long size = 3 * 1024 * 1024) =>
         new(
-            id,
-            Subscribed,
-            state == WorkshopItemState.DisabledLocally,
-            manifest is null ? null : new WorkshopInstall(@$"D:\SteamLibrary\steamapps\workshop\content\108600\{id}", manifest, Updated, size),
-            latest,
-            [.. (mods ?? []).Select(mod => TestMods.Mod(mod, workshopId: id.ToString(System.Globalization.CultureInfo.InvariantCulture)))],
-            collections ?? [],
-            state ?? (manifest is null ? WorkshopItemState.NotInstalled : WorkshopItemState.UpToDate));
+            new WorkshopItem(
+                id,
+                Subscribed,
+                state == WorkshopItemState.DisabledLocally,
+                manifest is null ? null : new WorkshopInstall(@$"D:\SteamLibrary\steamapps\workshop\content\108600\{id}", manifest, Updated, size),
+                latest,
+                state ?? (manifest is null ? WorkshopItemState.NotInstalled : WorkshopItemState.UpToDate)),
+            [.. (mods ?? []).Select(mod => TestMods.Mod(mod, workshopId: id))],
+            collections ?? []);
 
     public static WorkshopItemDetails Details(ulong id, string title, string manifest) => new(id, title, manifest, Updated, 3 * 1024 * 1024);
 
-    public static WorkshopLaunchCheck LaunchCheck(IWorkshopService workshop, IModCollectionService collections, TimeProvider? time = null) =>
-        new(workshop, collections, time ?? new ManualTimeProvider(), NullLogger<WorkshopLaunchCheck>.Instance);
+    public static WorkshopLaunchCheck LaunchCheck(IWorkshopModsService workshop, TimeProvider? time = null) =>
+        new(workshop, time ?? new ManualTimeProvider(), NullLogger<WorkshopLaunchCheck>.Instance);
 
     public static WorkshopCollectionHistory History(FakePreferenceStore? store = null, params SavedWorkshopEntry[] saved) =>
         new(store ?? new FakePreferenceStore(), new UserPreferences(null, null, null) { WorkshopCollections = saved });

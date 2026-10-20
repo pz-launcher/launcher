@@ -20,12 +20,12 @@ public sealed class WorkshopFavorites(IPreferenceStore store, UserPreferences sa
     private readonly WorkshopEntryList _collections = new(saved.WorkshopFavorites.Collections);
     private readonly WorkshopEntryList _items = new(saved.WorkshopFavorites.Items);
 
-    /// <summary>Raised after each change that applied.</summary>
+    /// <summary>Raised after each change that applied, a new title included; never when nothing changed.</summary>
     public event EventHandler? Changed;
 
-    public IReadOnlyList<SavedWorkshopEntry> Collections => _collections.Entries;
+    public IReadOnlyList<WorkshopEntry> Collections => _collections.Entries;
 
-    public IReadOnlyList<SavedWorkshopEntry> Items => _items.Entries;
+    public IReadOnlyList<WorkshopEntry> Items => _items.Entries;
 
     public bool IsFavorite(WorkshopFavoriteKind kind, ulong id) => List(kind).Contains(id);
 
@@ -42,24 +42,17 @@ public sealed class WorkshopFavorites(IPreferenceStore store, UserPreferences sa
         Commit();
     }
 
-    /// <summary>Keeps the titles seen for starred ids; other ids and unknown titles are ignored.</summary>
-    public void UpdateTitles(WorkshopFavoriteKind kind, IEnumerable<SavedWorkshopEntry> seen)
+    /// <summary>Keeps the titles seen for starred ids; other ids and unknown titles are ignored. Through <see cref="WorkshopTitles"/> only.</summary>
+    internal void UpdateTitles(WorkshopFavoriteKind kind, IEnumerable<WorkshopEntry> seen)
     {
-        var list = List(kind);
-        var changed = false;
-        foreach (var entry in seen)
-        {
-            changed |= list.SetTitle(entry.Id, entry.Title);
-        }
-
-        if (changed)
+        if (List(kind).SetTitles(seen))
         {
             Commit();
         }
     }
 
     /// <summary>Stars the ids not starred yet, on top in the given order, and counts them; starred ones keep their place and nothing is removed.</summary>
-    public (int Collections, int Items) Add(IReadOnlyList<SavedWorkshopEntry> collections, IReadOnlyList<SavedWorkshopEntry> items)
+    public (int Collections, int Items) Add(IReadOnlyList<WorkshopEntry> collections, IReadOnlyList<WorkshopEntry> items)
     {
         var added = (AddNew(_collections, collections), AddNew(_items, items));
         if (added != (0, 0))
@@ -70,9 +63,9 @@ public sealed class WorkshopFavorites(IPreferenceStore store, UserPreferences sa
         return added;
     }
 
-    private static int AddNew(WorkshopEntryList list, IReadOnlyList<SavedWorkshopEntry> entries)
+    private static int AddNew(WorkshopEntryList list, IReadOnlyList<WorkshopEntry> entries)
     {
-        List<SavedWorkshopEntry> added = [.. entries.Where(entry => !list.Contains(entry.Id)).DistinctBy(entry => entry.Id)];
+        List<WorkshopEntry> added = [.. entries.Where(entry => !list.Contains(entry.Id)).DistinctBy(entry => entry.Id)];
         for (var i = added.Count - 1; i >= 0; i--)
         {
             list.MoveToTop(added[i].Id, added[i].Title);
@@ -90,7 +83,7 @@ public sealed class WorkshopFavorites(IPreferenceStore store, UserPreferences sa
     private void Commit()
     {
         // SaveWorkshopFavoritesAsync never throws for I/O, and a failed save must not undo the change.
-        _ = store.SaveWorkshopFavoritesAsync(new SavedWorkshopFavorites(_collections.ToArray(), _items.ToArray()));
+        _ = store.SaveWorkshopFavoritesAsync(new SavedWorkshopFavorites(_collections.ToSaved(), _items.ToSaved()));
         Changed?.Invoke(this, EventArgs.Empty);
     }
 }

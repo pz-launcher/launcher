@@ -6,6 +6,7 @@ using PzLauncher.Core.Common;
 using PzLauncher.Core.Mod.ZombieBuddy;
 using PzLauncher.Core.Platform;
 using PzLauncher.Core.Steam;
+using PzLauncher.Core.Steam.Workshop;
 using PzLauncher.Core.Tests.Mod.ZBSkipOnlineChecks;
 using PzLauncher.Core.Tests.TestSupport;
 
@@ -106,7 +107,7 @@ public sealed class ZombieBuddyModsServiceTests : IDisposable
         var root = CreateGame();
         if (zabricInstalled)
         {
-            ZabricBuilder.Create(Path.Combine(WorkshopLibraries.ItemFolder(_library, "3820726385"), "mods", "Zabric"));
+            ZabricBuilder.Create(Path.Combine(WorkshopFiles.ItemFolder(_library, "3820726385"), "mods", "Zabric"));
         }
 
         ZBSkipOnlineChecksLaunchStepTests.SteamCopy(_library);

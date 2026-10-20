@@ -347,6 +347,9 @@
   <data name="Error_WorkshopHelperFailed" xml:space="preserve">
     <value>啟動器的 Steam 輔助程序在完成前停止了（{0}）。請在 Steam 中檢查這些項目，然後重試。</value>
   </data>
+  <data name="Error_WorkshopHelperRequestRejected" xml:space="preserve">
+    <value>啟動器的 Steam 輔助程序無法讀取其請求（{0}）。請重新啟動啟動器，然後重試。</value>
+  </data>
   <data name="Error_WorkshopHelperTimedOut" xml:space="preserve">
     <value>Steam 在 {0} 秒內沒有回報任何進度，工作坊操作已停止。請稍後再試一次。</value>
   </data>
@@ -1048,6 +1051,9 @@
   </data>
   <data name="Workshop_WaitingForSteam" xml:space="preserve">
     <value>正在等待 Steam…</value>
+  </data>
+  <data name="Workshop_WaitingForEarlierAction" xml:space="preserve">
+    <value>等待上一個 Steam 操作完成…</value>
   </data>
   <data name="Workshop_ActionSummary" xml:space="preserve">
     <value>已完成：{0} / {1}</value>

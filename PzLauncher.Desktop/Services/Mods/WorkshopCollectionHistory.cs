@@ -8,7 +8,7 @@ public sealed class WorkshopCollectionHistory(IPreferenceStore store, UserPrefer
 {
     private readonly WorkshopEntryList _items = new(saved.WorkshopCollections);
 
-    public IReadOnlyList<SavedWorkshopEntry> Items => _items.Entries;
+    public IReadOnlyList<WorkshopEntry> Items => _items.Entries;
 
     /// <summary>Moves the collection to the top with its current title. Applies at once; the file write is fire-and-forget.</summary>
     public void Remember(ulong id, string? title)
@@ -28,6 +28,15 @@ public sealed class WorkshopCollectionHistory(IPreferenceStore store, UserPrefer
         }
     }
 
+    /// <summary>Through <see cref="WorkshopTitles"/> only.</summary>
+    internal void UpdateTitles(IEnumerable<WorkshopEntry> seen)
+    {
+        if (_items.SetTitles(seen))
+        {
+            Save();
+        }
+    }
+
     // SaveWorkshopCollectionsAsync never throws for I/O, and a failed save must not undo the change.
-    private void Save() => _ = store.SaveWorkshopCollectionsAsync(_items.ToArray());
+    private void Save() => _ = store.SaveWorkshopCollectionsAsync(_items.ToSaved());
 }

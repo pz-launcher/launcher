@@ -1,10 +1,8 @@
-using PzLauncher.Core.Steam.Workshop.Actions;
-
 namespace PzLauncher.Core.Steam.Workshop.Helper;
 
-/// <summary>Runs one helper action against an initialised <see cref="SteamApi"/>, writing its events.</summary>
+/// <summary>Runs one helper action against an initialised Steam client, writing its events.</summary>
 // Synchronous on purpose: Steam's manual dispatch and shutdown stay on the thread that initialised it.
-internal sealed class SteamHelperSession(SteamApi api, Action<SteamHelperEvent> write, TimeProvider time)
+internal sealed class SteamHelperSession(ISteamUgcClient api, Action<SteamHelperEvent> write, SteamHelperTimeouts timeouts, TimeProvider time)
 {
     private static readonly TimeSpan PollInterval = TimeSpan.FromMilliseconds(100);
 
@@ -13,11 +11,6 @@ internal sealed class SteamHelperSession(SteamApi api, Action<SteamHelperEvent> 
 
     private readonly Dictionary<ulong, SteamCallback> _callResults = [];
     private readonly Dictionary<ulong, int> _downloadResults = [];
-
-    public TimeSpan CallResultTimeout { get; init; } = TimeSpan.FromSeconds(30);
-
-    /// <summary>How long an update may go without a change in progress or state before it fails.</summary>
-    public TimeSpan StallTimeout { get; init; } = TimeSpan.FromMinutes(2);
 
     public void ChangeSubscriptions(IReadOnlyList<ulong> ids, bool subscribe)
     {
@@ -39,15 +32,15 @@ internal sealed class SteamHelperSession(SteamApi api, Action<SteamHelperEvent> 
     public SteamHelperEvent ListCollections()
     {
         var account = api.GetAccountId();
-        List<WorkshopCollectionSummary> favorited = [], published = [];
+        List<SteamHelperCollection> favorited = [], published = [];
         var failed = ReadAllPages(SteamUserUgcList.Favorited, page => QueryPage(account, SteamUserUgcList.Favorited, page), favorited)
             ?? ReadAllPages(SteamUserUgcList.Published, page => QueryPage(account, SteamUserUgcList.Published, page), published);
-        return failed ?? (SteamHelperEvent)new SteamHelperCollections(new WorkshopUserCollections(account, favorited, published));
+        return failed ?? (SteamHelperEvent)new SteamHelperCollections(account, favorited, published);
     }
 
     /// <summary>Reads pages from 1 until a short page or Steam's total, adding each collection once.</summary>
     /// <returns>The failure of the first page Steam didn't answer with OK, <c>null</c> once all were read.</returns>
-    internal static SteamHelperFailed? ReadAllPages(SteamUserUgcList list, Func<uint, SteamUgcPage> queryPage, List<WorkshopCollectionSummary> collections)
+    internal static SteamHelperFailed? ReadAllPages(SteamUserUgcList list, Func<uint, SteamUgcPage> queryPage, List<SteamHelperCollection> collections)
     {
         var seen = new HashSet<ulong>();
         ulong read = 0;
@@ -65,7 +58,7 @@ internal sealed class SteamHelperSession(SteamApi api, Action<SteamHelperEvent> 
             {
                 if (item.Result == WorkshopFiles.ResultOk && item.FileType == WorkshopFiles.FileTypeCollection && seen.Add(item.Id))
                 {
-                    collections.Add(new WorkshopCollectionSummary(item.Id, item.Title.Length > 0 ? item.Title : null, item.ChildCount));
+                    collections.Add(new SteamHelperCollection(item.Id, item.Title.Length > 0 ? item.Title : null, item.ChildCount));
                 }
             }
 
@@ -79,7 +72,15 @@ internal sealed class SteamHelperSession(SteamApi api, Action<SteamHelperEvent> 
         return null;
     }
 
+    // Each page is reported, so the launcher hears from a long list before its stall timeout.
     private SteamUgcPage QueryPage(uint account, SteamUserUgcList list, uint page)
+    {
+        var answer = QueryPageOnce(account, list, page);
+        write(new SteamHelperPageRead(list, page));
+        return answer;
+    }
+
+    private SteamUgcPage QueryPageOnce(uint account, SteamUserUgcList list, uint page)
     {
         var handle = api.CreateUserCollectionsQuery(account, list, page);
         if (handle == SteamUgcQuery.InvalidHandle)
@@ -125,8 +126,8 @@ internal sealed class SteamHelperSession(SteamApi api, Action<SteamHelperEvent> 
     private SteamHelperItemFailed? ChangeSubscription(ulong id, bool subscribe)
     {
         var (failure, expectedCallback) = subscribe
-            ? (WorkshopItemFailure.SubscribeFailed, SteamCallbackIds.SubscribeItemResult)
-            : (WorkshopItemFailure.UnsubscribeFailed, SteamCallbackIds.UnsubscribeItemResult);
+            ? (SteamHelperItemFailure.SubscribeFailed, SteamCallbackIds.SubscribeItemResult)
+            : (SteamHelperItemFailure.UnsubscribeFailed, SteamCallbackIds.UnsubscribeItemResult);
         var call = subscribe ? api.SubscribeItem(id) : api.UnsubscribeItem(id);
         if (call == 0)
         {
@@ -135,7 +136,7 @@ internal sealed class SteamHelperSession(SteamApi api, Action<SteamHelperEvent> 
 
         if (!TryWaitForCallResult(call, out var callResult))
         {
-            return new SteamHelperItemFailed(id, WorkshopItemFailure.TimedOut, 0);
+            return new SteamHelperItemFailed(id, SteamHelperItemFailure.TimedOut, 0);
         }
 
         var result = callResult.Failed || callResult.Id != expectedCallback
@@ -158,7 +159,7 @@ internal sealed class SteamHelperSession(SteamApi api, Action<SteamHelperEvent> 
         _downloadResults.Remove(id);
         if (!api.DownloadItem(id, highPriority: true))
         {
-            return new SteamHelperItemFailed(id, WorkshopItemFailure.DownloadNotStarted, 0);
+            return new SteamHelperItemFailed(id, SteamHelperItemFailure.DownloadNotStarted, 0);
         }
 
         var lastChange = time.GetTimestamp();
@@ -171,7 +172,7 @@ internal sealed class SteamHelperSession(SteamApi api, Action<SteamHelperEvent> 
             {
                 if (result != WorkshopFiles.ResultOk)
                 {
-                    return new SteamHelperItemFailed(id, WorkshopItemFailure.DownloadFailed, result);
+                    return new SteamHelperItemFailed(id, SteamHelperItemFailure.DownloadFailed, result);
                 }
 
                 if (IsUpToDate(state))
@@ -192,12 +193,12 @@ internal sealed class SteamHelperSession(SteamApi api, Action<SteamHelperEvent> 
                 last = current;
                 lastChange = time.GetTimestamp();
             }
-            else if (time.GetElapsedTime(lastChange) > StallTimeout)
+            else if (time.GetElapsedTime(lastChange) > timeouts.Stall)
             {
-                return new SteamHelperItemFailed(id, WorkshopItemFailure.TimedOut, 0);
+                return new SteamHelperItemFailed(id, SteamHelperItemFailure.TimedOut, 0);
             }
 
-            Thread.Sleep(PollInterval);
+            Sleep();
         }
     }
 
@@ -216,14 +217,17 @@ internal sealed class SteamHelperSession(SteamApi api, Action<SteamHelperEvent> 
                 return true;
             }
 
-            if (time.GetElapsedTime(start) > CallResultTimeout)
+            if (time.GetElapsedTime(start) > timeouts.CallResult)
             {
                 return false;
             }
 
-            Thread.Sleep(PollInterval);
+            Sleep();
         }
     }
+
+    // Through the TimeProvider, so tests step its clock instead of sleeping.
+    private void Sleep() => Task.Delay(PollInterval, time).Wait();
 
     private void Pump()
     {

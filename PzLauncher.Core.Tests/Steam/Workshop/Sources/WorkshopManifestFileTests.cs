@@ -46,12 +46,12 @@ public sealed class WorkshopManifestFileTests : IDisposable
         Assert.Equal([2409333430UL, 3811390574UL], manifest.Items.Keys.Order());
         Assert.Equal(
             new WorkshopManifestEntry(
-                new WorkshopInstall(WorkshopLibraries.ItemFolder(library, "2409333430"), "2026051810389825471", DateTimeOffset.FromUnixTimeSeconds(1791483143), 18928379),
+                new WorkshopInstall(WorkshopFiles.ItemFolder(library, "2409333430"), "2026051810389825471", DateTimeOffset.FromUnixTimeSeconds(1791483143), 18928379),
                 "2026051810389825471"),
             manifest.Items[2409333430]);
         Assert.Equal(
             new WorkshopManifestEntry(
-                new WorkshopInstall(WorkshopLibraries.ItemFolder(library, "3811390574"), "14459181659745603925", DateTimeOffset.FromUnixTimeSeconds(1792336500), 253378238),
+                new WorkshopInstall(WorkshopFiles.ItemFolder(library, "3811390574"), "14459181659745603925", DateTimeOffset.FromUnixTimeSeconds(1792336500), 253378238),
                 "987951682342026743"),
             manifest.Items[3811390574]);
     }
@@ -66,7 +66,7 @@ public sealed class WorkshopManifestFileTests : IDisposable
         var manifest = await WorkshopManifestFile.ReadAsync([first, second, third], NullLogger.Instance, Ct);
 
         Assert.Equal("111", manifest.Items[5].Install.Manifest);
-        Assert.Equal(WorkshopLibraries.ItemFolder(first, "5"), manifest.Items[5].Install.Folder);
+        Assert.Equal(WorkshopFiles.ItemFolder(first, "5"), manifest.Items[5].Install.Folder);
         Assert.Equal("444", manifest.Items[6].Install.Manifest);
     }
 

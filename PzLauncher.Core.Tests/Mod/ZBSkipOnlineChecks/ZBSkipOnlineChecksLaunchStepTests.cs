@@ -5,6 +5,7 @@ using PzLauncher.Core.Mod.ZBSkipOnlineChecks;
 using PzLauncher.Core.Mod.ZombieBuddy;
 using PzLauncher.Core.Platform;
 using PzLauncher.Core.Steam;
+using PzLauncher.Core.Steam.Workshop;
 using PzLauncher.Core.Tests.Mod.ZombieBuddy;
 using PzLauncher.Core.Tests.TestSupport;
 
@@ -55,7 +56,7 @@ public sealed class ZBSkipOnlineChecksLaunchStepTests : IDisposable
 
     internal static string SteamCopy(string library, string? manifest = ZabricBuilder.PreloadManifest) =>
         ZabricBuilder.Create(
-            Path.Combine(WorkshopLibraries.ItemFolder(library, "3821335660"), "mods", "ZBSkipOnlineChecks"), modInfo: SkipModInfo, manifest: manifest);
+            Path.Combine(WorkshopFiles.ItemFolder(library, "3821335660"), "mods", "ZBSkipOnlineChecks"), modInfo: SkipModInfo, manifest: manifest);
 
     internal static string GameJar(string root) => Path.Combine(root, "ZBSkipOnlineChecks.jar");
 

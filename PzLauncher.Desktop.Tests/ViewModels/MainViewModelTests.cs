@@ -34,16 +34,20 @@ public class MainViewModelTests : UiTextCultureTest
         var applier = new ModCollectionApplier(collections, dialogs);
         var orderWriter = new ModCollectionOrderWriter(collections, runState, new FakePlatformEnvironment(), new ManualTimeProvider());
         var updates = TestUpdates.Coordinator(new FakeUpdateService(), store, runState: runState);
+        var workshop = new FakeWorkshopService();
+        var history = TestWorkshop.History();
+        var userCollections = TestWorkshop.UserCollections();
+        var favorites = TestWorkshop.Favorites();
         return new(
             new HomeViewModel(
                 installs, launcher, overrides, dialogs, zombieBuddy, channels, new FakeZombieBuddyModsService(),
-                collections, defaults, applier, orderWriter, TestWorkshop.LaunchCheck(new FakeWorkshopService(), collections),
+                collections, defaults, applier, orderWriter, TestWorkshop.LaunchCheck(new FakeWorkshopService()),
                 new FakeWorkshopService(), new FakeWorkshopActionRunner(), runState),
             installs,
             new ModsViewModel(
                 installs, collections, overrides, defaults, applier, dialogs, new FakeClipboardService(), runState, orderWriter,
-                new FakeWorkshopService(), new FakeWorkshopActionRunner(), new FakeUrlLauncher(), TestWorkshop.History(), TestWorkshop.UserCollections(),
-                TestWorkshop.Favorites(), Localization),
+                workshop, workshop, new FakeWorkshopActionRunner(), new FakeUrlLauncher(), history, userCollections, favorites,
+                new WorkshopTitles(history, userCollections, favorites), Localization),
             new SettingsViewModel(
                 new FakeThemeService(AppTheme.Light),
                 store,

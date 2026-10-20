@@ -23,8 +23,8 @@ internal sealed partial class WorkshopActionRunner(
     /// <summary>The launcher's own executable, which runs the helper; <c>null</c> when the OS doesn't report it.</summary>
     internal string? HelperExecutable { get; init; } = Environment.ProcessPath;
 
-    // Longer than the helper's own per-item stall timeout (SteamHelperSession), so the helper reports a stuck item first.
-    internal TimeSpan StallTimeout { get; init; } = TimeSpan.FromMinutes(3);
+    // Sent to the helper, so it gives up on a stuck item before the launcher gives up on the helper.
+    internal SteamHelperTimeouts HelperTimeouts { get; init; } = SteamHelperTimeouts.Default;
 
     internal TimeSpan ExitTimeout { get; init; } = TimeSpan.FromSeconds(10);
 
@@ -44,7 +44,7 @@ internal sealed partial class WorkshopActionRunner(
         }
 
         var outcomes = new Dictionary<ulong, WorkshopItemOutcome>();
-        var run = await RunHelperAsync(root, ToHelperAction(request.Action), ids, OnEvent, ct).ConfigureAwait(false);
+        var run = await RunHelperAsync(root, ToHelperAction(request.Action), ids, progress, OnEvent, ct).ConfigureAwait(false);
         if (!run.IsSuccess)
         {
             return run.Error;
@@ -67,7 +67,7 @@ internal sealed partial class WorkshopActionRunner(
                     Finish(new WorkshopItemOutcome(done.Id, null, 0));
                     break;
                 case SteamHelperItemFailed failed:
-                    Finish(new WorkshopItemOutcome(failed.Id, failed.Reason, failed.SteamResult));
+                    Finish(new WorkshopItemOutcome(failed.Id, ToItemFailure(failed.Reason), failed.SteamResult));
                     break;
             }
         }
@@ -79,7 +79,8 @@ internal sealed partial class WorkshopActionRunner(
         }
     }
 
-    public async Task<Result<WorkshopUserCollections>> ListCollectionsAsync(string installRoot, CancellationToken ct = default)
+    public async Task<Result<WorkshopUserCollections>> ListCollectionsAsync(
+        string installRoot, IProgress<WorkshopActionEvent>? progress = null, CancellationToken ct = default)
     {
         ct.ThrowIfCancellationRequested();
         if (!PathNormalizer.TryNormalizeAbsolute(installRoot, out var root))
@@ -88,7 +89,7 @@ internal sealed partial class WorkshopActionRunner(
         }
 
         WorkshopUserCollections? collections = null;
-        var run = await RunHelperAsync(root, SteamHelperAction.ListCollections, [], OnEvent, ct).ConfigureAwait(false);
+        var run = await RunHelperAsync(root, SteamHelperAction.ListCollections, [], progress, OnEvent, ct).ConfigureAwait(false);
         if (!run.IsSuccess)
         {
             return run.Error;
@@ -105,7 +106,7 @@ internal sealed partial class WorkshopActionRunner(
         {
             if (e is SteamHelperCollections listed)
             {
-                collections = listed.Collections;
+                collections = new WorkshopUserCollections(listed.AccountId, ToSummaries(listed.Favorited), ToSummaries(listed.Published));
             }
         }
     }
@@ -117,10 +118,30 @@ internal sealed partial class WorkshopActionRunner(
         WorkshopAction.Update => SteamHelperAction.Update,
     };
 
+    private static WorkshopItemFailure ToItemFailure(SteamHelperItemFailure failure) => failure switch
+    {
+        SteamHelperItemFailure.SubscribeFailed => WorkshopItemFailure.SubscribeFailed,
+        SteamHelperItemFailure.UnsubscribeFailed => WorkshopItemFailure.UnsubscribeFailed,
+        SteamHelperItemFailure.DownloadNotStarted => WorkshopItemFailure.DownloadNotStarted,
+        SteamHelperItemFailure.DownloadFailed => WorkshopItemFailure.DownloadFailed,
+        SteamHelperItemFailure.TimedOut => WorkshopItemFailure.TimedOut,
+    };
+
+    private static List<WorkshopCollectionSummary> ToSummaries(IReadOnlyList<SteamHelperCollection> collections) =>
+        collections.Select(collection => new WorkshopCollectionSummary(collection.Id, collection.Title, collection.ChildCount)).ToList();
+
+    // A working helper writes at least this often, with room for Steam's start and shutdown.
+    private TimeSpan StallTimeout => HelperTimeouts.LongestSilence + TimeSpan.FromSeconds(30);
+
     /// <summary>Runs the helper for a normalized install root, passing it every event but <c>failed</c> and <c>finished</c>.</summary>
     /// <returns>Success once the helper finished; otherwise its failure, already logged.</returns>
     private async Task<Result> RunHelperAsync(
-        string root, SteamHelperAction action, IReadOnlyList<ulong> ids, Action<SteamHelperEvent> onEvent, CancellationToken ct)
+        string root,
+        SteamHelperAction action,
+        IReadOnlyList<ulong> ids,
+        IProgress<WorkshopActionEvent>? progress,
+        Action<SteamHelperEvent> onEvent,
+        CancellationToken ct)
     {
         if (WorkshopFiles.SteamApiCandidates(root, platform.Os).FirstOrDefault(File.Exists) is not { } steamApi)
         {
@@ -132,8 +153,13 @@ internal sealed partial class WorkshopActionRunner(
             return Logged(WorkshopErrors.HelperStartFailed(AppContext.BaseDirectory, "the launcher's own executable path is unknown"));
         }
 
-        var request = new SteamHelperRequest(action, steamApi, ids);
-        await _gate.WaitAsync(ct).ConfigureAwait(false);
+        var request = new SteamHelperRequest(action, steamApi, ids, HelperTimeouts);
+        if (!_gate.Wait(0, ct))
+        {
+            progress?.Report(new WorkshopActionWaiting());
+            await _gate.WaitAsync(ct).ConfigureAwait(false);
+        }
+
         try
         {
             // The game folder holds the game's steam_appid.txt, Steam's fallback when the variables don't reach it.
@@ -259,7 +285,7 @@ internal sealed partial class WorkshopActionRunner(
 
         // VersionMismatch: the Steam client is older than the game's library.
         SteamHelperFailure.VersionMismatch or SteamHelperFailure.InitFailed => WorkshopErrors.SteamInitFailed(failed.Message),
-        SteamHelperFailure.BadRequest => WorkshopErrors.HelperFailed(failed.Message),
+        SteamHelperFailure.BadRequest => WorkshopErrors.HelperRequestRejected(failed.Message),
         SteamHelperFailure.QueryFailed => WorkshopErrors.CollectionsQueryFailed(failed.Message),
     };
 
