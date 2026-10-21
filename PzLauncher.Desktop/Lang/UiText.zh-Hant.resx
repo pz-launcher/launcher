@@ -62,10 +62,10 @@
     <value>啟動設定</value>
   </data>
   <data name="Home_Collection" xml:space="preserve">
-    <value>合集</value>
+    <value>模組預設</value>
   </data>
   <data name="Home_NoCollection" xml:space="preserve">
-    <value>不使用合集（保持遊戲內設定）</value>
+    <value>不使用模組預設（保持遊戲內設定）</value>
   </data>
   <data name="Installs_Title" xml:space="preserve">
     <value>已安裝</value>
@@ -264,13 +264,13 @@
     <value>找不到 {0} 的遊戲快取資料夾。請檢查「啟動設定」中的 -cachedir= 遊戲參數。</value>
   </data>
   <data name="Error_ModCollectionNameInvalid" xml:space="preserve">
-    <value>「{0}」不是有效的合集名稱。名稱不能為空，也不能包含 \ / : * ? " &lt; &gt; |。</value>
+    <value>「{0}」不是有效的模組預設名稱。名稱不能為空，也不能包含 \ / : * ? " &lt; &gt; |。</value>
   </data>
   <data name="Error_ModCollectionModIdInvalid" xml:space="preserve">
-    <value>「{0}」不是有效的合集 mod id。</value>
+    <value>「{0}」不是模組預設中有效的 mod id。</value>
   </data>
   <data name="Error_ModCollectionNotFound" xml:space="preserve">
-    <value>名為「{0}」的合集已不存在。請重新整理清單後再試一次。</value>
+    <value>名為「{0}」的模組預設已不存在。請重新整理清單後再試一次。</value>
   </data>
   <data name="Error_ModCollectionFileUnreadable" xml:space="preserve">
     <value>無法讀取模組清單檔案 {0}。請確認它沒有被其他程式開啟，然後再試一次。</value>
@@ -459,7 +459,7 @@
     <value>在 Steam 中按下「開始遊戲」時開啟 PzLauncher</value>
   </data>
   <data name="Steam_HookHint" xml:space="preserve">
-    <value>開啟後，在 Steam 中按下 Project Zomboid 的「開始遊戲」會開啟本啟動器而非直接啟動遊戲，確保一律使用你的 Java、記憶體、合集和 ZombieBuddy 設定。請在這裡按「啟動遊戲」開始遊戲。</value>
+    <value>開啟後，在 Steam 中按下 Project Zomboid 的「開始遊戲」會開啟本啟動器而非直接啟動遊戲，確保一律使用你的 Java、記憶體、模組預設和 ZombieBuddy 設定。請在這裡按「啟動遊戲」開始遊戲。</value>
   </data>
   <data name="Steam_OtherLauncher" xml:space="preserve">
     <value>Steam 目前會開啟另一個 PzLauncher：{0}。開啟後改為開啟這一個。</value>
@@ -723,7 +723,7 @@
     <value>模組管理</value>
   </data>
   <data name="Mods_SectionCollections" xml:space="preserve">
-    <value>合集管理</value>
+    <value>模組預設</value>
   </data>
   <data name="Mods_SectionWorkshopSubscriptions" xml:space="preserve">
     <value>工作坊訂閱</value>
@@ -759,7 +759,7 @@
     <value>已選 {0} 個</value>
   </data>
   <data name="Mods_AddToCollection" xml:space="preserve">
-    <value>加入合集…</value>
+    <value>加入模組預設…</value>
   </data>
   <data name="Mods_ClearSelection" xml:space="preserve">
     <value>取消選取</value>
@@ -780,7 +780,7 @@
     <value>啟用</value>
   </data>
   <data name="Mods_ColumnCollections" xml:space="preserve">
-    <value>所在合集</value>
+    <value>所在模組預設</value>
   </data>
   <data name="Mods_SortColumnTip" xml:space="preserve">
     <value>按此欄排序，再次點擊反向</value>
@@ -816,7 +816,7 @@
     <value>匯入</value>
   </data>
   <data name="ModCollections_Empty" xml:space="preserve">
-    <value>還沒有合集。新增一個，或匯入從遊戲複製的分享文字。</value>
+    <value>還沒有模組預設。新增一個，或匯入從遊戲複製的分享文字。</value>
   </data>
   <data name="ModCollections_CountFormat" xml:space="preserve">
     <value>{0} 個模組</value>
@@ -825,28 +825,28 @@
     <value>未安裝 {0} 個</value>
   </data>
   <data name="ModCollections_NoSelection" xml:space="preserve">
-    <value>請選擇一個合集。</value>
+    <value>請選擇一個模組預設。</value>
   </data>
   <data name="ModCollections_CurrentBadge" xml:space="preserve">
     <value>目前</value>
   </data>
   <data name="ModCollections_Use" xml:space="preserve">
-    <value>使用此合集</value>
+    <value>使用此模組預設</value>
   </data>
   <data name="ModCollections_UseHint" xml:space="preserve">
-    <value>立即將此合集套用為遊戲的啟用清單，之後每次從啟動器啟動都會自動套用。</value>
+    <value>立即將此模組預設套用為遊戲的啟用清單，之後每次從啟動器啟動都會自動套用。</value>
   </data>
   <data name="ModCollections_InUse" xml:space="preserve">
     <value>目前使用</value>
   </data>
   <data name="ModCollections_InUseHint" xml:space="preserve">
-    <value>這是目前的合集，啟用清單已是最新</value>
+    <value>這是目前的模組預設，啟用清單已是最新</value>
   </data>
   <data name="ModCollections_ApplyAgain" xml:space="preserve">
     <value>重新套用</value>
   </data>
   <data name="ModCollections_ApplyAgainHint" xml:space="preserve">
-    <value>合集或遊戲內的啟用清單有變動，按此立即套用（啟動時也會自動套用）</value>
+    <value>模組預設或遊戲內的啟用清單有變動，按此立即套用（啟動時也會自動套用）</value>
   </data>
   <data name="ModCollections_Share" xml:space="preserve">
     <value>分享</value>
@@ -873,7 +873,7 @@
     <value>未安裝</value>
   </data>
   <data name="ModCollections_MissingTip" xml:space="preserve">
-    <value>這些模組在本機找不到（未訂閱或已刪除），套用合集時會略過</value>
+    <value>這些模組在本機找不到（未訂閱或已刪除），套用模組預設時會略過</value>
   </data>
   <data name="ModCollections_MoveUp" xml:space="preserve">
     <value>上移</value>
@@ -888,43 +888,43 @@
     <value>置底</value>
   </data>
   <data name="ModCollections_RemoveMod" xml:space="preserve">
-    <value>從合集中移除</value>
+    <value>從模組預設中移除</value>
   </data>
   <data name="ModCollections_NameInvalid" xml:space="preserve">
     <value>請輸入名稱，且不能包含以下字元：\ / : * ? " &lt; &gt; |</value>
   </data>
   <data name="ModCollections_OverwriteTitle" xml:space="preserve">
-    <value>覆寫合集？</value>
+    <value>覆寫模組預設？</value>
   </data>
   <data name="ModCollections_OverwriteMessage" xml:space="preserve">
-    <value>已有名為「{0}」的合集。要覆寫它嗎？</value>
+    <value>已有名為「{0}」的模組預設。要覆寫它嗎？</value>
   </data>
   <data name="ModCollections_Overwrite" xml:space="preserve">
     <value>覆寫</value>
   </data>
   <data name="ModCollections_NewTitle" xml:space="preserve">
-    <value>新增合集</value>
+    <value>新增模組預設</value>
   </data>
   <data name="ModCollections_Create" xml:space="preserve">
     <value>建立</value>
   </data>
   <data name="ModCollections_NewFromEnabledTitle" xml:space="preserve">
-    <value>從目前啟用清單新增合集</value>
+    <value>從目前啟用清單新增模組預設</value>
   </data>
   <data name="ModCollections_ImportTitle" xml:space="preserve">
-    <value>匯入合集</value>
+    <value>匯入模組預設</value>
   </data>
   <data name="ModCollections_ImportMessage" xml:space="preserve">
-    <value>貼上從遊戲或啟動器複製的分享文字，每行一個合集（名稱:id1;id2;…;）。</value>
+    <value>貼上從遊戲或啟動器複製的分享文字，每行一個模組預設（名稱:id1;id2;…;）。</value>
   </data>
   <data name="ModCollections_RenameTitle" xml:space="preserve">
-    <value>重新命名合集</value>
+    <value>重新命名模組預設</value>
   </data>
   <data name="ModCollections_DeleteTitle" xml:space="preserve">
-    <value>刪除合集？</value>
+    <value>刪除模組預設？</value>
   </data>
   <data name="ModCollections_DeleteMessage" xml:space="preserve">
-    <value>要刪除合集「{0}」嗎？刪除前會先備份遊戲的模組清單檔案。</value>
+    <value>要刪除模組預設「{0}」嗎？刪除前會先備份遊戲的模組清單檔案。</value>
   </data>
   <data name="ModCollections_Applied" xml:space="preserve">
     <value>已套用「{0}」：啟用了 {1} 個模組。</value>
@@ -933,13 +933,13 @@
     <value>已將「{0}」的分享文字複製到剪貼簿。</value>
   </data>
   <data name="ModCollections_NameMessage" xml:space="preserve">
-    <value>合集名稱：</value>
+    <value>模組預設名稱：</value>
   </data>
   <data name="ModCollections_ImportNothing" xml:space="preserve">
-    <value>找不到合集。每行需要名稱、冒號和模組 ID。</value>
+    <value>找不到模組預設。每行需要名稱、冒號和模組 ID。</value>
   </data>
   <data name="ModCollections_ImportNameInvalid" xml:space="preserve">
-    <value>「{0}」不能用作合集名稱。</value>
+    <value>「{0}」不能用作模組預設名稱。</value>
   </data>
   <data name="Workshop_SearchPlaceholder" xml:space="preserve">
     <value>依標題、項目 ID 或模組 ID 搜尋</value>
@@ -948,7 +948,7 @@
     <value>需要更新</value>
   </data>
   <data name="Workshop_FilterUnused" xml:space="preserve">
-    <value>未被任何合集使用</value>
+    <value>未被任何模組預設使用</value>
   </data>
   <data name="Workshop_FilterFavorites" xml:space="preserve">
     <value>本機收藏</value>
@@ -1029,7 +1029,7 @@
     <value>要取消訂閱這 {0} 個項目嗎？操作結束後 Steam 會刪除它們的檔案。</value>
   </data>
   <data name="Workshop_UnsubscribeUsedMessage" xml:space="preserve">
-    <value>要取消訂閱這 {0} 個項目嗎？以下模組合集使用了它們的模組：{1}。合集會保留這些模組，但它們將變為缺少。操作結束後 Steam 會刪除它們的檔案。</value>
+    <value>要取消訂閱這 {0} 個項目嗎？以下模組預設使用了它們的模組：{1}。模組預設會保留這些模組，但它們將變為缺少。操作結束後 Steam 會刪除它們的檔案。</value>
   </data>
   <data name="Workshop_CheckedAllCurrent" xml:space="preserve">
     <value>所有已安裝的項目都已是最新。</value>
@@ -1149,25 +1149,25 @@
     <value>取消訂閱全部</value>
   </data>
   <data name="WorkshopCollections_Generate" xml:space="preserve">
-    <value>建立本機合集</value>
+    <value>建立模組預設</value>
   </data>
   <data name="WorkshopCollections_GenerateHint" xml:space="preserve">
-    <value>依此工作坊合輯的順序，用已安裝項目中的模組建立一個本機合集。</value>
+    <value>依此工作坊合輯的順序，用已安裝項目中的模組建立一個模組預設。</value>
   </data>
   <data name="WorkshopCollections_GenerateTitle" xml:space="preserve">
-    <value>從工作坊合輯新增合集</value>
+    <value>從工作坊合輯新增模組預設</value>
   </data>
   <data name="WorkshopCollections_GenerateNothing" xml:space="preserve">
     <value>這個合輯中已安裝的項目都沒有可加入的模組。請先訂閱缺少的項目，等 Steam 下載完成。</value>
   </data>
   <data name="WorkshopCollections_Generated" xml:space="preserve">
-    <value>已建立「{0}」，包含 {1} 個模組，可在合集管理中查看。</value>
+    <value>已建立「{0}」，包含 {1} 個模組，可在「模組預設」頁查看。</value>
   </data>
   <data name="WorkshopCollections_PickTitle" xml:space="preserve">
     <value>選擇要加入的模組</value>
   </data>
   <data name="WorkshopCollections_PickMessage" xml:space="preserve">
-    <value>以下項目包含多個模組。取消勾選不要放入新合集的模組。</value>
+    <value>以下項目包含多個模組。取消勾選不要放入新模組預設的模組。</value>
   </data>
   <data name="WorkshopCollections_PickConflict" xml:space="preserve">
     <value>與 {0} 不相容</value>
@@ -1239,7 +1239,7 @@
     <value>保留目前的啟用清單？</value>
   </data>
   <data name="ModApply_KeepMessage" xml:space="preserve">
-    <value>遊戲目前的啟用清單（{0} 個模組）與所有合集都不一致，套用「{1}」會取代它。要先把它儲存為合集嗎？</value>
+    <value>遊戲目前的啟用清單（{0} 個模組）與所有模組預設都不一致，套用「{1}」會取代它。要先把它儲存為模組預設嗎？</value>
   </data>
   <data name="ModApply_KeepDefaultName" xml:space="preserve">
     <value>原啟用清單</value>
