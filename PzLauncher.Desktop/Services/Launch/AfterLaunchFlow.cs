@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using PzLauncher.Core.Common;
 using PzLauncher.Core.Launch;
 using PzLauncher.Desktop.Lang;
 using PzLauncher.Desktop.Services.Shell;
@@ -21,7 +22,7 @@ public sealed class AfterLaunchFlow(
             UiText.AfterLaunch_PromptTitle,
             UiText.AfterLaunch_PromptMessage,
             UiText.AfterLaunch_PromptHint,
-            AfterLaunchSettings.Options(),
+            settings.Options(),
             AfterLaunchAction.Keep);
         if (await dialogs.ChooseOneAsync(prompt) is not { } chosen)
         {
@@ -32,8 +33,30 @@ public sealed class AfterLaunchFlow(
         return chosen;
     }
 
-    /// <summary>Call once the game has started.</summary>
-    public void Apply(AfterLaunchAction action)
+    /// <summary>
+    /// Call once the game has started; completes when it exits, with its exit, or <c>null</c> when the launcher is closing.
+    /// Still waits for the exit when closing, so the caller's run state stays set while the close flush runs.
+    /// </summary>
+    public async Task<Result?> WatchAsync(AfterLaunchAction action)
+    {
+        Apply(action);
+        var closing = await CloseWhenStartedAsync(action);
+        var exit = await launcher.WaitForExitAsync();
+        if (closing)
+        {
+            return null;
+        }
+
+        // Before the caller shows an exit error, so it never shows over a hidden or minimized window.
+        if (action != AfterLaunchAction.Keep)
+        {
+            window.Restore();
+        }
+
+        return exit;
+    }
+
+    private void Apply(AfterLaunchAction action)
     {
         switch (action)
         {
@@ -49,11 +72,9 @@ public sealed class AfterLaunchFlow(
         }
     }
 
-    /// <summary>
-    /// For <see cref="AfterLaunchAction.Close"/>: closes the launcher once the game has outlived its early-exit window, unless the user
-    /// brought the window back meanwhile. <c>true</c> when the launcher is closing; an early exit is a failed start the user must see.
-    /// </summary>
-    public async Task<bool> CloseWhenStartedAsync(AfterLaunchAction action)
+    // Closes once the game has outlived its early-exit window, unless the user brought the window back meanwhile;
+    // an early exit is a failed start the user must see.
+    private async Task<bool> CloseWhenStartedAsync(AfterLaunchAction action)
     {
         if (action != AfterLaunchAction.Close || !await launcher.WaitPastEarlyExitAsync() || !window.IsHidden)
         {
@@ -62,14 +83,5 @@ public sealed class AfterLaunchFlow(
 
         lifetime.Close();
         return true;
-    }
-
-    /// <summary>Call when the game has exited, before any exit error shows.</summary>
-    public void Restore(AfterLaunchAction action)
-    {
-        if (action != AfterLaunchAction.Keep)
-        {
-            window.Restore();
-        }
     }
 }

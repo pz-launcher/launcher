@@ -15,6 +15,6 @@ public interface IGameLaunchService
     /// <summary>Completes when the tracked game exits (a failure when its JVM crashed or failed to start), immediately when none runs.</summary>
     Task<Result> WaitForExitAsync(CancellationToken ct = default);
 
-    /// <summary><c>true</c> once the tracked game has outlived the window in which an exit counts as a failed start; <c>false</c> when it exited within it or none was started.</summary>
+    /// <summary><c>true</c> once the game started last has outlived the window in which an exit counts as a failed start; <c>false</c> when it exited within it or none was started. Stays decided after that game exits.</summary>
     Task<bool> WaitPastEarlyExitAsync(CancellationToken ct = default);
 }

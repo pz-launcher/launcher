@@ -80,7 +80,7 @@ public static class DesignData
     private static readonly GameRunState RunState = new();
 
     private static readonly AfterLaunchSettings AfterLaunch =
-        new(Preferences, new UserPreferences(null, null, null) { AfterLaunch = AfterLaunchAction.MinimizeToTray });
+        new(Preferences, new UserPreferences(null, null, null) { AfterLaunch = AfterLaunchAction.MinimizeToTray }, new SamplePlatform());
 
     private static readonly SampleModCollections ModCollectionsSample = new();
 
@@ -125,7 +125,7 @@ public static class DesignData
     public static SteamSettingsViewModel SteamSettings { get; } = CreateSteamSettings();
 
     public static SettingsViewModel Settings { get; } =
-        new(new LightThemeService(), Preferences, new NoWindowPlacement(), AfterLaunch, Java, UpdateSettings, ProxySettings, SteamSettings, Localization);
+        new(new LightThemeService(), Preferences, new NoWindowPlacement(), AfterLaunch, Java, UpdateSettings, ProxySettings, SteamSettings);
 
     public static LaunchSettingsViewModel LaunchSettings { get; } = CreateLaunchSettings();
 

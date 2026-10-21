@@ -51,4 +51,17 @@ public sealed class LauncherWindow : ILauncherWindow, IAppLifetime
     }
 
     public void Close() => Attached.Close();
+
+    /// <summary>An open dialog's caller would carry on while the app shuts down, so the dialog is brought forward instead.</summary>
+    public void CloseUnlessDialogOpen()
+    {
+        if (Attached.OwnedWindows is [.., var dialog])
+        {
+            Restore();
+            dialog.Activate();
+            return;
+        }
+
+        Close();
+    }
 }

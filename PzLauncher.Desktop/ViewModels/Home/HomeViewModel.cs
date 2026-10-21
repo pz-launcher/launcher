@@ -173,8 +173,6 @@ public partial class HomeViewModel : ViewModelBase
             return;
         }
 
-        var afterLaunch = await _afterLaunch.ChooseAsync();
-
         // A reorder still waiting for its delay must be on disk before the default collection is applied.
         var flushed = await _orderWriter.FlushAsync();
         if (!flushed.IsSuccess)
@@ -220,6 +218,8 @@ public partial class HomeViewModel : ViewModelBase
             }
         }
 
+        // Asked only once nothing else can call the launch off.
+        var afterLaunch = await _afterLaunch.ChooseAsync();
         var result = await _launcher.LaunchAsync(new LaunchGameRequest(install.RootPath, overrides));
         if (!result.IsSuccess)
         {
@@ -228,29 +228,20 @@ public partial class HomeViewModel : ViewModelBase
         }
 
         _runState.IsGameRunning = true;
-        _afterLaunch.Apply(afterLaunch);
-        Result exit;
-        bool closing;
+        Result? exit;
         try
         {
-            // Still awaits the exit when closing: the run state stays set while the close flush runs, so no write touches the running game.
-            closing = await _afterLaunch.CloseWhenStartedAsync(afterLaunch);
-            exit = await _launcher.WaitForExitAsync();
+            exit = await _afterLaunch.WatchAsync(afterLaunch);
         }
         finally
         {
             _runState.IsGameRunning = false;
         }
 
-        if (closing)
+        // Null when the launcher is closing.
+        if (exit is { IsSuccess: false } exited)
         {
-            return;
-        }
-
-        _afterLaunch.Restore(afterLaunch);
-        if (!exit.IsSuccess)
-        {
-            await _dialogs.ShowErrorAsync(ErrorMessages.ToUserText(exit.Error));
+            await _dialogs.ShowErrorAsync(ErrorMessages.ToUserText(exited.Error));
         }
     }
 

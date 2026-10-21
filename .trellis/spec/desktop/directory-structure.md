@@ -81,8 +81,9 @@ Reference: `PzLauncher.Desktop/Services/Shell/SingleInstanceGuard.cs`, run in `P
 Reference: `PzLauncher.Desktop/Services/Launch/AfterLaunchFlow.cs`, `PzLauncher.Desktop/Views/LauncherWindow.cs`, `PzLauncher.Desktop/Views/TrayIconHost.cs`.
 
 - `AfterLaunchFlow` owns the behaviour; Home only calls it.
-- `AfterLaunchSettings.Options()` is the only source of the choices' order and texts.
+- Linux offers no tray choice (`AfterLaunchSettings.OffersTray`): its desktops may show no tray icon.
 - Every way back to the window goes through `LauncherWindow.Restore`.
+- The tray's exit never closes under an open dialog (`LauncherWindow.CloseUnlessDialogOpen`).
 - Only Core decides whether the game outlived its early-exit window (`IGameLaunchService.WaitPastEarlyExitAsync`); Desktop runs no timer.
 - The run state stays set until the game exits, even while the launcher closes.
 

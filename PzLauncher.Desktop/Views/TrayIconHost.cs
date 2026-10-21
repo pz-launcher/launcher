@@ -13,7 +13,7 @@ public static class TrayIconHost
         var show = new NativeMenuItem();
         show.Click += (_, _) => window.Restore();
         var exit = new NativeMenuItem();
-        exit.Click += (_, _) => window.Close();
+        exit.Click += (_, _) => window.CloseUnlessDialogOpen();
         var tray = new TrayIcon
         {
             Icon = icon,

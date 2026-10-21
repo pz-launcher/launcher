@@ -44,7 +44,7 @@ public class HomeViewModelTests : UiTextCultureTest
     public HomeViewModelTests()
     {
         // Chosen by default, so tests of the other launch steps see no prompt.
-        _afterLaunch = new AfterLaunchSettings(_preferences, new UserPreferences(null, null, null) { AfterLaunch = AfterLaunchAction.Keep });
+        _afterLaunch = new AfterLaunchSettings(_preferences, new UserPreferences(null, null, null) { AfterLaunch = AfterLaunchAction.Keep }, new FakePlatformEnvironment());
         _orderWriter = new ModCollectionOrderWriter(_collections, _runState, new FakePlatformEnvironment(), new ManualTimeProvider());
         Installs = new(_service, new FakeFolderPicker(), new FakePlatformEnvironment(), Localization);
     }
@@ -364,22 +364,35 @@ public class HomeViewModelTests : UiTextCultureTest
     }
 
     [Fact]
-    public async Task Launch_NothingChosen_AsksBeforeTheFlushTheWorkshopCheckAndZombieBuddy()
+    public async Task Launch_NothingChosen_AsksAfterEveryOtherStepJustBeforeTheStart()
     {
         _afterLaunch.Action = null;
         _dialogs.SingleChoiceAnswers.Enqueue(AfterLaunchAction.Keep);
         ArrangeOutdatedWorkshopItem();
         _dialogs.ChoiceAnswers.Enqueue(ConfirmChoice.Alternative);
         var vm = await CreateActivatedViewModelAsync(SteamGame);
-        _orderWriter.Queue(SteamGame.RootPath, "", "Pack", ["ModA"]);
-        var stepsWhenShown = new List<(int Prompts, int OrderWrites, int WorkshopChoices, int ZombieBuddyChecks)>();
+        var stepsWhenShown = new List<(int Prompts, int WorkshopChoices, int ZombieBuddyChecks, int Launches)>();
         _dialogs.Shown += () => stepsWhenShown.Add(
-            (_dialogs.SingleChoices.Count, _collections.Saves.Count, _dialogs.Choices.Count, _zombieBuddy.StatusRequests.Count));
+            (_dialogs.SingleChoices.Count, _dialogs.Choices.Count, _zombieBuddy.StatusRequests.Count, _launcher.Launches.Count));
 
         await LaunchAndExitAsync(vm);
 
-        Assert.Equal([(1, 0, 0, 0), (1, 1, 1, 0)], stepsWhenShown);
+        Assert.Equal([(0, 1, 0, 0), (1, 1, 1, 0)], stepsWhenShown);
         Assert.Single(_launcher.Launches);
+    }
+
+    [Fact]
+    public async Task Launch_NothingChosenAndTheWorkshopPromptCancelled_NeverAsks()
+    {
+        _afterLaunch.Action = null;
+        ArrangeOutdatedWorkshopItem();
+        var vm = await CreateActivatedViewModelAsync(SteamGame);
+
+        await vm.LaunchCommand.ExecuteAsync(null);
+
+        Assert.Empty(_dialogs.SingleChoices);
+        Assert.Empty(_launcher.Launches);
+        Assert.Empty(_preferences.SavedAfterLaunch);
     }
 
     public static TheoryData<AfterLaunchAction> AfterLaunchActions => [.. Enum.GetValues<AfterLaunchAction>()];

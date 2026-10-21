@@ -1,7 +1,6 @@
 using PzLauncher.Core.Common;
 using PzLauncher.Core.Launch;
 using PzLauncher.Desktop.Lang;
-using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Services.Launch;
 using PzLauncher.Desktop.Services.Preferences;
 using PzLauncher.Desktop.Services.Shell;
@@ -22,7 +21,7 @@ public class AfterLaunchFlowTests : UiTextCultureTest
 
     public AfterLaunchFlowTests()
     {
-        _settings = new AfterLaunchSettings(_preferences, new UserPreferences(null, null, null));
+        _settings = new AfterLaunchSettings(_preferences, new UserPreferences(null, null, null), new FakePlatformEnvironment());
         _flow = new AfterLaunchFlow(_settings, _window, _lifetime, _dialogs, _launcher);
     }
 
@@ -43,7 +42,7 @@ public class AfterLaunchFlowTests : UiTextCultureTest
     }
 
     [Fact]
-    public async Task ChooseAsync_NothingSaved_AsksWithEveryChoiceInOrder_KeepPreselected()
+    public async Task ChooseAsync_NothingSaved_AsksWithTheOfferedChoices_KeepPreselected()
     {
         await _flow.ChooseAsync();
 
@@ -51,10 +50,7 @@ public class AfterLaunchFlowTests : UiTextCultureTest
         Assert.Equal(UiText.AfterLaunch_PromptTitle, prompt.Title);
         Assert.Equal(UiText.AfterLaunch_PromptMessage, prompt.Message);
         Assert.Equal(UiText.AfterLaunch_PromptHint, prompt.Hint);
-        Assert.Equal(
-            [AfterLaunchAction.Keep, AfterLaunchAction.Minimize, AfterLaunchAction.MinimizeToTray, AfterLaunchAction.Close],
-            prompt.Options.Select(option => option.Value));
-        Assert.Equal(prompt.Options.Select(option => DisplayNames.Of(option.Value)), prompt.Options.Select(option => option.Text));
+        Assert.Equal(_settings.Options(), prompt.Options);
         Assert.Equal(AfterLaunchAction.Keep, prompt.Preselected);
     }
 
@@ -92,78 +88,63 @@ public class AfterLaunchFlowTests : UiTextCultureTest
 
     [Theory]
     [MemberData(nameof(WindowWhileRunning))]
-    public void Apply_Chosen_ChangesTheWindow(AfterLaunchAction action, string[] expected)
-    {
-        _flow.Apply(action);
-
-        Assert.Equal(expected, _window.Calls);
-    }
-
-    [Theory]
-    [MemberData(nameof(Actions))]
-    public void Restore_Chosen_BringsTheWindowBackUnlessKept(AfterLaunchAction action)
-    {
-        _flow.Restore(action);
-
-        string[] expected = action == AfterLaunchAction.Keep ? [] : [nameof(FakeLauncherWindow.Restore)];
-        Assert.Equal(expected, _window.Calls);
-    }
-
-    [Theory]
-    [InlineData(AfterLaunchAction.Keep)]
-    [InlineData(AfterLaunchAction.Minimize)]
-    [InlineData(AfterLaunchAction.MinimizeToTray)]
-    public async Task CloseWhenStartedAsync_NotClose_ReturnsFalseAtOnce(AfterLaunchAction action)
+    public async Task WatchAsync_GameExits_ChangesTheWindowOnStartAndRestoresItUnlessKept(AfterLaunchAction action, string[] onStart)
     {
         await StartGameAsync();
-        _flow.Apply(action);
+        var crash = TestErrors.Create(ErrorCode.LaunchGameCrashed, "hs_err_pid4242.log");
 
-        var close = _flow.CloseWhenStartedAsync(action);
+        var watch = _flow.WatchAsync(action);
 
-        Assert.True(close.IsCompleted);
-        Assert.False(await close);
+        Assert.Equal(onStart, _window.Calls);
+        Assert.False(watch.IsCompleted);
+        _launcher.Exit.SetResult(crash);
+        Assert.Equal(crash, await watch);
+        string[] expected = action == AfterLaunchAction.Keep ? [] : [.. onStart, nameof(FakeLauncherWindow.Restore)];
+        Assert.Equal(expected, _window.Calls);
         Assert.Equal(0, _lifetime.CloseCalls);
     }
 
     [Fact]
-    public async Task CloseWhenStartedAsync_GameOutlivesTheEarlyExitWindow_ClosesTheLauncher()
+    public async Task WatchAsync_CloseAndTheGameOutlivesTheEarlyExitWindow_ClosesTheLauncherAndStillWaitsForTheExit()
     {
         await StartGameAsync();
-        _flow.Apply(AfterLaunchAction.Close);
 
-        var close = _flow.CloseWhenStartedAsync(AfterLaunchAction.Close);
+        var watch = _flow.WatchAsync(AfterLaunchAction.Close);
 
-        Assert.False(close.IsCompleted);
+        Assert.Equal(0, _lifetime.CloseCalls);
         _launcher.PastEarlyExit.SetResult(true);
-        Assert.True(await close);
         Assert.Equal(1, _lifetime.CloseCalls);
+        Assert.False(watch.IsCompleted);
+        _launcher.Exit.SetResult(Result.Ok());
+        Assert.Null(await watch);
         Assert.Equal([nameof(FakeLauncherWindow.Hide)], _window.Calls);
     }
 
     [Fact]
-    public async Task CloseWhenStartedAsync_GameExitsEarly_StaysOpen()
+    public async Task WatchAsync_CloseAndTheGameExitsEarly_StaysOpenAndRestores()
     {
         await StartGameAsync();
-        _flow.Apply(AfterLaunchAction.Close);
+        var exitedEarly = TestErrors.Create(ErrorCode.LaunchGameExitedEarly, "Unrecognized VM option 'UseShenandoahGC'");
 
-        var close = _flow.CloseWhenStartedAsync(AfterLaunchAction.Close);
-        _launcher.Exit.SetResult(TestErrors.Create(ErrorCode.LaunchGameExitedEarly, "Unrecognized VM option 'UseShenandoahGC'"));
+        var watch = _flow.WatchAsync(AfterLaunchAction.Close);
+        _launcher.Exit.SetResult(exitedEarly);
 
-        Assert.False(await close);
+        Assert.Equal(exitedEarly, await watch);
         Assert.Equal(0, _lifetime.CloseCalls);
+        Assert.Equal([nameof(FakeLauncherWindow.Hide), nameof(FakeLauncherWindow.Restore)], _window.Calls);
     }
 
     [Fact]
-    public async Task CloseWhenStartedAsync_WindowBroughtBackDuringTheWait_StaysOpen()
+    public async Task WatchAsync_CloseAndTheWindowBroughtBackDuringTheWait_StaysOpen()
     {
         await StartGameAsync();
-        _flow.Apply(AfterLaunchAction.Close);
 
-        var close = _flow.CloseWhenStartedAsync(AfterLaunchAction.Close);
+        var watch = _flow.WatchAsync(AfterLaunchAction.Close);
         _window.Restore();
         _launcher.PastEarlyExit.SetResult(true);
+        _launcher.Exit.SetResult(Result.Ok());
 
-        Assert.False(await close);
+        Assert.Equal(Result.Ok(), await watch);
         Assert.Equal(0, _lifetime.CloseCalls);
     }
 }

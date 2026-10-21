@@ -38,7 +38,7 @@ public class MainViewModelTests : UiTextCultureTest
         var history = TestWorkshop.History();
         var userCollections = TestWorkshop.UserCollections();
         var favorites = TestWorkshop.Favorites();
-        var afterLaunch = new AfterLaunchSettings(store, new(null, null, null));
+        var afterLaunch = new AfterLaunchSettings(store, new(null, null, null), new FakePlatformEnvironment());
         return new(
             new HomeViewModel(
                 installs, launcher, overrides, dialogs, zombieBuddy, channels, new FakeZombieBuddyModsService(),
@@ -58,8 +58,7 @@ public class MainViewModelTests : UiTextCultureTest
                 java,
                 new UpdateSettingsViewModel(updates, Localization),
                 TestProxy.ViewModel(Localization, store),
-                TestSteam.ViewModel(Localization, store),
-                Localization),
+                TestSteam.ViewModel(Localization, store)),
             new LaunchSettingsViewModel(
                 installs, launcher, overrides, java, zombieBuddy, channels, runState, dialogs, new FakePlatformEnvironment(), Localization),
             new LanguageMenuViewModel(Localization, store),

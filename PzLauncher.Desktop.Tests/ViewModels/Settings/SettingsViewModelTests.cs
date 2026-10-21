@@ -1,4 +1,3 @@
-using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Services.Launch;
 using PzLauncher.Desktop.Services.Preferences;
 using PzLauncher.Desktop.Tests.TestSupport;
@@ -16,20 +15,16 @@ public class SettingsViewModelTests : UiTextCultureTest
     private readonly FakeJavaDiscoveryService _java = new();
     private readonly FakeSteamLaunchHookService _steam = new();
 
-    private SettingsViewModel CreateViewModel(FakeThemeService theme, AfterLaunchAction? afterLaunch = null) =>
+    private SettingsViewModel CreateViewModel(FakeThemeService theme) =>
         new(
             theme,
             _store,
             _windowPlacement,
-            new AfterLaunchSettings(_store, new UserPreferences(null, null, null) { AfterLaunch = afterLaunch }),
+            new AfterLaunchSettings(_store, new UserPreferences(null, null, null), new FakePlatformEnvironment()),
             TestJava.ViewModel(Localization, _java, _store),
             new UpdateSettingsViewModel(TestUpdates.Coordinator(new FakeUpdateService(), _store), Localization),
             TestProxy.ViewModel(Localization, _store),
-            TestSteam.ViewModel(Localization, _store, _steam),
-            Localization);
-
-    private static AfterLaunchAction[] Checked(SettingsViewModel vm) =>
-        [.. vm.AfterLaunchOptions.Where(option => option.IsChecked).Select(option => option.Value)];
+            TestSteam.ViewModel(Localization, _store, _steam));
 
     [Theory]
     [InlineData(AppTheme.Light)]
@@ -64,44 +59,6 @@ public class SettingsViewModelTests : UiTextCultureTest
         Assert.Equal(expected, theme.Applied);
         Assert.Equal(expected, _store.SavedThemes);
         Assert.Empty(_store.SavedLanguages);
-    }
-
-    [Fact]
-    public void AfterLaunchOptions_NothingSaved_ListsEveryChoiceWithNoneChecked()
-    {
-        var vm = CreateViewModel(new FakeThemeService(AppTheme.Light));
-
-        Assert.Equal(AfterLaunchSettings.Options().Select(option => option.Text), vm.AfterLaunchOptions.Select(option => option.Label));
-        Assert.Empty(Checked(vm));
-    }
-
-    [Fact]
-    public void AfterLaunchOptions_Checked_ChecksOnlyThatOne_SavingEachChangeButNotTheLoadedValue()
-    {
-        var vm = CreateViewModel(new FakeThemeService(AppTheme.Light), AfterLaunchAction.Minimize);
-
-        Assert.Equal([AfterLaunchAction.Minimize], Checked(vm));
-        Assert.Empty(_store.SavedAfterLaunch);
-
-        vm.AfterLaunchOptions.Single(option => option.Value == AfterLaunchAction.Close).IsChecked = true;
-        vm.AfterLaunchOptions.Single(option => option.Value == AfterLaunchAction.Minimize).IsChecked = false;
-
-        Assert.Equal([AfterLaunchAction.Close], Checked(vm));
-        Assert.Equal([AfterLaunchAction.Close], _store.SavedAfterLaunch);
-    }
-
-    [Fact]
-    public void AfterLaunchOptions_LanguageSwitched_ShowTheNewTextsAndKeepTheChoice()
-    {
-        var vm = CreateViewModel(new FakeThemeService(AppTheme.Light), AfterLaunchAction.Close);
-        string[] english = [.. vm.AfterLaunchOptions.Select(option => option.Label)];
-
-        Localization.SetLanguage(AppLanguage.Russian);
-
-        string[] russian = [.. vm.AfterLaunchOptions.Select(option => option.Label)];
-        Assert.Equal(AfterLaunchSettings.Options().Select(option => option.Text), russian);
-        Assert.NotEqual(english, russian);
-        Assert.Equal([AfterLaunchAction.Close], Checked(vm));
     }
 
     [Fact]
