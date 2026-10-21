@@ -78,13 +78,13 @@ Reference: `PzLauncher.Desktop/Services/Shell/SingleInstanceGuard.cs`, run in `P
 
 ## Window after a launch
 
-Reference: `PzLauncher.Desktop/Services/Launch/AfterLaunchFlow.cs`, `PzLauncher.Desktop/Services/Launch/AfterLaunchSettings.cs`, `PzLauncher.Desktop/Views/LauncherWindow.cs` (behind `ILauncherWindow` and `IAppLifetime`); Core API `IGameLaunchService.WaitPastEarlyExitAsync`.
+Reference: `PzLauncher.Desktop/Services/Launch/AfterLaunchFlow.cs`, `PzLauncher.Desktop/Views/LauncherWindow.cs`, `PzLauncher.Desktop/Views/TrayIconHost.cs`.
 
-- `AfterLaunchFlow` owns the behaviour; `HomeViewModel.LaunchAsync` only calls it: choose before the order flush, apply once the game has started (a cancelled or failed launch never gets there), the Close decision, restore on exit before any exit error.
-- The choices' order and texts come only from `AfterLaunchSettings.Options()`, shown by the first-launch prompt (`IDialogService.ChooseOneAsync`) and the Settings General radios (rebuilt on `LanguageChanged`, none checked while nothing is saved).
-- `LauncherWindow` is one instance, registered before the main window exists and attached to it in `App.axaml.cs`. Every way back (tray click and menu, a second start, the game's exit) goes through its `Restore`, which shows a hidden window and keeps a maximized one maximized.
-- The tray icon is always shown, built by `TrayIconHost.Attach` (`PzLauncher.Desktop/Views/TrayIconHost.cs`); its menu texts are set in code and re-set on `LanguageChanged`.
-- Close hides the window and closes through `IAppLifetime.Close` only once Core reports that the game outlived its early-exit window (the same decision that classifies an early exit) with the window still hidden; the run state stays set until the game exits, so the close flush writes nothing the game uses.
+- `AfterLaunchFlow` owns the behaviour; Home only calls it.
+- `AfterLaunchSettings.Options()` is the only source of the choices' order and texts.
+- Every way back to the window goes through `LauncherWindow.Restore`.
+- Only Core decides whether the game outlived its early-exit window (`IGameLaunchService.WaitPastEarlyExitAsync`); Desktop runs no timer.
+- The run state stays set until the game exits, even while the launcher closes.
 
 ## Composition root
 
