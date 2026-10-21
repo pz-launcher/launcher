@@ -1,0 +1,5 @@
+{"file": ".trellis/spec/desktop/preferences.md", "reason": "Verify the preference field, mapping, tests and spec table update"}
+{"file": ".trellis/spec/desktop/localization.md", "reason": "Verify keys exist in every resx and are used correctly"}
+{"file": ".trellis/spec/desktop/directory-structure.md", "reason": "Verify placement of new files and composition root usage"}
+{"file": ".trellis/spec/common/coding-rules.md", "reason": "General C# coding rules"}
+{"file": ".trellis/spec/common/test-strategy.md", "reason": "Verify test coverage per test strategy"}

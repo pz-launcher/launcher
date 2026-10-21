@@ -79,6 +79,9 @@ public static class DesignData
 
     private static readonly GameRunState RunState = new();
 
+    private static readonly AfterLaunchSettings AfterLaunch =
+        new(Preferences, new UserPreferences(null, null, null) { AfterLaunch = AfterLaunchAction.MinimizeToTray }, new SamplePlatform());
+
     private static readonly SampleModCollections ModCollectionsSample = new();
 
     private static readonly SampleModCollectionDefaults ModCollectionDefaults = new();
@@ -122,7 +125,7 @@ public static class DesignData
     public static SteamSettingsViewModel SteamSettings { get; } = CreateSteamSettings();
 
     public static SettingsViewModel Settings { get; } =
-        new(new LightThemeService(), Preferences, new NoWindowPlacement(), Java, UpdateSettings, ProxySettings, SteamSettings);
+        new(new LightThemeService(), Preferences, new NoWindowPlacement(), AfterLaunch, Java, UpdateSettings, ProxySettings, SteamSettings);
 
     public static LaunchSettingsViewModel LaunchSettings { get; } = CreateLaunchSettings();
 
@@ -173,7 +176,8 @@ public static class DesignData
             Installs, GameLaunch, InstallOverrides, new NoDialogs(), ZombieBuddySample, ZombieBuddyChannels, new SampleZombieBuddyMods(),
             ModCollectionsSample, ModCollectionDefaults, Applier, OrderWriter,
             new WorkshopLaunchCheck(workshop, TimeProvider.System, NullLogger<WorkshopLaunchCheck>.Instance),
-            workshop, new SampleWorkshopActions(), RunState);
+            workshop, new SampleWorkshopActions(), RunState,
+            new AfterLaunchFlow(AfterLaunch, new NoLauncherWindow(), new NoAppLifetime(), new NoDialogs(), GameLaunch));
         vm.ActivateCommand.Execute(null);
         return vm;
     }
@@ -301,6 +305,8 @@ public static class DesignData
             Task.FromResult<Result>(new Error(ErrorCode.LaunchGcIncompatibleViewpoint, "sample", ErrorKind.Validation));
 
         public Task<Result> WaitForExitAsync(CancellationToken ct = default) => Task.FromResult(Result.Ok());
+
+        public Task<bool> WaitPastEarlyExitAsync(CancellationToken ct = default) => Task.FromResult(false);
     }
 
     private sealed class SampleInstallOverrides : IInstallOverridesService
@@ -333,6 +339,9 @@ public static class DesignData
         public Task ShowWorkshopActionAsync(WorkshopActionViewModel action) => Task.CompletedTask;
 
         public Task<bool> PickWorkshopModsAsync(WorkshopModPickViewModel pick) => Task.FromResult(false);
+
+        public Task<T?> ChooseOneAsync<T>(ChoicePrompt<T> prompt)
+            where T : struct => Task.FromResult<T?>(null);
     }
 
     // Both channels subscribed and initialized with allow-all on, so every part of the section shows; setup stays on its third step.
@@ -599,6 +608,8 @@ public static class DesignData
         public Task SaveWorkshopUserCollectionsAsync(SavedWorkshopUserCollections collections, CancellationToken ct = default) => Task.CompletedTask;
 
         public Task SaveWorkshopFavoritesAsync(SavedWorkshopFavorites favorites, CancellationToken ct = default) => Task.CompletedTask;
+
+        public Task SaveAfterLaunchAsync(AfterLaunchAction action, CancellationToken ct = default) => Task.CompletedTask;
     }
 
     // Steam opens a launcher in another folder, so the account, the switch and the other path all show.
@@ -679,6 +690,23 @@ public static class DesignData
     private sealed class NoAppLifetime : IAppLifetime
     {
         public void Close()
+        {
+        }
+    }
+
+    private sealed class NoLauncherWindow : ILauncherWindow
+    {
+        public bool IsHidden => false;
+
+        public void Minimize()
+        {
+        }
+
+        public void Hide()
+        {
+        }
+
+        public void Restore()
         {
         }
     }

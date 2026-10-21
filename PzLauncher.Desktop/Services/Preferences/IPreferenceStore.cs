@@ -7,6 +7,7 @@ using PzLauncher.Core.Launch;
 using PzLauncher.Core.Mod.ZombieBuddy;
 using PzLauncher.Core.Update;
 using PzLauncher.Desktop.Localization;
+using PzLauncher.Desktop.Services.Launch;
 using PzLauncher.Desktop.Services.Shell;
 using PzLauncher.Desktop.Themes;
 
@@ -43,6 +44,9 @@ public sealed record UserPreferences(AppLanguage? Language, AppTheme? Theme, Win
 
     public SavedWorkshopFavorites WorkshopFavorites { get; init; } = SavedWorkshopFavorites.None;
 
+    /// <summary><c>null</c> until the user has chosen; the first launch asks.</summary>
+    public AfterLaunchAction? AfterLaunch { get; init; }
+
     // Compares the collections by content; the generated equality would compare references.
     public bool Equals(UserPreferences? other) =>
         other is not null
@@ -55,6 +59,7 @@ public sealed record UserPreferences(AppLanguage? Language, AppTheme? Theme, Win
         && SteamHookReminder == other.SteamHookReminder
         && WorkshopUserCollections == other.WorkshopUserCollections
         && WorkshopFavorites == other.WorkshopFavorites
+        && AfterLaunch == other.AfterLaunch
         && ManualJavaHomes.SequenceEqual(other.ManualJavaHomes, StringComparer.Ordinal)
         && WorkshopCollections.SequenceEqual(other.WorkshopCollections)
         && InstallOverrides.Count == other.InstallOverrides.Count
@@ -67,7 +72,7 @@ public sealed record UserPreferences(AppLanguage? Language, AppTheme? Theme, Win
     public override int GetHashCode() =>
         HashCode.Combine(
             HashCode.Combine(Language, Theme, Window, UpdateSource, AutoCheckUpdates, Proxy, SteamHookReminder, WorkshopUserCollections),
-            WorkshopFavorites,
+            HashCode.Combine(WorkshopFavorites, AfterLaunch),
             ManualJavaHomes.Count,
             WorkshopCollections.Count,
             InstallOverrides.Count,
@@ -121,4 +126,7 @@ public interface IPreferenceStore
 
     /// <inheritdoc cref="SaveLanguageAsync"/>
     Task SaveWorkshopFavoritesAsync(SavedWorkshopFavorites favorites, CancellationToken ct = default);
+
+    /// <inheritdoc cref="SaveLanguageAsync"/>
+    Task SaveAfterLaunchAsync(AfterLaunchAction action, CancellationToken ct = default);
 }

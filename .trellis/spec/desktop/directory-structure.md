@@ -76,6 +76,17 @@ Reference: `PzLauncher.Desktop/Services/Shell/SingleInstanceGuard.cs`, run in `P
 - A start with `LauncherArguments.Restart` (the self-update restart) waits, bounded, for the closing instance instead of exiting.
 - Any failure to open the named mutex or event (e.g. created by an elevated instance) runs without the guard; the guard never blocks startup.
 
+## Window after a launch
+
+Reference: `PzLauncher.Desktop/Services/Launch/AfterLaunchFlow.cs`, `PzLauncher.Desktop/Views/LauncherWindow.cs`, `PzLauncher.Desktop/Views/TrayIconHost.cs`.
+
+- `AfterLaunchFlow` owns the behaviour; Home only calls it.
+- Linux offers no tray choice (`AfterLaunchSettings.OffersTray`): its desktops may show no tray icon.
+- Every way back to the window goes through `LauncherWindow.Restore`.
+- The tray's exit never closes under an open dialog (`LauncherWindow.CloseUnlessDialogOpen`).
+- Only Core decides whether the game outlived its early-exit window (`IGameLaunchService.WaitPastEarlyExitAsync`); Desktop runs no timer.
+- The run state stays set until the game exits, even while the launcher closes.
+
 ## Composition root
 
 `PzLauncher.Desktop/App.axaml.cs` is the only place that builds the DI container.

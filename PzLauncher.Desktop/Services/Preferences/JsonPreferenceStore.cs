@@ -15,6 +15,7 @@ using PzLauncher.Core.Net;
 using PzLauncher.Core.Steam.Workshop.Actions;
 using PzLauncher.Core.Update;
 using PzLauncher.Desktop.Localization;
+using PzLauncher.Desktop.Services.Launch;
 using PzLauncher.Desktop.Services.Shell;
 using PzLauncher.Desktop.Themes;
 
@@ -22,7 +23,7 @@ namespace PzLauncher.Desktop.Services.Preferences;
 
 public sealed partial class JsonPreferenceStore(string filePath, ILogger logger, ISecretProtector secrets) : IPreferenceStore
 {
-    private static readonly PreferencesFile Empty = new(null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+    private static readonly PreferencesFile Empty = new(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
 
     private delegate bool EntryReader<T>(JsonElement element, [MaybeNullWhen(false)] out T value);
 
@@ -79,9 +80,7 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger,
             LogInvalidDefaultModCollections(logger, filePath);
         }
 
-        var updateSource = file.UpdateSource is { ValueKind: JsonValueKind.String } source
-            ? UpdateSourcePreferences.FromPreferenceName(source.GetString())
-            : null;
+        var updateSource = ToNamed(file.UpdateSource, UpdateSourcePreferences.FromPreferenceName);
         if (updateSource is null && file.UpdateSource is { ValueKind: not JsonValueKind.Null })
         {
             LogInvalidUpdateSource(logger, filePath);
@@ -97,6 +96,12 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger,
         if (steamHookReminder is null && file.SteamHookReminder is { ValueKind: not JsonValueKind.Null })
         {
             LogInvalidSteamHookReminder(logger, filePath);
+        }
+
+        var afterLaunch = ToNamed(file.AfterLaunch, AfterLaunchPreferences.FromPreferenceName);
+        if (afterLaunch is null && file.AfterLaunch is { ValueKind: not JsonValueKind.Null })
+        {
+            LogInvalidAfterLaunch(logger, filePath);
         }
 
         var workshopCollections = ToWorkshopEntries(file.WorkshopCollections, out var workshopCollectionsValid);
@@ -130,6 +135,7 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger,
             WorkshopCollections = workshopCollections,
             WorkshopUserCollections = userCollections,
             WorkshopFavorites = favorites,
+            AfterLaunch = afterLaunch,
         };
     }
 
@@ -167,7 +173,7 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger,
 
     public Task SaveZombieBuddyChannelAsync(string installRoot, ZombieBuddyChannel channel, CancellationToken ct = default)
     {
-        var entry = JsonSerializer.SerializeToElement(channel.PreferenceName(), DesktopJsonContext.Default.String);
+        var entry = NameElement(channel.PreferenceName());
         return SaveAsync(file => file with { ZombieBuddyChannels = WithPerInstall(file.ZombieBuddyChannels, installRoot, entry) }, ct);
     }
 
@@ -179,7 +185,7 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger,
 
     public Task SaveUpdateSourceAsync(UpdateSource source, CancellationToken ct = default)
     {
-        var entry = JsonSerializer.SerializeToElement(source.PreferenceName(), DesktopJsonContext.Default.String);
+        var entry = NameElement(source.PreferenceName());
         return SaveAsync(file => file with { UpdateSource = entry }, ct);
     }
 
@@ -193,6 +199,12 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger,
     {
         var entry = JsonSerializer.SerializeToElement(remind, DesktopJsonContext.Default.Boolean);
         return SaveAsync(file => file with { SteamHookReminder = entry }, ct);
+    }
+
+    public Task SaveAfterLaunchAsync(AfterLaunchAction action, CancellationToken ct = default)
+    {
+        var entry = NameElement(action.PreferenceName());
+        return SaveAsync(file => file with { AfterLaunch = entry }, ct);
     }
 
     public Task SaveWorkshopCollectionsAsync(IReadOnlyList<SavedWorkshopEntry> collections, CancellationToken ct = default)
@@ -295,6 +307,12 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger,
             JsonValueKind.False => false,
             _ => null,
         };
+
+    private static T? ToNamed<T>(JsonElement? element, Func<string?, T?> fromPreferenceName)
+        where T : struct =>
+        element is { ValueKind: JsonValueKind.String } name ? fromPreferenceName(name.GetString()) : null;
+
+    private static JsonElement NameElement(string preferenceName) => JsonSerializer.SerializeToElement(preferenceName, DesktopJsonContext.Default.String);
 
     private static List<string> ToManualJavaHomes(IReadOnlyList<JsonElement>? entries) =>
     [
@@ -587,6 +605,9 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger,
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Steam hook reminder preference {Path} is not true or false; reminding")]
     private static partial void LogInvalidSteamHookReminder(ILogger logger, string path);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "After-launch preference {Path} holds an unsupported value; asking at the next launch")]
+    private static partial void LogInvalidAfterLaunch(ILogger logger, string path);
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Workshop collection list preference {Path} holds entries that aren't valid; ignoring them")]
     private static partial void LogInvalidWorkshopCollections(ILogger logger, string path);

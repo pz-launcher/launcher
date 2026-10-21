@@ -29,4 +29,8 @@ public interface IDialogService
 
     /// <summary><c>true</c> only for the accept button; the choices stay on the view model.</summary>
     Task<bool> PickWorkshopModsAsync(WorkshopModPickViewModel pick);
+
+    /// <summary>One radio per option and an OK button; <c>null</c> when dismissed (Esc or the window's close button).</summary>
+    Task<T?> ChooseOneAsync<T>(ChoicePrompt<T> prompt)
+        where T : struct;
 }

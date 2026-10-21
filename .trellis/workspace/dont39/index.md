@@ -8,8 +8,8 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 19
-- **Last Active**: 2026-10-19
+- **Total Sessions**: 20
+- **Last Active**: 2026-10-20
 <!-- @@@/auto:current-status -->
 
 ---
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~479 | Active |
+| `journal-1.md` | ~501 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 20 | 2026-10-20 | Launcher window behavior after game launch | `4bbc2d6` | `feat/after-launch-window-behavior` |
 | 19 | 2026-10-19 | Local Workshop favorites with share/import | `bcbc0af` | `feat/workshop-management` |
 | 18 | 2026-10-19 | Favorited and own Steam collections; Workshop reuse refactor | `5288c3b`, `2059178`, `e3969a8` | `feat/workshop-management` |
 | 17 | 2026-10-19 | Steam Workshop management | `ce67881` | `feat/workshop-management` |

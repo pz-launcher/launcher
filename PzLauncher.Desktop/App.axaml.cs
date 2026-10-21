@@ -63,7 +63,9 @@ public partial class App : Application
             services.AddSingleton<IDialogService>(new AvaloniaDialogService(() => desktop.MainWindow));
             services.AddSingleton<IClipboardService>(new AvaloniaClipboardService(() => desktop.MainWindow));
             services.AddSingleton<IUrlLauncher>(new AvaloniaUrlLauncher(() => desktop.MainWindow));
-            services.AddSingleton<IAppLifetime>(new AvaloniaAppLifetime(() => desktop.MainWindow));
+            var launcherWindow = new LauncherWindow();
+            services.AddSingleton<ILauncherWindow>(launcherWindow);
+            services.AddSingleton<IAppLifetime>(launcherWindow);
             WindowPlacementPersistence? windowPlacement = null;
             services.AddSingleton<IWindowPlacementService>(new WindowPlacementService(() => windowPlacement));
             services.AddSingleton<ISecretProtector>(sp => sp.GetRequiredService<IPlatformEnvironment>().Os switch
@@ -86,6 +88,8 @@ public partial class App : Application
             services.AddSingleton<WorkshopTitles>();
             services.AddSingleton<WorkshopLaunchCheck>();
             services.AddSingleton<GameRunState>();
+            services.AddSingleton<AfterLaunchSettings>();
+            services.AddSingleton<AfterLaunchFlow>();
             services.AddSingleton<UpdateCoordinator>();
             // The apphost's path; Steam starts the launcher through it.
             var launcherExe = Environment.ProcessPath ?? Path.Combine(AppContext.BaseDirectory, "PzLauncher.exe");
@@ -139,10 +143,14 @@ public partial class App : Application
                 updates.InstallPendingOnCloseAsync,
                 provider.GetRequiredService<ILogger<WindowPlacementPersistence>>());
             desktop.MainWindow = mainWindow;
+            launcherWindow.Attach(mainWindow);
             if (Instance is { } instance)
             {
-                WindowActivation.Attach(mainWindow, instance);
+                // Raised on a thread-pool thread.
+                instance.ActivationRequested += (_, _) => Dispatcher.UIThread.Post(launcherWindow.Restore);
             }
+
+            TrayIconHost.Attach(this, mainWindow.Icon, launcherWindow, localization);
 
             // Once the window shows, so neither delays the first frame; failures are only logged.
             var steam = provider.GetRequiredService<SteamSettingsViewModel>();

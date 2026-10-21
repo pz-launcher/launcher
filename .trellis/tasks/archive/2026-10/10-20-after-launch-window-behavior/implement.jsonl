@@ -1,0 +1,6 @@
+{"file": ".trellis/spec/desktop/directory-structure.md", "reason": "MVVM, view and composition-root conventions for the new service, view and tray"}
+{"file": ".trellis/spec/desktop/preferences.md", "reason": "New afterLaunch preference field contract and save rules"}
+{"file": ".trellis/spec/desktop/localization.md", "reason": "New UiText keys in all resx files; tray menu text updates"}
+{"file": ".trellis/spec/desktop/shell-and-theming.md", "reason": "Settings sidebar section and window chrome conventions"}
+{"file": ".trellis/spec/common/coding-rules.md", "reason": "General C# coding rules"}
+{"file": ".trellis/spec/common/test-strategy.md", "reason": "Test levels and rules for the new tests"}

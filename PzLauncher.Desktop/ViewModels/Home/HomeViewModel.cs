@@ -43,6 +43,7 @@ public partial class HomeViewModel : ViewModelBase
     private readonly IWorkshopService _workshop;
     private readonly IWorkshopActionRunner _workshopActions;
     private readonly GameRunState _runState;
+    private readonly AfterLaunchFlow _afterLaunch;
 
     private CollectionChoice _selectedCollection = CollectionChoice.None;
     private bool _activated;
@@ -65,7 +66,8 @@ public partial class HomeViewModel : ViewModelBase
         WorkshopLaunchCheck workshopCheck,
         IWorkshopService workshop,
         IWorkshopActionRunner workshopActions,
-        GameRunState runState)
+        GameRunState runState,
+        AfterLaunchFlow afterLaunch)
     {
         _installs = installs;
         _launcher = launcher;
@@ -82,6 +84,7 @@ public partial class HomeViewModel : ViewModelBase
         _workshop = workshop;
         _workshopActions = workshopActions;
         _runState = runState;
+        _afterLaunch = afterLaunch;
         CollectionChoices = [CollectionChoice.None];
 
         // Never unsubscribed: all of these are app-lifetime singletons.
@@ -215,6 +218,8 @@ public partial class HomeViewModel : ViewModelBase
             }
         }
 
+        // Asked only once nothing else can call the launch off.
+        var afterLaunch = await _afterLaunch.ChooseAsync();
         var result = await _launcher.LaunchAsync(new LaunchGameRequest(install.RootPath, overrides));
         if (!result.IsSuccess)
         {
@@ -223,19 +228,20 @@ public partial class HomeViewModel : ViewModelBase
         }
 
         _runState.IsGameRunning = true;
-        Result exit;
+        Result? exit;
         try
         {
-            exit = await _launcher.WaitForExitAsync();
+            exit = await _afterLaunch.WatchAsync(afterLaunch);
         }
         finally
         {
             _runState.IsGameRunning = false;
         }
 
-        if (!exit.IsSuccess)
+        // Null when the launcher is closing.
+        if (exit is { IsSuccess: false } exited)
         {
-            await _dialogs.ShowErrorAsync(ErrorMessages.ToUserText(exit.Error));
+            await _dialogs.ShowErrorAsync(ErrorMessages.ToUserText(exited.Error));
         }
     }
 

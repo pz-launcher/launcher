@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:PzLauncher.Desktop.ViewModels.Settings"
              xmlns:themes="using:PzLauncher.Desktop.Themes"
+             xmlns:launch="using:PzLauncher.Desktop.Services.Launch"
              xmlns:design="using:PzLauncher.Desktop.ViewModels.Design"
              xmlns:controls="using:PzLauncher.Desktop.Views.Controls"
              xmlns:lang="using:PzLauncher.Desktop.Lang"
@@ -20,6 +21,8 @@
         <Border Grid.Column="0" Classes="sidebar left" MinWidth="180">
             <StackPanel Margin="8" Spacing="2">
                 <TextBlock Classes="sidebarHeader" Text="{x:Static lang:UiText.Settings_LauncherGroup}" />
+                <controls:NavItem Icon="Options" Content="{x:Static lang:UiText.Settings_General}"
+                                  IsChecked="{Binding Section, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:SettingsSection.General}}" />
                 <controls:NavItem Icon="PaintBrush" Content="{x:Static lang:UiText.Settings_Appearance}"
                                   IsChecked="{Binding Section, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:SettingsSection.Appearance}}" />
                 <controls:NavItem Icon="ArrowSync" Content="{x:Static lang:UiText.Settings_Updates}"
@@ -35,6 +38,23 @@
         </Border>
 
         <Panel Grid.Column="1" Background="{DynamicResource Shell.ContentBackground}">
+            <!-- No option is checked while nothing is saved: the first launch still asks. -->
+            <StackPanel Margin="24,16" Spacing="12"
+                        IsVisible="{Binding Section, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:SettingsSection.General}}">
+                <TextBlock Text="{x:Static lang:UiText.Settings_General}" Classes="pageTitle" />
+                <TextBlock Text="{x:Static lang:UiText.Settings_AfterLaunch}" Classes="sectionTitle" />
+                <StackPanel Spacing="4">
+                    <RadioButton Content="{x:Static lang:UiText.AfterLaunchAction_Keep}"
+                                 IsChecked="{Binding AfterLaunch.Action, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static launch:AfterLaunchAction.Keep}}" />
+                    <RadioButton Content="{x:Static lang:UiText.AfterLaunchAction_Minimize}"
+                                 IsChecked="{Binding AfterLaunch.Action, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static launch:AfterLaunchAction.Minimize}}" />
+                    <RadioButton Content="{x:Static lang:UiText.AfterLaunchAction_MinimizeToTray}" IsVisible="{Binding AfterLaunch.OffersTray}"
+                                 IsChecked="{Binding AfterLaunch.Action, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static launch:AfterLaunchAction.MinimizeToTray}}" />
+                    <RadioButton Content="{x:Static lang:UiText.AfterLaunchAction_Close}"
+                                 IsChecked="{Binding AfterLaunch.Action, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static launch:AfterLaunchAction.Close}}" />
+                </StackPanel>
+                <TextBlock Text="{x:Static lang:UiText.Settings_AfterLaunchHint}" Classes="hint" TextWrapping="Wrap" />
+            </StackPanel>
             <StackPanel Margin="24,16" Spacing="12"
                         IsVisible="{Binding Section, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:SettingsSection.Appearance}}">
                 <TextBlock Text="{x:Static lang:UiText.Settings_Appearance}" Classes="pageTitle" />

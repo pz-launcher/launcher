@@ -26,6 +26,10 @@ internal sealed partial class GameLaunchService(
     // Completes once the tracked game has exited and its process handle is released.
     private volatile Task<Result> _exit = Task.FromResult(Result.Ok());
 
+    // Set once per game by whichever comes first, the early-exit timer (true) or the exit (false), so the exit's
+    // classification and WaitPastEarlyExitAsync always agree.
+    private volatile Task<bool> _pastEarlyExit = Task.FromResult(false);
+
     public async Task<Result<GameLaunchDefaults>> GetDefaultsAsync(string installRoot, CancellationToken ct = default)
     {
         ct.ThrowIfCancellationRequested();
@@ -99,6 +103,8 @@ internal sealed partial class GameLaunchService(
     }
 
     public Task<Result> WaitForExitAsync(CancellationToken ct = default) => _exit.WaitAsync(ct);
+
+    public Task<bool> WaitPastEarlyExitAsync(CancellationToken ct = default) => _pastEarlyExit.WaitAsync(ct);
 
     private Result CheckRequest(GameLaunchOverrides overrides)
     {
@@ -222,16 +228,20 @@ internal sealed partial class GameLaunchService(
         }
 
         var session = new GameSession(plan.InstallRoot, process.Id);
-        _exit = TrackAsync(process, plan, startedAt);
+        var pastEarlyExit = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        _pastEarlyExit = pastEarlyExit.Task;
+        _exit = TrackAsync(process, plan, startedAt, pastEarlyExit);
         return session;
     }
 
-    private async Task<Result> TrackAsync(IRunningProcess process, LaunchPlan plan, DateTimeOffset startedAt)
+    private async Task<Result> TrackAsync(IRunningProcess process, LaunchPlan plan, DateTimeOffset startedAt, TaskCompletionSource<bool> pastEarlyExit)
     {
         using (process)
+        using (time.CreateTimer(_ => pastEarlyExit.TrySetResult(true), null, EarlyExitWindow, Timeout.InfiniteTimeSpan))
         {
             await process.WaitForExitAsync(CancellationToken.None).ConfigureAwait(false);
-            var exit = ExitResult(process, plan, startedAt);
+            var exitedEarly = pastEarlyExit.TrySetResult(false);
+            var exit = ExitResult(process, plan, startedAt, exitedEarly);
             if (!exit.IsSuccess)
             {
                 LogWarning(logger, exit.Error.Code.ToWireName(), exit.Error.Message);
@@ -241,14 +251,14 @@ internal sealed partial class GameLaunchService(
         }
     }
 
-    private Result ExitResult(IRunningProcess process, LaunchPlan plan, DateTimeOffset startedAt)
+    private static Result ExitResult(IRunningProcess process, LaunchPlan plan, DateTimeOffset startedAt, bool exitedEarly)
     {
         if (FindCrashLog(plan, process.Id, startedAt) is { } crashLog)
         {
             return LaunchErrors.GameCrashed(crashLog, process.ExitCode);
         }
 
-        if (process.ExitCode != 0 && time.GetUtcNow() - startedAt < EarlyExitWindow)
+        if (process.ExitCode != 0 && exitedEarly)
         {
             return LaunchErrors.GameExitedEarly(process.ExitCode, string.Join('\n', process.ErrorOutputTail));
         }

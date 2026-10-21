@@ -38,11 +38,13 @@ public class MainViewModelTests : UiTextCultureTest
         var history = TestWorkshop.History();
         var userCollections = TestWorkshop.UserCollections();
         var favorites = TestWorkshop.Favorites();
+        var afterLaunch = new AfterLaunchSettings(store, new(null, null, null), new FakePlatformEnvironment());
         return new(
             new HomeViewModel(
                 installs, launcher, overrides, dialogs, zombieBuddy, channels, new FakeZombieBuddyModsService(),
                 collections, defaults, applier, orderWriter, TestWorkshop.LaunchCheck(new FakeWorkshopService()),
-                new FakeWorkshopService(), new FakeWorkshopActionRunner(), runState),
+                new FakeWorkshopService(), new FakeWorkshopActionRunner(), runState,
+                new AfterLaunchFlow(afterLaunch, new FakeLauncherWindow(), new FakeAppLifetime(), dialogs, launcher)),
             installs,
             new ModsViewModel(
                 installs, collections, overrides, defaults, applier, dialogs, new FakeClipboardService(), runState, orderWriter,
@@ -52,6 +54,7 @@ public class MainViewModelTests : UiTextCultureTest
                 new FakeThemeService(AppTheme.Light),
                 store,
                 new FakeWindowPlacementService(),
+                afterLaunch,
                 java,
                 new UpdateSettingsViewModel(updates, Localization),
                 TestProxy.ViewModel(Localization, store),

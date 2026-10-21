@@ -1316,4 +1316,40 @@
   <data name="UpdateSource_Gitee" xml:space="preserve">
     <value>Gitee</value>
   </data>
+  <data name="Settings_General" xml:space="preserve">
+    <value>Общие</value>
+  </data>
+  <data name="Settings_AfterLaunch" xml:space="preserve">
+    <value>После запуска игры</value>
+  </data>
+  <data name="Settings_AfterLaunchHint" xml:space="preserve">
+    <value>Когда игра закроется, лаунчер снова появится. При варианте «Закрыть лаунчер» он закрывается, только когда игра успешно запустится, чтобы ошибка запуска всё равно была показана.</value>
+  </data>
+  <data name="AfterLaunchAction_Keep" xml:space="preserve">
+    <value>Оставить лаунчер открытым</value>
+  </data>
+  <data name="AfterLaunchAction_Minimize" xml:space="preserve">
+    <value>Свернуть лаунчер</value>
+  </data>
+  <data name="AfterLaunchAction_MinimizeToTray" xml:space="preserve">
+    <value>Свернуть в системный трей</value>
+  </data>
+  <data name="AfterLaunchAction_Close" xml:space="preserve">
+    <value>Закрыть лаунчер</value>
+  </data>
+  <data name="AfterLaunch_PromptTitle" xml:space="preserve">
+    <value>После запуска игры</value>
+  </data>
+  <data name="AfterLaunch_PromptMessage" xml:space="preserve">
+    <value>Что делать лаунчеру после запуска игры?</value>
+  </data>
+  <data name="AfterLaunch_PromptHint" xml:space="preserve">
+    <value>Это можно изменить позже в разделе «Настройки → Общие».</value>
+  </data>
+  <data name="Tray_Show" xml:space="preserve">
+    <value>Показать лаунчер</value>
+  </data>
+  <data name="Tray_Exit" xml:space="preserve">
+    <value>Выйти из лаунчера</value>
+  </data>
 </root>

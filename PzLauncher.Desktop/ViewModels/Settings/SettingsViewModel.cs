@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using PzLauncher.Desktop.Services.Launch;
 using PzLauncher.Desktop.Services.Preferences;
 using PzLauncher.Desktop.Services.Shell;
 using PzLauncher.Desktop.Themes;
@@ -13,11 +14,14 @@ public partial class SettingsViewModel(
     IThemeService themeService,
     IPreferenceStore preferences,
     IWindowPlacementService windowPlacement,
+    AfterLaunchSettings afterLaunch,
     JavaRuntimesViewModel java,
     UpdateSettingsViewModel updates,
     ProxySettingsViewModel proxy,
     SteamSettingsViewModel steam) : ViewModelBase
 {
+    public AfterLaunchSettings AfterLaunch { get; } = afterLaunch;
+
     public JavaRuntimesViewModel Java { get; } = java;
 
     public UpdateSettingsViewModel Updates { get; } = updates;
@@ -42,6 +46,7 @@ public partial class SettingsViewModel(
                 // Re-read each time: the user may have changed the launch options in Steam meanwhile.
                 _ = Steam.LoadAsync();
                 break;
+            case SettingsSection.General:
             case SettingsSection.Appearance:
             case SettingsSection.Updates:
             case SettingsSection.Proxy:

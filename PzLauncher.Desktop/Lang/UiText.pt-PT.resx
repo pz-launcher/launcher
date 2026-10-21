@@ -1316,4 +1316,40 @@
   <data name="UpdateSource_Gitee" xml:space="preserve">
     <value>Gitee</value>
   </data>
+  <data name="Settings_General" xml:space="preserve">
+    <value>Geral</value>
+  </data>
+  <data name="Settings_AfterLaunch" xml:space="preserve">
+    <value>Depois de o jogo iniciar</value>
+  </data>
+  <data name="Settings_AfterLaunchHint" xml:space="preserve">
+    <value>O iniciador volta quando o jogo fecha. Com “Fechar o iniciador”, só fecha depois de o jogo arrancar corretamente, para que uma falha no arranque continue a ser mostrada.</value>
+  </data>
+  <data name="AfterLaunchAction_Keep" xml:space="preserve">
+    <value>Manter o iniciador aberto</value>
+  </data>
+  <data name="AfterLaunchAction_Minimize" xml:space="preserve">
+    <value>Minimizar o iniciador</value>
+  </data>
+  <data name="AfterLaunchAction_MinimizeToTray" xml:space="preserve">
+    <value>Minimizar para a área de notificação</value>
+  </data>
+  <data name="AfterLaunchAction_Close" xml:space="preserve">
+    <value>Fechar o iniciador</value>
+  </data>
+  <data name="AfterLaunch_PromptTitle" xml:space="preserve">
+    <value>Depois de o jogo iniciar</value>
+  </data>
+  <data name="AfterLaunch_PromptMessage" xml:space="preserve">
+    <value>O que deve o iniciador fazer depois de o jogo iniciar?</value>
+  </data>
+  <data name="AfterLaunch_PromptHint" xml:space="preserve">
+    <value>Pode alterar isto mais tarde em Definições → Geral.</value>
+  </data>
+  <data name="Tray_Show" xml:space="preserve">
+    <value>Mostrar iniciador</value>
+  </data>
+  <data name="Tray_Exit" xml:space="preserve">
+    <value>Sair do iniciador</value>
+  </data>
 </root>

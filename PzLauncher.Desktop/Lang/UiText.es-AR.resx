@@ -1316,4 +1316,40 @@
   <data name="UpdateSource_Gitee" xml:space="preserve">
     <value>Gitee</value>
   </data>
+  <data name="Settings_General" xml:space="preserve">
+    <value>General</value>
+  </data>
+  <data name="Settings_AfterLaunch" xml:space="preserve">
+    <value>Después de iniciar el juego</value>
+  </data>
+  <data name="Settings_AfterLaunchHint" xml:space="preserve">
+    <value>El lanzador vuelve cuando el juego se cierra. Con «Cerrar el lanzador», solo se cierra cuando el juego ya arrancó bien, para que un fallo al iniciar se siga mostrando.</value>
+  </data>
+  <data name="AfterLaunchAction_Keep" xml:space="preserve">
+    <value>Mantener el lanzador abierto</value>
+  </data>
+  <data name="AfterLaunchAction_Minimize" xml:space="preserve">
+    <value>Minimizar el lanzador</value>
+  </data>
+  <data name="AfterLaunchAction_MinimizeToTray" xml:space="preserve">
+    <value>Minimizar a la bandeja del sistema</value>
+  </data>
+  <data name="AfterLaunchAction_Close" xml:space="preserve">
+    <value>Cerrar el lanzador</value>
+  </data>
+  <data name="AfterLaunch_PromptTitle" xml:space="preserve">
+    <value>Después de iniciar el juego</value>
+  </data>
+  <data name="AfterLaunch_PromptMessage" xml:space="preserve">
+    <value>¿Qué debe hacer el lanzador una vez que el juego se inicie?</value>
+  </data>
+  <data name="AfterLaunch_PromptHint" xml:space="preserve">
+    <value>Podés cambiarlo después en Configuración → General.</value>
+  </data>
+  <data name="Tray_Show" xml:space="preserve">
+    <value>Mostrar lanzador</value>
+  </data>
+  <data name="Tray_Exit" xml:space="preserve">
+    <value>Salir del lanzador</value>
+  </data>
 </root>

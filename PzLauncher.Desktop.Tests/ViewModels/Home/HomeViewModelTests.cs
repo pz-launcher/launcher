@@ -8,6 +8,7 @@ using PzLauncher.Desktop.Lang;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Services.Launch;
 using PzLauncher.Desktop.Services.Mods;
+using PzLauncher.Desktop.Services.Preferences;
 using PzLauncher.Desktop.Services.Shell;
 using PzLauncher.Desktop.Tests.TestSupport;
 using PzLauncher.Desktop.ViewModels.Home;
@@ -34,10 +35,16 @@ public class HomeViewModelTests : UiTextCultureTest
     private readonly FakeWorkshopService _workshop = new();
     private readonly FakeWorkshopActionRunner _workshopActions = new();
     private readonly GameRunState _runState = new();
+    private readonly FakePreferenceStore _preferences = new();
+    private readonly FakeLauncherWindow _window = new();
+    private readonly FakeAppLifetime _lifetime = new();
+    private readonly AfterLaunchSettings _afterLaunch;
     private readonly ModCollectionOrderWriter _orderWriter;
 
     public HomeViewModelTests()
     {
+        // Chosen by default, so tests of the other launch steps see no prompt.
+        _afterLaunch = new AfterLaunchSettings(_preferences, new UserPreferences(null, null, null) { AfterLaunch = AfterLaunchAction.Keep }, new FakePlatformEnvironment());
         _orderWriter = new ModCollectionOrderWriter(_collections, _runState, new FakePlatformEnvironment(), new ManualTimeProvider());
         Installs = new(_service, new FakeFolderPicker(), new FakePlatformEnvironment(), Localization);
     }
@@ -48,7 +55,7 @@ public class HomeViewModelTests : UiTextCultureTest
         new(
             Installs, _launcher, _overrides, _dialogs, _zombieBuddy, _channels, _zombieBuddyMods, _collections, _defaultCollections,
             new ModCollectionApplier(_collections, _dialogs), _orderWriter, TestWorkshop.LaunchCheck(_workshop), _workshop,
-            _workshopActions, _runState);
+            _workshopActions, _runState, new AfterLaunchFlow(_afterLaunch, _window, _lifetime, _dialogs, _launcher));
 
     private async Task<HomeViewModel> CreateActivatedViewModelAsync(params PzInstall[] installs)
     {
@@ -354,6 +361,113 @@ public class HomeViewModelTests : UiTextCultureTest
         Assert.Equal([ErrorMessages.ToUserText(crash)], _dialogs.Errors);
         Assert.Equal([false], runningWhenShown);
         Assert.True(vm.LaunchCommand.CanExecute(null));
+    }
+
+    [Fact]
+    public async Task Launch_NothingChosen_AsksAfterEveryOtherStepJustBeforeTheStart()
+    {
+        _afterLaunch.Action = null;
+        _dialogs.SingleChoiceAnswers.Enqueue(AfterLaunchAction.Keep);
+        ArrangeOutdatedWorkshopItem();
+        _dialogs.ChoiceAnswers.Enqueue(ConfirmChoice.Alternative);
+        var vm = await CreateActivatedViewModelAsync(SteamGame);
+        var stepsWhenShown = new List<(int Prompts, int WorkshopChoices, int ZombieBuddyChecks, int Launches)>();
+        _dialogs.Shown += () => stepsWhenShown.Add(
+            (_dialogs.SingleChoices.Count, _dialogs.Choices.Count, _zombieBuddy.StatusRequests.Count, _launcher.Launches.Count));
+
+        await LaunchAndExitAsync(vm);
+
+        Assert.Equal([(0, 1, 0, 0), (1, 1, 1, 0)], stepsWhenShown);
+        Assert.Single(_launcher.Launches);
+    }
+
+    [Fact]
+    public async Task Launch_NothingChosenAndTheWorkshopPromptCancelled_NeverAsks()
+    {
+        _afterLaunch.Action = null;
+        ArrangeOutdatedWorkshopItem();
+        var vm = await CreateActivatedViewModelAsync(SteamGame);
+
+        await vm.LaunchCommand.ExecuteAsync(null);
+
+        Assert.Empty(_dialogs.SingleChoices);
+        Assert.Empty(_launcher.Launches);
+        Assert.Empty(_preferences.SavedAfterLaunch);
+    }
+
+    public static TheoryData<AfterLaunchAction> AfterLaunchActions => [.. Enum.GetValues<AfterLaunchAction>()];
+
+    [Theory]
+    [MemberData(nameof(AfterLaunchActions))]
+    public async Task Launch_FailsToStart_LeavesTheWindowAlone(AfterLaunchAction action)
+    {
+        _afterLaunch.Action = action;
+        _launcher.Launch = _ => TestErrors.Create(ErrorCode.LaunchJavaMissing, @"C:\Java\jdk-25\bin\javaw.exe");
+        var vm = await CreateActivatedViewModelAsync(SteamGame);
+
+        await vm.LaunchCommand.ExecuteAsync(null);
+
+        Assert.Single(_dialogs.Errors);
+        Assert.Empty(_window.Calls);
+        Assert.Equal(0, _lifetime.CloseCalls);
+    }
+
+    [Theory]
+    [MemberData(nameof(AfterLaunchActions))]
+    public async Task Launch_WorkshopPromptCancelled_LeavesTheWindowAlone(AfterLaunchAction action)
+    {
+        _afterLaunch.Action = action;
+        ArrangeOutdatedWorkshopItem();
+        var vm = await CreateActivatedViewModelAsync(SteamGame);
+
+        await vm.LaunchCommand.ExecuteAsync(null);
+
+        Assert.Empty(_launcher.Launches);
+        Assert.Empty(_window.Calls);
+        Assert.Equal(0, _lifetime.CloseCalls);
+    }
+
+    [Theory]
+    [InlineData(AfterLaunchAction.Minimize, nameof(FakeLauncherWindow.Minimize))]
+    [InlineData(AfterLaunchAction.MinimizeToTray, nameof(FakeLauncherWindow.Hide))]
+    [InlineData(AfterLaunchAction.Close, nameof(FakeLauncherWindow.Hide))]
+    public async Task Launch_GameExitsWithAFailure_AppliesOnStartAndRestoresBeforeTheError(AfterLaunchAction action, string onStart)
+    {
+        _afterLaunch.Action = action;
+        var crash = TestErrors.Create(ErrorCode.LaunchGameExitedEarly, "Unrecognized VM option 'UseShenandoahGC'");
+        var vm = await CreateActivatedViewModelAsync(SteamGame);
+        var callsWhenShown = new List<string[]>();
+        _dialogs.Shown += () => callsWhenShown.Add([.. _window.Calls]);
+
+        var launch = vm.LaunchCommand.ExecuteAsync(null);
+
+        Assert.Equal([onStart], _window.Calls);
+        _launcher.Exit.SetResult(crash);
+        await launch;
+
+        Assert.Equal([ErrorMessages.ToUserText(crash)], _dialogs.Errors);
+        Assert.Equal([[onStart, nameof(FakeLauncherWindow.Restore)]], callsWhenShown);
+        Assert.Equal(0, _lifetime.CloseCalls);
+    }
+
+    [Fact]
+    public async Task Launch_LauncherClosingWhileTheGameRuns_KeepsTheRunStateUntilTheExitAndShowsNothing()
+    {
+        _afterLaunch.Action = AfterLaunchAction.Close;
+        _launcher.OutlivesEarlyExit = true;
+        var vm = await CreateActivatedViewModelAsync(SteamGame);
+
+        var launch = vm.LaunchCommand.ExecuteAsync(null);
+
+        Assert.Equal(1, _lifetime.CloseCalls);
+        Assert.True(vm.IsGameRunning);
+
+        _launcher.Exit.SetResult(TestErrors.Create(ErrorCode.LaunchGameCrashed, "hs_err_pid4242.log"));
+        await launch;
+
+        Assert.False(vm.IsGameRunning);
+        Assert.Equal([nameof(FakeLauncherWindow.Hide)], _window.Calls);
+        Assert.Empty(_dialogs.Errors);
     }
 
     private void ArrangeDefaultCollection(params string[] ids)

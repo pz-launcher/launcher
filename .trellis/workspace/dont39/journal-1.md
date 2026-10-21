@@ -477,3 +477,25 @@ Launcher-local stars for Steam collections and items (preference workshopFavorit
 ### Status
 
 [OK] **Completed**
+
+
+## Session 20: Launcher window behavior after game launch
+<!-- trellis-session: v=2 fp=91809055278eab16 -->
+
+**Date**: 2026-10-20
+**Task**: Launcher window behavior after game launch
+**Branch**: `feat/after-launch-window-behavior`
+
+### Summary
+
+Added a global after-launch setting (Keep / Minimize / Minimize to tray / Close), asked once on first launch and editable in the new Settings > General section; always-on tray icon; Close exits after the 30 s early-exit window; window restored on game exit. Check fixed a Close-timing race. Tests: Core 1638 passed (3 skipped), Desktop 1810 passed.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `4bbc2d6` | Choose what the launcher window does after the game starts |
+
+### Status
+
+[OK] **Completed**

@@ -1,3 +1,5 @@
+using PzLauncher.Desktop.Services.Launch;
+using PzLauncher.Desktop.Services.Preferences;
 using PzLauncher.Desktop.Tests.TestSupport;
 using PzLauncher.Desktop.Themes;
 using PzLauncher.Desktop.ViewModels.Settings;
@@ -18,6 +20,7 @@ public class SettingsViewModelTests : UiTextCultureTest
             theme,
             _store,
             _windowPlacement,
+            new AfterLaunchSettings(_store, new UserPreferences(null, null, null), new FakePlatformEnvironment()),
             TestJava.ViewModel(Localization, _java, _store),
             new UpdateSettingsViewModel(TestUpdates.Coordinator(new FakeUpdateService(), _store), Localization),
             TestProxy.ViewModel(Localization, _store),
@@ -33,7 +36,7 @@ public class SettingsViewModelTests : UiTextCultureTest
         var vm = CreateViewModel(theme);
 
         Assert.Equal(current, vm.Theme);
-        Assert.Equal(SettingsSection.Appearance, vm.Section);
+        Assert.Equal(SettingsSection.General, vm.Section);
         Assert.Empty(theme.Applied);
         Assert.Empty(_store.SavedThemes);
         Assert.Equal(0, _java.ScanCalls);

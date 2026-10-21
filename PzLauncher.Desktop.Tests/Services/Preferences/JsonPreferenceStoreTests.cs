@@ -6,6 +6,7 @@ using PzLauncher.Core.Net;
 using PzLauncher.Core.Steam.Workshop.Actions;
 using PzLauncher.Core.Update;
 using PzLauncher.Desktop.Localization;
+using PzLauncher.Desktop.Services.Launch;
 using PzLauncher.Desktop.Services.Preferences;
 using PzLauncher.Desktop.Services.Shell;
 using PzLauncher.Desktop.Tests.TestSupport;
@@ -215,6 +216,7 @@ public sealed class JsonPreferenceStoreTests : IDisposable
     [InlineData(11)]
     [InlineData(12)]
     [InlineData(13)]
+    [InlineData(14)]
     public async Task SaveOneField_FileHoldsTheOthers_KeepsAll(int savedLast)
     {
         var ct = TestContext.Current.CancellationToken;
@@ -234,6 +236,7 @@ public sealed class JsonPreferenceStoreTests : IDisposable
             () => CreateStore().SaveWorkshopCollectionsAsync([SteamCollection], ct),
             () => CreateStore().SaveWorkshopUserCollectionsAsync(UserCollections, ct),
             () => CreateStore().SaveWorkshopFavoritesAsync(Favorites, ct),
+            () => CreateStore().SaveAfterLaunchAsync(AfterLaunchAction.MinimizeToTray, ct),
         ];
 
         // Separate stores, as across app runs.
@@ -256,6 +259,7 @@ public sealed class JsonPreferenceStoreTests : IDisposable
                 WorkshopCollections = [SteamCollection],
                 WorkshopUserCollections = UserCollections,
                 WorkshopFavorites = Favorites,
+                AfterLaunch = AfterLaunchAction.MinimizeToTray,
             },
             CreateStore().Load());
     }
@@ -283,7 +287,8 @@ public sealed class JsonPreferenceStoreTests : IDisposable
             store.SaveSteamHookReminderAsync(false, TestContext.Current.CancellationToken),
             store.SaveWorkshopCollectionsAsync([SteamCollection], TestContext.Current.CancellationToken),
             store.SaveWorkshopUserCollectionsAsync(UserCollections, TestContext.Current.CancellationToken),
-            store.SaveWorkshopFavoritesAsync(Favorites, TestContext.Current.CancellationToken));
+            store.SaveWorkshopFavoritesAsync(Favorites, TestContext.Current.CancellationToken),
+            store.SaveAfterLaunchAsync(AfterLaunchAction.Close, TestContext.Current.CancellationToken));
 
         Assert.Equal(
             new UserPreferences(AppLanguage.PortugueseBrazil, AppTheme.Dark, Placement)
@@ -299,6 +304,7 @@ public sealed class JsonPreferenceStoreTests : IDisposable
                 WorkshopCollections = [SteamCollection],
                 WorkshopUserCollections = UserCollections,
                 WorkshopFavorites = Favorites,
+                AfterLaunch = AfterLaunchAction.Close,
             },
             CreateStore().Load());
     }
@@ -322,6 +328,7 @@ public sealed class JsonPreferenceStoreTests : IDisposable
         await CreateStore().SaveWorkshopCollectionsAsync([SteamCollection], TestContext.Current.CancellationToken);
         await CreateStore().SaveWorkshopUserCollectionsAsync(UserCollections, TestContext.Current.CancellationToken);
         await CreateStore().SaveWorkshopFavoritesAsync(Favorites, TestContext.Current.CancellationToken);
+        await CreateStore().SaveAfterLaunchAsync(AfterLaunchAction.Close, TestContext.Current.CancellationToken);
 
         Assert.Equal(new UserPreferences(null, null, null), CreateStore().Load());
     }
@@ -686,6 +693,51 @@ public sealed class JsonPreferenceStoreTests : IDisposable
     public void Load_NonBoolSteamHookReminder_KeepsOtherFieldsAndReturnsNoChoice(string value)
     {
         WriteFile($$"""{"theme":"dark","steamHookReminder":{{value}},"autoCheckUpdates":false}""");
+
+        Assert.Equal(new UserPreferences(null, AppTheme.Dark, null) { AutoCheckUpdates = false }, CreateStore().Load());
+    }
+
+    public static TheoryData<AfterLaunchAction> AfterLaunchActions => [.. Enum.GetValues<AfterLaunchAction>()];
+
+    [Theory]
+    [MemberData(nameof(AfterLaunchActions))]
+    public async Task SaveAfterLaunchAsync_ThenLoad_RoundTrips(AfterLaunchAction action)
+    {
+        await CreateStore().SaveAfterLaunchAsync(action, TestContext.Current.CancellationToken);
+
+        Assert.Equal(new UserPreferences(null, null, null) { AfterLaunch = action }, CreateStore().Load());
+    }
+
+    [Theory]
+    [InlineData(AfterLaunchAction.Keep, "keep")]
+    [InlineData(AfterLaunchAction.Minimize, "minimize")]
+    [InlineData(AfterLaunchAction.MinimizeToTray, "tray")]
+    [InlineData(AfterLaunchAction.Close, "close")]
+    public async Task SaveAfterLaunchAsync_WritesStableName(AfterLaunchAction action, string expected)
+    {
+        await CreateStore().SaveAfterLaunchAsync(action, TestContext.Current.CancellationToken);
+
+        Assert.Equal($$"""{"afterLaunch":"{{expected}}"}""", await File.ReadAllTextAsync(FilePath, TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
+    public void Load_NoAfterLaunch_LoadsNull()
+    {
+        WriteFile("""{"theme":"dark"}""");
+
+        Assert.Null(CreateStore().Load().AfterLaunch);
+    }
+
+    [Theory]
+    [InlineData("\"hide\"")]
+    [InlineData("\"MinimizeToTray\"")]
+    [InlineData("\"\"")]
+    [InlineData("1")]
+    [InlineData("null")]
+    [InlineData("[\"close\"]")]
+    public void Load_UnknownAfterLaunch_KeepsOtherFieldsAndReturnsNoChoice(string value)
+    {
+        WriteFile($$"""{"theme":"dark","afterLaunch":{{value}},"autoCheckUpdates":false}""");
 
         Assert.Equal(new UserPreferences(null, AppTheme.Dark, null) { AutoCheckUpdates = false }, CreateStore().Load());
     }
