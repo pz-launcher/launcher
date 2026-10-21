@@ -499,3 +499,25 @@ Added a global after-launch setting (Keep / Minimize / Minimize to tray / Close)
 ### Status
 
 [OK] **Completed**
+
+
+## Session 21: Rename the game's mod lists to mod presets
+<!-- trellis-session: v=2 fp=15e243d133ce25b7 -->
+
+**Date**: 2026-10-21
+**Task**: Rename the game's mod lists to mod presets
+**Branch**: `feat/mod-preset-term`
+
+### Summary
+
+The game's mod lists (ModCollection) were called 合集/Collection, the same word as Steam Workshop collections. Renamed them in all 10 resx languages to the game's own term (mod preset, 模组预设, 模組預設, набор модов, conjunto/preajuste de mods, predefinição/modelo de mods), always in full. Chinese nav is now 模组预设. Added a Terminology section to the localization spec. 1819 Desktop tests pass.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `581717b` | Call the game's mod lists "mod presets", as the game does |
+
+### Status
+
+[OK] **Completed**

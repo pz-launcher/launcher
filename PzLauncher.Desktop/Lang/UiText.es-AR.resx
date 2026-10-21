@@ -62,10 +62,10 @@
     <value>Configuración de inicio</value>
   </data>
   <data name="Home_Collection" xml:space="preserve">
-    <value>Colección</value>
+    <value>Preajuste de mods</value>
   </data>
   <data name="Home_NoCollection" xml:space="preserve">
-    <value>Sin colección (mantener la configuración del juego)</value>
+    <value>Sin preajuste de mods (mantener la configuración del juego)</value>
   </data>
   <data name="Installs_Title" xml:space="preserve">
     <value>Instalaciones</value>
@@ -264,13 +264,13 @@
     <value>No se pudo encontrar la carpeta de caché del juego para {0}. Revisá el argumento -cachedir= en la configuración de inicio.</value>
   </data>
   <data name="Error_ModCollectionNameInvalid" xml:space="preserve">
-    <value>"{0}" no es un nombre de colección válido. El nombre no puede estar vacío ni contener \ / : * ? " &lt; &gt; |.</value>
+    <value>"{0}" no es un nombre de preajuste de mods válido. El nombre no puede estar vacío ni contener \ / : * ? " &lt; &gt; |.</value>
   </data>
   <data name="Error_ModCollectionModIdInvalid" xml:space="preserve">
-    <value>"{0}" no es un id de mod válido para una colección.</value>
+    <value>"{0}" no es un id de mod válido para un preajuste de mods.</value>
   </data>
   <data name="Error_ModCollectionNotFound" xml:space="preserve">
-    <value>Ya no existe una colección llamada "{0}". Actualizá la lista y volvé a intentarlo.</value>
+    <value>Ya no existe un preajuste de mods llamado "{0}". Actualizá la lista y volvé a intentarlo.</value>
   </data>
   <data name="Error_ModCollectionFileUnreadable" xml:space="preserve">
     <value>No se pudo leer el archivo de lista de mods {0}. Asegurate de que no esté abierto en otro programa y volvé a intentarlo.</value>
@@ -459,7 +459,7 @@
     <value>Abrir PzLauncher con el botón Jugar de Steam</value>
   </data>
   <data name="Steam_HookHint" xml:space="preserve">
-    <value>El botón Jugar de Project Zomboid en Steam abrirá este launcher en lugar del juego, para que siempre se use tu configuración de Java, memoria, colección y ZombieBuddy. Iniciá el juego acá con Iniciar juego.</value>
+    <value>El botón Jugar de Project Zomboid en Steam abrirá este launcher en lugar del juego, para que siempre se use tu configuración de Java, memoria, preajuste de mods y ZombieBuddy. Iniciá el juego acá con Iniciar juego.</value>
   </data>
   <data name="Steam_OtherLauncher" xml:space="preserve">
     <value>Steam abre actualmente otro PzLauncher: {0}. Activalo para abrir este en su lugar.</value>
@@ -723,7 +723,7 @@
     <value>Mods instalados</value>
   </data>
   <data name="Mods_SectionCollections" xml:space="preserve">
-    <value>Colecciones</value>
+    <value>Preajustes de mods</value>
   </data>
   <data name="Mods_SectionWorkshopSubscriptions" xml:space="preserve">
     <value>Suscripciones de Workshop</value>
@@ -759,7 +759,7 @@
     <value>{0} seleccionados</value>
   </data>
   <data name="Mods_AddToCollection" xml:space="preserve">
-    <value>Agregar a colección…</value>
+    <value>Agregar a preajuste de mods…</value>
   </data>
   <data name="Mods_ClearSelection" xml:space="preserve">
     <value>Quitar selección</value>
@@ -780,7 +780,7 @@
     <value>Activado</value>
   </data>
   <data name="Mods_ColumnCollections" xml:space="preserve">
-    <value>Colecciones</value>
+    <value>Preajustes de mods</value>
   </data>
   <data name="Mods_SortColumnTip" xml:space="preserve">
     <value>Ordenar por esta columna; otro clic invierte el orden</value>
@@ -807,7 +807,7 @@
     <value>Carpeta mods local</value>
   </data>
   <data name="ModCollections_New" xml:space="preserve">
-    <value>Nueva</value>
+    <value>Nuevo</value>
   </data>
   <data name="ModCollections_NewFromEnabled" xml:space="preserve">
     <value>Desde la lista activada</value>
@@ -816,7 +816,7 @@
     <value>Importar</value>
   </data>
   <data name="ModCollections_Empty" xml:space="preserve">
-    <value>Todavía no hay colecciones. Creá una o importá el texto para compartir copiado del juego.</value>
+    <value>Todavía no hay preajustes de mods. Creá uno o importá el texto para compartir copiado del juego.</value>
   </data>
   <data name="ModCollections_CountFormat" xml:space="preserve">
     <value>{0} mods</value>
@@ -825,28 +825,28 @@
     <value>No instalados: {0}</value>
   </data>
   <data name="ModCollections_NoSelection" xml:space="preserve">
-    <value>Seleccioná una colección.</value>
+    <value>Seleccioná un preajuste de mods.</value>
   </data>
   <data name="ModCollections_CurrentBadge" xml:space="preserve">
     <value>Actual</value>
   </data>
   <data name="ModCollections_Use" xml:space="preserve">
-    <value>Usar esta colección</value>
+    <value>Usar este preajuste de mods</value>
   </data>
   <data name="ModCollections_UseHint" xml:space="preserve">
-    <value>Aplica ahora esta colección como lista activada del juego; cada inicio desde el launcher la vuelve a aplicar.</value>
+    <value>Aplica ahora este preajuste de mods como lista activada del juego; cada inicio desde el launcher lo vuelve a aplicar.</value>
   </data>
   <data name="ModCollections_InUse" xml:space="preserve">
     <value>En uso</value>
   </data>
   <data name="ModCollections_InUseHint" xml:space="preserve">
-    <value>Esta es la colección actual y la lista activada está al día</value>
+    <value>Este es el preajuste de mods actual y la lista activada está al día</value>
   </data>
   <data name="ModCollections_ApplyAgain" xml:space="preserve">
     <value>Volver a aplicar</value>
   </data>
   <data name="ModCollections_ApplyAgainHint" xml:space="preserve">
-    <value>La colección o la lista activada del juego cambió; aplicala ahora (al iniciar también se aplica)</value>
+    <value>El preajuste de mods o la lista activada del juego cambió; aplicalo ahora (al iniciar también se aplica)</value>
   </data>
   <data name="ModCollections_Share" xml:space="preserve">
     <value>Compartir</value>
@@ -873,7 +873,7 @@
     <value>No instalado</value>
   </data>
   <data name="ModCollections_MissingTip" xml:space="preserve">
-    <value>Estos mods no están en este equipo (sin suscripción o eliminados); al aplicar la colección se omiten.</value>
+    <value>Estos mods no están en este equipo (sin suscripción o eliminados); al aplicar el preajuste de mods se omiten.</value>
   </data>
   <data name="ModCollections_MoveUp" xml:space="preserve">
     <value>Subir</value>
@@ -888,43 +888,43 @@
     <value>Mover al final</value>
   </data>
   <data name="ModCollections_RemoveMod" xml:space="preserve">
-    <value>Quitar de la colección</value>
+    <value>Quitar del preajuste de mods</value>
   </data>
   <data name="ModCollections_NameInvalid" xml:space="preserve">
     <value>Escribí un nombre sin ninguno de estos caracteres: \ / : * ? " &lt; &gt; |</value>
   </data>
   <data name="ModCollections_OverwriteTitle" xml:space="preserve">
-    <value>¿Sobrescribir la colección?</value>
+    <value>¿Sobrescribir el preajuste de mods?</value>
   </data>
   <data name="ModCollections_OverwriteMessage" xml:space="preserve">
-    <value>Ya existe una colección llamada "{0}". ¿Querés sobrescribirla?</value>
+    <value>Ya existe un preajuste de mods llamado "{0}". ¿Querés sobrescribirlo?</value>
   </data>
   <data name="ModCollections_Overwrite" xml:space="preserve">
     <value>Sobrescribir</value>
   </data>
   <data name="ModCollections_NewTitle" xml:space="preserve">
-    <value>Nueva colección</value>
+    <value>Nuevo preajuste de mods</value>
   </data>
   <data name="ModCollections_Create" xml:space="preserve">
     <value>Crear</value>
   </data>
   <data name="ModCollections_NewFromEnabledTitle" xml:space="preserve">
-    <value>Nueva colección desde la lista activada</value>
+    <value>Nuevo preajuste de mods desde la lista activada</value>
   </data>
   <data name="ModCollections_ImportTitle" xml:space="preserve">
-    <value>Importar colecciones</value>
+    <value>Importar preajustes de mods</value>
   </data>
   <data name="ModCollections_ImportMessage" xml:space="preserve">
-    <value>Pegá el texto para compartir del juego o del launcher, una colección por línea (nombre:id1;id2;…;).</value>
+    <value>Pegá el texto para compartir del juego o del launcher, un preajuste de mods por línea (nombre:id1;id2;…;).</value>
   </data>
   <data name="ModCollections_RenameTitle" xml:space="preserve">
-    <value>Renombrar colección</value>
+    <value>Renombrar preajuste de mods</value>
   </data>
   <data name="ModCollections_DeleteTitle" xml:space="preserve">
-    <value>¿Eliminar la colección?</value>
+    <value>¿Eliminar el preajuste de mods?</value>
   </data>
   <data name="ModCollections_DeleteMessage" xml:space="preserve">
-    <value>¿Eliminar la colección "{0}"? Antes se hace una copia de seguridad del archivo de listas de mods del juego.</value>
+    <value>¿Eliminar el preajuste de mods "{0}"? Antes se hace una copia de seguridad del archivo de listas de mods del juego.</value>
   </data>
   <data name="ModCollections_Applied" xml:space="preserve">
     <value>Se aplicó "{0}": {1} mods activados.</value>
@@ -933,13 +933,13 @@
     <value>Se copió al portapapeles el texto para compartir de "{0}".</value>
   </data>
   <data name="ModCollections_NameMessage" xml:space="preserve">
-    <value>Nombre de la colección:</value>
+    <value>Nombre del preajuste de mods:</value>
   </data>
   <data name="ModCollections_ImportNothing" xml:space="preserve">
-    <value>No se encontró ninguna colección. Cada línea necesita un nombre, dos puntos y los ID de los mods.</value>
+    <value>No se encontró ningún preajuste de mods. Cada línea necesita un nombre, dos puntos y los ID de los mods.</value>
   </data>
   <data name="ModCollections_ImportNameInvalid" xml:space="preserve">
-    <value>"{0}" no se puede usar como nombre de colección.</value>
+    <value>"{0}" no se puede usar como nombre de preajuste de mods.</value>
   </data>
   <data name="Workshop_SearchPlaceholder" xml:space="preserve">
     <value>Buscar por título, ID del elemento o ID del mod</value>
@@ -948,7 +948,7 @@
     <value>Necesita actualización</value>
   </data>
   <data name="Workshop_FilterUnused" xml:space="preserve">
-    <value>Sin usar en colecciones</value>
+    <value>Sin usar en preajustes de mods</value>
   </data>
   <data name="Workshop_FilterFavorites" xml:space="preserve">
     <value>Favoritos locales</value>
@@ -1029,7 +1029,7 @@
     <value>¿Cancelar la suscripción a estos {0} elementos? Steam borrará sus archivos cuando termine la acción.</value>
   </data>
   <data name="Workshop_UnsubscribeUsedMessage" xml:space="preserve">
-    <value>¿Cancelar la suscripción a estos {0} elementos? Sus mods están en estas colecciones: {1}. Las colecciones conservan los mods, que pasarán a faltar. Steam borrará los archivos cuando termine la acción.</value>
+    <value>¿Cancelar la suscripción a estos {0} elementos? Sus mods están en estos preajustes de mods: {1}. Los preajustes de mods conservan los mods, que pasarán a faltar. Steam borrará los archivos cuando termine la acción.</value>
   </data>
   <data name="Workshop_CheckedAllCurrent" xml:space="preserve">
     <value>Todos los elementos instalados están actualizados.</value>
@@ -1149,25 +1149,25 @@
     <value>Cancelar todas las suscripciones</value>
   </data>
   <data name="WorkshopCollections_Generate" xml:space="preserve">
-    <value>Crear colección de mods</value>
+    <value>Crear preajuste de mods</value>
   </data>
   <data name="WorkshopCollections_GenerateHint" xml:space="preserve">
-    <value>Crea una colección del launcher con los mods de los elementos instalados, en el orden de esta colección.</value>
+    <value>Crea un preajuste de mods con los mods de los elementos instalados, en el orden de esta colección.</value>
   </data>
   <data name="WorkshopCollections_GenerateTitle" xml:space="preserve">
-    <value>Nueva colección desde la colección de Workshop</value>
+    <value>Nuevo preajuste de mods desde la colección de Workshop</value>
   </data>
   <data name="WorkshopCollections_GenerateNothing" xml:space="preserve">
     <value>Ningún elemento instalado de esta colección tiene mods para agregar. Suscribite primero a los que faltan y dejá que Steam los descargue.</value>
   </data>
   <data name="WorkshopCollections_Generated" xml:space="preserve">
-    <value>Se creó "{0}" con {1} mods. Está en Colecciones.</value>
+    <value>Se creó "{0}" con {1} mods. Está en Preajustes de mods.</value>
   </data>
   <data name="WorkshopCollections_PickTitle" xml:space="preserve">
     <value>Elegí los mods para agregar</value>
   </data>
   <data name="WorkshopCollections_PickMessage" xml:space="preserve">
-    <value>Estos elementos tienen más de un mod. Desmarcá los mods que no tenga que incluir la nueva colección.</value>
+    <value>Estos elementos tienen más de un mod. Desmarcá los mods que no tenga que incluir el nuevo preajuste de mods.</value>
   </data>
   <data name="WorkshopCollections_PickConflict" xml:space="preserve">
     <value>Incompatible con {0}</value>
@@ -1239,7 +1239,7 @@
     <value>¿Conservar la lista activada actual?</value>
   </data>
   <data name="ModApply_KeepMessage" xml:space="preserve">
-    <value>La lista activada del juego ({0} mods) no coincide con ninguna colección, y aplicar "{1}" la reemplaza. ¿Guardarla antes como colección?</value>
+    <value>La lista activada del juego ({0} mods) no coincide con ningún preajuste de mods, y aplicar "{1}" la reemplaza. ¿Guardarla antes como preajuste de mods?</value>
   </data>
   <data name="ModApply_KeepDefaultName" xml:space="preserve">
     <value>Lista activada original</value>

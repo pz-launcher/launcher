@@ -16,6 +16,12 @@ Reference: `PzLauncher.Desktop/Lang/` → `UiText.resx` (English) and one `UiTex
 - `Main_FontFamily` is the per-language font list (Inter, then CJK fonts of that script per OS; languages Inter covers fully keep the English value); every root that shows text (`MainView`, standalone windows such as the error dialog in `App.axaml.cs`) sets `FontFamily` from it. Without named CJK fallbacks, bold Chinese renders at regular weight.
 - Format with `CultureInfo.CurrentCulture`; only the UI language changes, never number/date formatting.
 
+## Terminology
+
+- A game concept takes the game's own term for that language, from `media/lua/shared/Translate/<LANG>/UI.json`. A language whose game translation is missing or empty uses its nearest regional sibling (`es-AR`, `es-CL` follow `ES_MX`).
+- The game's mod lists (`ModCollection`) are the game's "mods preset" (`UI_mods_SavePrompt`): en "mod preset", zh-Hans 模组预设, zh-Hant 模組預設. Always write the full term, never a bare "preset"/预设/預設. Grammatical forms (plural, case, article and gender agreement) follow the term.
+- "Collection" (zh-Hans 合集, zh-Hant 合輯) means only Steam Workshop collections.
+
 ## Using text
 
 | Where | How | Reference |

@@ -62,10 +62,10 @@
     <value>Definições de arranque</value>
   </data>
   <data name="Home_Collection" xml:space="preserve">
-    <value>Coleção</value>
+    <value>Modelo de mods</value>
   </data>
   <data name="Home_NoCollection" xml:space="preserve">
-    <value>Sem coleção (manter as definições do jogo)</value>
+    <value>Sem modelo de mods (manter as definições do jogo)</value>
   </data>
   <data name="Installs_Title" xml:space="preserve">
     <value>Instalações</value>
@@ -264,13 +264,13 @@
     <value>Não foi possível encontrar a pasta de cache do jogo para {0}. Verifique o argumento -cachedir= nas definições de arranque.</value>
   </data>
   <data name="Error_ModCollectionNameInvalid" xml:space="preserve">
-    <value>"{0}" não é um nome de coleção válido. O nome não pode estar vazio nem conter \ / : * ? " &lt; &gt; |.</value>
+    <value>"{0}" não é um nome de modelo de mods válido. O nome não pode estar vazio nem conter \ / : * ? " &lt; &gt; |.</value>
   </data>
   <data name="Error_ModCollectionModIdInvalid" xml:space="preserve">
-    <value>"{0}" não é um id de mod válido para uma coleção.</value>
+    <value>"{0}" não é um id de mod válido para um modelo de mods.</value>
   </data>
   <data name="Error_ModCollectionNotFound" xml:space="preserve">
-    <value>Já não existe uma coleção chamada "{0}". Atualize a lista e tente novamente.</value>
+    <value>Já não existe um modelo de mods chamado "{0}". Atualize a lista e tente novamente.</value>
   </data>
   <data name="Error_ModCollectionFileUnreadable" xml:space="preserve">
     <value>Não foi possível ler o ficheiro da lista de mods {0}. Verifique se não está aberto noutro programa e tente novamente.</value>
@@ -459,7 +459,7 @@
     <value>Abrir o PzLauncher pelo botão Jogar do Steam</value>
   </data>
   <data name="Steam_HookHint" xml:space="preserve">
-    <value>O botão Jogar do Project Zomboid no Steam passa a abrir este launcher em vez do jogo, para que as suas definições de Java, memória, coleção e ZombieBuddy sejam sempre usadas. Inicie o jogo aqui com Iniciar jogo.</value>
+    <value>O botão Jogar do Project Zomboid no Steam passa a abrir este launcher em vez do jogo, para que as suas definições de Java, memória, modelo de mods e ZombieBuddy sejam sempre usadas. Inicie o jogo aqui com Iniciar jogo.</value>
   </data>
   <data name="Steam_OtherLauncher" xml:space="preserve">
     <value>O Steam abre atualmente outro PzLauncher: {0}. Ative para abrir este.</value>
@@ -723,7 +723,7 @@
     <value>Mods instalados</value>
   </data>
   <data name="Mods_SectionCollections" xml:space="preserve">
-    <value>Coleções</value>
+    <value>Modelos de mods</value>
   </data>
   <data name="Mods_SectionWorkshopSubscriptions" xml:space="preserve">
     <value>Subscrições do Workshop</value>
@@ -759,7 +759,7 @@
     <value>{0} selecionados</value>
   </data>
   <data name="Mods_AddToCollection" xml:space="preserve">
-    <value>Adicionar à coleção…</value>
+    <value>Adicionar ao modelo de mods…</value>
   </data>
   <data name="Mods_ClearSelection" xml:space="preserve">
     <value>Limpar seleção</value>
@@ -780,7 +780,7 @@
     <value>Ativado</value>
   </data>
   <data name="Mods_ColumnCollections" xml:space="preserve">
-    <value>Coleções</value>
+    <value>Modelos de mods</value>
   </data>
   <data name="Mods_SortColumnTip" xml:space="preserve">
     <value>Ordenar por esta coluna; outro clique inverte a ordem</value>
@@ -807,7 +807,7 @@
     <value>Pasta mods local</value>
   </data>
   <data name="ModCollections_New" xml:space="preserve">
-    <value>Nova</value>
+    <value>Novo</value>
   </data>
   <data name="ModCollections_NewFromEnabled" xml:space="preserve">
     <value>Da lista ativada</value>
@@ -816,7 +816,7 @@
     <value>Importar</value>
   </data>
   <data name="ModCollections_Empty" xml:space="preserve">
-    <value>Ainda não existem coleções. Crie uma ou importe o texto de partilha copiado do jogo.</value>
+    <value>Ainda não existem modelos de mods. Crie um ou importe o texto de partilha copiado do jogo.</value>
   </data>
   <data name="ModCollections_CountFormat" xml:space="preserve">
     <value>{0} mods</value>
@@ -825,28 +825,28 @@
     <value>Não instalados: {0}</value>
   </data>
   <data name="ModCollections_NoSelection" xml:space="preserve">
-    <value>Selecione uma coleção.</value>
+    <value>Selecione um modelo de mods.</value>
   </data>
   <data name="ModCollections_CurrentBadge" xml:space="preserve">
     <value>Atual</value>
   </data>
   <data name="ModCollections_Use" xml:space="preserve">
-    <value>Usar esta coleção</value>
+    <value>Usar este modelo de mods</value>
   </data>
   <data name="ModCollections_UseHint" xml:space="preserve">
-    <value>Aplica já esta coleção como lista ativada do jogo; cada início a partir do launcher volta a aplicá-la.</value>
+    <value>Aplica já este modelo de mods como lista ativada do jogo; cada início a partir do launcher volta a aplicá-lo.</value>
   </data>
   <data name="ModCollections_InUse" xml:space="preserve">
     <value>Em uso</value>
   </data>
   <data name="ModCollections_InUseHint" xml:space="preserve">
-    <value>Esta é a coleção atual e a lista ativada está atualizada</value>
+    <value>Este é o modelo de mods atual e a lista ativada está atualizada</value>
   </data>
   <data name="ModCollections_ApplyAgain" xml:space="preserve">
     <value>Aplicar novamente</value>
   </data>
   <data name="ModCollections_ApplyAgainHint" xml:space="preserve">
-    <value>A coleção ou a lista ativada no jogo mudou; aplique agora (ao iniciar também é aplicada)</value>
+    <value>O modelo de mods ou a lista ativada no jogo mudou; aplique agora (ao iniciar também é aplicado)</value>
   </data>
   <data name="ModCollections_Share" xml:space="preserve">
     <value>Partilhar</value>
@@ -873,7 +873,7 @@
     <value>Não instalado</value>
   </data>
   <data name="ModCollections_MissingTip" xml:space="preserve">
-    <value>Estes mods não estão neste computador (sem subscrição ou eliminados); ao aplicar a coleção, são ignorados.</value>
+    <value>Estes mods não estão neste computador (sem subscrição ou eliminados); ao aplicar o modelo de mods, são ignorados.</value>
   </data>
   <data name="ModCollections_MoveUp" xml:space="preserve">
     <value>Mover para cima</value>
@@ -888,58 +888,58 @@
     <value>Mover para o fim</value>
   </data>
   <data name="ModCollections_RemoveMod" xml:space="preserve">
-    <value>Remover da coleção</value>
+    <value>Remover do modelo de mods</value>
   </data>
   <data name="ModCollections_NameInvalid" xml:space="preserve">
     <value>Introduza um nome sem nenhum destes carateres: \ / : * ? " &lt; &gt; |</value>
   </data>
   <data name="ModCollections_OverwriteTitle" xml:space="preserve">
-    <value>Substituir a coleção?</value>
+    <value>Substituir o modelo de mods?</value>
   </data>
   <data name="ModCollections_OverwriteMessage" xml:space="preserve">
-    <value>Já existe uma coleção chamada "{0}". Pretende substituí-la?</value>
+    <value>Já existe um modelo de mods chamado "{0}". Pretende substituí-lo?</value>
   </data>
   <data name="ModCollections_Overwrite" xml:space="preserve">
     <value>Substituir</value>
   </data>
   <data name="ModCollections_NewTitle" xml:space="preserve">
-    <value>Nova coleção</value>
+    <value>Novo modelo de mods</value>
   </data>
   <data name="ModCollections_Create" xml:space="preserve">
     <value>Criar</value>
   </data>
   <data name="ModCollections_NewFromEnabledTitle" xml:space="preserve">
-    <value>Nova coleção a partir da lista ativada</value>
+    <value>Novo modelo de mods a partir da lista ativada</value>
   </data>
   <data name="ModCollections_ImportTitle" xml:space="preserve">
-    <value>Importar coleções</value>
+    <value>Importar modelos de mods</value>
   </data>
   <data name="ModCollections_ImportMessage" xml:space="preserve">
-    <value>Cole o texto de partilha do jogo ou do launcher, uma coleção por linha (nome:id1;id2;…;).</value>
+    <value>Cole o texto de partilha do jogo ou do launcher, um modelo de mods por linha (nome:id1;id2;…;).</value>
   </data>
   <data name="ModCollections_RenameTitle" xml:space="preserve">
-    <value>Renomear coleção</value>
+    <value>Renomear modelo de mods</value>
   </data>
   <data name="ModCollections_DeleteTitle" xml:space="preserve">
-    <value>Eliminar a coleção?</value>
+    <value>Eliminar o modelo de mods?</value>
   </data>
   <data name="ModCollections_DeleteMessage" xml:space="preserve">
-    <value>Eliminar a coleção "{0}"? Antes é feita uma cópia de segurança do ficheiro de listas de mods do jogo.</value>
+    <value>Eliminar o modelo de mods "{0}"? Antes é feita uma cópia de segurança do ficheiro de listas de mods do jogo.</value>
   </data>
   <data name="ModCollections_Applied" xml:space="preserve">
-    <value>"{0}" aplicada: {1} mods ativados.</value>
+    <value>"{0}" aplicado: {1} mods ativados.</value>
   </data>
   <data name="ModCollections_Shared" xml:space="preserve">
     <value>Texto de partilha de "{0}" copiado para a área de transferência.</value>
   </data>
   <data name="ModCollections_NameMessage" xml:space="preserve">
-    <value>Nome da coleção:</value>
+    <value>Nome do modelo de mods:</value>
   </data>
   <data name="ModCollections_ImportNothing" xml:space="preserve">
-    <value>Nenhuma coleção encontrada. Cada linha precisa de um nome, dois-pontos e os IDs dos mods.</value>
+    <value>Nenhum modelo de mods encontrado. Cada linha precisa de um nome, dois-pontos e os IDs dos mods.</value>
   </data>
   <data name="ModCollections_ImportNameInvalid" xml:space="preserve">
-    <value>"{0}" não pode ser usado como nome de coleção.</value>
+    <value>"{0}" não pode ser usado como nome de modelo de mods.</value>
   </data>
   <data name="Workshop_SearchPlaceholder" xml:space="preserve">
     <value>Procurar por título, ID do item ou ID do mod</value>
@@ -948,7 +948,7 @@
     <value>Precisa de atualização</value>
   </data>
   <data name="Workshop_FilterUnused" xml:space="preserve">
-    <value>Sem utilização em coleções</value>
+    <value>Sem utilização em modelos de mods</value>
   </data>
   <data name="Workshop_FilterFavorites" xml:space="preserve">
     <value>Favoritos locais</value>
@@ -1029,7 +1029,7 @@
     <value>Cancelar a subscrição destes {0} itens? O Steam apaga os ficheiros quando a ação terminar.</value>
   </data>
   <data name="Workshop_UnsubscribeUsedMessage" xml:space="preserve">
-    <value>Cancelar a subscrição destes {0} itens? Os mods deles estão nestas coleções: {1}. As coleções mantêm os mods, que passarão a estar em falta. O Steam apaga os ficheiros quando a ação terminar.</value>
+    <value>Cancelar a subscrição destes {0} itens? Os mods deles estão nestes modelos de mods: {1}. Os modelos de mods mantêm os mods, que passarão a estar em falta. O Steam apaga os ficheiros quando a ação terminar.</value>
   </data>
   <data name="Workshop_CheckedAllCurrent" xml:space="preserve">
     <value>Todos os itens instalados estão atualizados.</value>
@@ -1149,25 +1149,25 @@
     <value>Cancelar todas as subscrições</value>
   </data>
   <data name="WorkshopCollections_Generate" xml:space="preserve">
-    <value>Criar coleção de mods</value>
+    <value>Criar modelo de mods</value>
   </data>
   <data name="WorkshopCollections_GenerateHint" xml:space="preserve">
-    <value>Cria uma coleção do launcher com os mods dos itens instalados, pela ordem desta coleção.</value>
+    <value>Cria um modelo de mods com os mods dos itens instalados, pela ordem desta coleção.</value>
   </data>
   <data name="WorkshopCollections_GenerateTitle" xml:space="preserve">
-    <value>Nova coleção a partir da coleção do Workshop</value>
+    <value>Novo modelo de mods a partir da coleção do Workshop</value>
   </data>
   <data name="WorkshopCollections_GenerateNothing" xml:space="preserve">
     <value>Nenhum item instalado desta coleção tem mods para adicionar. Subscreva primeiro os que faltam e deixe o Steam transferi-los.</value>
   </data>
   <data name="WorkshopCollections_Generated" xml:space="preserve">
-    <value>"{0}" criada com {1} mods. Está em Coleções.</value>
+    <value>"{0}" criado com {1} mods. Está em Modelos de mods.</value>
   </data>
   <data name="WorkshopCollections_PickTitle" xml:space="preserve">
     <value>Escolha os mods a adicionar</value>
   </data>
   <data name="WorkshopCollections_PickMessage" xml:space="preserve">
-    <value>Estes itens têm mais do que um mod. Desmarque os mods que a nova coleção não deve ter.</value>
+    <value>Estes itens têm mais do que um mod. Desmarque os mods que o novo modelo de mods não deve ter.</value>
   </data>
   <data name="WorkshopCollections_PickConflict" xml:space="preserve">
     <value>Incompatível com {0}</value>
@@ -1239,7 +1239,7 @@
     <value>Manter a lista ativada atual?</value>
   </data>
   <data name="ModApply_KeepMessage" xml:space="preserve">
-    <value>A lista ativada do jogo ({0} mods) não corresponde a nenhuma coleção, e aplicar "{1}" substitui-a. Guardá-la antes como coleção?</value>
+    <value>A lista ativada do jogo ({0} mods) não corresponde a nenhum modelo de mods, e aplicar "{1}" substitui-a. Guardá-la antes como modelo de mods?</value>
   </data>
   <data name="ModApply_KeepDefaultName" xml:space="preserve">
     <value>Lista ativada original</value>

@@ -62,10 +62,10 @@
     <value>Launch settings</value>
   </data>
   <data name="Home_Collection" xml:space="preserve">
-    <value>Collection</value>
+    <value>Mod preset</value>
   </data>
   <data name="Home_NoCollection" xml:space="preserve">
-    <value>No collection (keep in-game settings)</value>
+    <value>No mod preset (keep in-game settings)</value>
   </data>
   <data name="Installs_Title" xml:space="preserve">
     <value>Installs</value>
@@ -264,13 +264,13 @@
     <value>Couldn't find the game's cache folder for {0}. Check the -cachedir= game argument in Launch settings.</value>
   </data>
   <data name="Error_ModCollectionNameInvalid" xml:space="preserve">
-    <value>"{0}" isn't a valid collection name. A name can't be empty or contain \ / : * ? " &lt; &gt; |.</value>
+    <value>"{0}" isn't a valid mod preset name. A name can't be empty or contain \ / : * ? " &lt; &gt; |.</value>
   </data>
   <data name="Error_ModCollectionModIdInvalid" xml:space="preserve">
-    <value>"{0}" isn't a valid mod id for a collection.</value>
+    <value>"{0}" isn't a valid mod id for a mod preset.</value>
   </data>
   <data name="Error_ModCollectionNotFound" xml:space="preserve">
-    <value>There's no collection named "{0}" any more. Refresh the list and try again.</value>
+    <value>There's no mod preset named "{0}" any more. Refresh the list and try again.</value>
   </data>
   <data name="Error_ModCollectionFileUnreadable" xml:space="preserve">
     <value>Couldn't read the mod list file {0}. Make sure it isn't open in another program, then try again.</value>
@@ -459,7 +459,7 @@
     <value>Open PzLauncher from Steam's Play button</value>
   </data>
   <data name="Steam_HookHint" xml:space="preserve">
-    <value>Steam's Play button for Project Zomboid then opens this launcher instead of the game, so your Java, memory, collection and ZombieBuddy settings are always used. Start the game here with Launch game.</value>
+    <value>Steam's Play button for Project Zomboid then opens this launcher instead of the game, so your Java, memory, mod preset and ZombieBuddy settings are always used. Start the game here with Launch game.</value>
   </data>
   <data name="Steam_OtherLauncher" xml:space="preserve">
     <value>Steam currently opens another PzLauncher: {0}. Turn this on to open this one instead.</value>
@@ -723,7 +723,7 @@
     <value>Installed mods</value>
   </data>
   <data name="Mods_SectionCollections" xml:space="preserve">
-    <value>Collections</value>
+    <value>Mod presets</value>
   </data>
   <data name="Mods_SectionWorkshopSubscriptions" xml:space="preserve">
     <value>Workshop subscriptions</value>
@@ -759,7 +759,7 @@
     <value>{0} selected</value>
   </data>
   <data name="Mods_AddToCollection" xml:space="preserve">
-    <value>Add to collection…</value>
+    <value>Add to mod preset…</value>
   </data>
   <data name="Mods_ClearSelection" xml:space="preserve">
     <value>Clear selection</value>
@@ -780,7 +780,7 @@
     <value>Enabled</value>
   </data>
   <data name="Mods_ColumnCollections" xml:space="preserve">
-    <value>Collections</value>
+    <value>Mod presets</value>
   </data>
   <data name="Mods_SortColumnTip" xml:space="preserve">
     <value>Sort by this column; click again to reverse</value>
@@ -816,7 +816,7 @@
     <value>Import</value>
   </data>
   <data name="ModCollections_Empty" xml:space="preserve">
-    <value>No collections yet. Create one, or import share text copied from the game.</value>
+    <value>No mod presets yet. Create one, or import share text copied from the game.</value>
   </data>
   <data name="ModCollections_CountFormat" xml:space="preserve">
     <value>{0} mods</value>
@@ -825,28 +825,28 @@
     <value>Not installed: {0}</value>
   </data>
   <data name="ModCollections_NoSelection" xml:space="preserve">
-    <value>Select a collection.</value>
+    <value>Select a mod preset.</value>
   </data>
   <data name="ModCollections_CurrentBadge" xml:space="preserve">
     <value>Current</value>
   </data>
   <data name="ModCollections_Use" xml:space="preserve">
-    <value>Use this collection</value>
+    <value>Use this mod preset</value>
   </data>
   <data name="ModCollections_UseHint" xml:space="preserve">
-    <value>Apply this collection as the game's enabled list now; every launch from the launcher applies it again.</value>
+    <value>Apply this mod preset as the game's enabled list now; every launch from the launcher applies it again.</value>
   </data>
   <data name="ModCollections_InUse" xml:space="preserve">
     <value>In use</value>
   </data>
   <data name="ModCollections_InUseHint" xml:space="preserve">
-    <value>This is the current collection and the enabled list is up to date</value>
+    <value>This is the current mod preset and the enabled list is up to date</value>
   </data>
   <data name="ModCollections_ApplyAgain" xml:space="preserve">
     <value>Apply again</value>
   </data>
   <data name="ModCollections_ApplyAgainHint" xml:space="preserve">
-    <value>The collection or the in-game enabled list changed; apply now (launching also applies it)</value>
+    <value>The mod preset or the in-game enabled list changed; apply now (launching also applies it)</value>
   </data>
   <data name="ModCollections_Share" xml:space="preserve">
     <value>Share</value>
@@ -873,7 +873,7 @@
     <value>Not installed</value>
   </data>
   <data name="ModCollections_MissingTip" xml:space="preserve">
-    <value>These mods aren't on this computer (not subscribed or deleted); applying the collection skips them.</value>
+    <value>These mods aren't on this computer (not subscribed or deleted); applying the mod preset skips them.</value>
   </data>
   <data name="ModCollections_MoveUp" xml:space="preserve">
     <value>Move up</value>
@@ -888,43 +888,43 @@
     <value>Move to bottom</value>
   </data>
   <data name="ModCollections_RemoveMod" xml:space="preserve">
-    <value>Remove from collection</value>
+    <value>Remove from mod preset</value>
   </data>
   <data name="ModCollections_NameInvalid" xml:space="preserve">
     <value>Enter a name without any of these characters: \ / : * ? " &lt; &gt; |</value>
   </data>
   <data name="ModCollections_OverwriteTitle" xml:space="preserve">
-    <value>Overwrite collection?</value>
+    <value>Overwrite mod preset?</value>
   </data>
   <data name="ModCollections_OverwriteMessage" xml:space="preserve">
-    <value>A collection named "{0}" already exists. Overwrite it?</value>
+    <value>A mod preset named "{0}" already exists. Overwrite it?</value>
   </data>
   <data name="ModCollections_Overwrite" xml:space="preserve">
     <value>Overwrite</value>
   </data>
   <data name="ModCollections_NewTitle" xml:space="preserve">
-    <value>New collection</value>
+    <value>New mod preset</value>
   </data>
   <data name="ModCollections_Create" xml:space="preserve">
     <value>Create</value>
   </data>
   <data name="ModCollections_NewFromEnabledTitle" xml:space="preserve">
-    <value>New collection from the enabled list</value>
+    <value>New mod preset from the enabled list</value>
   </data>
   <data name="ModCollections_ImportTitle" xml:space="preserve">
-    <value>Import collections</value>
+    <value>Import mod presets</value>
   </data>
   <data name="ModCollections_ImportMessage" xml:space="preserve">
-    <value>Paste share text from the game or the launcher, one collection per line (name:id1;id2;…;).</value>
+    <value>Paste share text from the game or the launcher, one mod preset per line (name:id1;id2;…;).</value>
   </data>
   <data name="ModCollections_RenameTitle" xml:space="preserve">
-    <value>Rename collection</value>
+    <value>Rename mod preset</value>
   </data>
   <data name="ModCollections_DeleteTitle" xml:space="preserve">
-    <value>Delete collection?</value>
+    <value>Delete mod preset?</value>
   </data>
   <data name="ModCollections_DeleteMessage" xml:space="preserve">
-    <value>Delete the collection "{0}"? The game's mod list file is backed up first.</value>
+    <value>Delete the mod preset "{0}"? The game's mod list file is backed up first.</value>
   </data>
   <data name="ModCollections_Applied" xml:space="preserve">
     <value>Applied "{0}": {1} mods enabled.</value>
@@ -933,13 +933,13 @@
     <value>Share text for "{0}" copied to the clipboard.</value>
   </data>
   <data name="ModCollections_NameMessage" xml:space="preserve">
-    <value>Collection name:</value>
+    <value>Mod preset name:</value>
   </data>
   <data name="ModCollections_ImportNothing" xml:space="preserve">
-    <value>No collection found. Each line needs a name, a colon and the mod IDs.</value>
+    <value>No mod preset found. Each line needs a name, a colon and the mod IDs.</value>
   </data>
   <data name="ModCollections_ImportNameInvalid" xml:space="preserve">
-    <value>"{0}" can't be used as a collection name.</value>
+    <value>"{0}" can't be used as a mod preset name.</value>
   </data>
   <data name="Workshop_SearchPlaceholder" xml:space="preserve">
     <value>Search by title, item ID or mod ID</value>
@@ -948,7 +948,7 @@
     <value>Needs update</value>
   </data>
   <data name="Workshop_FilterUnused" xml:space="preserve">
-    <value>Used by no collection</value>
+    <value>Used by no mod preset</value>
   </data>
   <data name="Workshop_FilterFavorites" xml:space="preserve">
     <value>Local favorites</value>
@@ -1029,7 +1029,7 @@
     <value>Unsubscribe from these {0} items? Steam removes their files once the action ends.</value>
   </data>
   <data name="Workshop_UnsubscribeUsedMessage" xml:space="preserve">
-    <value>Unsubscribe from these {0} items? Their mods are in these mod collections: {1}. The collections keep the mods, which will then be missing. Steam removes the files once the action ends.</value>
+    <value>Unsubscribe from these {0} items? Their mods are in these mod presets: {1}. The mod presets keep the mods, which will then be missing. Steam removes the files once the action ends.</value>
   </data>
   <data name="Workshop_CheckedAllCurrent" xml:space="preserve">
     <value>All installed items are up to date.</value>
@@ -1149,25 +1149,25 @@
     <value>Unsubscribe from all</value>
   </data>
   <data name="WorkshopCollections_Generate" xml:space="preserve">
-    <value>Create mod collection</value>
+    <value>Create mod preset</value>
   </data>
   <data name="WorkshopCollections_GenerateHint" xml:space="preserve">
-    <value>Creates a launcher mod collection from the mods of the installed items, in this collection's order.</value>
+    <value>Creates a mod preset from the mods of the installed items, in this collection's order.</value>
   </data>
   <data name="WorkshopCollections_GenerateTitle" xml:space="preserve">
-    <value>New collection from the Workshop collection</value>
+    <value>New mod preset from the Workshop collection</value>
   </data>
   <data name="WorkshopCollections_GenerateNothing" xml:space="preserve">
     <value>None of this collection's installed items holds a mod to add. Subscribe to the missing items and let Steam download them first.</value>
   </data>
   <data name="WorkshopCollections_Generated" xml:space="preserve">
-    <value>Created "{0}" with {1} mods. It's in Collections.</value>
+    <value>Created "{0}" with {1} mods. It's in Mod presets.</value>
   </data>
   <data name="WorkshopCollections_PickTitle" xml:space="preserve">
     <value>Choose the mods to add</value>
   </data>
   <data name="WorkshopCollections_PickMessage" xml:space="preserve">
-    <value>These items hold more than one mod. Untick the mods the new collection shouldn't hold.</value>
+    <value>These items hold more than one mod. Untick the mods the new mod preset shouldn't hold.</value>
   </data>
   <data name="WorkshopCollections_PickConflict" xml:space="preserve">
     <value>Incompatible with {0}</value>
@@ -1239,7 +1239,7 @@
     <value>Keep the current enabled list?</value>
   </data>
   <data name="ModApply_KeepMessage" xml:space="preserve">
-    <value>The game's enabled list ({0} mods) doesn't match any collection, and applying "{1}" replaces it. Save it as a collection first?</value>
+    <value>The game's enabled list ({0} mods) doesn't match any mod preset, and applying "{1}" replaces it. Save it as a mod preset first?</value>
   </data>
   <data name="ModApply_KeepDefaultName" xml:space="preserve">
     <value>Original enabled list</value>

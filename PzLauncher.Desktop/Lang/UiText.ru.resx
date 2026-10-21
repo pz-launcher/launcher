@@ -62,10 +62,10 @@
     <value>Настройки запуска</value>
   </data>
   <data name="Home_Collection" xml:space="preserve">
-    <value>Сборка</value>
+    <value>Набор модов</value>
   </data>
   <data name="Home_NoCollection" xml:space="preserve">
-    <value>Без сборки (оставить настройки игры)</value>
+    <value>Без набора модов (оставить настройки игры)</value>
   </data>
   <data name="Installs_Title" xml:space="preserve">
     <value>Установки</value>
@@ -264,13 +264,13 @@
     <value>Не удалось найти папку кэша игры для {0}. Проверьте игровой аргумент -cachedir= в настройках запуска.</value>
   </data>
   <data name="Error_ModCollectionNameInvalid" xml:space="preserve">
-    <value>«{0}» — недопустимое имя сборки. Имя не может быть пустым или содержать \ / : * ? " &lt; &gt; |.</value>
+    <value>«{0}» — недопустимое имя набора модов. Имя не может быть пустым или содержать \ / : * ? " &lt; &gt; |.</value>
   </data>
   <data name="Error_ModCollectionModIdInvalid" xml:space="preserve">
-    <value>«{0}» — недопустимый id мода для сборки.</value>
+    <value>«{0}» — недопустимый id мода для набора модов.</value>
   </data>
   <data name="Error_ModCollectionNotFound" xml:space="preserve">
-    <value>Сборки «{0}» больше нет. Обновите список и попробуйте снова.</value>
+    <value>Набора модов «{0}» больше нет. Обновите список и попробуйте снова.</value>
   </data>
   <data name="Error_ModCollectionFileUnreadable" xml:space="preserve">
     <value>Не удалось прочитать файл списка модов {0}. Убедитесь, что он не открыт в другой программе, и попробуйте снова.</value>
@@ -459,7 +459,7 @@
     <value>Открывать PzLauncher кнопкой «Играть» в Steam</value>
   </data>
   <data name="Steam_HookHint" xml:space="preserve">
-    <value>Кнопка «Играть» для Project Zomboid в Steam будет открывать этот лаунчер вместо игры, поэтому ваши настройки Java, памяти, сборки и ZombieBuddy всегда применяются. Запускайте игру здесь кнопкой «Запустить игру».</value>
+    <value>Кнопка «Играть» для Project Zomboid в Steam будет открывать этот лаунчер вместо игры, поэтому ваши настройки Java, памяти, набора модов и ZombieBuddy всегда применяются. Запускайте игру здесь кнопкой «Запустить игру».</value>
   </data>
   <data name="Steam_OtherLauncher" xml:space="preserve">
     <value>Сейчас Steam открывает другой PzLauncher: {0}. Включите, чтобы открывался этот.</value>
@@ -723,7 +723,7 @@
     <value>Установленные моды</value>
   </data>
   <data name="Mods_SectionCollections" xml:space="preserve">
-    <value>Сборки</value>
+    <value>Наборы модов</value>
   </data>
   <data name="Mods_SectionWorkshopSubscriptions" xml:space="preserve">
     <value>Подписки Мастерской</value>
@@ -759,7 +759,7 @@
     <value>Выбрано: {0}</value>
   </data>
   <data name="Mods_AddToCollection" xml:space="preserve">
-    <value>Добавить в сборку…</value>
+    <value>Добавить в набор модов…</value>
   </data>
   <data name="Mods_ClearSelection" xml:space="preserve">
     <value>Снять выбор</value>
@@ -780,7 +780,7 @@
     <value>Включён</value>
   </data>
   <data name="Mods_ColumnCollections" xml:space="preserve">
-    <value>Сборки</value>
+    <value>Наборы модов</value>
   </data>
   <data name="Mods_SortColumnTip" xml:space="preserve">
     <value>Сортировать по этому столбцу; повторный щелчок меняет порядок</value>
@@ -816,7 +816,7 @@
     <value>Импорт</value>
   </data>
   <data name="ModCollections_Empty" xml:space="preserve">
-    <value>Сборок пока нет. Создайте сборку или импортируйте текст, скопированный в игре.</value>
+    <value>Наборов модов пока нет. Создайте новый набор модов или импортируйте текст, скопированный в игре.</value>
   </data>
   <data name="ModCollections_CountFormat" xml:space="preserve">
     <value>Модов: {0}</value>
@@ -825,28 +825,28 @@
     <value>Не установлено: {0}</value>
   </data>
   <data name="ModCollections_NoSelection" xml:space="preserve">
-    <value>Выберите сборку.</value>
+    <value>Выберите набор модов.</value>
   </data>
   <data name="ModCollections_CurrentBadge" xml:space="preserve">
-    <value>Текущая</value>
+    <value>Текущий</value>
   </data>
   <data name="ModCollections_Use" xml:space="preserve">
-    <value>Использовать эту сборку</value>
+    <value>Использовать этот набор модов</value>
   </data>
   <data name="ModCollections_UseHint" xml:space="preserve">
-    <value>Сразу применить эту сборку как список включённых модов; затем она применяется при каждом запуске из лаунчера.</value>
+    <value>Сразу применить этот набор модов как список включённых модов; затем он применяется при каждом запуске из лаунчера.</value>
   </data>
   <data name="ModCollections_InUse" xml:space="preserve">
     <value>Используется</value>
   </data>
   <data name="ModCollections_InUseHint" xml:space="preserve">
-    <value>Это текущая сборка, список включённых модов актуален</value>
+    <value>Это текущий набор модов, список включённых модов актуален</value>
   </data>
   <data name="ModCollections_ApplyAgain" xml:space="preserve">
     <value>Применить снова</value>
   </data>
   <data name="ModCollections_ApplyAgainHint" xml:space="preserve">
-    <value>Сборка или список включённых модов в игре изменились; применить сейчас (при запуске она тоже применяется)</value>
+    <value>Набор модов или список включённых модов в игре изменились; применить сейчас (при запуске он тоже применяется)</value>
   </data>
   <data name="ModCollections_Share" xml:space="preserve">
     <value>Поделиться</value>
@@ -873,7 +873,7 @@
     <value>Не установлен</value>
   </data>
   <data name="ModCollections_MissingTip" xml:space="preserve">
-    <value>Этих модов нет на этом компьютере (нет подписки или удалены); при применении сборки они пропускаются.</value>
+    <value>Этих модов нет на этом компьютере (нет подписки или удалены); при применении набора модов они пропускаются.</value>
   </data>
   <data name="ModCollections_MoveUp" xml:space="preserve">
     <value>Выше</value>
@@ -888,58 +888,58 @@
     <value>В конец</value>
   </data>
   <data name="ModCollections_RemoveMod" xml:space="preserve">
-    <value>Убрать из сборки</value>
+    <value>Убрать из набора модов</value>
   </data>
   <data name="ModCollections_NameInvalid" xml:space="preserve">
     <value>Введите имя без этих символов: \ / : * ? " &lt; &gt; |</value>
   </data>
   <data name="ModCollections_OverwriteTitle" xml:space="preserve">
-    <value>Перезаписать сборку?</value>
+    <value>Перезаписать набор модов?</value>
   </data>
   <data name="ModCollections_OverwriteMessage" xml:space="preserve">
-    <value>Сборка «{0}» уже есть. Перезаписать её?</value>
+    <value>Набор модов «{0}» уже есть. Перезаписать его?</value>
   </data>
   <data name="ModCollections_Overwrite" xml:space="preserve">
     <value>Перезаписать</value>
   </data>
   <data name="ModCollections_NewTitle" xml:space="preserve">
-    <value>Новая сборка</value>
+    <value>Новый набор модов</value>
   </data>
   <data name="ModCollections_Create" xml:space="preserve">
     <value>Создать</value>
   </data>
   <data name="ModCollections_NewFromEnabledTitle" xml:space="preserve">
-    <value>Новая сборка из включённых модов</value>
+    <value>Новый набор модов из списка включённых</value>
   </data>
   <data name="ModCollections_ImportTitle" xml:space="preserve">
-    <value>Импорт сборок</value>
+    <value>Импорт наборов модов</value>
   </data>
   <data name="ModCollections_ImportMessage" xml:space="preserve">
-    <value>Вставьте текст из игры или лаунчера, по одной сборке в строке (имя:id1;id2;…;).</value>
+    <value>Вставьте текст из игры или лаунчера, по одному набору модов в строке (имя:id1;id2;…;).</value>
   </data>
   <data name="ModCollections_RenameTitle" xml:space="preserve">
-    <value>Переименовать сборку</value>
+    <value>Переименовать набор модов</value>
   </data>
   <data name="ModCollections_DeleteTitle" xml:space="preserve">
-    <value>Удалить сборку?</value>
+    <value>Удалить набор модов?</value>
   </data>
   <data name="ModCollections_DeleteMessage" xml:space="preserve">
-    <value>Удалить сборку «{0}»? Сначала будет сохранена резервная копия файла списков модов игры.</value>
+    <value>Удалить набор модов «{0}»? Сначала будет сохранена резервная копия файла списков модов игры.</value>
   </data>
   <data name="ModCollections_Applied" xml:space="preserve">
-    <value>Сборка «{0}» применена: включено модов — {1}.</value>
+    <value>Набор модов «{0}» применён: включено модов — {1}.</value>
   </data>
   <data name="ModCollections_Shared" xml:space="preserve">
-    <value>Текст сборки «{0}» скопирован в буфер обмена.</value>
+    <value>Текст набора модов «{0}» скопирован в буфер обмена.</value>
   </data>
   <data name="ModCollections_NameMessage" xml:space="preserve">
-    <value>Имя сборки:</value>
+    <value>Имя набора модов:</value>
   </data>
   <data name="ModCollections_ImportNothing" xml:space="preserve">
-    <value>Сборки не найдены. В каждой строке нужны имя, двоеточие и ID модов.</value>
+    <value>Наборы модов не найдены. В каждой строке нужны имя, двоеточие и ID модов.</value>
   </data>
   <data name="ModCollections_ImportNameInvalid" xml:space="preserve">
-    <value>«{0}» нельзя использовать как имя сборки.</value>
+    <value>«{0}» нельзя использовать как имя набора модов.</value>
   </data>
   <data name="Workshop_SearchPlaceholder" xml:space="preserve">
     <value>Поиск по названию, ID предмета или ID мода</value>
@@ -948,7 +948,7 @@
     <value>Нужно обновить</value>
   </data>
   <data name="Workshop_FilterUnused" xml:space="preserve">
-    <value>Не используется в сборках</value>
+    <value>Не используется в наборах модов</value>
   </data>
   <data name="Workshop_FilterFavorites" xml:space="preserve">
     <value>Локальное избранное</value>
@@ -1029,7 +1029,7 @@
     <value>Отписаться от выбранных предметов ({0})? Steam удалит их файлы после завершения действия.</value>
   </data>
   <data name="Workshop_UnsubscribeUsedMessage" xml:space="preserve">
-    <value>Отписаться от выбранных предметов ({0})? Их моды входят в сборки: {1}. Сборки сохранят эти моды, но они станут отсутствующими. Steam удалит файлы после завершения действия.</value>
+    <value>Отписаться от выбранных предметов ({0})? Их моды входят в наборы модов: {1}. Наборы модов сохранят эти моды, но они станут отсутствующими. Steam удалит файлы после завершения действия.</value>
   </data>
   <data name="Workshop_CheckedAllCurrent" xml:space="preserve">
     <value>Все установленные предметы актуальны.</value>
@@ -1149,31 +1149,31 @@
     <value>Отписаться от всех</value>
   </data>
   <data name="WorkshopCollections_Generate" xml:space="preserve">
-    <value>Создать сборку</value>
+    <value>Создать набор модов</value>
   </data>
   <data name="WorkshopCollections_GenerateHint" xml:space="preserve">
-    <value>Создаёт сборку лаунчера из модов установленных предметов в порядке этой коллекции.</value>
+    <value>Создаёт набор модов из установленных предметов в порядке этой коллекции.</value>
   </data>
   <data name="WorkshopCollections_GenerateTitle" xml:space="preserve">
-    <value>Новая сборка из коллекции Мастерской</value>
+    <value>Новый набор модов из коллекции Мастерской</value>
   </data>
   <data name="WorkshopCollections_GenerateNothing" xml:space="preserve">
-    <value>Среди установленных предметов коллекции нет модов для сборки. Сначала подпишитесь на недостающие предметы и дождитесь, пока Steam их скачает.</value>
+    <value>Среди установленных предметов коллекции нет модов, которые можно добавить. Сначала подпишитесь на недостающие предметы и дождитесь, пока Steam их скачает.</value>
   </data>
   <data name="WorkshopCollections_Generated" xml:space="preserve">
-    <value>Сборка «{0}» создана, модов — {1}. Она в разделе «Сборки».</value>
+    <value>Набор модов «{0}» создан, модов — {1}. Он в разделе «Наборы модов».</value>
   </data>
   <data name="WorkshopCollections_PickTitle" xml:space="preserve">
     <value>Выберите моды</value>
   </data>
   <data name="WorkshopCollections_PickMessage" xml:space="preserve">
-    <value>Эти предметы содержат несколько модов. Снимите флажки с модов, которых не должно быть в новой сборке.</value>
+    <value>Эти предметы содержат несколько модов. Снимите флажки с модов, которых не должно быть в новом наборе модов.</value>
   </data>
   <data name="WorkshopCollections_PickConflict" xml:space="preserve">
     <value>Несовместим с {0}</value>
   </data>
   <data name="WorkshopCollections_SkippedMessage" xml:space="preserve">
-    <value>Эти предметы не войдут в сборку:</value>
+    <value>Эти предметы не войдут в набор модов:</value>
   </data>
   <data name="WorkshopCollections_SkippedFormat" xml:space="preserve">
     <value>{0}: {1}</value>
@@ -1239,7 +1239,7 @@
     <value>Сохранить текущий список включённых?</value>
   </data>
   <data name="ModApply_KeepMessage" xml:space="preserve">
-    <value>Список включённых модов игры ({0}) не совпадает ни с одной сборкой, и применение «{1}» его заменит. Сначала сохранить его как сборку?</value>
+    <value>Список включённых модов игры ({0}) не совпадает ни с одним набором модов, и применение «{1}» его заменит. Сначала сохранить его как набор модов?</value>
   </data>
   <data name="ModApply_KeepDefaultName" xml:space="preserve">
     <value>Исходный список включённых</value>
