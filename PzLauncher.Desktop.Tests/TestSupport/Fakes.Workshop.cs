@@ -300,6 +300,17 @@ public static class TestWorkshop
     public static WorkshopFavorites Favorites(FakePreferenceStore? store = null, SavedWorkshopFavorites? saved = null) =>
         new(store ?? new FakePreferenceStore(), new UserPreferences(null, null, null) { WorkshopFavorites = saved ?? SavedWorkshopFavorites.None });
 
+    public static LocalCollections LocalCollectionStore(FakePreferenceStore? store = null, params SavedLocalCollection[] saved) =>
+        new(store ?? new FakePreferenceStore(), new UserPreferences(null, null, null) { LocalCollections = saved });
+
+    public static ModpackStore ModpackStoreOf(
+        LocalCollections localCollections, FakePreferenceStore? store = null, IReadOnlyDictionary<string, IReadOnlyList<Modpack>>? saved = null) =>
+        new(
+            store ?? new FakePreferenceStore(),
+            new UserPreferences(null, null, null) { Modpacks = saved ?? new Dictionary<string, IReadOnlyList<Modpack>>() },
+            new FakePlatformEnvironment(),
+            localCollections);
+
     public static WorkshopUserCollectionsCache UserCollections(FakePreferenceStore? store = null, SavedWorkshopUserCollections? saved = null, TimeProvider? time = null) =>
         new(store ?? new FakePreferenceStore(), new UserPreferences(null, null, null) { WorkshopUserCollections = saved }, time ?? new ManualTimeProvider());
 }

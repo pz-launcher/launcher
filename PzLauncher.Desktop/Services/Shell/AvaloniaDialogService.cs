@@ -9,8 +9,10 @@ using Avalonia.Layout;
 using Avalonia.Media;
 using PzLauncher.Desktop.Lang;
 using PzLauncher.Desktop.ViewModels;
+using PzLauncher.Desktop.ViewModels.Mods.Modpacks;
 using PzLauncher.Desktop.ViewModels.Mods.Workshop;
 using PzLauncher.Desktop.ViewModels.ZombieBuddy;
+using PzLauncher.Desktop.Views.Mods.Modpacks;
 using PzLauncher.Desktop.Views.Mods.Workshop;
 using PzLauncher.Desktop.Views.ZombieBuddy;
 
@@ -124,6 +126,12 @@ public sealed class AvaloniaDialogService(Func<Window?> owner) : IDialogService
 
     public Task<bool> PickWorkshopModsAsync(WorkshopModPickViewModel pick) =>
         ShowViewDialogAsync(pick, UiText.WorkshopCollections_PickTitle, 520, () => new WorkshopModPickView { DataContext = pick });
+
+    public Task<bool> PickLocalCollectionAsync(LocalCollectionPickViewModel pick) =>
+        ShowViewDialogAsync(pick, UiText.LocalCollections_PickTitle, 420, () => new LocalCollectionPickView { DataContext = pick });
+
+    public Task<bool> EditModpackAsync(ModpackEditViewModel edit) =>
+        ShowViewDialogAsync(edit, edit.Title, 520, () => new ModpackEditView { DataContext = edit });
 
     public async Task<T?> ChooseOneAsync<T>(ChoicePrompt<T> prompt)
         where T : struct

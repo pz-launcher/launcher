@@ -1,0 +1,47 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:PzLauncher.Desktop.ViewModels.Mods.Workshop"
+             xmlns:design="using:PzLauncher.Desktop.ViewModels.Design"
+             xmlns:lang="using:PzLauncher.Desktop.Lang"
+             mc:Ignorable="d" d:DesignWidth="420"
+             x:Class="PzLauncher.Desktop.Views.Mods.Workshop.LocalCollectionPickView"
+             x:DataType="vm:LocalCollectionPickViewModel">
+
+    <Design.DataContext>
+        <x:Static Member="design:DesignData.LocalCollectionPick" />
+    </Design.DataContext>
+
+    <StackPanel Margin="16" Spacing="12">
+        <TextBlock Text="{x:Static lang:UiText.LocalCollections_PickMessage}" TextWrapping="Wrap" />
+
+        <ScrollViewer MaxHeight="280" IsVisible="{Binding HasOptions}">
+            <ItemsControl ItemsSource="{Binding Options}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:LocalCollectionPickOption">
+                        <RadioButton GroupName="LocalCollectionTarget" IsChecked="{Binding IsChecked}" AutomationProperties.Name="{Binding Name}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                                <TextBlock Text="{Binding ItemCount, StringFormat={x:Static lang:UiText.WorkshopCollections_ItemCountFormat}}"
+                                           Foreground="{DynamicResource Shell.TextMuted}" />
+                            </StackPanel>
+                        </RadioButton>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+
+        <StackPanel Spacing="4">
+            <RadioButton GroupName="LocalCollectionTarget" IsChecked="{Binding IsNewChecked}" Content="{x:Static lang:UiText.LocalCollections_PickNew}" />
+            <TextBox Text="{Binding NewName}" PlaceholderText="{x:Static lang:UiText.LocalCollections_NameMessage}" Margin="28,0,0,0" />
+            <TextBlock Text="{Binding NewNameError}" Classes="error" TextWrapping="Wrap" Margin="28,0,0,0"
+                       IsVisible="{Binding NewNameError, Converter={x:Static ObjectConverters.IsNotNull}}" />
+        </StackPanel>
+
+        <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+            <Button Classes="accent" Content="{x:Static lang:UiText.LocalCollections_PickAccept}" Command="{Binding AcceptCommand}" IsDefault="True" />
+            <Button Content="{x:Static lang:UiText.Dialog_Cancel}" Command="{Binding CancelCommand}" IsCancel="True" />
+        </StackPanel>
+    </StackPanel>
+</UserControl>

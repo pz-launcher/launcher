@@ -32,8 +32,9 @@ public abstract partial class WorkshopItemListSectionViewModel : WorkshopSection
         IDialogService dialogs,
         IUrlLauncher urls,
         WorkshopFavorites favorites,
-        WorkshopTitles titles)
-        : base(page, service, runner, dialogs, urls, favorites, titles)
+        WorkshopTitles titles,
+        LocalCollections localCollections)
+        : base(page, service, runner, dialogs, urls, favorites, titles, localCollections)
     {
         AddStateCommands(SubscribeMissingCommand, GenerateCommand);
     }
@@ -150,6 +151,30 @@ public abstract partial class WorkshopItemListSectionViewModel : WorkshopSection
 
         SetItems([.. items.Where(entry => keep(entry.Id))]);
         ShowListRows([.. Rows.Where(row => keep(row.Id))]);
+    }
+
+    /// <summary>Lists the items in this order, rows included, without asking Steam or the Web API again; false when one isn't listed yet.</summary>
+    protected bool ArrangeItems(IReadOnlyList<ulong> ids)
+    {
+        if (_items is not { } items)
+        {
+            return false;
+        }
+
+        var listed = items.ToDictionary(item => item.Id);
+        if (!ids.All(listed.ContainsKey))
+        {
+            return false;
+        }
+
+        if (!items.Select(item => item.Id).SequenceEqual(ids))
+        {
+            var rows = Rows.ToDictionary(row => row.Id);
+            SetItems([.. ids.Select(id => listed[id])]);
+            ShowListRows([.. ids.Where(rows.ContainsKey).Select(id => rows[id])]);
+        }
+
+        return true;
     }
 
     /// <summary>Shows the listed items as of now with their state in the install's subscriptions.</summary>

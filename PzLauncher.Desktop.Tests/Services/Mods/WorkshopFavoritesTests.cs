@@ -8,7 +8,7 @@ public class WorkshopFavoritesTests
 {
     private readonly FakePreferenceStore _store = new();
 
-    private static WorkshopTitles Titles(WorkshopFavorites favorites) => new(TestWorkshop.History(), TestWorkshop.UserCollections(), favorites);
+    private static WorkshopTitles Titles(WorkshopFavorites favorites) => new(TestWorkshop.History(), TestWorkshop.UserCollections(), favorites, TestWorkshop.LocalCollectionStore());
 
     private WorkshopFavorites Create(params SavedWorkshopEntry[] items) =>
         TestWorkshop.Favorites(_store, new SavedWorkshopFavorites([new SavedWorkshopEntry(9000, "Pack")], items));

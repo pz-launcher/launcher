@@ -37,6 +37,7 @@ public class MainViewModelTests : UiTextCultureTest
         var workshop = new FakeWorkshopService();
         var history = TestWorkshop.History();
         var userCollections = TestWorkshop.UserCollections();
+        var localCollections = TestWorkshop.LocalCollectionStore();
         var favorites = TestWorkshop.Favorites();
         var afterLaunch = new AfterLaunchSettings(store, new(null, null, null), new FakePlatformEnvironment());
         return new(
@@ -49,7 +50,7 @@ public class MainViewModelTests : UiTextCultureTest
             new ModsViewModel(
                 installs, collections, overrides, defaults, applier, dialogs, new FakeClipboardService(), runState, orderWriter,
                 workshop, workshop, new FakeWorkshopActionRunner(), new FakeUrlLauncher(), history, userCollections, favorites,
-                new WorkshopTitles(history, userCollections, favorites), Localization),
+                new WorkshopTitles(history, userCollections, favorites, localCollections), localCollections, TestWorkshop.ModpackStoreOf(localCollections), Localization),
             new SettingsViewModel(
                 new FakeThemeService(AppTheme.Light),
                 store,

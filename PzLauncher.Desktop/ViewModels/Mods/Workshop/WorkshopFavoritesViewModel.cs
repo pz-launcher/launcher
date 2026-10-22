@@ -31,8 +31,9 @@ public sealed partial class WorkshopFavoritesViewModel : WorkshopItemListSection
         IClipboardService clipboard,
         IUrlLauncher urls,
         WorkshopFavorites favorites,
-        WorkshopTitles titles)
-        : base(page, service, runner, dialogs, urls, favorites, titles)
+        WorkshopTitles titles,
+        LocalCollections localCollections)
+        : base(page, service, runner, dialogs, urls, favorites, titles, localCollections)
     {
         _clipboard = clipboard;
         _favoritesStatus = new LocalizedText(text => FavoritesStatusText = text);

@@ -19,6 +19,9 @@ public sealed class InstallKeyedMap<T>
         }
     }
 
+    /// <summary>As saved.</summary>
+    public IReadOnlyCollection<string> Roots => _values.Keys;
+
     public T this[string installRoot] => _values[installRoot];
 
     public T? GetValueOrDefault(string installRoot) => _values.GetValueOrDefault(installRoot);

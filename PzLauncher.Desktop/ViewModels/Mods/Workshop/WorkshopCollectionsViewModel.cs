@@ -42,8 +42,9 @@ public partial class WorkshopCollectionsViewModel : WorkshopItemListSectionViewM
         WorkshopCollectionHistory history,
         WorkshopUserCollectionsCache userCache,
         WorkshopFavorites favorites,
-        WorkshopTitles titles)
-        : base(page, service, runner, dialogs, urls, favorites, titles)
+        WorkshopTitles titles,
+        LocalCollections localCollections)
+        : base(page, service, runner, dialogs, urls, favorites, titles, localCollections)
     {
         _history = history;
         _userCache = userCache;
@@ -187,6 +188,29 @@ public partial class WorkshopCollectionsViewModel : WorkshopItemListSectionViewM
     private Task OpenCollectionInSteamAsync() =>
         _collection is { } open ? OpenInSteamAsync(open.Id) : Task.CompletedTask;
 
+    private bool CanSaveAsLocalCollection() => HasCollection;
+
+    /// <summary>A local collection of the open collection's items, in collection order.</summary>
+    [RelayCommand(CanExecute = nameof(CanSaveAsLocalCollection))]
+    private async Task SaveAsLocalCollectionAsync()
+    {
+        if (_collection is not { } open)
+        {
+            return;
+        }
+
+        var initial = open.Title is { } openTitle && LocalCollectionName.IsValid(openTitle) ? openTitle.Trim() : "";
+        if (await LocalCollectionPrompts.AskNameAsync(
+                Dialogs, LocalCollections, UiText.LocalCollections_SaveAsTitle, initial, UiText.ModCollections_Create) is not { } name)
+        {
+            return;
+        }
+
+        var saved = LocalCollections.Create(name, [.. open.Items.Select(item => new WorkshopEntry(item.Id, item.Details?.Title is { Length: > 0 } itemTitle ? itemTitle : null))]);
+        var count = saved.Items.Count;
+        ShownStatus.Show(() => string.Format(CultureInfo.CurrentCulture, UiText.LocalCollections_SavedAs, count, name));
+    }
+
     private bool CanUnsubscribeAll() => CanRunActions && SubscribedCount > 0;
 
     [RelayCommand(CanExecute = nameof(CanUnsubscribeAll))]
@@ -285,6 +309,7 @@ public partial class WorkshopCollectionsViewModel : WorkshopItemListSectionViewM
         IdText = collection?.Id.ToString(CultureInfo.InvariantCulture);
         OpenCollectionInSteamCommand.NotifyCanExecuteChanged();
         ToggleOpenCollectionFavoriteCommand.NotifyCanExecuteChanged();
+        SaveAsLocalCollectionCommand.NotifyCanExecuteChanged();
         RefreshCollectionLists();
     }
 

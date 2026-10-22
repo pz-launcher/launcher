@@ -41,6 +41,16 @@ public sealed class WorkshopLinksTests
     }
 
     [Fact]
+    public void ParseLines_IdsAndLinks_KeepsEachIdOnceInOrderAndCountsTheOtherLines()
+    {
+        var parsed = WorkshopLinks.ParseLines(
+            "3\r\n\n  https://steamcommunity.com/sharedfiles/filedetails/?id=1  \nnot an id\n3\nsteam://url/CommunityFilePage/2\n#items\n");
+
+        Assert.Equal([3UL, 1, 2], parsed.Ids);
+        Assert.Equal(2, parsed.SkippedLines);
+    }
+
+    [Fact]
     public void ClientPage_OpensTheItemPageInSteam()
     {
         Assert.Equal("steam://url/CommunityFilePage/18446744073709551615", WorkshopLinks.ClientPage(ulong.MaxValue).OriginalString);

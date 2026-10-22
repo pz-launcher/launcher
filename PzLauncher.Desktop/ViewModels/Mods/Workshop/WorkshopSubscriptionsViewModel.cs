@@ -31,8 +31,9 @@ public partial class WorkshopSubscriptionsViewModel : WorkshopSectionViewModel
         IClipboardService clipboard,
         IUrlLauncher urls,
         WorkshopFavorites favorites,
-        WorkshopTitles titles)
-        : base(page, service, runner, dialogs, urls, favorites, titles)
+        WorkshopTitles titles,
+        LocalCollections localCollections)
+        : base(page, service, runner, dialogs, urls, favorites, titles, localCollections)
     {
         _clipboard = clipboard;
         VisibleRows = [];
@@ -155,6 +156,12 @@ public partial class WorkshopSubscriptionsViewModel : WorkshopSectionViewModel
     [RelayCommand(CanExecute = nameof(CanRunOnSelection))]
     private Task UpdateSelectedAsync() => RunAsync(WorkshopAction.Update, SelectedRows());
 
+    private bool HasSelectedRows() => SelectedCount > 0;
+
+    // A local write, never Steam's: available while a game or a Steam action runs.
+    [RelayCommand(CanExecute = nameof(HasSelectedRows))]
+    private Task AddSelectedToLocalCollectionAsync() => AddEntriesToLocalCollectionAsync([.. SelectedRows().Select(EntryOf)]);
+
     partial void OnSearchTextChanged(string value) => RefreshVisibleRows();
 
     partial void OnFilterChanged(WorkshopSubscriptionsFilter value) => RefreshVisibleRows();
@@ -254,6 +261,7 @@ public partial class WorkshopSubscriptionsViewModel : WorkshopSectionViewModel
         RefreshVisibleRows();
         OnPropertyChanged(nameof(IsEmpty));
         OnPropertyChanged(nameof(SelectedCount));
+        AddSelectedToLocalCollectionCommand.NotifyCanExecuteChanged();
     }
 
     private void OnRowSelectionChanged(WorkshopItemRow row)
@@ -262,6 +270,7 @@ public partial class WorkshopSubscriptionsViewModel : WorkshopSectionViewModel
         OnPropertyChanged(nameof(SelectedCount));
         UnsubscribeCommand.NotifyCanExecuteChanged();
         UpdateSelectedCommand.NotifyCanExecuteChanged();
+        AddSelectedToLocalCollectionCommand.NotifyCanExecuteChanged();
     }
 
     private void RefreshVisibleRows()

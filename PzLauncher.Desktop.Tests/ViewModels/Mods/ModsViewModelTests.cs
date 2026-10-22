@@ -54,11 +54,12 @@ public class ModsViewModelTests : UiTextCultureTest
         var workshop = new FakeWorkshopService();
         var history = TestWorkshop.History();
         var userCollections = TestWorkshop.UserCollections();
+        var localCollections = TestWorkshop.LocalCollectionStore();
         var favorites = TestWorkshop.Favorites();
         var vm = new ModsViewModel(
             Installs, _service, _overrides, _defaults, new ModCollectionApplier(_service, _dialogs), _dialogs, _clipboard, _runState, _orderWriter,
             workshop, workshop, new FakeWorkshopActionRunner(), new FakeUrlLauncher(), history, userCollections, favorites,
-            new WorkshopTitles(history, userCollections, favorites), Localization);
+            new WorkshopTitles(history, userCollections, favorites, localCollections), localCollections, TestWorkshop.ModpackStoreOf(localCollections), Localization);
         await vm.ActivateCommand.ExecuteAsync(null);
         return vm;
     }
@@ -129,8 +130,10 @@ public class ModsViewModelTests : UiTextCultureTest
     [Theory]
     [InlineData(ModsSection.Mods, true)]
     [InlineData(ModsSection.Collections, true)]
+    [InlineData(ModsSection.Modpacks, true)]
     [InlineData(ModsSection.WorkshopSubscriptions, false)]
     [InlineData(ModsSection.WorkshopCollections, false)]
+    [InlineData(ModsSection.LocalCollections, false)]
     [InlineData(ModsSection.WorkshopFavorites, false)]
     public async Task Section_OnlyTheGameFileSectionsShowThePagesLoadState(ModsSection section, bool showsGameFiles)
     {

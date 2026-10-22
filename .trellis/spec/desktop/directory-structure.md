@@ -17,7 +17,7 @@ PzLauncher.Desktop/
 └── Assets/
 ```
 
-`<Feature>` matches the Core feature folder (`Installs`, ...), or names a desktop-only page (`Home`, `Settings`, `Mods`, which spans Core's `Mod/` and `Mod/Collections/`).
+`<Feature>` matches the Core feature folder (`Installs`, ...), or names a desktop-only page (`Home`, `Settings`, `Mods`, which spans Core's `Mod/` and `Mod/Collections/`). A sub-folder becomes a namespace that hides any type of the same name in sibling namespaces, so no type is named after a folder (`ViewModels/Mods/Modpacks/` → the store is `ModpackStore`).
 
 `<Group>` under `Services/` is a feature folder (`Launch`, `Mods`, `Net`, `Steam`, `Update`, `ZombieBuddy`), `Shell` (app lifetime, dialogs, prompts, clipboard, folder picker, theme, URLs, window placement, UI-thread progress) or `Preferences` (preference store, its JSON context and saved records, secret protection). Namespace `PzLauncher.Desktop.Services.<Group>`; no files directly under `Services/`.
 

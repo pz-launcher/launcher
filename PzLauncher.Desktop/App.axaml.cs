@@ -85,6 +85,8 @@ public partial class App : Application
             services.AddSingleton<WorkshopCollectionHistory>();
             services.AddSingleton<WorkshopUserCollectionsCache>();
             services.AddSingleton<WorkshopFavorites>();
+            services.AddSingleton<LocalCollections>();
+            services.AddSingleton<ModpackStore>();
             services.AddSingleton<WorkshopTitles>();
             services.AddSingleton<WorkshopLaunchCheck>();
             services.AddSingleton<GameRunState>();

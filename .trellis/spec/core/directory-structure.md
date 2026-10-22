@@ -16,6 +16,7 @@ PzLauncher.Core/
 ├── Launch/          # game launch, ProjectZomboid64.json reading and vmArgs editing
 ├── Mod/             # any PZ mod: mod.info reading, lookup in the game's mod order, installed-mod catalog
 │   ├── Collections/ # the game's mod collections and active mod list: files, load order, apply
+│   ├── Modpacks/    # modpack share text: a Workshop collection with a mod preset
 │   ├── Workshop/    # Workshop items with their mods and collections
 │   ├── ZombieBuddy/ # ZombieBuddy setup in a game install; Java mod preload check and preload list; launch entry point running each mod's launch step
 │   ├── Zabric/      # launch step: Zabric's entry in ZombieBuddy's preload list

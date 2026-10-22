@@ -68,7 +68,7 @@
         <local:WorkshopItemListActions DockPanel.Dock="Top" />
 
         <Panel>
-            <local:WorkshopItemListView Rows="{Binding Rows}" />
+            <local:WorkshopItemListView Rows="{Binding Rows}" ShowsAddToLocalCollection="True" />
             <TextBlock Text="{x:Static lang:UiText.WorkshopFavorites_ItemsEmpty}" IsVisible="{Binding IsListEmpty}" TextWrapping="Wrap"
                        Foreground="{DynamicResource Shell.TextMuted}" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" />
         </Panel>
