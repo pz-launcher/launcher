@@ -9,6 +9,7 @@ using PzLauncher.Core.Mod.ZombieBuddy;
 using PzLauncher.Core.Mod;
 using PzLauncher.Core.Net;
 using PzLauncher.Core.Serialization;
+using PzLauncher.Core.Server;
 using PzLauncher.Core.Steam.Workshop.Actions;
 using PzLauncher.Core.Steam.Workshop;
 using PzLauncher.Core.Steam;
@@ -632,4 +633,63 @@ public class CoreJsonContextTests
             Assert.Equal(e, JsonSerializer.Deserialize(json, CoreJsonContext.Default.WorkshopActionEvent));
         }
     }
+
+    [Fact]
+    public void StartServerRequest_RoundTrips()
+    {
+        var original = new StartServerRequest(new ServerSite("/srv/pz", "/home/pz/Zomboid", "/var/lib/pzl"), "main", null, 8192);
+
+        var json = JsonSerializer.Serialize(original, CoreJsonContext.Default.StartServerRequest);
+
+        Assert.Equal(
+            """{"site":{"installRoot":"/srv/pz","cacheDir":"/home/pz/Zomboid","stateDir":"/var/lib/pzl"},"name":"main","adminPassword":null,"maxMemoryMb":8192}""",
+            json);
+        Assert.Equal(original, JsonSerializer.Deserialize(json, CoreJsonContext.Default.StartServerRequest));
+    }
+
+    [Fact]
+    public void NamedServers_RoundTrip()
+    {
+        IReadOnlyList<NamedServer> original = [new NamedServer("main", HasWorld: true, HasDatabase: true), new NamedServer("test", false, false)];
+
+        var json = JsonSerializer.Serialize(original, CoreJsonContext.Default.IReadOnlyListNamedServer);
+
+        Assert.Equal(original, JsonSerializer.Deserialize(json, CoreJsonContext.Default.IReadOnlyListNamedServer));
+    }
+
+    [Fact]
+    public void ServerStatus_RoundTrips_WithStringEnumsAndTheFailure()
+    {
+        var running = new ServerStatus(ServerState.Running, "main", 4242, new DateTimeOffset(2026, 10, 23, 8, 0, 0, TimeSpan.Zero), null);
+        var failed = new ServerStatus(
+            ServerState.Stopped, null, null, null, new Error(ErrorCode.ServerExitedEarly, "msg", ErrorKind.External) { Details = new Dictionary<string, string> { ["output"] = "o" } });
+
+        var runningJson = JsonSerializer.Serialize(running, CoreJsonContext.Default.ServerStatus);
+        var failedJson = JsonSerializer.Serialize(failed, CoreJsonContext.Default.ServerStatus);
+        var failedCopy = JsonSerializer.Deserialize(failedJson, CoreJsonContext.Default.ServerStatus);
+
+        Assert.Contains("\"state\":\"Running\"", runningJson, StringComparison.Ordinal);
+        Assert.Contains("\"code\":\"server.exited_early\"", failedJson, StringComparison.Ordinal);
+        Assert.Equal(running, JsonSerializer.Deserialize(runningJson, CoreJsonContext.Default.ServerStatus));
+        Assert.NotNull(failedCopy?.LastFailure);
+        Assert.Equal((ServerState.Stopped, ErrorCode.ServerExitedEarly, "o"), (failedCopy.State, failedCopy.LastFailure.Code, failedCopy.LastFailure.Details["output"]));
+    }
+
+    [Fact]
+    public void ServerConsoleLine_RoundTrips_WithItsKind()
+    {
+        var original = new ServerConsoleLine("", ServerConsoleLineKind.FileRestarted);
+
+        var json = JsonSerializer.Serialize(original, CoreJsonContext.Default.ServerConsoleLine);
+
+        Assert.Equal("""{"text":"","kind":"FileRestarted"}""", json);
+        Assert.Equal(original, JsonSerializer.Deserialize(json, CoreJsonContext.Default.ServerConsoleLine));
+    }
+
+    [Theory]
+    [InlineData("""{"site":null,"name":"main","adminPassword":null,"maxMemoryMb":null}""")]
+    [InlineData("""{"site":{"installRoot":"/srv/pz","cacheDir":"/c","stateDir":"/s"},"adminPassword":null,"maxMemoryMb":null}""")]
+    [InlineData("""{"site":{"installRoot":"/srv/pz","cacheDir":null,"stateDir":"/s"},"name":"main","adminPassword":null,"maxMemoryMb":null}""")]
+    public void StartServerRequest_NonNullMemberNullOrMissingInJson_Throws(string json) =>
+        Assert.Throws<JsonException>(() => JsonSerializer.Deserialize(json, CoreJsonContext.Default.StartServerRequest));
 }

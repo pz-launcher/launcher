@@ -8,6 +8,7 @@ using PzLauncher.Core.Mod.Workshop;
 using PzLauncher.Core.Mod.ZombieBuddy;
 using PzLauncher.Core.Mod;
 using PzLauncher.Core.Net;
+using PzLauncher.Core.Server;
 using PzLauncher.Core.Steam.Workshop.Actions;
 using PzLauncher.Core.Steam.Workshop;
 using PzLauncher.Core.Steam;
@@ -84,4 +85,12 @@ namespace PzLauncher.Core.Serialization;
 [JsonSerializable(typeof(WorkshopActionEvent))]
 [JsonSerializable(typeof(WorkshopCollectionSummary))]
 [JsonSerializable(typeof(WorkshopUserCollections))]
+[JsonSerializable(typeof(ServerSite))]
+[JsonSerializable(typeof(NamedServer))]
+[JsonSerializable(typeof(IReadOnlyList<NamedServer>))]
+[JsonSerializable(typeof(StartServerRequest))]
+[JsonSerializable(typeof(ServerState))]
+[JsonSerializable(typeof(ServerStatus))]
+[JsonSerializable(typeof(ServerConsoleLine))]
+[JsonSerializable(typeof(ServerConsoleLineKind))]
 public sealed partial class CoreJsonContext : JsonSerializerContext;

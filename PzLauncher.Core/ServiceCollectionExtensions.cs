@@ -11,6 +11,7 @@ using PzLauncher.Core.Mod.Zabric;
 using PzLauncher.Core.Mod.ZombieBuddy;
 using PzLauncher.Core.Net;
 using PzLauncher.Core.Platform;
+using PzLauncher.Core.Server;
 using PzLauncher.Core.Steam.Workshop.Actions;
 using PzLauncher.Core.Steam.Workshop.Sources;
 using PzLauncher.Core.Steam.Workshop;
@@ -52,6 +53,8 @@ public static class ServiceCollectionExtensions
         services.TryAddSingleton<IWorkshopService, WorkshopService>();
         services.TryAddSingleton<IWorkshopModsService, WorkshopModsService>();
         services.TryAddSingleton<IWorkshopActionRunner, WorkshopActionRunner>();
+        services.TryAddSingleton<IRconClient, RconClient>();
+        services.TryAddSingleton<IServerHostService, ServerHostService>();
         services.TryAddSingleton<IUpdateService>(provider => new UpdateService(
             currentVersion,
             provider.GetRequiredService<LauncherHttpClient>(),

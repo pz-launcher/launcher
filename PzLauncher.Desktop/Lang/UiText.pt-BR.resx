@@ -314,6 +314,53 @@
   <data name="Error_NetworkTimeout" xml:space="preserve">
     <value>{0} não respondeu em {1} segundos.</value>
   </data>
+  <data name="Error_ServerNameInvalid" xml:space="preserve">
+    <value>{0} não é um nome de servidor válido. Use de 1 a 64 caracteres: A–Z, a–z, 0–9, _ ou -.</value>
+  </data>
+  <data name="Error_ServerAlreadyExists" xml:space="preserve">
+    <value>Já existe um servidor chamado {0}.</value>
+  </data>
+  <data name="Error_ServerNotFound" xml:space="preserve">
+    <value>Não existe nenhum servidor chamado {0}.</value>
+  </data>
+  <data name="Error_ServerNotAServerInstall" xml:space="preserve">
+    <value>{0} não é uma pasta de servidor dedicado do Project Zomboid.</value>
+  </data>
+  <data name="Error_ServerAlreadyRunning" xml:space="preserve">
+    <value>O servidor {0} já está em execução. Só é possível executar um servidor por vez.</value>
+  </data>
+  <data name="Error_ServerNotRunning" xml:space="preserve">
+    <value>Nenhum servidor está em execução.</value>
+  </data>
+  <data name="Error_ServerNotReady" xml:space="preserve">
+    <value>O servidor ainda está iniciando. Aguarde até que esteja em execução ou force a parada.</value>
+  </data>
+  <data name="Error_ServerAdminPasswordRequired" xml:space="preserve">
+    <value>O servidor {0} ainda não tem uma conta de administrador. Digite uma senha de administrador para criá-la.</value>
+  </data>
+  <data name="Error_ServerStartFailed" xml:space="preserve">
+    <value>Não foi possível iniciar o servidor com {0}.</value>
+  </data>
+  <data name="Error_ServerExitedEarly" xml:space="preserve">
+    <value>O servidor {0} parou durante a inicialização. Últimas linhas do console:
+{1}</value>
+  </data>
+  <data name="Error_ServerExitedUnexpectedly" xml:space="preserve">
+    <value>O servidor {0} parou inesperadamente. Últimas linhas do console:
+{1}</value>
+  </data>
+  <data name="Error_ServerRconFailed" xml:space="preserve">
+    <value>Não foi possível se comunicar com o servidor via RCON: {0}</value>
+  </data>
+  <data name="Error_ServerCommandInvalid" xml:space="preserve">
+    <value>Digite o comando em uma única linha, com no máximo 4000 bytes.</value>
+  </data>
+  <data name="Error_ServerStopTimeout" xml:space="preserve">
+    <value>O servidor não parou em {0} segundos.</value>
+  </data>
+  <data name="Error_ServerFileAccessFailed" xml:space="preserve">
+    <value>Não foi possível ler nem gravar {0}.</value>
+  </data>
   <data name="Error_WorkshopSubscriptionsUnreadable" xml:space="preserve">
     <value>Não foi possível ler a lista de inscrições da Oficina da Steam {0}. Confira se a Steam está instalada e conectada, depois atualize.</value>
   </data>

@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Globalization;
 using System.Text;
 
 namespace PzLauncher.Core.Platform;
@@ -7,6 +8,9 @@ namespace PzLauncher.Core.Platform;
 internal sealed class ProcessRunner : IProcessRunner
 {
     private const int ErrorTailLines = 50;
+
+    // A background child of a non-interactive sh isn't a process group leader, so setsid execs in place and $! is its id.
+    private const string DetachScript = "setsid \"$0\" \"$@\" </dev/null >/dev/null 2>&1 & echo $!";
 
     // A child that inherited the stderr pipe can keep it open after the process exits.
     private static readonly TimeSpan DrainTimeout = TimeSpan.FromSeconds(2);
@@ -68,6 +72,89 @@ internal sealed class ProcessRunner : IProcessRunner
         }
 
         return found;
+    }
+
+    public DetachedProcess StartDetached(ProcessStartRequest request) =>
+        OperatingSystem.IsWindows() ? WindowsDetachedStart.Start(request) : StartDetachedUnix(request);
+
+    private DetachedProcess StartDetachedUnix(ProcessStartRequest request)
+    {
+        var info = new ProcessStartInfo("/bin/sh")
+        {
+            UseShellExecute = false,
+            WorkingDirectory = request.WorkingDirectory,
+            RedirectStandardOutput = true,
+        };
+        info.ArgumentList.Add("-c");
+        info.ArgumentList.Add(DetachScript);
+        info.ArgumentList.Add(request.FileName);
+        foreach (var argument in request.Arguments)
+        {
+            info.ArgumentList.Add(argument);
+        }
+
+        foreach (var (name, value) in request.Environment)
+        {
+            info.Environment[name] = value;
+        }
+
+        // sh only forks and prints the id, so these blocking calls return at once.
+        using var shell = StartProcess(info);
+        var output = shell.StandardOutput.ReadToEnd();
+        shell.WaitForExit();
+        if (!int.TryParse(output.Trim(), NumberStyles.None, CultureInfo.InvariantCulture, out var id))
+        {
+            throw new IOException($"The detaching shell printed no process id: '{output.Trim()}'");
+        }
+
+        // Gone this fast means the exec itself failed: setsid's error went to /dev/null.
+        return GetById(id) is { } started
+            ? new DetachedProcess(id, started.StartTime)
+            : throw new IOException($"{request.FileName} exited right after it was started.");
+    }
+
+    public ProcessInfo? GetById(int id)
+    {
+        try
+        {
+            using var process = Process.GetProcessById(id);
+            return process.HasExited ? null : new ProcessInfo(process.Id, process.ProcessName, new DateTimeOffset(process.StartTime));
+        }
+        catch (Exception ex) when (ex is ArgumentException or InvalidOperationException or Win32Exception)
+        {
+            // Not running, exited while being read, or another user's.
+            return null;
+        }
+    }
+
+    public void KillTree(int id)
+    {
+        Process process;
+        try
+        {
+            process = Process.GetProcessById(id);
+        }
+        catch (ArgumentException)
+        {
+            return;
+        }
+
+        using (process)
+        {
+            try
+            {
+                process.Kill(entireProcessTree: true);
+            }
+            catch (InvalidOperationException)
+            {
+                // Exited since the lookup.
+            }
+            catch (AggregateException ex)
+            {
+                // A tree kill reports each process it couldn't end here, not as a Win32Exception.
+                throw ex.InnerExceptions.OfType<Win32Exception>().FirstOrDefault() ?? new Win32Exception(ex.Message);
+            }
+        }
     }
 
     // Another user's processes, and ones that exited since the listing, aren't ours to wait for.

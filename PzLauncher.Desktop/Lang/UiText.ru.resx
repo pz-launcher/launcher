@@ -314,6 +314,53 @@
   <data name="Error_NetworkTimeout" xml:space="preserve">
     <value>{0} не ответил за {1} с.</value>
   </data>
+  <data name="Error_ServerNameInvalid" xml:space="preserve">
+    <value>{0} — недопустимое имя сервера. Используйте от 1 до 64 символов: A–Z, a–z, 0–9, _ или -.</value>
+  </data>
+  <data name="Error_ServerAlreadyExists" xml:space="preserve">
+    <value>Сервер с именем {0} уже существует.</value>
+  </data>
+  <data name="Error_ServerNotFound" xml:space="preserve">
+    <value>Сервер с именем {0} не найден.</value>
+  </data>
+  <data name="Error_ServerNotAServerInstall" xml:space="preserve">
+    <value>{0} — не папка выделенного сервера Project Zomboid.</value>
+  </data>
+  <data name="Error_ServerAlreadyRunning" xml:space="preserve">
+    <value>Сервер {0} уже запущен. Одновременно может работать только один сервер.</value>
+  </data>
+  <data name="Error_ServerNotRunning" xml:space="preserve">
+    <value>Ни один сервер не запущен.</value>
+  </data>
+  <data name="Error_ServerNotReady" xml:space="preserve">
+    <value>Сервер ещё запускается. Дождитесь запуска или остановите его принудительно.</value>
+  </data>
+  <data name="Error_ServerAdminPasswordRequired" xml:space="preserve">
+    <value>У сервера {0} ещё нет учётной записи администратора. Введите пароль администратора, чтобы создать её.</value>
+  </data>
+  <data name="Error_ServerStartFailed" xml:space="preserve">
+    <value>Не удалось запустить сервер с помощью {0}.</value>
+  </data>
+  <data name="Error_ServerExitedEarly" xml:space="preserve">
+    <value>Сервер {0} остановился во время запуска. Последние строки консоли:
+{1}</value>
+  </data>
+  <data name="Error_ServerExitedUnexpectedly" xml:space="preserve">
+    <value>Сервер {0} неожиданно остановился. Последние строки консоли:
+{1}</value>
+  </data>
+  <data name="Error_ServerRconFailed" xml:space="preserve">
+    <value>Не удалось связаться с сервером по RCON: {0}</value>
+  </data>
+  <data name="Error_ServerCommandInvalid" xml:space="preserve">
+    <value>Введите команду одной строкой длиной не более 4000 байт.</value>
+  </data>
+  <data name="Error_ServerStopTimeout" xml:space="preserve">
+    <value>Сервер не остановился за {0} с.</value>
+  </data>
+  <data name="Error_ServerFileAccessFailed" xml:space="preserve">
+    <value>Не удалось прочитать или записать {0}.</value>
+  </data>
   <data name="Error_WorkshopSubscriptionsUnreadable" xml:space="preserve">
     <value>Не удалось прочитать список подписок Мастерской Steam {0}. Проверьте, что Steam установлен и вы вошли в аккаунт, затем обновите список.</value>
   </data>

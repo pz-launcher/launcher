@@ -9,7 +9,7 @@ internal sealed class FakeProcessRunner : IProcessRunner
 
     public List<FakeRunningProcess> Processes { get; } = [];
 
-    /// <summary>Thrown by <see cref="Start"/> instead of starting a process.</summary>
+    /// <summary>Thrown by <see cref="Start"/> and <see cref="StartDetached"/> instead of starting a process.</summary>
     public Exception? StartException { get; set; }
 
     /// <summary>Like <see cref="StartException"/>, for the request it returns one for.</summary>
@@ -31,6 +31,21 @@ internal sealed class FakeProcessRunner : IProcessRunner
     public Action<FakePipedProcess>? OnStartPiped { get; set; }
 
     public ProcessStartRequest LastRequest => Assert.Single(Requests);
+
+    /// <summary>What <see cref="GetById"/> finds; <see cref="StartDetached"/> adds to it, <see cref="KillTree"/> removes from it.</summary>
+    public Dictionary<int, ProcessInfo> Alive { get; } = [];
+
+    /// <summary>The start time <see cref="StartDetached"/> reports.</summary>
+    public DateTimeOffset DetachedStartTime { get; set; } = new(2026, 1, 1, 0, 0, 0, TimeSpan.Zero);
+
+    /// <summary>Ids <see cref="KillTree"/> was called with, in order.</summary>
+    public List<int> Killed { get; } = [];
+
+    /// <summary>Thrown by <see cref="KillTree"/>, which then leaves the process alive.</summary>
+    public Exception? KillException { get; set; }
+
+    /// <summary>Runs before each <see cref="GetById"/> lookup; can end processes.</summary>
+    public Action<int>? OnGetById { get; set; }
 
     public FakeRunningProcess AddRunning(string name)
     {
@@ -64,6 +79,37 @@ internal sealed class FakeProcessRunner : IProcessRunner
         PipedProcesses.Add(process);
         OnStartPiped?.Invoke(process);
         return process;
+    }
+
+    public DetachedProcess StartDetached(ProcessStartRequest request)
+    {
+        Requests.Add(request);
+        OnStart?.Invoke(request);
+        if ((StartException ?? StartExceptionFor(request)) is { } exception)
+        {
+            throw exception;
+        }
+
+        var id = 4000 + Requests.Count;
+        Alive[id] = new ProcessInfo(id, Path.GetFileNameWithoutExtension(request.FileName), DetachedStartTime);
+        return new DetachedProcess(id, DetachedStartTime);
+    }
+
+    public ProcessInfo? GetById(int id)
+    {
+        OnGetById?.Invoke(id);
+        return Alive.GetValueOrDefault(id);
+    }
+
+    public void KillTree(int id)
+    {
+        Killed.Add(id);
+        if (KillException is { } exception)
+        {
+            throw exception;
+        }
+
+        Alive.Remove(id);
     }
 
     public IRunningProcess Start(ProcessStartRequest request)

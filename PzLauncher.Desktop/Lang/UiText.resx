@@ -314,6 +314,53 @@
   <data name="Error_NetworkTimeout" xml:space="preserve">
     <value>{0} didn't answer within {1} seconds.</value>
   </data>
+  <data name="Error_ServerNameInvalid" xml:space="preserve">
+    <value>{0} isn't a valid server name. Use 1 to 64 characters: A–Z, a–z, 0–9, _ or -.</value>
+  </data>
+  <data name="Error_ServerAlreadyExists" xml:space="preserve">
+    <value>A server named {0} already exists.</value>
+  </data>
+  <data name="Error_ServerNotFound" xml:space="preserve">
+    <value>There is no server named {0}.</value>
+  </data>
+  <data name="Error_ServerNotAServerInstall" xml:space="preserve">
+    <value>{0} isn't a Project Zomboid dedicated server folder.</value>
+  </data>
+  <data name="Error_ServerAlreadyRunning" xml:space="preserve">
+    <value>Server {0} is already running. Only one server can run at a time.</value>
+  </data>
+  <data name="Error_ServerNotRunning" xml:space="preserve">
+    <value>No server is running.</value>
+  </data>
+  <data name="Error_ServerNotReady" xml:space="preserve">
+    <value>The server is still starting. Wait until it's running, or force it to stop.</value>
+  </data>
+  <data name="Error_ServerAdminPasswordRequired" xml:space="preserve">
+    <value>Server {0} has no admin account yet. Enter an admin password to create it.</value>
+  </data>
+  <data name="Error_ServerStartFailed" xml:space="preserve">
+    <value>Couldn't start the server with {0}.</value>
+  </data>
+  <data name="Error_ServerExitedEarly" xml:space="preserve">
+    <value>Server {0} stopped while starting. Its last console lines:
+{1}</value>
+  </data>
+  <data name="Error_ServerExitedUnexpectedly" xml:space="preserve">
+    <value>Server {0} stopped unexpectedly. Its last console lines:
+{1}</value>
+  </data>
+  <data name="Error_ServerRconFailed" xml:space="preserve">
+    <value>Couldn't reach the server over RCON: {0}</value>
+  </data>
+  <data name="Error_ServerCommandInvalid" xml:space="preserve">
+    <value>Enter the command on one line, at most 4000 bytes long.</value>
+  </data>
+  <data name="Error_ServerStopTimeout" xml:space="preserve">
+    <value>The server didn't stop within {0} seconds.</value>
+  </data>
+  <data name="Error_ServerFileAccessFailed" xml:space="preserve">
+    <value>Couldn't read or write {0}.</value>
+  </data>
   <data name="Error_WorkshopSubscriptionsUnreadable" xml:space="preserve">
     <value>Couldn't read Steam's Workshop subscription list {0}. Make sure Steam is installed and signed in, then refresh.</value>
   </data>

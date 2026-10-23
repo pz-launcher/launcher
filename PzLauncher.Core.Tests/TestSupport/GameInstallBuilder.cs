@@ -1,4 +1,5 @@
 using PzLauncher.Core.Installs;
+using PzLauncher.Core.Java;
 using PzLauncher.Core.Launch;
 using PzLauncher.Core.Platform;
 
@@ -28,8 +29,16 @@ public sealed class GameInstallBuilder(string baseDirectory, PlatformKind os)
     public string CreateNested(string name, string? json, bool withJre = true) =>
         Create(name, "projectzomboid.sh", nested: true, json, withJre);
 
-    public string CreateServer(string name) =>
-        Create(name, PzInstallMarkers.DedicatedServer[0], nested: false, ServerJson, withJre: true);
+    /// <summary>With the console <c>java</c> the server runs, which the shipped <c>jre64</c> has next to <c>javaw.exe</c>.</summary>
+    public string CreateServer(string name, string? json = null)
+    {
+        var root = Create(name, PzInstallMarkers.DedicatedServer[0], nested: false, json ?? ServerJson, withJre: true);
+        File.WriteAllBytes(ServerJava(root), []);
+        return root;
+    }
+
+    public string ServerJava(string root) =>
+        Path.Combine(root, PzLaunchFiles.BundledJreFolder, JavaLocations.BinFolder, JavaLocations.ConsoleExecutableName(os));
 
     public static string GameFolder(string root, bool nested) =>
         nested ? Path.Combine(root, PzLaunchFiles.NestedGameFolder) : root;

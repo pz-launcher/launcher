@@ -11,4 +11,13 @@ internal interface IProcessRunner
 
     /// <summary>Processes of the current session running an executable with this name (no extension); their stderr isn't read.</summary>
     IReadOnlyList<IRunningProcess> FindByName(string name);
+
+    /// <summary>Like <see cref="Start"/>, but std handles on the null device, in its own process group, and outliving the caller.</summary>
+    DetachedProcess StartDetached(ProcessStartRequest request);
+
+    /// <summary><c>null</c> when no process has this id, or it can't be read.</summary>
+    ProcessInfo? GetById(int id);
+
+    /// <summary>Kills the process and its children; does nothing once it is gone. Throws <see cref="System.ComponentModel.Win32Exception"/> when the OS refuses.</summary>
+    void KillTree(int id);
 }

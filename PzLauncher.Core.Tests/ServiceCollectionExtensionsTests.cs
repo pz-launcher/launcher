@@ -9,6 +9,7 @@ using PzLauncher.Core.Mod.Workshop;
 using PzLauncher.Core.Mod.ZombieBuddy;
 using PzLauncher.Core.Net;
 using PzLauncher.Core.Platform;
+using PzLauncher.Core.Server;
 using PzLauncher.Core.Steam.Workshop.Actions;
 using PzLauncher.Core.Steam.Workshop;
 using PzLauncher.Core.Steam;
@@ -39,6 +40,7 @@ public class ServiceCollectionExtensionsTests
         Assert.Same(provider.GetRequiredService<IWorkshopService>(), provider.GetRequiredService<IWorkshopService>());
         Assert.Same(provider.GetRequiredService<IWorkshopModsService>(), provider.GetRequiredService<IWorkshopModsService>());
         Assert.Same(provider.GetRequiredService<IWorkshopActionRunner>(), provider.GetRequiredService<IWorkshopActionRunner>());
+        Assert.Same(provider.GetRequiredService<IServerHostService>(), provider.GetRequiredService<IServerHostService>());
     }
 
     [Theory]

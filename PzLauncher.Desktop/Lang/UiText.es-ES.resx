@@ -314,6 +314,53 @@
   <data name="Error_NetworkTimeout" xml:space="preserve">
     <value>{0} no ha respondido en {1} segundos.</value>
   </data>
+  <data name="Error_ServerNameInvalid" xml:space="preserve">
+    <value>{0} no es un nombre de servidor válido. Usa de 1 a 64 caracteres: A–Z, a–z, 0–9, _ o -.</value>
+  </data>
+  <data name="Error_ServerAlreadyExists" xml:space="preserve">
+    <value>Ya existe un servidor llamado {0}.</value>
+  </data>
+  <data name="Error_ServerNotFound" xml:space="preserve">
+    <value>No existe ningún servidor llamado {0}.</value>
+  </data>
+  <data name="Error_ServerNotAServerInstall" xml:space="preserve">
+    <value>{0} no es una carpeta de servidor dedicado de Project Zomboid.</value>
+  </data>
+  <data name="Error_ServerAlreadyRunning" xml:space="preserve">
+    <value>El servidor {0} ya se está ejecutando. Solo puede ejecutarse un servidor a la vez.</value>
+  </data>
+  <data name="Error_ServerNotRunning" xml:space="preserve">
+    <value>No hay ningún servidor en ejecución.</value>
+  </data>
+  <data name="Error_ServerNotReady" xml:space="preserve">
+    <value>El servidor aún se está iniciando. Espera a que esté en ejecución o fuerza su detención.</value>
+  </data>
+  <data name="Error_ServerAdminPasswordRequired" xml:space="preserve">
+    <value>El servidor {0} aún no tiene una cuenta de administrador. Introduce una contraseña de administrador para crearla.</value>
+  </data>
+  <data name="Error_ServerStartFailed" xml:space="preserve">
+    <value>No se ha podido iniciar el servidor con {0}.</value>
+  </data>
+  <data name="Error_ServerExitedEarly" xml:space="preserve">
+    <value>El servidor {0} se ha detenido durante el inicio. Últimas líneas de la consola:
+{1}</value>
+  </data>
+  <data name="Error_ServerExitedUnexpectedly" xml:space="preserve">
+    <value>El servidor {0} se ha detenido inesperadamente. Últimas líneas de la consola:
+{1}</value>
+  </data>
+  <data name="Error_ServerRconFailed" xml:space="preserve">
+    <value>No se ha podido comunicar con el servidor por RCON: {0}</value>
+  </data>
+  <data name="Error_ServerCommandInvalid" xml:space="preserve">
+    <value>Introduce el comando en una sola línea, de 4000 bytes como máximo.</value>
+  </data>
+  <data name="Error_ServerStopTimeout" xml:space="preserve">
+    <value>El servidor no se ha detenido en {0} segundos.</value>
+  </data>
+  <data name="Error_ServerFileAccessFailed" xml:space="preserve">
+    <value>No se ha podido leer ni escribir {0}.</value>
+  </data>
   <data name="Error_WorkshopSubscriptionsUnreadable" xml:space="preserve">
     <value>No se ha podido leer la lista de suscripciones de Workshop de Steam {0}. Comprueba que Steam está instalado y con la sesión iniciada, y actualiza.</value>
   </data>
