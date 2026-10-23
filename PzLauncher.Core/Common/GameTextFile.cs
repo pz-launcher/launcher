@@ -18,18 +18,16 @@ internal sealed class GameTextFile
 {
     private readonly byte[]? _original;
     private readonly bool _hasBom;
-    private readonly Encoding _encoding;
     private readonly GameTextFileErrors _errors;
 
     private GameTextFile(
-        string path, byte[]? original, bool hasBom, List<TextLine> lines, string newline, Encoding encoding, GameTextFileErrors errors)
+        string path, byte[]? original, bool hasBom, List<TextLine> lines, string newline, GameTextFileErrors errors)
     {
         FilePath = path;
         _original = original;
         _hasBom = hasBom;
         Lines = lines;
         Newline = newline;
-        _encoding = encoding;
         _errors = errors;
     }
 
@@ -42,18 +40,13 @@ internal sealed class GameTextFile
     /// <summary>The file's first line terminator; new lines get it.</summary>
     public string Newline { get; }
 
-    /// <summary>Strict UTF-8; a missing file reads as empty, with <paramref name="newline"/> for the lines added to it.</summary>
-    public static Task<Result<GameTextFile>> ReadAsync(string path, string newline, GameTextFileErrors errors, CancellationToken ct) =>
-        ReadAsync(path, newline, Utf8TextFile.StrictUtf8, errors, ct);
-
-    /// <summary><paramref name="encoding"/> decodes and encodes the text after the BOM.</summary>
-    public static async Task<Result<GameTextFile>> ReadAsync(
-        string path, string newline, Encoding encoding, GameTextFileErrors errors, CancellationToken ct)
+    /// <summary>A missing file reads as empty, with <paramref name="newline"/> for the lines added to it.</summary>
+    public static async Task<Result<GameTextFile>> ReadAsync(string path, string newline, GameTextFileErrors errors, CancellationToken ct)
     {
         var read = await ReadFile.BytesIfExistsAsync(path, reason => errors.Unreadable(path, reason), ct).ConfigureAwait(false);
         if (read is not { } result)
         {
-            return new GameTextFile(path, null, false, [], newline, encoding, errors);
+            return new GameTextFile(path, null, false, [], newline, errors);
         }
 
         if (!result.IsSuccess)
@@ -62,7 +55,7 @@ internal sealed class GameTextFile
         }
 
         var bytes = result.Value;
-        var decoded = Utf8TextFile.Decode(bytes, encoding, reason => errors.Malformed(path, reason));
+        var decoded = Utf8TextFile.Decode(bytes, reason => errors.Malformed(path, reason));
         if (!decoded.IsSuccess)
         {
             return decoded.Error;
@@ -70,7 +63,7 @@ internal sealed class GameTextFile
 
         var lines = Split(decoded.Value.Text);
         var own = lines.Select(line => line.Terminator).FirstOrDefault(terminator => terminator.Length > 0);
-        return new GameTextFile(path, bytes, decoded.Value.HasBom, lines, own ?? newline, encoding, errors);
+        return new GameTextFile(path, bytes, decoded.Value.HasBom, lines, own ?? newline, errors);
     }
 
     public void Add(string content) => Insert(Lines.Count, content);
@@ -141,7 +134,7 @@ internal sealed class GameTextFile
             text.Append(line.Content).Append(line.Terminator);
         }
 
-        return Utf8TextFile.Encode(text.ToString(), _hasBom, _encoding);
+        return Utf8TextFile.Encode(text.ToString(), _hasBom);
     }
 
     private static List<TextLine> Split(string text)

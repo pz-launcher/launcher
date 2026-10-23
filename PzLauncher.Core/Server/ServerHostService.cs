@@ -248,7 +248,7 @@ internal sealed partial class ServerHostService(
 
     private List<string> GameArgs(string name, string cacheDir, string? adminPassword)
     {
-        List<string> args = [.. PzServerFiles.StatisticArgs, PzServerFiles.ServerNameArg, name];
+        List<string> args = [PzServerFiles.ServerNameArg, name];
         if (!IsDefaultCacheDir(cacheDir))
         {
             args.Add(PzServerFiles.CacheDirArgPrefix + cacheDir);

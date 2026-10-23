@@ -1,4 +1,5 @@
 using System.Text;
+using PzLauncher.Core.Common;
 using PzLauncher.Core.Server.Config;
 using PzLauncher.Core.Server;
 using PzLauncher.Core.Tests.TestSupport;
@@ -66,17 +67,25 @@ public sealed class ServerIniFileTests : IDisposable
         Assert.Equal(expected, Encoding.UTF8.GetString(updated));
     }
 
-    [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public async Task Set_OtherLinesNotUtf8_KeepsTheirBytes(bool bom)
+    [Fact]
+    public async Task ReadAsync_NotUtf8_FailsFileAccessFailed()
     {
-        byte[] start = bom ? [0xEF, 0xBB, 0xBF] : [];
-        byte[] gbk = [.. "PublicDescription="u8, 0xD6, 0xD0, 0xCE, 0xC4, 0xFF, .. "\r\n"u8];
+        await File.WriteAllBytesAsync(_path, [.. "RCONPort=1\r\nPublicDescription="u8, 0xFF, 0xFE, .. "\r\n"u8], Ct);
 
-        var updated = await SetAsync([.. start, .. "RCONPort=1\r\n"u8, .. gbk], "RCONPort", "2");
+        var read = await ServerIniFile.ReadAsync(_path, Ct);
 
-        Assert.Equal([.. start, .. "RCONPort=2\r\n"u8, .. gbk], updated);
+        Assert.NotNull(read);
+        ResultAssert.Failed(read.Value, ErrorCode.ServerFileAccessFailed);
+    }
+
+    [Fact]
+    public async Task Set_WithBom_KeepsTheBom()
+    {
+        byte[] bom = [0xEF, 0xBB, 0xBF];
+
+        var updated = await SetAsync([.. bom, .. "RCONPort=1\r\nA=1\r\n"u8], "RCONPort", "2");
+
+        Assert.Equal([.. bom, .. "RCONPort=2\r\nA=1\r\n"u8], updated);
     }
 
     [Fact]

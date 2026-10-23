@@ -5,7 +5,7 @@ namespace PzLauncher.Core.Server;
 
 internal static class ServerErrors
 {
-    // The ini is read as Latin-1, which can't fail to decode, so there is no malformed code to give.
+    // Unreadable, not UTF-8 or unwritable: for the host each means the ini can't be used.
     public static GameTextFileErrors TextFile { get; } = new(FileAccessFailed, FileAccessFailed, FileAccessFailed);
 
     public static Error NameInvalid(string name) =>

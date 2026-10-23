@@ -76,6 +76,9 @@ console. The user never needs an SSH session for day-to-day server work.
 - D13 (approved 2026-10-23): saving config while the server runs
   is allowed; the UI says it takes effect on the next start. Stop waits for
   RCON `quit` to finish; on timeout the UI offers a separate force-kill.
+- D14 (2026-10-24): only B42 is supported; B41 servers are out of scope (no
+  B41 fixtures, no workarounds for its Java 17 behaviour). The server ini is
+  strict UTF-8, like the mod-list files.
 
 ## Task map
 

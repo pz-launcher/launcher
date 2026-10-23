@@ -158,8 +158,8 @@ returns response text), stream console (`IAsyncEnumerable<ServerConsoleLine>`).
   (`../10-23-server-host-core/research/pz-server-runtime.md`): stdin on the
   null device is harmless; `-Drconlo=1` binds RCON to 127.0.0.1.
 - R2: RCON, ini defaults and console behaviour verified on B42 (Windows).
-  Still open: B41, and the Linux server folder layout / environment /
-  `setsid` — checked manually on Linux in `server-host-core`.
+  Still open: the Linux server folder layout / environment / `setsid` —
+  checked manually on Linux in `server-host-core`. B41 is out of scope (D14).
 - R4: Plain HTTP exposes the password if the user changes `--urls` to a public
   address without a proxy; docs and the login page warn when the request is
   not HTTPS and not loopback.

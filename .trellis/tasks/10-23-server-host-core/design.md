@@ -83,7 +83,7 @@ processes' command lines (not portable on Windows).
    osVersion)` with `LaunchArguments.JvmArgs` applying `MaxMemoryMb`; plus
    `-Drconlo=1` unless present (RCON on loopback only, F: RCON); bundled
    `jre64`; classpath + main class via `LaunchArguments.Build`; game args
-   `-statistic 0` (as `StartServer64.bat`), `-servername <name>`,
+   `-servername <name>`,
    `-cachedir=<CacheDir>` unless it equals PZ's default `<home>/Zomboid`,
    `-adminpassword <pw>` when given. Linux environment from
    `LinuxLaunchEnvironment` (to be confirmed on Linux).
@@ -212,9 +212,9 @@ These supersede the sections above where they differ.
 4. **`ServerIniFile` on `GameTextFile`.** `GameTextFile` moves to `Common/`
    (error factory passed in, as `ReadFile` does); `ServerIniFile` becomes a
    key lookup / set layer over it. `10-23-server-config-core` builds on that.
-   The ini is read as Latin-1 (every byte kept: B41's Java 17 writes the
-   Windows code page) and written without a `.pzlauncher.bak`; the mod
-   collection files keep strict UTF-8 and their backups.
+   The ini is strict UTF-8 like the mod-list files (B42 only, parent D14) and
+   is written without a `.pzlauncher.bak`; the mod-list files keep their
+   backups. `-statistic 0` is dropped: B42 logs it as an unknown option.
 5. **Console tail.** One reusable read buffer per tail; a poll whose file
    length equals the read offset reads nothing.
 6. **Server environment on Linux.** Its own builder mirroring

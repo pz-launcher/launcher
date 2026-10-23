@@ -14,7 +14,7 @@ understand.
 - R1 Typed `ServerSettings` for the common fields: public name / description,
   password, max players, default + UDP ports, PVP, Public, Mods, WorkshopItems,
   Map; sandbox: zombie population, speed, loot rarity, XP multiplier (final
-  list in this child's design, checked against B41 and B42 files).
+  list in this child's design, checked against B42 files; B41 is out of scope, parent D14).
 - R2 Saving typed settings changes only those values; comments, order and
   unknown keys stay byte-identical.
 - R3 Raw text get/save for both files with a content hash; save with a stale
@@ -28,7 +28,7 @@ understand.
 
 ## Acceptance criteria
 
-- [ ] Round-trip tests on real B41 and B42 ini / SandboxVars fixtures: load →
+- [ ] Round-trip tests on real B42 ini / SandboxVars fixtures: load →
       save unchanged → byte-identical.
 - [ ] Tests for typed edits, conflict, validation errors with line numbers,
       backup rotation.
@@ -43,7 +43,5 @@ understand.
 - `<name>_SandboxVars.lua` exists only after the first successful start.
 - Build on `server-host-core`'s `Server/Config/ServerIniFile` helper instead of a
   second ini reader.
-- The ini's text encoding is open: B41 (Java 17) on Windows writes it in the
-  system code page (e.g. GBK), so `ServerIniFile` reads it as Latin-1 to keep
-  every byte and only handles ASCII keys and values. Decide how non-ASCII
-  values are decoded and written.
+- The ini is strict UTF-8 (B42's Java writes UTF-8; parent D14): a file that
+  isn't valid UTF-8 fails with `server.file_access_failed`.

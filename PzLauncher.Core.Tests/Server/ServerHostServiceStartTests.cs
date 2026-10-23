@@ -86,7 +86,7 @@ public sealed class ServerHostServiceStartTests : IDisposable
                 "-Djava.awt.headless=true", "-Xmx8g", "-Dzomboid.steam=1", "-Dzomboid.znetlog=1", "-Djava.library.path=natives/",
                 "-XX:-CreateCoredumpOnCrash", "-XX:-OmitStackTraceInFastThrow", "-XX:+UseZGC", "-Drconlo=1",
                 "-cp", "java/.;java/projectzomboid.jar", "zombie.network.GameServer",
-                "-statistic", "0", "-servername", "pz", "-cachedir=" + _kit.Site.CacheDir, "-adminpassword", "secret",
+                "-servername", "pz", "-cachedir=" + _kit.Site.CacheDir, "-adminpassword", "secret",
             ],
             request.Arguments);
         Assert.Equal(new ServerStatus(ServerState.Starting, "pz", 4001, _kit.Processes.DetachedStartTime, null), status);

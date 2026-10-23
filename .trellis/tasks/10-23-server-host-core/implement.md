@@ -31,7 +31,7 @@ Design: `design.md`; facts: `research/pz-server-runtime.md`.
    `FakeProcessRunner`, fake RCON, `ManualTimeProvider`):
    - name validation, duplicate (case-insensitive), minimal ini contents;
    - start: command line (json JVM args, heap override, `-Drconlo=1` once,
-     `-statistic 0`, `-servername`, `-cachedir=` only when non-default,
+     `-servername`, `-cachedir=` only when non-default,
      `-adminpassword` only when given), admin password required without db,
      empty RCON password generated and written, not-a-server install,
      already running;

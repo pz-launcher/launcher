@@ -32,9 +32,6 @@ internal static class PzServerFiles
 
     public const string RconLoopbackArg = RconLoopbackProperty + "=1";
 
-    /// <summary>As <c>StartServer64.bat</c> passes it.</summary>
-    public static IReadOnlyList<string> StatisticArgs { get; } = ["-statistic", "0"];
-
     public const string ServerNameArg = "-servername";
 
     public const string CacheDirArgPrefix = "-cachedir=";

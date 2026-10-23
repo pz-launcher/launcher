@@ -16,10 +16,7 @@ internal sealed class ServerIniFile
     /// <summary><c>null</c> when the file doesn't exist.</summary>
     public static async Task<Result<ServerIniFile>?> ReadAsync(string path, CancellationToken ct)
     {
-        // Java 17 (B41) on Windows writes it in the system code page (GBK for a Chinese description). Latin-1 maps each byte to
-        // one char and back, so untouched lines keep their bytes; non-ASCII values aren't decoded here, the keys and values this
-        // layer reads and sets are ASCII. 10-23-server-config-core decides the ini's text encoding.
-        var read = await GameTextFile.ReadAsync(path, "\n", Encoding.Latin1, ServerErrors.TextFile, ct).ConfigureAwait(false);
+        var read = await GameTextFile.ReadAsync(path, "\n", ServerErrors.TextFile, ct).ConfigureAwait(false);
         if (!read.IsSuccess)
         {
             return read.Error;
