@@ -146,7 +146,7 @@ processes' command lines (not portable on Windows).
 - UTF-8, invalid bytes replaced. Runs while the server is stopped too (the
   file just doesn't change) until `ct` is cancelled.
 
-## Process seam (`PzLauncher.Core/Platform/`)
+## Process seam (`PzLauncher.Core/Platform/Processes/`)
 
 New on `IProcessRunner` (fakes in `FakeProcessRunner`):
 

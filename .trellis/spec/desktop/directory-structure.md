@@ -19,7 +19,9 @@ PzLauncher.Desktop/
 
 `<Feature>` matches the Core feature folder (`Installs`, ...), or names a desktop-only page (`Home`, `Settings`, `Mods`, which spans Core's `Mod/` and `Mod/Collections/`).
 
-`<Group>` under `Services/` is a feature folder (`Launch`, `Mods`, `Net`, `Steam`, `Update`, `ZombieBuddy`), `Shell` (app lifetime, dialogs, prompts, clipboard, folder picker, theme, URLs, window placement, UI-thread progress) or `Preferences` (preference store, its JSON context and saved records, secret protection). Namespace `PzLauncher.Desktop.Services.<Group>`; no files directly under `Services/`.
+`<Group>` under `Services/` is a feature folder (`Launch`, `Mods`, `Net`, `Steam`, `Update`, `ZombieBuddy`), `Shell` (clipboard, theme, URLs, UI-thread progress; `Dialogs/`: dialogs, prompts, folder picker; `Lifetime/`: app lifetime, single instance, window and its placement) or `Preferences` (preference store and its JSON context; `Records/`: saved records; `Secrets/`: secret protection). Namespace `PzLauncher.Desktop.Services.<Group>`; no files directly under `Services/`.
+
+A folder over the size limit splits into subfolders per [Folder size](../common/coding-rules.md#folder-size), e.g. `ViewModels/Mods/` into `Installed/`, `Collections/` and `Workshop/` (with `Workshop/Actions/`).
 
 ## ViewModels
 
@@ -41,7 +43,7 @@ Reference: `PzLauncher.Desktop/Views/Installs/`.
 - VM→View mapping: explicit `DataTemplate`s in `PzLauncher.Desktop/App.axaml`, never a reflection `ViewLocator`.
 - Previewer data: `PzLauncher.Desktop/ViewModels/Design/DesignData.cs`. Fictional, portable values only, never data from a real machine.
 - Range controls (`Slider`, ...) bind `Minimum`/`Maximum` before `Value`, with a range that includes the loaded value, or the control rewrites the saved value. Reference: `PzLauncher.Desktop/Views/LaunchSettings/LaunchSettingsView.axaml`.
-- Dialogs go through `IDialogService` (`PzLauncher.Desktop/Services/Shell/IDialogService.cs`). A dialog that runs an operation takes a per-dialog ViewModel derived from `DialogOperationViewModel`: `StartAsync` (once, on `Opened`) and `Abort` (on `Closed`, cancels the token); closing the window is cancel, and the follow-up action (e.g. launch) happens only when the dialog returns `true`. Reference: `ShowOperationDialogAsync` in `PzLauncher.Desktop/Services/Shell/AvaloniaDialogService.cs`.
+- Dialogs go through `IDialogService` (`PzLauncher.Desktop/Services/Shell/Dialogs/IDialogService.cs`). A dialog that runs an operation takes a per-dialog ViewModel derived from `DialogOperationViewModel`: `StartAsync` (once, on `Opened`) and `Abort` (on `Closed`, cancels the token); closing the window is cancel, and the follow-up action (e.g. launch) happens only when the dialog returns `true`. Reference: `ShowOperationDialogAsync` in `PzLauncher.Desktop/Services/Shell/Dialogs/AvaloniaDialogService.cs`.
 - Icons: `FluentIcons.Avalonia` (`<ic:FluentIcon Icon="…" IconVariant="Regular" />`, reference `PzLauncher.Desktop/Views/MainView.axaml`), matching the Fluent theme. Never paste SVG path data into XAML. Verified AOT-clean with a Native AOT publish (0 IL warnings).
 
 ## Launcher self-update
@@ -70,7 +72,7 @@ Reference: `PzLauncher.Desktop/Services/Steam/SteamLaunchHookFlow.cs`, `PzLaunch
 
 ## Single instance
 
-Reference: `PzLauncher.Desktop/Services/Shell/SingleInstanceGuard.cs`, run in `Program.Main` before Avalonia.
+Reference: `PzLauncher.Desktop/Services/Shell/Lifetime/SingleInstanceGuard.cs`, run in `Program.Main` before Avalonia.
 
 - Windows only, one instance per install directory, so a release install and a dev build run side by side. A second start activates the running window and exits.
 - A start with `LauncherArguments.Restart` (the self-update restart) waits, bounded, for the closing instance instead of exiting.

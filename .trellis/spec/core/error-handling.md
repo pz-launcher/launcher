@@ -25,7 +25,7 @@ All codes are members of `ErrorCode` (`PzLauncher.Core/Common/ErrorCode.cs`).
 
 - Wire name `<feature>.<snake_case_reason>` is a **public contract**: never change one.
 - Logs use the wire name (`ToWireName()`), never `ToString()`.
-- Each feature builds errors in one factory class, e.g. `PzLauncher.Core/Installs/InstallErrors.cs`. A code belongs to the feature whose code produces it, not to its caller: `Launch/PzLaunchConfigEditor` returns `launch.*` codes although only ZombieBuddy calls it.
+- Each feature builds errors in one factory class, e.g. `PzLauncher.Core/Installs/InstallErrors.cs`. A code belongs to the feature whose code produces it, not to its caller: `Launch/Config/PzLaunchConfigEditor` returns `launch.*` codes although only ZombieBuddy calls it.
 - `Details` with exactly `path`, `reason`, or `path` + `reason` come from `ErrorDetails` (`PzLauncher.Core/Common/ErrorDetails.cs`), which owns those key names; other key sets are written inline.
 - `Message` is for developers and logs. Users see text from `Code` + `Details` via the desktop `ErrorMessages`.
 
@@ -62,9 +62,9 @@ Each hazard has a test that feeds bad input and asserts the code.
 Game files (`ProjectZomboid64.json`, files copied into the game folder, the cache folder's
 `Lua/pz_modlist_settings.cfg` and `mods/default.txt`) are the user's, and so are ZombieBuddy's `config.json`
 and Steam's `userdata/<account>/config/localconfig.vdf`.
-Reference: `PzLauncher.Core/Launch/PzLaunchConfigEditor.cs`, `PzLauncher.Core/Steam/LocalConfigEditor.cs`,
-`PzLauncher.Core/Mod/ZombieBuddy/ZombieBuddyPreloadConfig.cs`, `PzLauncher.Core/Mod/ZombieBuddy/ZombieBuddyService.cs`,
-`PzLauncher.Core/Mod/Collections/ModListSettingsFile.cs`, `ActiveModsFile.cs`; atomic write in
+Reference: `PzLauncher.Core/Launch/Config/PzLaunchConfigEditor.cs`, `PzLauncher.Core/Steam/LaunchHook/LocalConfigEditor.cs`,
+`PzLauncher.Core/Mod/ZombieBuddy/Preload/ZombieBuddyPreloadConfig.cs`, `PzLauncher.Core/Mod/ZombieBuddy/ZombieBuddyService.cs`,
+`PzLauncher.Core/Mod/Collections/Files/ModListSettingsFile.cs`, `ActiveModsFile.cs`; atomic write in
 `PzLauncher.Core/Common/AtomicFile.cs` (`AtomicJsonFile.cs` for json).
 
 - Change only the key the feature owns; every other byte of meaning survives

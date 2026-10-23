@@ -2,6 +2,7 @@ using System.Collections.Concurrent;
 using Microsoft.Extensions.Logging;
 using PzLauncher.Core.Common;
 using PzLauncher.Core.Installs;
+using PzLauncher.Core.Steam.Workshop.Ids;
 using PzLauncher.Core.Steam.Workshop.Sources;
 
 namespace PzLauncher.Core.Steam.Workshop;

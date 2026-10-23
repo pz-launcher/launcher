@@ -134,7 +134,7 @@ returns response text), stream console (`IAsyncEnumerable<ServerConsoleLine>`).
   `PzLauncher.Server` AOT for both RIDs, packages
   `PzLauncher.Server-<ver>-<rid>` under one `PzLauncher.Server` folder. The
   desktop updater matches its own package name exactly
-  (`PzLauncher.Core/Update/LauncherReleases.cs` `PackageName`), so extra assets
+  (`PzLauncher.Core/Update/Releases/LauncherReleases.cs` `PackageName`), so extra assets
   in the same release are safe; Gitee sync uploads all `dist/*`.
 - **Docs** (`docs/server/`): install, systemd unit (`KillMode=process`),
   Caddy and nginx samples (SSE: buffering off), firewall (open game UDP ports,

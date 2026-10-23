@@ -1,4 +1,5 @@
 using PzLauncher.Core.Common;
+using PzLauncher.Core.Steam.LaunchHook;
 using PzLauncher.Core.Steam;
 using PzLauncher.Desktop.Lang;
 using PzLauncher.Desktop.Localization;

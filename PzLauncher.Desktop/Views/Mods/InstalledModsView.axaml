@@ -2,7 +2,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:vm="using:PzLauncher.Desktop.ViewModels.Mods"
+             xmlns:vm="using:PzLauncher.Desktop.ViewModels.Mods.Installed"
+             xmlns:collections="using:PzLauncher.Desktop.ViewModels.Mods.Collections"
              xmlns:design="using:PzLauncher.Desktop.ViewModels.Design"
              xmlns:controls="using:PzLauncher.Desktop.Views.Controls"
              xmlns:loc="using:PzLauncher.Desktop.Localization"
@@ -41,7 +42,7 @@
                     <Button.Flyout>
                         <MenuFlyout Placement="BottomEdgeAlignedLeft" ItemsSource="{Binding AddTargets}">
                             <MenuFlyout.ItemContainerTheme>
-                                <ControlTheme TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}" x:DataType="vm:ModCollectionTarget">
+                                <ControlTheme TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}" x:DataType="collections:ModCollectionTarget">
                                     <Setter Property="Header" Value="{Binding Name}" />
                                     <Setter Property="Command" Value="{Binding AddCommand}" />
                                 </ControlTheme>

@@ -1,4 +1,5 @@
 using System.Net.Http.Headers;
+using PzLauncher.Core.Update.Releases;
 using PzLauncher.Core.Update;
 
 namespace PzLauncher.Core.Net;

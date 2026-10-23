@@ -1,3 +1,5 @@
+using PzLauncher.Core.Update.Releases;
+
 namespace PzLauncher.Core.Update;
 
 /// <summary>The <c>.update</c> layout below an install folder.</summary>

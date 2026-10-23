@@ -1,3 +1,4 @@
+using PzLauncher.Core.Launch.Config;
 using PzLauncher.Core.Launch;
 using PzLauncher.Core.Platform;
 

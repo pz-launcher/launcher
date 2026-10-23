@@ -2,7 +2,7 @@ using PzLauncher.Core.Mod.ZombieBuddy;
 using PzLauncher.Desktop.Services.Preferences;
 using PzLauncher.Desktop.Services.ZombieBuddy;
 using PzLauncher.Desktop.Tests.TestSupport;
-using static PzLauncher.Desktop.Tests.TestSupport.TestZombieBuddy;
+using static PzLauncher.Desktop.Tests.TestSupport.Fakes.TestZombieBuddy;
 
 namespace PzLauncher.Desktop.Tests.Services.ZombieBuddy;
 

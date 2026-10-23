@@ -1,4 +1,5 @@
 using PzLauncher.Core.Platform;
+using PzLauncher.Desktop.Services.Preferences.Records;
 using PzLauncher.Desktop.Services.Preferences;
 
 namespace PzLauncher.Desktop.Services.Mods;

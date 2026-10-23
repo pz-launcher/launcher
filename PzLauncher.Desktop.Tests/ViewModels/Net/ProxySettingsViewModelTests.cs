@@ -2,6 +2,7 @@ using PzLauncher.Core.Common;
 using PzLauncher.Core.Net;
 using PzLauncher.Core.Platform;
 using PzLauncher.Desktop.Localization;
+using PzLauncher.Desktop.Services.Preferences.Records;
 using PzLauncher.Desktop.Services.Preferences;
 using PzLauncher.Desktop.Tests.TestSupport;
 using PzLauncher.Desktop.ViewModels.Net;

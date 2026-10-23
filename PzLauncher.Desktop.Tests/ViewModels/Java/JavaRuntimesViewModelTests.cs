@@ -2,10 +2,11 @@ using PzLauncher.Core.Common;
 using PzLauncher.Core.Java;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Services.Preferences;
+using PzLauncher.Desktop.Services.Shell.Dialogs;
 using PzLauncher.Desktop.Services.Shell;
 using PzLauncher.Desktop.Tests.TestSupport;
 using PzLauncher.Desktop.ViewModels.Java;
-using static PzLauncher.Desktop.Tests.TestSupport.TestJava;
+using static PzLauncher.Desktop.Tests.TestSupport.Fakes.TestJava;
 
 namespace PzLauncher.Desktop.Tests.ViewModels.Java;
 

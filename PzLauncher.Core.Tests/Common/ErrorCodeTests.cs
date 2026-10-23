@@ -12,6 +12,7 @@ using PzLauncher.Core.Server;
 using PzLauncher.Core.Serialization;
 using PzLauncher.Core.Steam;
 using PzLauncher.Core.Steam.Workshop;
+using PzLauncher.Core.Update.Releases;
 using PzLauncher.Core.Update;
 
 namespace PzLauncher.Core.Tests.Common;

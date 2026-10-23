@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using PzLauncher.Desktop.Services.Preferences.Records;
+using PzLauncher.Desktop.Services.Preferences.Secrets;
 
 namespace PzLauncher.Desktop.Services.Preferences;
 

@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using PzLauncher.Core.Common;
 using PzLauncher.Core.Platform;
 using PzLauncher.Core.Tests.TestSupport;
+using PzLauncher.Core.Update.Releases;
 using PzLauncher.Core.Update;
 using static PzLauncher.Core.Tests.TestSupport.UpdateTestKit;
 

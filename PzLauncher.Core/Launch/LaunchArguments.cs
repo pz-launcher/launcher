@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Text;
 using PzLauncher.Core.Java;
+using PzLauncher.Core.Launch.Config;
 using PzLauncher.Core.Platform;
 
 namespace PzLauncher.Core.Launch;

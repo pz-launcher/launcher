@@ -4,7 +4,7 @@ using PzLauncher.Desktop.Services.Launch;
 using PzLauncher.Desktop.Services.Update;
 using PzLauncher.Desktop.Tests.TestSupport;
 using PzLauncher.Desktop.ViewModels.Update;
-using static PzLauncher.Desktop.Tests.TestSupport.TestUpdates;
+using static PzLauncher.Desktop.Tests.TestSupport.Fakes.TestUpdates;
 
 namespace PzLauncher.Desktop.Tests.ViewModels.Update;
 
@@ -155,7 +155,7 @@ public class UpdateBannerViewModelTests : UiTextCultureTest
     [Fact]
     public async Task FolderNotWritable_OffersTheDownloadPage()
     {
-        _updates.Check = _ => Found("0.3.0", Core.Update.UpdateSource.Gitee);
+        _updates.Check = _ => Found("0.3.0", Core.Update.Releases.UpdateSource.Gitee);
         _updates.CanInstallInPlace = false;
         var (coordinator, banner) = Create();
         await coordinator.StartAsync(TestContext.Current.CancellationToken);

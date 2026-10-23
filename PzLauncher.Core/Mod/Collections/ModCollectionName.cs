@@ -1,3 +1,5 @@
+using PzLauncher.Core.Mod.Collections.Files;
+
 namespace PzLauncher.Core.Mod.Collections;
 
 public static class ModCollectionName

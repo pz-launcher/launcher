@@ -4,6 +4,8 @@ using Microsoft.Extensions.Logging;
 using PzLauncher.Core.Common;
 using PzLauncher.Core.Installs;
 using PzLauncher.Core.Java;
+using PzLauncher.Core.Launch.Config;
+using PzLauncher.Core.Platform.Processes;
 using PzLauncher.Core.Platform;
 
 namespace PzLauncher.Core.Launch;
