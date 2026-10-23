@@ -1,8 +1,9 @@
 using System.Text;
+using PzLauncher.Core.Server.Config;
 using PzLauncher.Core.Server;
 using PzLauncher.Core.Tests.TestSupport;
 
-namespace PzLauncher.Core.Tests.Server;
+namespace PzLauncher.Core.Tests.Server.Config;
 
 public sealed class ServerIniFileTests : IDisposable
 {

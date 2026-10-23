@@ -4,7 +4,7 @@ using System.Net.Sockets;
 using System.Text;
 using PzLauncher.Core.Common;
 
-namespace PzLauncher.Core.Server;
+namespace PzLauncher.Core.Server.Rcon;
 
 // Packets: little-endian size, id, type, then the UTF-8 body and two NULs (task research/pz-server-runtime.md, RCON).
 internal sealed class RconClient(TimeProvider time) : IRconClient

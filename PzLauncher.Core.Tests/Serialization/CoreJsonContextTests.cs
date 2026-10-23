@@ -9,6 +9,7 @@ using PzLauncher.Core.Mod.ZombieBuddy;
 using PzLauncher.Core.Mod;
 using PzLauncher.Core.Net;
 using PzLauncher.Core.Serialization;
+using PzLauncher.Core.Server.ConsoleLog;
 using PzLauncher.Core.Server;
 using PzLauncher.Core.Steam.Workshop.Actions;
 using PzLauncher.Core.Steam.Workshop;

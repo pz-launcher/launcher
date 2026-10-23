@@ -2,7 +2,7 @@ using System.Buffers;
 using System.Runtime.CompilerServices;
 using System.Text;
 
-namespace PzLauncher.Core.Server;
+namespace PzLauncher.Core.Server.ConsoleLog;
 
 /// <summary>
 /// Follows <c>server-console.txt</c> by polling: portable, and testable with a <see cref="TimeProvider"/>. PZ truncates the

@@ -41,5 +41,5 @@ understand.
   "byte-identical" applies to the manager's own saves; the UI should say that
   PZ rewrites the file on start.
 - `<name>_SandboxVars.lua` exists only after the first successful start.
-- Build on `server-host-core`'s `Server/ServerIniFile` helper instead of a
+- Build on `server-host-core`'s `Server/Config/ServerIniFile` helper instead of a
   second ini reader.

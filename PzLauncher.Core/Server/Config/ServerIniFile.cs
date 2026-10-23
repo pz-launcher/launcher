@@ -1,7 +1,7 @@
 using System.Text;
 using PzLauncher.Core.Common;
 
-namespace PzLauncher.Core.Server;
+namespace PzLauncher.Core.Server.Config;
 
 /// <summary>
 /// A server's <c>&lt;name&gt;.ini</c> as bytes: <see cref="Set"/> rewrites only that key's lines, so every other line keeps

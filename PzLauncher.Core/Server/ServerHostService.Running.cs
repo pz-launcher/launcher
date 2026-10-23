@@ -3,6 +3,7 @@ using System.Text;
 using System.Text.Json;
 using PzLauncher.Core.Common;
 using PzLauncher.Core.Java;
+using PzLauncher.Core.Server.ConsoleLog;
 
 namespace PzLauncher.Core.Server;
 

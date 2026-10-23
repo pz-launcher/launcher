@@ -20,7 +20,10 @@ PzLauncher.Core/
 │   ├── ZombieBuddy/ # ZombieBuddy setup in a game install; Java mod preload check and preload list; launch entry point running each mod's launch step
 │   ├── Zabric/      # launch step: Zabric's entry in ZombieBuddy's preload list
 │   └── ZBSkipOnlineChecks/ # launch step: ZB Skip Online Checks' preload entry and patches_jar agent start
-├── Server/          # dedicated server hosting: named servers, detached start, running file, RCON, console tail
+├── Server/          # dedicated server hosting: named servers, detached start, running file
+│   ├── Config/      # server ini access
+│   ├── ConsoleLog/  # server-console.txt tail and its line DTOs
+│   └── Rcon/        # Source RCON client
 ├── Update/          # launcher self-update: GitHub/Gitee release feeds, download + verify + stage, install with rollback
 ├── Net/             # the one shared HttpClient (LauncherHttpClient), HttpJson, runtime-switchable proxy, proxy settings, connection test
 ├── Serialization/   # CoreJsonContext (source-gen JSON)

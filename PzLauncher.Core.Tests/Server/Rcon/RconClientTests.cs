@@ -1,10 +1,11 @@
 using System.Net;
 using System.Net.Sockets;
 using PzLauncher.Core.Common;
+using PzLauncher.Core.Server.Rcon;
 using PzLauncher.Core.Server;
 using PzLauncher.Core.Tests.TestSupport;
 
-namespace PzLauncher.Core.Tests.Server;
+namespace PzLauncher.Core.Tests.Server.Rcon;
 
 public sealed class RconClientTests
 {

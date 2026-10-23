@@ -1,4 +1,4 @@
-namespace PzLauncher.Core.Server;
+namespace PzLauncher.Core.Server.ConsoleLog;
 
 public enum ServerConsoleLineKind
 {

@@ -11,7 +11,7 @@ Design: `design.md`; facts: `research/pz-server-runtime.md`.
    process; `StartDetached` of a short-lived child on the current OS returns
    its PID and the child gets EOF on stdin.
 2. **Constants + ini helper** — `Server/PzServerFiles.cs`;
-   `Server/ServerIniFile` (read key, set key keeping other lines byte-for-byte).
+   `Server/Config/ServerIniFile` (read key, set key keeping other lines byte-for-byte).
 3. **DTOs + errors** — `ServerSite`, `NamedServer`, `StartServerRequest`,
    `ServerStatus`, `ServerState`, `ServerConsoleLine`; register in
    `CoreJsonContext` + round-trip tests. `ServerErrors` + 14 `ErrorCode`s;

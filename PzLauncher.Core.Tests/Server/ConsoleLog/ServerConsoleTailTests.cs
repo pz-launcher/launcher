@@ -1,7 +1,8 @@
+using PzLauncher.Core.Server.ConsoleLog;
 using PzLauncher.Core.Server;
 using PzLauncher.Core.Tests.TestSupport;
 
-namespace PzLauncher.Core.Tests.Server;
+namespace PzLauncher.Core.Tests.Server.ConsoleLog;
 
 public sealed class ServerConsoleTailTests : IDisposable
 {

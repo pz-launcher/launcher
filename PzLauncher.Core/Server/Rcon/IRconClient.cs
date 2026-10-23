@@ -1,6 +1,6 @@
 using PzLauncher.Core.Common;
 
-namespace PzLauncher.Core.Server;
+namespace PzLauncher.Core.Server.Rcon;
 
 /// <summary>Source RCON to a server on this machine; one connection per call. Failures are <c>server.rcon_failed</c>.</summary>
 internal interface IRconClient
