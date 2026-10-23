@@ -1,0 +1,32 @@
+{
+  "id": "web-server-management",
+  "name": "web-server-management",
+  "title": "Web server management",
+  "description": "Manage the Project Zomboid dedicated server from a web page",
+  "status": "planning",
+  "dev_type": null,
+  "scope": null,
+  "package": null,
+  "priority": "P2",
+  "creator": "dont39",
+  "assignee": "dont39",
+  "createdAt": "2026-10-23",
+  "completedAt": null,
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [
+    "10-23-server-host-core",
+    "10-23-server-config-core",
+    "10-23-steamcmd-core",
+    "10-23-server-web-host",
+    "10-23-server-web-ui"
+  ],
+  "parent": null,
+  "relatedFiles": [],
+  "notes": "",
+  "meta": {}
+}
