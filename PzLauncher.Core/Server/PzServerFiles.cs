@@ -47,6 +47,13 @@ internal static class PzServerFiles
 
     public const string QuitCommand = "quit";
 
+    // From the known start-server.sh, not yet run on Linux; confirmed in the task's Linux check (research/pz-server-runtime.md).
+    /// <summary>The server's own natives on Linux, first on the loader path before the game's <c>natives</c>.</summary>
+    public const string LinuxNativesFolder = "linux64";
+
+    /// <summary>Bare names, as in <c>start-server.sh</c>; unlike the game, no <c>libPZXInitThreads64.so</c>.</summary>
+    public static IReadOnlyList<string> LinuxPreloadLibraries { get; } = ["libjsig.so"];
+
     public static string IniFile(string cacheDir, string name) => Path.Combine(cacheDir, ServerFolder, name + IniExtension);
 
     public static string DatabaseFile(string cacheDir, string name) => Path.Combine(cacheDir, DatabaseFolder, name + DatabaseExtension);

@@ -3,35 +3,34 @@ using PzLauncher.Core.Common;
 
 namespace PzLauncher.Core.Server.Config;
 
-/// <summary>
-/// A server's <c>&lt;name&gt;.ini</c> as bytes: <see cref="Set"/> rewrites only that key's lines, so every other line keeps
-/// its bytes whatever their encoding.
-/// </summary>
+/// <summary>A server's <c>&lt;name&gt;.ini</c>: <see cref="Set"/> rewrites only that key's lines.</summary>
 internal sealed class ServerIniFile
 {
-    private const byte NewLine = (byte)'\n';
-    private const byte CarriageReturn = (byte)'\r';
+    private readonly GameTextFile _file;
 
-    private ServerIniFile(string path, byte[] content)
+    private ServerIniFile(GameTextFile file)
     {
-        Path = path;
-        Content = content;
+        _file = file;
     }
-
-    public string Path { get; }
-
-    public byte[] Content { get; }
 
     /// <summary><c>null</c> when the file doesn't exist.</summary>
     public static async Task<Result<ServerIniFile>?> ReadAsync(string path, CancellationToken ct)
     {
-        var bytes = await ReadFile.BytesIfExistsAsync(path, reason => ServerErrors.FileAccessFailed(path, reason), ct).ConfigureAwait(false);
-        return bytes switch
+        // Java 17 (B41) on Windows writes it in the system code page (GBK for a Chinese description). Latin-1 maps each byte to
+        // one char and back, so untouched lines keep their bytes; non-ASCII values aren't decoded here, the keys and values this
+        // layer reads and sets are ASCII. 10-23-server-config-core decides the ini's text encoding.
+        var read = await GameTextFile.ReadAsync(path, "\n", Encoding.Latin1, ServerErrors.TextFile, ct).ConfigureAwait(false);
+        if (!read.IsSuccess)
         {
-            null => null,
-            { IsSuccess: true } read => new ServerIniFile(path, read.Value),
-            { } failed => failed.Error,
-        };
+            return read.Error;
+        }
+
+        if (!read.Value.Exists)
+        {
+            return null;
+        }
+
+        return new ServerIniFile(read.Value);
     }
 
     public static byte[] Create(IReadOnlyList<KeyValuePair<string, string>> entries) =>
@@ -41,9 +40,9 @@ internal sealed class ServerIniFile
     public string? Get(string key)
     {
         string? value = null;
-        foreach (var (start, length) in Lines())
+        foreach (var line in _file.Lines)
         {
-            if (Parse(start, length) is { } entry && string.Equals(entry.Key, key, StringComparison.Ordinal))
+            if (Parse(line.Content) is { } entry && string.Equals(entry.Key, key, StringComparison.Ordinal))
             {
                 value = entry.Value;
             }
@@ -53,64 +52,31 @@ internal sealed class ServerIniFile
     }
 
     /// <summary>Replaces every line of the key, or appends one in the file's line-ending style.</summary>
-    public ServerIniFile Set(string key, string value)
+    public void Set(string key, string value)
     {
-        var line = Encoding.UTF8.GetBytes($"{key}={value}");
-        using var output = new MemoryStream();
-        var copied = 0;
+        var line = $"{key}={value}";
         var found = false;
-        foreach (var (start, length) in Lines())
+        for (var i = 0; i < _file.Lines.Count; i++)
         {
-            if (Parse(start, length) is { } entry && string.Equals(entry.Key, key, StringComparison.Ordinal))
+            if (Parse(_file.Lines[i].Content) is { } entry && string.Equals(entry.Key, key, StringComparison.Ordinal))
             {
-                output.Write(Content, copied, start - copied);
-                output.Write(line);
-                copied = start + length;
+                _file.Lines[i] = _file.Lines[i] with { Content = line };
                 found = true;
             }
         }
 
-        output.Write(Content, copied, Content.Length - copied);
         if (!found)
         {
-            ReadOnlySpan<byte> newLine = Content.AsSpan().IndexOf("\r\n"u8) >= 0 ? "\r\n"u8 : "\n"u8;
-            if (Content.Length > 0 && Content[^1] != NewLine)
-            {
-                output.Write(newLine);
-            }
-
-            output.Write(line);
-            output.Write(newLine);
+            _file.Add(line);
         }
-
-        return new ServerIniFile(Path, output.ToArray());
     }
 
-    // Each line's start and length, without its "\n" or "\r\n".
-    private List<(int Start, int Length)> Lines()
+    /// <summary>Writes nothing when unchanged, and keeps no backup next to PZ's files.</summary>
+    public Task<Result> WriteAsync(CancellationToken ct) => _file.WriteAsync(rollingBackup: false, originalCopy: null, ct);
+
+    private static KeyValuePair<string, string>? Parse(string line)
     {
-        var lines = new List<(int, int)>();
-        var start = 0;
-        while (start < Content.Length)
-        {
-            var end = Array.IndexOf(Content, NewLine, start);
-            var next = end < 0 ? Content.Length : end + 1;
-            var contentEnd = end < 0 ? Content.Length : end;
-            if (contentEnd > start && Content[contentEnd - 1] == CarriageReturn)
-            {
-                contentEnd--;
-            }
-
-            lines.Add((start, contentEnd - start));
-            start = next;
-        }
-
-        return lines;
-    }
-
-    private KeyValuePair<string, string>? Parse(int start, int length)
-    {
-        var text = Encoding.UTF8.GetString(Content, start, length).Trim();
+        var text = line.Trim();
         var equals = text.IndexOf('=', StringComparison.Ordinal);
         return text.StartsWith('#') || equals <= 0
             ? null

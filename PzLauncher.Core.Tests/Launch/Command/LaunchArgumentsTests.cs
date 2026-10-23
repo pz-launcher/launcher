@@ -1,8 +1,9 @@
+using PzLauncher.Core.Launch.Command;
 using PzLauncher.Core.Launch.Config;
 using PzLauncher.Core.Launch;
 using PzLauncher.Core.Platform;
 
-namespace PzLauncher.Core.Tests.Launch;
+namespace PzLauncher.Core.Tests.Launch.Command;
 
 public class LaunchArgumentsTests
 {

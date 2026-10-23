@@ -64,7 +64,7 @@ Game files (`ProjectZomboid64.json`, files copied into the game folder, the cach
 and Steam's `userdata/<account>/config/localconfig.vdf`.
 Reference: `PzLauncher.Core/Launch/Config/PzLaunchConfigEditor.cs`, `PzLauncher.Core/Steam/LaunchHook/LocalConfigEditor.cs`,
 `PzLauncher.Core/Mod/ZombieBuddy/Preload/ZombieBuddyPreloadConfig.cs`, `PzLauncher.Core/Mod/ZombieBuddy/ZombieBuddyService.cs`,
-`PzLauncher.Core/Mod/Collections/Files/ModListSettingsFile.cs`, `ActiveModsFile.cs`; atomic write in
+`PzLauncher.Core/Mod/Collections/Files/ModListSettingsFile.cs`, `ActiveModsFile.cs` (both on `PzLauncher.Core/Common/GameTextFile.cs`); atomic write in
 `PzLauncher.Core/Common/AtomicFile.cs` (`AtomicJsonFile.cs` for json).
 
 - Change only the key the feature owns; every other byte of meaning survives

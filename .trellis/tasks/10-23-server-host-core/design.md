@@ -192,3 +192,36 @@ arg names, the admin-prompt marker text, default cache folder name `Zomboid`.
 Config editing (`10-23-server-config-core`), SteamCMD
 (`10-23-steamcmd-core`), HTTP / auth / settings persistence
 (`10-23-server-web-host`), any desktop UI. Desktop only gains error texts.
+
+## Review follow-ups (PR #18, 2026-10-24)
+
+These supersede the sections above where they differ.
+
+1. **Stop doesn't block kill.** Stop sends `quit` and marks the run
+   Stopping under the change lock, then waits for the exit *outside* it.
+   Kill, start and create are no longer queued behind a stop's wait; a stop
+   called while one is already waiting just waits too.
+2. **One launch builder.** The steps the game and the server share move into
+   one internal helper in `Launch/`: game folder + `ProjectZomboid64.json`,
+   bundled JRE path for a given executable name (`javaw` / `java`), heap
+   override, argument list, environment. `GameLaunchService` and
+   `ServerHostService` both use it; game-only checks (GC choice, Graal) stay
+   in `GameLaunchService`.
+3. **Locks per site.** The change and file locks are kept per normalized
+   state folder, like the in-memory site state.
+4. **`ServerIniFile` on `GameTextFile`.** `GameTextFile` moves to `Common/`
+   (error factory passed in, as `ReadFile` does); `ServerIniFile` becomes a
+   key lookup / set layer over it. `10-23-server-config-core` builds on that.
+   The ini is read as Latin-1 (every byte kept: B41's Java 17 writes the
+   Windows code page) and written without a `.pzlauncher.bak`; the mod
+   collection files keep strict UTF-8 and their backups.
+5. **Console tail.** One reusable read buffer per tail; a poll whose file
+   length equals the read offset reads nothing.
+6. **Server environment on Linux.** Its own builder mirroring
+   `start-server.sh`: `LD_LIBRARY_PATH` = `linux64`, `natives`, install root,
+   `jre64/lib`, inherited; `LD_PRELOAD` = inherited + `libjsig.so` only (no
+   game-client `libPZXInitThreads64.so`). From the known script layout, still
+   to confirm in the Linux check.
+7. **Last failure persisted.** Written to `<StateDir>/server/last-failure.json`
+   when a run ends on its own, removed on the next start or a clean stop, so
+   a restarted host still reports why the server stopped.

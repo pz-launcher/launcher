@@ -20,6 +20,7 @@ internal sealed class ServerConsoleTail(string path)
     private static readonly TimeSpan PollInterval = TimeSpan.FromMilliseconds(500);
 
     private readonly ArrayBufferWriter<byte> _pending = new();
+    private readonly byte[] _chunk = new byte[ChunkBytes];
     private long _offset;
 
     /// <summary>The backlog first, then new lines as they are written, until <paramref name="ct"/> is cancelled.</summary>
@@ -92,13 +93,17 @@ internal sealed class ServerConsoleTail(string path)
                 _pending.ResetWrittenCount();
             }
 
+            if (stream.Length == _offset)
+            {
+                return lines;
+            }
+
             stream.Position = _offset;
-            var chunk = new byte[ChunkBytes];
             int read;
-            while ((read = await stream.ReadAsync(chunk, ct).ConfigureAwait(false)) > 0)
+            while ((read = await stream.ReadAsync(_chunk, ct).ConfigureAwait(false)) > 0)
             {
                 _offset += read;
-                Collect(chunk.AsSpan(0, read), lines);
+                Collect(_chunk.AsSpan(0, read), lines);
             }
         }
         catch (Exception ex) when (ex is FileNotFoundException or DirectoryNotFoundException)

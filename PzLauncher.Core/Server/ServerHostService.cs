@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 using PzLauncher.Core.Common;
 using PzLauncher.Core.Installs;
 using PzLauncher.Core.Java;
-using PzLauncher.Core.Launch.Config;
+using PzLauncher.Core.Launch.Command;
 using PzLauncher.Core.Launch;
 using PzLauncher.Core.Platform.Processes;
 using PzLauncher.Core.Platform;
@@ -25,9 +25,6 @@ internal sealed partial class ServerHostService(
     private const string PasswordChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
     private const int PasswordLength = 24;
 
-    // One change (create, start, stop, kill) at a time; status and commands don't wait behind a stop that takes minutes.
-    private readonly SemaphoreSlim _changeGate = new(1, 1);
-
     public Task<Result<IReadOnlyList<NamedServer>>> ListServersAsync(ServerSite site, CancellationToken ct = default)
     {
         ct.ThrowIfCancellationRequested();
@@ -46,7 +43,8 @@ internal sealed partial class ServerHostService(
             return ServerErrors.NameInvalid(name);
         }
 
-        await _changeGate.WaitAsync(ct).ConfigureAwait(false);
+        var changeGate = Memory(paths).ChangeGate;
+        await changeGate.WaitAsync(ct).ConfigureAwait(false);
         try
         {
             var names = ListNames(paths.CacheDir);
@@ -81,7 +79,7 @@ internal sealed partial class ServerHostService(
         }
         finally
         {
-            _changeGate.Release();
+            changeGate.Release();
         }
     }
 
@@ -104,7 +102,8 @@ internal sealed partial class ServerHostService(
             return LaunchErrors.InvalidMemory(memory);
         }
 
-        await _changeGate.WaitAsync(ct).ConfigureAwait(false);
+        var changeGate = Memory(paths).ChangeGate;
+        await changeGate.WaitAsync(ct).ConfigureAwait(false);
         try
         {
             // Any server, not just this one: they share the cache folder's console file and usually the ports.
@@ -118,7 +117,7 @@ internal sealed partial class ServerHostService(
         }
         finally
         {
-            _changeGate.Release();
+            changeGate.Release();
         }
     }
 
@@ -188,61 +187,68 @@ internal sealed partial class ServerHostService(
         }
 
         var game = PzLaunchFiles.ResolveGameFolder(root);
-        var config = await PzLaunchConfig.ReadAsync(Path.Combine(game, PzLaunchFiles.ConfigFile), ct).ConfigureAwait(false);
-        if (!config.IsSuccess)
+        var command = await LaunchCommand.ReadAsync(game, ct).ConfigureAwait(false);
+        if (!command.IsSuccess)
         {
-            return config.Error;
+            return command.Error;
         }
 
-        var javaHome = Path.Combine(game, PzLaunchFiles.BundledJreFolder);
-        var java = Path.Combine(javaHome, JavaLocations.BinFolder, JavaLocations.ConsoleExecutableName(platform.Os));
-        if (!File.Exists(java))
+        var javaHome = LaunchCommand.BundledJavaHome(game);
+        var java = LaunchCommand.FindJava(javaHome, JavaLocations.ConsoleExecutableName(platform.Os));
+        if (!java.IsSuccess)
         {
-            return LaunchErrors.JavaMissing(java);
+            return java.Error;
         }
 
-        var (ini, rconPort, rconPassword) = WithRcon(read.Value.Value);
-        var start = new ProcessStartRequest(
-            java,
-            Arguments(config.Value, name, paths.CacheDir, adminPassword, request.MaxMemoryMb),
-            game,
-            BuildEnvironment(game, javaHome));
-        return new StartPlan(name, root, ini, !ini.Content.AsSpan().SequenceEqual(read.Value.Value.Content), rconPort, rconPassword, start);
+        var ini = read.Value.Value;
+        var (rconPort, rconPassword) = EnsureRcon(ini);
+        var overrides = GameLaunchOverrides.Empty with { MaxMemoryMb = request.MaxMemoryMb };
+        var start = command.Value.Start(
+            platform,
+            java.Value,
+            javaHome,
+            JvmArgs(command.Value, overrides),
+            overrides,
+            GameArgs(name, paths.CacheDir, adminPassword),
+            LinuxEnvironment);
+        return new StartPlan(name, root, ini, rconPort, rconPassword, start);
     }
 
     // RCON is off without a password, and the host needs it to see the server get ready, to send commands and to stop it.
-    private static (ServerIniFile Ini, int Port, string Password) WithRcon(ServerIniFile ini)
+    private static (int Port, string Password) EnsureRcon(ServerIniFile ini)
     {
         if (!int.TryParse(ini.Get(PzServerFiles.RconPortKey), NumberStyles.None, CultureInfo.InvariantCulture, out var port)
             || port is < 1 or > 65535)
         {
             port = PzServerFiles.DefaultRconPort;
-            ini = ini.Set(PzServerFiles.RconPortKey, port.ToString(CultureInfo.InvariantCulture));
+            ini.Set(PzServerFiles.RconPortKey, port.ToString(CultureInfo.InvariantCulture));
         }
 
         var password = ini.Get(PzServerFiles.RconPasswordKey);
         if (string.IsNullOrEmpty(password))
         {
             password = NewPassword();
-            ini = ini.Set(PzServerFiles.RconPasswordKey, password);
+            ini.Set(PzServerFiles.RconPasswordKey, password);
         }
 
-        return (ini, port, password);
+        return (port, password);
     }
 
-    private List<string> Arguments(PzLaunchConfig config, string name, string cacheDir, string? adminPassword, int? maxMemoryMb)
+    private List<string> JvmArgs(LaunchCommand command, GameLaunchOverrides overrides)
     {
-        var overrides = GameLaunchOverrides.Empty with { MaxMemoryMb = maxMemoryMb };
-        var jvmArgs = LaunchArguments.JvmArgs(config.JvmArgs(platform.Os, platform.OsVersion), overrides, []);
+        var jvmArgs = LaunchArguments.JvmArgs(command.JsonJvmArgs(platform), overrides, []);
         if (!jvmArgs.Any(arg => arg == PzServerFiles.RconLoopbackProperty
             || arg.StartsWith(PzServerFiles.RconLoopbackProperty + "=", StringComparison.Ordinal)))
         {
             jvmArgs.Add(PzServerFiles.RconLoopbackArg);
         }
 
-        var args = LaunchArguments.Build(config, platform.Os, jvmArgs, overrides);
-        args.AddRange(PzServerFiles.StatisticArgs);
-        args.AddRange([PzServerFiles.ServerNameArg, name]);
+        return jvmArgs;
+    }
+
+    private List<string> GameArgs(string name, string cacheDir, string? adminPassword)
+    {
+        List<string> args = [.. PzServerFiles.StatisticArgs, PzServerFiles.ServerNameArg, name];
         if (!IsDefaultCacheDir(cacheDir))
         {
             args.Add(PzServerFiles.CacheDirArgPrefix + cacheDir);
@@ -260,28 +266,26 @@ internal sealed partial class ServerHostService(
         PathNormalizer.TryNormalizeAbsolute(Path.Combine(platform.HomeDirectory, PzServerFiles.DefaultCacheFolder), out var defaultDir)
         && string.Equals(defaultDir, cacheDir, platform.PathComparison);
 
-    private Dictionary<string, string> BuildEnvironment(string game, string javaHome) => platform.Os switch
-    {
-        PlatformKind.Linux => LinuxLaunchEnvironment.Build(
-            game,
-            javaHome,
-            platform.GetEnvironmentVariable(LinuxLaunchEnvironment.LibraryPathVariable),
-            platform.GetEnvironmentVariable(LinuxLaunchEnvironment.PreloadVariable)),
-        PlatformKind.Windows or PlatformKind.MacOS => [],
-    };
+    // Mirrors start-server.sh, not the game's projectzomboid.sh: linux64 first, and neither the game's thread preload nor its
+    // XMODIFIERS fix.
+    private static Dictionary<string, string> LinuxEnvironment(
+        string gameFolder, string javaHome, string? inheritedLibraryPath, string? inheritedPreload) => new(StringComparer.Ordinal)
+        {
+            [LinuxLaunchEnvironment.LibraryPathVariable] = LinuxLaunchEnvironment.JoinNonEmpty(
+                Path.Combine(gameFolder, PzServerFiles.LinuxNativesFolder),
+                Path.Combine(gameFolder, PzLaunchFiles.NativesFolder),
+                gameFolder,
+                Path.Combine(javaHome, PzLaunchFiles.JavaLibFolder),
+                inheritedLibraryPath),
+            [LinuxLaunchEnvironment.PreloadVariable] = LinuxLaunchEnvironment.JoinNonEmpty([inheritedPreload, .. PzServerFiles.LinuxPreloadLibraries]),
+        };
 
     private async Task<Result<ServerStatus>> LaunchAsync(SitePaths paths, StartPlan plan, CancellationToken ct)
     {
-        if (plan.IniChanged)
+        var ini = await plan.Ini.WriteAsync(ct).ConfigureAwait(false);
+        if (!ini.IsSuccess)
         {
-            try
-            {
-                await AtomicFile.WriteAsync(plan.Ini.Path, plan.Ini.Content, ct).ConfigureAwait(false);
-            }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-            {
-                return Failed(ServerErrors.FileAccessFailed(plan.Ini.Path, ex.Message));
-            }
+            return Failed(ini.Error);
         }
 
         DetachedProcess process;
@@ -298,22 +302,29 @@ internal sealed partial class ServerHostService(
             process.Id, process.StartTime, plan.Name, plan.InstallRoot, paths.CacheDir, plan.RconPort, plan.RconPassword, Ready: false, StopRequestedAt: null);
 
         // The process runs: from here it is recorded or ended, whatever the caller's token says.
-        await _fileGate.WaitAsync(CancellationToken.None).ConfigureAwait(false);
+        var site = Memory(paths);
+        await site.FileGate.WaitAsync(CancellationToken.None).ConfigureAwait(false);
         try
         {
-            await WriteRunningAsync(paths.RunningFile, running, CancellationToken.None).ConfigureAwait(false);
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-        {
-            KillUnrecorded(process.Id);
-            return Failed(ServerErrors.FileAccessFailed(paths.RunningFile, ex.Message));
+            try
+            {
+                await WriteStateFileAsync(paths.RunningFile, running, RunningServerJsonContext.Default.RunningServer, CancellationToken.None)
+                    .ConfigureAwait(false);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                KillUnrecorded(process.Id);
+                return Failed(ServerErrors.FileAccessFailed(paths.RunningFile, ex.Message));
+            }
+
+            await SetLastFailureAsync(paths, site, null).ConfigureAwait(false);
         }
         finally
         {
-            _fileGate.Release();
+            site.FileGate.Release();
         }
 
-        ResetMemory(paths);
+        ResetProbe(site);
         LogStarted(logger, plan.Name, process.Id);
         return StatusOf(running);
     }
@@ -354,18 +365,23 @@ internal sealed partial class ServerHostService(
     [LoggerMessage(Level = LogLevel.Warning, Message = "Server process {ProcessId} could not be killed: {Detail}")]
     private static partial void LogKillFailed(ILogger logger, int processId, string detail);
 
-    [LoggerMessage(Level = LogLevel.Warning, Message = "Server running file {Path}: {Detail}")]
-    private static partial void LogRunningFileProblem(ILogger logger, string path, string detail);
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Server state file {Path}: {Detail}")]
+    private static partial void LogStateFileProblem(ILogger logger, string path, string detail);
 
     /// <param name="CacheDir">Absolute and normalized, like <paramref name="RunningFile"/>.</param>
-    private sealed record SitePaths(string InstallRoot, string CacheDir, string RunningFile)
+    /// <param name="RunningFile">Also the key of the site's locks and memory.</param>
+    private sealed record SitePaths(string InstallRoot, string CacheDir, string RunningFile, string LastFailureFile)
     {
-        private const string RunningFolder = "server";
+        private const string StateFolder = "server";
         private const string RunningFileName = "running.json";
+        private const string LastFailureFileName = "last-failure.json";
 
         // The host's own settings: a relative path there is a bug, not user input.
-        public static SitePaths Of(ServerSite site) =>
-            new(site.InstallRoot, Absolute(site.CacheDir), Path.Combine(Absolute(site.StateDir), RunningFolder, RunningFileName));
+        public static SitePaths Of(ServerSite site)
+        {
+            var state = Path.Combine(Absolute(site.StateDir), StateFolder);
+            return new(site.InstallRoot, Absolute(site.CacheDir), Path.Combine(state, RunningFileName), Path.Combine(state, LastFailureFileName));
+        }
 
         private static string Absolute(string path) =>
             PathNormalizer.TryNormalizeAbsolute(path, out var normalized)
@@ -374,5 +390,5 @@ internal sealed partial class ServerHostService(
     }
 
     private sealed record StartPlan(
-        string Name, string InstallRoot, ServerIniFile Ini, bool IniChanged, int RconPort, string RconPassword, ProcessStartRequest Start);
+        string Name, string InstallRoot, ServerIniFile Ini, int RconPort, string RconPassword, ProcessStartRequest Start);
 }

@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using PzLauncher.Core.Common;
 
 namespace PzLauncher.Core.Server;
 
@@ -19,11 +20,13 @@ internal sealed record RunningServer(
     bool Ready,
     DateTimeOffset? StopRequestedAt);
 
-// The launcher's own file, so not part of CoreJsonContext's contract.
+// The launcher's own files (running.json, last-failure.json), so not part of CoreJsonContext's contract.
 [JsonSourceGenerationOptions(
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+    UseStringEnumConverter = true,
     WriteIndented = true,
     RespectNullableAnnotations = true,
     RespectRequiredConstructorParameters = true)]
 [JsonSerializable(typeof(RunningServer))]
+[JsonSerializable(typeof(Error))]
 internal sealed partial class RunningServerJsonContext : JsonSerializerContext;

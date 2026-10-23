@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Text;
+using System.Text.Json.Serialization.Metadata;
 using System.Text.Json;
 using PzLauncher.Core.Common;
 using PzLauncher.Core.Java;
@@ -20,9 +21,6 @@ internal sealed partial class ServerHostService
     private static readonly TimeSpan ExitPollInterval = TimeSpan.FromSeconds(1);
     private static readonly TimeSpan StartTimeTolerance = TimeSpan.FromSeconds(1);
 
-    // Around every read-modify-write of a running file.
-    private readonly SemaphoreSlim _fileGate = new(1, 1);
-
     private readonly Lock _memoryGate = new();
     private readonly Dictionary<string, SiteMemory> _memory = new(StringComparer.FromComparison(platform.PathComparison));
 
@@ -41,15 +39,19 @@ internal sealed partial class ServerHostService
     {
         ct.ThrowIfCancellationRequested();
         var paths = SitePaths.Of(site);
-        await _changeGate.WaitAsync(ct).ConfigureAwait(false);
+        var changeGate = Memory(paths).ChangeGate;
+        RunningServer running;
+        await changeGate.WaitAsync(ct).ConfigureAwait(false);
         try
         {
-            if ((await ObserveAsync(paths, ct).ConfigureAwait(false)).Alive is not { } running)
+            if ((await ObserveAsync(paths, ct).ConfigureAwait(false)).Alive is not { } alive)
             {
                 return ServerErrors.NotRunning();
             }
 
-            // Already stopping (an earlier stop timed out): wait again without a second quit.
+            running = alive;
+
+            // Already stopping (an earlier stop timed out, or one is still waiting): wait too, without a second quit.
             if (running.StopRequestedAt is null)
             {
                 if (!running.Ready)
@@ -65,20 +67,22 @@ internal sealed partial class ServerHostService
 
                 running = await MarkStoppingAsync(paths, running).ConfigureAwait(false);
             }
-
-            return await WaitForExitAsync(paths, running, StopTimeout, ct).ConfigureAwait(false);
         }
         finally
         {
-            _changeGate.Release();
+            changeGate.Release();
         }
+
+        // Outside the change gate: a kill mustn't queue behind a save that can take minutes.
+        return await WaitForExitAsync(paths, running, StopTimeout, ct).ConfigureAwait(false);
     }
 
     public async Task<Result<ServerStatus>> KillAsync(ServerSite site, CancellationToken ct = default)
     {
         ct.ThrowIfCancellationRequested();
         var paths = SitePaths.Of(site);
-        await _changeGate.WaitAsync(ct).ConfigureAwait(false);
+        var changeGate = Memory(paths).ChangeGate;
+        await changeGate.WaitAsync(ct).ConfigureAwait(false);
         try
         {
             // The identity check in ObserveAsync keeps a reused process id from being killed.
@@ -102,7 +106,7 @@ internal sealed partial class ServerHostService
         }
         finally
         {
-            _changeGate.Release();
+            changeGate.Release();
         }
     }
 
@@ -138,21 +142,22 @@ internal sealed partial class ServerHostService
 
     private async Task<Observation> ObserveAsync(SitePaths paths, CancellationToken ct)
     {
+        var site = Memory(paths);
         RunningServer? running;
-        await _fileGate.WaitAsync(ct).ConfigureAwait(false);
+        await site.FileGate.WaitAsync(ct).ConfigureAwait(false);
         try
         {
-            running = await ReadRunningAsync(paths.RunningFile, ct).ConfigureAwait(false);
+            running = await ReadStateFileAsync(paths.RunningFile, RunningServerJsonContext.Default.RunningServer, ct).ConfigureAwait(false);
             if (running is null)
             {
-                return new Observation(new ServerStatus(ServerState.Stopped, null, null, null, LastFailure(paths)), null);
+                return new Observation(Stopped(await LastFailureAsync(paths, site, ct).ConfigureAwait(false)), null);
             }
 
             if (!IsAlive(running))
             {
                 var failure = await ExitFailureAsync(running, ct).ConfigureAwait(false);
-                DeleteRunning(paths.RunningFile);
-                RememberFailure(paths, failure);
+                DeleteStateFile(paths.RunningFile);
+                await SetLastFailureAsync(paths, site, failure).ConfigureAwait(false);
                 if (failure is null)
                 {
                     LogStopped(logger, running.Name);
@@ -162,15 +167,15 @@ internal sealed partial class ServerHostService
                     Failed(failure);
                 }
 
-                return new Observation(new ServerStatus(ServerState.Stopped, null, null, null, failure), null);
+                return new Observation(Stopped(failure), null);
             }
         }
         finally
         {
-            _fileGate.Release();
+            site.FileGate.Release();
         }
 
-        if (running.StopRequestedAt is null && !running.Ready && TryClaimProbe(paths)
+        if (running.StopRequestedAt is null && !running.Ready && TryClaimProbe(site)
             && (await rcon.AuthenticateAsync(running.RconPort, running.RconPassword, ct).ConfigureAwait(false)).IsSuccess)
         {
             running = await MarkReadyAsync(paths, running, ct).ConfigureAwait(false);
@@ -178,6 +183,8 @@ internal sealed partial class ServerHostService
 
         return new Observation(StatusOf(running), running);
     }
+
+    private static ServerStatus Stopped(Error? lastFailure) => new(ServerState.Stopped, null, null, null, lastFailure);
 
     private static ServerStatus StatusOf(RunningServer running) =>
         new(
@@ -233,22 +240,30 @@ internal sealed partial class ServerHostService
             await Task.Delay(ExitPollInterval, time, ct).ConfigureAwait(false);
         }
 
-        await _fileGate.WaitAsync(CancellationToken.None).ConfigureAwait(false);
+        var site = Memory(paths);
+        await site.FileGate.WaitAsync(CancellationToken.None).ConfigureAwait(false);
         try
         {
-            if (await ReadRunningAsync(paths.RunningFile, CancellationToken.None).ConfigureAwait(false) is { } current && IsSameRun(current, running))
+            // A start that came in after the exit owns the files now.
+            var current = await ReadStateFileAsync(paths.RunningFile, RunningServerJsonContext.Default.RunningServer, CancellationToken.None)
+                .ConfigureAwait(false);
+            if (current is null || IsSameRun(current, running))
             {
-                DeleteRunning(paths.RunningFile);
+                if (current is not null)
+                {
+                    DeleteStateFile(paths.RunningFile);
+                }
+
+                await SetLastFailureAsync(paths, site, null).ConfigureAwait(false);
             }
         }
         finally
         {
-            _fileGate.Release();
+            site.FileGate.Release();
         }
 
-        RememberFailure(paths, null);
         LogStopped(logger, running.Name);
-        return new ServerStatus(ServerState.Stopped, null, null, null, null);
+        return Stopped(null);
     }
 
     // Recorded once the request went out, whatever the caller's token says; a failed write only costs the exit's classification.
@@ -269,29 +284,65 @@ internal sealed partial class ServerHostService
     // Leaves the file alone when another run replaced it, or a status check removed it, in the meantime.
     private async Task UpdateRunningAsync(SitePaths paths, RunningServer expected, RunningServer updated, CancellationToken ct)
     {
-        await _fileGate.WaitAsync(ct).ConfigureAwait(false);
+        var fileGate = Memory(paths).FileGate;
+        await fileGate.WaitAsync(ct).ConfigureAwait(false);
         try
         {
-            if (await ReadRunningAsync(paths.RunningFile, ct).ConfigureAwait(false) is { } current && IsSameRun(current, expected))
+            var type = RunningServerJsonContext.Default.RunningServer;
+            if (await ReadStateFileAsync(paths.RunningFile, type, ct).ConfigureAwait(false) is { } current && IsSameRun(current, expected))
             {
-                await WriteRunningAsync(paths.RunningFile, updated, ct).ConfigureAwait(false);
+                await WriteStateFileAsync(paths.RunningFile, updated, type, ct).ConfigureAwait(false);
             }
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            LogRunningFileProblem(logger, paths.RunningFile, ex.Message);
+            LogStateFileProblem(logger, paths.RunningFile, ex.Message);
         }
         finally
         {
-            _fileGate.Release();
+            fileGate.Release();
         }
     }
 
     private static bool IsSameRun(RunningServer a, RunningServer b) =>
         a.ProcessId == b.ProcessId && a.ProcessStartTime == b.ProcessStartTime;
 
-    // Missing means stopped. Unreadable is treated as stopped too, but kept; malformed can never become readable, so it goes.
-    private async Task<RunningServer?> ReadRunningAsync(string path, CancellationToken ct)
+    // Under the site's file gate. Read once per site, then kept in step with the file.
+    private async Task<Error?> LastFailureAsync(SitePaths paths, SiteMemory site, CancellationToken ct)
+    {
+        if (!site.LastFailureLoaded)
+        {
+            site.LastFailure = await ReadStateFileAsync(paths.LastFailureFile, RunningServerJsonContext.Default.Error, ct).ConfigureAwait(false);
+            site.LastFailureLoaded = true;
+        }
+
+        return site.LastFailure;
+    }
+
+    // Under the site's file gate. A failed write or delete only costs what a restarted host reports.
+    private async Task SetLastFailureAsync(SitePaths paths, SiteMemory site, Error? failure)
+    {
+        site.LastFailure = failure;
+        site.LastFailureLoaded = true;
+        if (failure is null)
+        {
+            DeleteStateFile(paths.LastFailureFile);
+            return;
+        }
+
+        try
+        {
+            await WriteStateFileAsync(paths.LastFailureFile, failure, RunningServerJsonContext.Default.Error, CancellationToken.None).ConfigureAwait(false);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            LogStateFileProblem(logger, paths.LastFailureFile, ex.Message);
+        }
+    }
+
+    // Missing means none. Unreadable is treated as none too, but kept; malformed can never become readable, so it goes.
+    private async Task<T?> ReadStateFileAsync<T>(string path, JsonTypeInfo<T> type, CancellationToken ct)
+        where T : class
     {
         var read = await ReadFile.BytesIfExistsAsync(path, reason => ServerErrors.FileAccessFailed(path, reason), ct).ConfigureAwait(false);
         if (read is not { } bytes)
@@ -305,34 +356,33 @@ internal sealed partial class ServerHostService
             return null;
         }
 
-        RunningServer? running = null;
+        T? value = null;
         var problem = "The file holds no JSON object.";
         try
         {
-            running = JsonSerializer.Deserialize(bytes.Value, RunningServerJsonContext.Default.RunningServer);
+            value = JsonSerializer.Deserialize(bytes.Value, type);
         }
         catch (JsonException ex)
         {
             problem = ex.Message;
         }
 
-        if (running is null)
+        if (value is null)
         {
-            LogRunningFileProblem(logger, path, problem);
-            DeleteRunning(path);
+            LogStateFileProblem(logger, path, problem);
+            DeleteStateFile(path);
         }
 
-        return running;
+        return value;
     }
 
-    private static async Task WriteRunningAsync(string path, RunningServer running, CancellationToken ct)
+    private static async Task WriteStateFileAsync<T>(string path, T value, JsonTypeInfo<T> type, CancellationToken ct)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(path) ?? path);
-        await AtomicFile.WriteAsync(path, JsonSerializer.SerializeToUtf8Bytes(running, RunningServerJsonContext.Default.RunningServer), ct)
-            .ConfigureAwait(false);
+        await AtomicFile.WriteAsync(path, JsonSerializer.SerializeToUtf8Bytes(value, type), ct).ConfigureAwait(false);
     }
 
-    private void DeleteRunning(string path)
+    private void DeleteStateFile(string path)
     {
         try
         {
@@ -340,71 +390,66 @@ internal sealed partial class ServerHostService
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            // The next status check finds the process gone again and retries.
-            LogRunningFileProblem(logger, path, ex.Message);
-        }
-    }
-
-    private Error? LastFailure(SitePaths paths)
-    {
-        lock (_memoryGate)
-        {
-            return _memory.GetValueOrDefault(paths.RunningFile)?.LastFailure;
-        }
-    }
-
-    private void RememberFailure(SitePaths paths, Error? failure)
-    {
-        lock (_memoryGate)
-        {
-            Memory(paths).LastFailure = failure;
-        }
-    }
-
-    private void ResetMemory(SitePaths paths)
-    {
-        lock (_memoryGate)
-        {
-            _memory.Remove(paths.RunningFile);
+            // A running file is deleted again by the next status check that finds the process gone.
+            LogStateFileProblem(logger, path, ex.Message);
         }
     }
 
     // RCON refuses connections until the world is loaded; probing at most every 2 s keeps frequent status calls cheap.
-    private bool TryClaimProbe(SitePaths paths)
+    private bool TryClaimProbe(SiteMemory site)
     {
         var now = time.GetUtcNow();
         lock (_memoryGate)
         {
-            var memory = Memory(paths);
-            if (memory.LastProbe is { } last && now - last < ReadyProbeInterval)
+            if (site.LastProbe is { } last && now - last < ReadyProbeInterval)
             {
                 return false;
             }
 
-            memory.LastProbe = now;
+            site.LastProbe = now;
             return true;
+        }
+    }
+
+    private void ResetProbe(SiteMemory site)
+    {
+        lock (_memoryGate)
+        {
+            site.LastProbe = null;
         }
     }
 
     private SiteMemory Memory(SitePaths paths)
     {
-        if (!_memory.TryGetValue(paths.RunningFile, out var memory))
+        lock (_memoryGate)
         {
-            memory = new SiteMemory();
-            _memory[paths.RunningFile] = memory;
-        }
+            if (!_memory.TryGetValue(paths.RunningFile, out var memory))
+            {
+                memory = new SiteMemory();
+                _memory[paths.RunningFile] = memory;
+            }
 
-        return memory;
+            return memory;
+        }
     }
 
     /// <param name="Alive">The record of a process that still runs; <c>null</c> when stopped.</param>
     private sealed record Observation(ServerStatus Status, RunningServer? Alive);
 
-    // Not persisted: a restarted host forgets the last failure and probes again at once.
+    // One per state folder for the service's lifetime, so its gates are never replaced while held.
     private sealed class SiteMemory
     {
+        // One change (create, start, stop, kill) at a time; status, commands and a stop's wait don't hold it.
+        public SemaphoreSlim ChangeGate { get; } = new(1, 1);
+
+        // Around every read-modify-write of the running and last-failure files, and LastFailure with them.
+        public SemaphoreSlim FileGate { get; } = new(1, 1);
+
+        public bool LastFailureLoaded { get; set; }
+
         public Error? LastFailure { get; set; }
 
+        // Not persisted: a restarted host probes again at once.
         public DateTimeOffset? LastProbe { get; set; }
     }
 }

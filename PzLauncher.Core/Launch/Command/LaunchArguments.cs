@@ -4,7 +4,7 @@ using PzLauncher.Core.Java;
 using PzLauncher.Core.Launch.Config;
 using PzLauncher.Core.Platform;
 
-namespace PzLauncher.Core.Launch;
+namespace PzLauncher.Core.Launch.Command;
 
 internal static class LaunchArguments
 {

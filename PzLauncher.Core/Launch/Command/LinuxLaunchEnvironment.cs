@@ -1,4 +1,4 @@
-namespace PzLauncher.Core.Launch;
+namespace PzLauncher.Core.Launch.Command;
 
 internal static class LinuxLaunchEnvironment
 {
@@ -21,6 +21,7 @@ internal static class LinuxLaunchEnvironment
             [InputMethodVariable] = "",
         };
 
-    private static string JoinNonEmpty(params string?[] parts) =>
+    /// <summary>A colon-separated loader list without empty entries.</summary>
+    public static string JoinNonEmpty(params string?[] parts) =>
         string.Join(':', parts.Where(p => !string.IsNullOrEmpty(p)));
 }

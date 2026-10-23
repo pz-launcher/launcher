@@ -1,6 +1,5 @@
 using System.ComponentModel;
 using PzLauncher.Core.Common;
-using PzLauncher.Core.Launch;
 using PzLauncher.Core.Platform;
 using PzLauncher.Core.Server;
 using PzLauncher.Core.Tests.TestSupport;
@@ -158,18 +157,25 @@ public sealed class ServerHostServiceStartTests : IDisposable
     }
 
     [Fact]
-    public async Task StartAsync_Linux_RunsJavaWithTheScriptEnvironment()
+    public async Task StartAsync_Linux_RunsJavaWithTheServerScriptEnvironment()
     {
         using var kit = new ServerHostTestKit(PlatformKind.Linux);
+        kit.Platform.EnvironmentVariables["LD_LIBRARY_PATH"] = "/opt/lib";
+        kit.Platform.EnvironmentVariables["LD_PRELOAD"] = "libextra.so";
         kit.AddServer("pz");
 
         ResultAssert.Ok(await kit.Service().StartAsync(new StartServerRequest(kit.Site, "pz", null, null), Ct));
 
         var request = kit.Processes.LastRequest;
-        Assert.Equal(Path.Combine(kit.Site.InstallRoot, "jre64", "bin", "java"), request.FileName);
+        var root = kit.Site.InstallRoot;
+        Assert.Equal(Path.Combine(root, "jre64", "bin", "java"), request.FileName);
         Assert.Contains("java/.:java/projectzomboid.jar", request.Arguments);
         Assert.DoesNotContain("-XX:+UseZGC", request.Arguments);
-        Assert.StartsWith(Path.Combine(kit.Site.InstallRoot, "natives"), request.Environment[LinuxLaunchEnvironment.LibraryPathVariable], StringComparison.Ordinal);
+        Assert.Equal(2, request.Environment.Count);
+        Assert.Equal(
+            string.Join(':', Path.Combine(root, "linux64"), Path.Combine(root, "natives"), root, Path.Combine(root, "jre64", "lib"), "/opt/lib"),
+            request.Environment["LD_LIBRARY_PATH"]);
+        Assert.Equal("libextra.so:libjsig.so", request.Environment["LD_PRELOAD"]);
     }
 
     [Fact]

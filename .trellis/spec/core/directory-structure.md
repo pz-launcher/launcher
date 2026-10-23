@@ -4,7 +4,7 @@
 
 ```
 PzLauncher.Core/
-├── Common/          # Result, Error, ErrorCode, ErrorDetails, path helpers, file reads (ReadFile), atomic writes, strict UTF-8 text (Utf8TextFile), file comparison
+├── Common/          # Result, Error, ErrorCode, ErrorDetails, path helpers, file reads (ReadFile), atomic writes, strict UTF-8 text (Utf8TextFile), line-preserving text files (GameTextFile), file comparison
 ├── Platform/        # IPlatformEnvironment + real implementation (OS seam)
 │   └── Processes/   # process start, detached start and lookup (IProcessRunner)
 ├── Steam/           # Steam root/library discovery, Workshop library order, KeyValues parsing
@@ -17,7 +17,8 @@ PzLauncher.Core/
 ├── Installs/        # PZ game + dedicated server install detection
 ├── Java/            # Java runtime discovery (Windows + Linux sources)
 ├── Launch/          # game launch
-│   └── Config/      # ProjectZomboid64.json reading and vmArgs editing
+│   ├── Config/      # ProjectZomboid64.json reading and vmArgs editing
+│   └── Command/     # java command shared by the game and the server: arguments, Linux environment
 ├── Mod/             # any PZ mod: mod.info reading, lookup in the game's mod order, installed-mod catalog
 │   ├── Collections/ # the game's mod collections and active mod list: load order, share text, apply
 │   │   └── Files/   # the game's collection, collection order, active-list and mod-list settings files

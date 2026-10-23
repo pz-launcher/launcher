@@ -10,8 +10,14 @@ namespace PzLauncher.Core.Tests.Server;
 public sealed class ServerHostServiceRunningTests : IDisposable
 {
     private readonly ServerHostTestKit _kit = new();
+    private readonly ManualResetEventSlim _releaseStop = new();
 
-    public void Dispose() => _kit.Dispose();
+    public void Dispose()
+    {
+        _releaseStop.Set();
+        _releaseStop.Dispose();
+        _kit.Dispose();
+    }
 
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
@@ -31,6 +37,27 @@ public sealed class ServerHostServiceRunningTests : IDisposable
     }
 
     private async Task<ServerStatus> StatusAsync(ServerHostService service) => ResultAssert.Ok(await service.GetStatusAsync(_kit.Site, Ct));
+
+    // Holds the stop at its first exit check after quit, outside the change gate, until _releaseStop is set.
+    private async Task<Task<Result<ServerStatus>>> StopWaitingForTheExitAsync(ServerHostService service)
+    {
+        var waiting = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var quit = false;
+        var lookupsAfterQuit = 0;
+        _kit.Rcon.OnCommand = command => quit |= command == "quit";
+        _kit.Processes.OnGetById = _ =>
+        {
+            if (quit && Interlocked.Increment(ref lookupsAfterQuit) == 1)
+            {
+                waiting.SetResult();
+                _releaseStop.Wait(Ct);
+            }
+        };
+
+        var stop = Task.Run(() => service.StopAsync(_kit.Site, Ct), Ct);
+        await waiting.Task.WaitAsync(Ct);
+        return stop;
+    }
 
     [Fact]
     public async Task GetStatusAsync_NothingStarted_IsStopped() =>
@@ -179,9 +206,38 @@ public sealed class ServerHostServiceRunningTests : IDisposable
 
         Assert.Equal(ErrorCode.ServerExitedUnexpectedly, (await StatusAsync(service)).LastFailure?.Code);
         Assert.Equal(ErrorCode.ServerExitedUnexpectedly, (await StatusAsync(service)).LastFailure?.Code);
+        Assert.True(File.Exists(_kit.LastFailureFile));
 
         ResultAssert.Ok(await service.StartAsync(new StartServerRequest(_kit.Site, "pz", null, null), Ct));
         Assert.Null((await StatusAsync(service)).LastFailure);
+        Assert.False(File.Exists(_kit.LastFailureFile));
+    }
+
+    [Fact]
+    public async Task GetStatusAsync_NewServiceInstance_ReportsTheLastFailureOfAnEarlierOne()
+    {
+        var service = await RunningAsync();
+        _kit.WriteConsole(["crash"]);
+        _kit.ExitServer();
+        await StatusAsync(service);
+
+        var failure = (await StatusAsync(_kit.Service())).LastFailure;
+
+        Assert.Equal(ErrorCode.ServerExitedUnexpectedly, failure?.Code);
+        Assert.Equal("crash", failure?.Details["output"]);
+    }
+
+    [Theory]
+    [InlineData("{ not json")]
+    [InlineData("null")]
+    [InlineData("""{"code":"server.no_such_code","message":"m","kind":"External"}""")]
+    public async Task GetStatusAsync_MalformedLastFailureFile_ReportsNoneAndDeletesIt(string content)
+    {
+        Directory.CreateDirectory(Path.GetDirectoryName(_kit.LastFailureFile)!);
+        await File.WriteAllTextAsync(_kit.LastFailureFile, content, Ct);
+
+        Assert.Null((await StatusAsync(_kit.Service())).LastFailure);
+        Assert.False(File.Exists(_kit.LastFailureFile));
     }
 
     [Fact]
@@ -237,6 +293,36 @@ public sealed class ServerHostServiceRunningTests : IDisposable
         ResultAssert.Ok(await service.StopAsync(_kit.Site, Ct));
 
         Assert.Single(_kit.Rcon.Commands);
+    }
+
+    [Fact]
+    public async Task KillAsync_WhileAStopWaitsForTheExit_DoesNotWaitForIt()
+    {
+        var service = await RunningAsync();
+        var stop = await StopWaitingForTheExitAsync(service);
+
+        var killed = ResultAssert.Ok(await service.KillAsync(_kit.Site, Ct));
+
+        Assert.Equal(ServerState.Stopped, killed.State);
+        Assert.Equal([4001], _kit.Processes.Killed);
+        Assert.False(stop.IsCompleted);
+        _releaseStop.Set();
+        Assert.Equal(ServerState.Stopped, ResultAssert.Ok(await stop).State);
+        Assert.Single(_kit.Rcon.Commands);
+    }
+
+    [Fact]
+    public async Task StartAsync_WhileAStopWaitsForTheExit_FailsAlreadyRunning()
+    {
+        var service = await RunningAsync();
+        var stop = await StopWaitingForTheExitAsync(service);
+
+        ResultAssert.Failed(await service.StartAsync(new StartServerRequest(_kit.Site, "pz", null, null), Ct), ErrorCode.ServerAlreadyRunning);
+
+        Assert.Single(_kit.Processes.Requests);
+        _kit.ExitServer();
+        _releaseStop.Set();
+        ResultAssert.Ok(await stop);
     }
 
     [Fact]

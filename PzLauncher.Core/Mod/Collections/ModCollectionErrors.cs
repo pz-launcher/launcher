@@ -4,6 +4,8 @@ namespace PzLauncher.Core.Mod.Collections;
 
 internal static class ModCollectionErrors
 {
+    public static GameTextFileErrors TextFile { get; } = new(FileUnreadable, FileMalformed, FileWriteFailed);
+
     public static Error CacheFolderUnresolved(string installRoot) =>
         new(ErrorCode.ModCollectionCacheFolderUnresolved, $"The game's cache folder could not be resolved for {installRoot} (-cachedir= or home folder).", ErrorKind.Validation)
         {

@@ -1,6 +1,4 @@
 using System.Globalization;
-using PzLauncher.Core.Java;
-using PzLauncher.Core.Platform;
 
 namespace PzLauncher.Core.Launch;
 
@@ -27,9 +25,6 @@ internal static class PzLaunchFiles
 
     /// <summary>The JVM's crash log when <c>-XX:ErrorFile</c> isn't set: in its working directory.</summary>
     public static string DefaultCrashLog(int processId) => $"hs_err_pid{processId.ToString(CultureInfo.InvariantCulture)}.log";
-
-    public static string JavaExecutable(string javaHome, PlatformKind os) =>
-        Path.Combine(javaHome, JavaLocations.BinFolder, JavaLocations.ExecutableName(os));
 
     // The Linux Steam depot nests the game one level down; when neither has the json, the root is named in the error.
     public static string ResolveGameFolder(string root)

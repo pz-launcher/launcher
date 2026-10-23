@@ -5,6 +5,9 @@ namespace PzLauncher.Core.Server;
 
 internal static class ServerErrors
 {
+    // The ini is read as Latin-1, which can't fail to decode, so there is no malformed code to give.
+    public static GameTextFileErrors TextFile { get; } = new(FileAccessFailed, FileAccessFailed, FileAccessFailed);
+
     public static Error NameInvalid(string name) =>
         new(ErrorCode.ServerNameInvalid, $"Not a valid server name: '{name}'", ErrorKind.Validation)
         {

@@ -43,3 +43,7 @@ understand.
 - `<name>_SandboxVars.lua` exists only after the first successful start.
 - Build on `server-host-core`'s `Server/Config/ServerIniFile` helper instead of a
   second ini reader.
+- The ini's text encoding is open: B41 (Java 17) on Windows writes it in the
+  system code page (e.g. GBK), so `ServerIniFile` reads it as Latin-1 to keep
+  every byte and only handles ASCII keys and values. Decide how non-ASCII
+  values are decoded and written.

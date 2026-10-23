@@ -31,7 +31,7 @@ internal sealed partial class ActiveModsFile
     /// <summary><paramref name="newline"/> is for a file the launcher creates; an existing file keeps its own.</summary>
     public static async Task<Result<ActiveModsFile>> ReadAsync(string cache, string newline, CancellationToken ct)
     {
-        var read = await GameTextFile.ReadAsync(ModCollectionFiles.ActiveModsFile(cache), newline, ct).ConfigureAwait(false);
+        var read = await GameTextFile.ReadAsync(ModCollectionFiles.ActiveModsFile(cache), newline, ModCollectionErrors.TextFile, ct).ConfigureAwait(false);
         if (!read.IsSuccess)
         {
             return read.Error;
@@ -69,7 +69,7 @@ internal sealed partial class ActiveModsFile
     }
 
     /// <summary>Keeps the first version of an existing file as <c>default.txt.pzlauncher.orig</c>.</summary>
-    public Task<Result> WriteAsync(CancellationToken ct) => _file.WriteAsync(keepOriginal: true, ct);
+    public Task<Result> WriteAsync(CancellationToken ct) => _file.WriteAsync(rollingBackup: true, _file.FilePath + ModCollectionFiles.OriginalSuffix, ct);
 
     private static Result<ActiveModsFile> Parse(GameTextFile file)
     {

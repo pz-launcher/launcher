@@ -8,6 +8,9 @@ namespace PzLauncher.Core.Tests.Server.Config;
 public sealed class ServerIniFileTests : IDisposable
 {
     private readonly TempDirectory _temp = new();
+    private readonly string _path;
+
+    public ServerIniFileTests() => _path = Path.Combine(_temp.Path, "pz.ini");
 
     public void Dispose() => _temp.Dispose();
 
@@ -15,11 +18,18 @@ public sealed class ServerIniFileTests : IDisposable
 
     private async Task<ServerIniFile> LoadAsync(byte[] content)
     {
-        var path = Path.Combine(_temp.Path, "pz.ini");
-        await File.WriteAllBytesAsync(path, content, Ct);
-        var read = await ServerIniFile.ReadAsync(path, Ct);
+        await File.WriteAllBytesAsync(_path, content, Ct);
+        var read = await ServerIniFile.ReadAsync(_path, Ct);
         Assert.NotNull(read);
         return ResultAssert.Ok(read.Value);
+    }
+
+    private async Task<byte[]> SetAsync(byte[] content, string key, string value)
+    {
+        var ini = await LoadAsync(content);
+        ini.Set(key, value);
+        ResultAssert.Ok(await ini.WriteAsync(Ct));
+        return await File.ReadAllBytesAsync(_path, Ct);
     }
 
     [Fact]
@@ -50,20 +60,39 @@ public sealed class ServerIniFileTests : IDisposable
     {
         var original = await File.ReadAllBytesAsync(Fixtures.Path("Server", "server.ini"), Ct);
 
-        var updated = (await LoadAsync(original)).Set("RCONPassword", "new");
+        var updated = await SetAsync(original, "RCONPassword", "new");
 
         var expected = Encoding.UTF8.GetString(original).Replace("RCONPassword=spike-rcon-7f3a", "RCONPassword=new", StringComparison.Ordinal);
-        Assert.Equal(expected, Encoding.UTF8.GetString(updated.Content));
+        Assert.Equal(expected, Encoding.UTF8.GetString(updated));
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Set_OtherLinesNotUtf8_KeepsTheirBytes(bool bom)
+    {
+        byte[] start = bom ? [0xEF, 0xBB, 0xBF] : [];
+        byte[] gbk = [.. "PublicDescription="u8, 0xD6, 0xD0, 0xCE, 0xC4, 0xFF, .. "\r\n"u8];
+
+        var updated = await SetAsync([.. start, .. "RCONPort=1\r\n"u8, .. gbk], "RCONPort", "2");
+
+        Assert.Equal([.. start, .. "RCONPort=2\r\n"u8, .. gbk], updated);
     }
 
     [Fact]
-    public async Task Set_OtherLinesNotUtf8_KeepsTheirBytes()
+    public async Task WriteAsync_Changed_KeepsNoBackup()
     {
-        byte[] original = [.. "Name="u8, 0xFF, 0xFE, .. "\r\nRCONPort=1\r\n"u8];
+        await SetAsync("RCONPort=1\n"u8.ToArray(), "RCONPort", "2");
 
-        var updated = (await LoadAsync(original)).Set("RCONPort", "2");
+        Assert.Equal(["pz.ini"], Directory.EnumerateFiles(_temp.Path).Select(Path.GetFileName));
+    }
 
-        Assert.Equal([.. "Name="u8, 0xFF, 0xFE, .. "\r\nRCONPort=2\r\n"u8], updated.Content);
+    [Fact]
+    public async Task Set_DuplicateKey_ReplacesEveryLine()
+    {
+        var updated = await SetAsync("RCONPort=1\r\nA=1\r\nRCONPort=2\r\n"u8.ToArray(), "RCONPort", "3");
+
+        Assert.Equal("RCONPort=3\r\nA=1\r\nRCONPort=3\r\n", Encoding.UTF8.GetString(updated));
     }
 
     [Theory]
@@ -72,9 +101,9 @@ public sealed class ServerIniFileTests : IDisposable
     [InlineData("", "RCONPort=7\n")]
     public async Task Set_MissingKey_AppendsInTheFilesLineEnding(string content, string expected)
     {
-        var updated = (await LoadAsync(Encoding.UTF8.GetBytes(content))).Set("RCONPort", "7");
+        var updated = await SetAsync(Encoding.UTF8.GetBytes(content), "RCONPort", "7");
 
-        Assert.Equal(expected, Encoding.UTF8.GetString(updated.Content));
+        Assert.Equal(expected, Encoding.UTF8.GetString(updated));
     }
 
     [Fact]

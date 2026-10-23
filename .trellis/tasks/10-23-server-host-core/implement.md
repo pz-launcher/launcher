@@ -56,8 +56,9 @@ Design: `design.md`; facts: `research/pz-server-runtime.md`.
 - Manual, Linux (needs a Linux machine with the dedicated server installed):
   the same harness run on Linux; also confirms the open items at the end of
   `research/pz-server-runtime.md` (folder layout, environment, `setsid`).
-  Any constant that differs is fixed in `PzServerFiles.cs` /
-  `LinuxLaunchEnvironment` before the child is archived.
+  Any constant that differs is fixed in `PzServerFiles.cs` / the server's
+  Linux environment (`ServerHostService.LinuxEnvironment`) before the child
+  is archived.
 
 ## Risky points / rollback
 

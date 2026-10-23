@@ -18,7 +18,7 @@ internal sealed class ModListSettingsFile
     public static async Task<Result<ModListSettingsFile>> ReadAsync(string cache, CancellationToken ct)
     {
         // The game writes "\n" whatever the OS.
-        var file = await GameTextFile.ReadAsync(ModCollectionFiles.SettingsFile(cache), "\n", ct).ConfigureAwait(false);
+        var file = await GameTextFile.ReadAsync(ModCollectionFiles.SettingsFile(cache), "\n", ModCollectionErrors.TextFile, ct).ConfigureAwait(false);
         return file.IsSuccess ? new ModListSettingsFile(file.Value) : file.Error;
     }
 
@@ -82,7 +82,7 @@ internal sealed class ModListSettingsFile
         return lines.Count > 0;
     }
 
-    public Task<Result> WriteAsync(CancellationToken ct) => _file.WriteAsync(keepOriginal: false, ct);
+    public Task<Result> WriteAsync(CancellationToken ct) => _file.WriteAsync(rollingBackup: true, originalCopy: null, ct);
 
     private IEnumerable<(int Index, SharedModCollection Collection)> Parsed()
     {

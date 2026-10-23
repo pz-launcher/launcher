@@ -35,6 +35,8 @@ internal sealed class ServerHostTestKit : IDisposable
 
     public string RunningFile => Path.Combine(Site.StateDir, "server", "running.json");
 
+    public string LastFailureFile => Path.Combine(Site.StateDir, "server", "last-failure.json");
+
     public RunningServer Running =>
         JsonSerializer.Deserialize(File.ReadAllBytes(RunningFile), RunningServerJsonContext.Default.RunningServer)
         ?? throw new InvalidOperationException("The running file holds null.");
