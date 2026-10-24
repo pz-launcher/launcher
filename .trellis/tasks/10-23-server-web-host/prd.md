@@ -37,5 +37,11 @@ authenticated HTTP/SSE API over the Core server services.
       endpoint streams.
 - [ ] AOT publish for linux-x64 without IL2xxx/IL3xxx warnings; the binary
       starts and serves `index.html`.
+- [ ] Linux check carried over from `10-23-server-host-core`: a server
+      started through the host survives a host restart, takes a command and
+      stops on `quit` with the world saved; the open items in
+      `archive/2026-10/10-23-server-host-core/research/pz-server-runtime.md` (folder layout,
+      `linux64` / `libjsig.so` environment, `setsid`) are confirmed or fixed
+      in `PzServerFiles.cs` / `ServerHostService.LinuxEnvironment`.
 - [ ] With the systemd unit from the docs, `systemctl restart` leaves a running
       game server alive.
