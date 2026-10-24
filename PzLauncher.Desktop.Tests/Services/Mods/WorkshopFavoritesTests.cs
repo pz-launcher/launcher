@@ -1,4 +1,5 @@
 using PzLauncher.Desktop.Services.Mods;
+using PzLauncher.Desktop.Services.Preferences.Records;
 using PzLauncher.Desktop.Services.Preferences;
 using PzLauncher.Desktop.Tests.TestSupport;
 

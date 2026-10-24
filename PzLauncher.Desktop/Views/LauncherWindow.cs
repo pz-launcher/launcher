@@ -1,5 +1,6 @@
 using System;
 using Avalonia.Controls;
+using PzLauncher.Desktop.Services.Shell.Lifetime;
 using PzLauncher.Desktop.Services.Shell;
 
 namespace PzLauncher.Desktop.Views;

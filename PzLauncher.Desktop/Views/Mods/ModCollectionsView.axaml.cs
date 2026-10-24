@@ -1,4 +1,5 @@
 using Avalonia.Controls;
+using PzLauncher.Desktop.ViewModels.Mods.Collections;
 using PzLauncher.Desktop.ViewModels.Mods;
 
 namespace PzLauncher.Desktop.Views.Mods;

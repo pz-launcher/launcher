@@ -2,6 +2,7 @@ using PzLauncher.Core.Mod.Collections;
 using PzLauncher.Desktop.Services.Mods;
 using PzLauncher.Desktop.Services.Preferences;
 using PzLauncher.Desktop.Tests.TestSupport;
+using PzLauncher.Desktop.Services.Preferences.Records;
 
 namespace PzLauncher.Desktop.Tests.Services.Mods;
 

@@ -8,9 +8,11 @@ using PzLauncher.Core.Mod.Collections;
 using PzLauncher.Core.Mod.ZombieBuddy;
 using PzLauncher.Core.Net;
 using PzLauncher.Core.Platform;
+using PzLauncher.Core.Server;
 using PzLauncher.Core.Serialization;
 using PzLauncher.Core.Steam;
 using PzLauncher.Core.Steam.Workshop;
+using PzLauncher.Core.Update.Releases;
 using PzLauncher.Core.Update;
 
 namespace PzLauncher.Core.Tests.Common;
@@ -100,6 +102,21 @@ public partial class ErrorCodeTests
         [ErrorCode.NetworkProxyPortInvalid] = (NetworkErrors.ProxyPortInvalid(0), ErrorKind.Validation),
         [ErrorCode.NetworkUnreachable] = (NetworkErrors.Unreachable("t", "r"), ErrorKind.External),
         [ErrorCode.NetworkTimeout] = (NetworkErrors.Timeout("t", TimeSpan.FromSeconds(15)), ErrorKind.External),
+        [ErrorCode.ServerNameInvalid] = (ServerErrors.NameInvalid("n"), ErrorKind.Validation),
+        [ErrorCode.ServerAlreadyExists] = (ServerErrors.AlreadyExists("n"), ErrorKind.Conflict),
+        [ErrorCode.ServerNotFound] = (ServerErrors.NotFound("n"), ErrorKind.NotFound),
+        [ErrorCode.ServerNotAServerInstall] = (ServerErrors.NotAServerInstall("p"), ErrorKind.Validation),
+        [ErrorCode.ServerAlreadyRunning] = (ServerErrors.AlreadyRunning("n"), ErrorKind.Conflict),
+        [ErrorCode.ServerNotRunning] = (ServerErrors.NotRunning(), ErrorKind.Conflict),
+        [ErrorCode.ServerNotReady] = (ServerErrors.NotReady(), ErrorKind.Conflict),
+        [ErrorCode.ServerAdminPasswordRequired] = (ServerErrors.AdminPasswordRequired("n"), ErrorKind.Validation),
+        [ErrorCode.ServerStartFailed] = (ServerErrors.StartFailed("p", "r"), ErrorKind.External),
+        [ErrorCode.ServerExitedEarly] = (ServerErrors.ExitedEarly("n", "o"), ErrorKind.External),
+        [ErrorCode.ServerExitedUnexpectedly] = (ServerErrors.ExitedUnexpectedly("n", "o"), ErrorKind.External),
+        [ErrorCode.ServerRconFailed] = (ServerErrors.RconFailed("r"), ErrorKind.External),
+        [ErrorCode.ServerCommandInvalid] = (ServerErrors.CommandInvalid(), ErrorKind.Validation),
+        [ErrorCode.ServerStopTimeout] = (ServerErrors.StopTimeout(TimeSpan.FromMinutes(3)), ErrorKind.External),
+        [ErrorCode.ServerFileAccessFailed] = (ServerErrors.FileAccessFailed("p", "r"), ErrorKind.External),
     };
 
     [GeneratedRegex(@"^[a-z]+\.[a-z0-9]+(_[a-z0-9]+)*$")]
@@ -209,6 +226,21 @@ public partial class ErrorCodeTests
     [InlineData(ErrorCode.NetworkProxyPortInvalid, "network.proxy_port_invalid")]
     [InlineData(ErrorCode.NetworkUnreachable, "network.unreachable")]
     [InlineData(ErrorCode.NetworkTimeout, "network.timeout")]
+    [InlineData(ErrorCode.ServerNameInvalid, "server.name_invalid")]
+    [InlineData(ErrorCode.ServerAlreadyExists, "server.already_exists")]
+    [InlineData(ErrorCode.ServerNotFound, "server.not_found")]
+    [InlineData(ErrorCode.ServerNotAServerInstall, "server.not_a_server_install")]
+    [InlineData(ErrorCode.ServerAlreadyRunning, "server.already_running")]
+    [InlineData(ErrorCode.ServerNotRunning, "server.not_running")]
+    [InlineData(ErrorCode.ServerNotReady, "server.not_ready")]
+    [InlineData(ErrorCode.ServerAdminPasswordRequired, "server.admin_password_required")]
+    [InlineData(ErrorCode.ServerStartFailed, "server.start_failed")]
+    [InlineData(ErrorCode.ServerExitedEarly, "server.exited_early")]
+    [InlineData(ErrorCode.ServerExitedUnexpectedly, "server.exited_unexpectedly")]
+    [InlineData(ErrorCode.ServerRconFailed, "server.rcon_failed")]
+    [InlineData(ErrorCode.ServerCommandInvalid, "server.command_invalid")]
+    [InlineData(ErrorCode.ServerStopTimeout, "server.stop_timeout")]
+    [InlineData(ErrorCode.ServerFileAccessFailed, "server.file_access_failed")]
     public void ToWireName_ExistingCodes_AreStable(ErrorCode code, string wireName) =>
         Assert.Equal(wireName, code.ToWireName());
 
@@ -238,6 +270,7 @@ public partial class ErrorCodeTests
     [InlineData(ErrorCode.ZombieBuddySourceFileMissing)]
     [InlineData(ErrorCode.ZombieBuddyNotInitialized)]
     [InlineData(ErrorCode.WorkshopSteamApiMissing)]
+    [InlineData(ErrorCode.ServerNotAServerInstall)]
     public void Factory_PathDetails_HoldOnlyThePath(ErrorCode code) =>
         Assert.Equal(new Dictionary<string, string> { ["path"] = "p" }, Factories[code].Error.Details);
 
@@ -266,6 +299,8 @@ public partial class ErrorCodeTests
     [InlineData(ErrorCode.UpdateInstallFolderNotWritable)]
     [InlineData(ErrorCode.UpdateInstallFailed)]
     [InlineData(ErrorCode.UpdateRestartFailed)]
+    [InlineData(ErrorCode.ServerStartFailed)]
+    [InlineData(ErrorCode.ServerFileAccessFailed)]
     public void Factory_PathReasonDetails_HoldThePathAndReason(ErrorCode code) =>
         Assert.Equal(new Dictionary<string, string> { ["path"] = "p", ["reason"] = "r" }, Factories[code].Error.Details);
 
@@ -278,6 +313,7 @@ public partial class ErrorCodeTests
     [InlineData(ErrorCode.WorkshopHelperFailed)]
     [InlineData(ErrorCode.WorkshopHelperRequestRejected)]
     [InlineData(ErrorCode.WorkshopCollectionsQueryFailed)]
+    [InlineData(ErrorCode.ServerRconFailed)]
     public void Factory_ReasonDetails_HoldTheReason(ErrorCode code) =>
         Assert.Equal(new Dictionary<string, string> { ["reason"] = "r" }, Factories[code].Error.Details);
 }

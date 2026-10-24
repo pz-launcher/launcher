@@ -10,6 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Using Include="PzLauncher.Desktop.Tests.TestSupport.Fakes" />
     <Using Include="Xunit" />
   </ItemGroup>
 

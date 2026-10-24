@@ -15,6 +15,8 @@ using PzLauncher.Desktop.Lang;
 using PzLauncher.Desktop.Services.Mods;
 using PzLauncher.Desktop.Services.Shell;
 using PzLauncher.Desktop.ViewModels.Mods.Workshop;
+using PzLauncher.Desktop.Services.Shell.Dialogs;
+using PzLauncher.Desktop.ViewModels.Mods.Collections;
 
 namespace PzLauncher.Desktop.ViewModels.Mods.Modpacks;
 

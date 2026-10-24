@@ -6,6 +6,7 @@ using System.Text;
 using Microsoft.Extensions.Logging.Abstractions;
 using PzLauncher.Core.Net;
 using PzLauncher.Core.Platform;
+using PzLauncher.Core.Update.Releases;
 using PzLauncher.Core.Update;
 
 namespace PzLauncher.Core.Tests.TestSupport;

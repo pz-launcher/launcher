@@ -1,7 +1,7 @@
 using System.Globalization;
 using System.Text;
 using PzLauncher.Core.Mod.Collections;
-using PzLauncher.Core.Steam.Workshop;
+using PzLauncher.Core.Steam.Workshop.Ids;
 
 namespace PzLauncher.Core.Mod.Modpacks;
 

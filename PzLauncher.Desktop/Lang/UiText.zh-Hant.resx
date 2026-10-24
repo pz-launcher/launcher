@@ -314,6 +314,53 @@
   <data name="Error_NetworkTimeout" xml:space="preserve">
     <value>{0} 在 {1} 秒內沒有回應。</value>
   </data>
+  <data name="Error_ServerNameInvalid" xml:space="preserve">
+    <value>{0} 不是有效的伺服器名稱。請使用 1 到 64 個字元：A–Z、a–z、0–9、_ 或 -。</value>
+  </data>
+  <data name="Error_ServerAlreadyExists" xml:space="preserve">
+    <value>已存在名為 {0} 的伺服器。</value>
+  </data>
+  <data name="Error_ServerNotFound" xml:space="preserve">
+    <value>不存在名為 {0} 的伺服器。</value>
+  </data>
+  <data name="Error_ServerNotAServerInstall" xml:space="preserve">
+    <value>{0} 不是 Project Zomboid 專用伺服器資料夾。</value>
+  </data>
+  <data name="Error_ServerAlreadyRunning" xml:space="preserve">
+    <value>伺服器 {0} 已在執行中。同一時間只能執行一個伺服器。</value>
+  </data>
+  <data name="Error_ServerNotRunning" xml:space="preserve">
+    <value>沒有正在執行的伺服器。</value>
+  </data>
+  <data name="Error_ServerNotReady" xml:space="preserve">
+    <value>伺服器仍在啟動中。請等待其開始執行，或強制停止。</value>
+  </data>
+  <data name="Error_ServerAdminPasswordRequired" xml:space="preserve">
+    <value>伺服器 {0} 尚無管理員帳號。請輸入管理員密碼以建立帳號。</value>
+  </data>
+  <data name="Error_ServerStartFailed" xml:space="preserve">
+    <value>無法使用 {0} 啟動伺服器。</value>
+  </data>
+  <data name="Error_ServerExitedEarly" xml:space="preserve">
+    <value>伺服器 {0} 在啟動過程中停止了。主控台最後幾行：
+{1}</value>
+  </data>
+  <data name="Error_ServerExitedUnexpectedly" xml:space="preserve">
+    <value>伺服器 {0} 意外停止了。主控台最後幾行：
+{1}</value>
+  </data>
+  <data name="Error_ServerRconFailed" xml:space="preserve">
+    <value>無法透過 RCON 連線伺服器：{0}</value>
+  </data>
+  <data name="Error_ServerCommandInvalid" xml:space="preserve">
+    <value>請在一行內輸入命令，長度不超過 4000 位元組。</value>
+  </data>
+  <data name="Error_ServerStopTimeout" xml:space="preserve">
+    <value>伺服器未在 {0} 秒內停止。</value>
+  </data>
+  <data name="Error_ServerFileAccessFailed" xml:space="preserve">
+    <value>無法讀取或寫入 {0}。</value>
+  </data>
   <data name="Error_WorkshopSubscriptionsUnreadable" xml:space="preserve">
     <value>無法讀取 Steam 工作坊訂閱清單 {0}。請確認 Steam 已安裝並已登入，然後重新整理。</value>
   </data>

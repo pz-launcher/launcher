@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using PzLauncher.Core.Launch;
 using PzLauncher.Core.Platform;
+using PzLauncher.Desktop.Services.Preferences.Records;
 using PzLauncher.Desktop.Services.Preferences;
 
 namespace PzLauncher.Desktop.Services.Launch;

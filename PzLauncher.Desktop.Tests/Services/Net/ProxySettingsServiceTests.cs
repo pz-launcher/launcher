@@ -1,6 +1,7 @@
 using PzLauncher.Core.Common;
 using PzLauncher.Core.Net;
 using PzLauncher.Desktop.Services.Net;
+using PzLauncher.Desktop.Services.Preferences.Records;
 using PzLauncher.Desktop.Services.Preferences;
 using PzLauncher.Desktop.Tests.TestSupport;
 

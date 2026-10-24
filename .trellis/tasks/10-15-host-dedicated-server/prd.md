@@ -25,3 +25,10 @@ _To be filled._
 - Confirm the server follows the game's mechanism (java built from the server's `ProjectZomboid64.json` + per-install overrides), rather than `StartServer64.bat` (trailing `PAUSE`, hard-coded `-Xms16g`).
 - Server name / `-servername`, custom args, admin password handling.
 - What happens to a running server when the launcher closes.
+
+## Note (2026-10-23)
+
+`10-23-web-server-management` (D5, D11) builds server hosting in Core:
+detached process, RCON commands, console tail of `server-console.txt`,
+re-attach via PID file. When this task is planned, reuse that Core service
+instead of the child-process + stdin model in parent D2.

@@ -1,0 +1,4 @@
+{"file": ".trellis/spec/core/service-api.md", "reason": "HTTP mapping the SPA consumes (7807 code, SSE)"}
+{"file": ".trellis/spec/desktop/localization.md", "reason": "game terminology to keep consistent in zh-Hans/en"}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "API -> UI data flow"}
+{"file": ".trellis/tasks/10-23-web-server-management/design.md", "reason": "shared design: pages, stack, error display"}

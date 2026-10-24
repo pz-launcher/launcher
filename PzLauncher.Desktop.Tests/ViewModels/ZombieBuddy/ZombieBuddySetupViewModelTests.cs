@@ -3,8 +3,8 @@ using PzLauncher.Core.Mod.ZombieBuddy;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Tests.TestSupport;
 using PzLauncher.Desktop.ViewModels.ZombieBuddy;
-using static PzLauncher.Desktop.Tests.TestSupport.TestInstalls;
-using static PzLauncher.Desktop.Tests.TestSupport.TestZombieBuddy;
+using static PzLauncher.Desktop.Tests.TestSupport.Fakes.TestInstalls;
+using static PzLauncher.Desktop.Tests.TestSupport.Fakes.TestZombieBuddy;
 
 namespace PzLauncher.Desktop.Tests.ViewModels.ZombieBuddy;
 

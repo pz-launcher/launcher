@@ -4,6 +4,7 @@ using System.Linq;
 using PzLauncher.Core.Steam.Workshop;
 using PzLauncher.Core.Steam.Workshop.Helper;
 using PzLauncher.Core.Update;
+using PzLauncher.Desktop.Services.Shell.Lifetime;
 using PzLauncher.Desktop.Services.Shell;
 
 namespace PzLauncher.Desktop;

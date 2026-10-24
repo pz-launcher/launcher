@@ -13,6 +13,8 @@ using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Services.Mods;
 using PzLauncher.Desktop.Services.Shell;
 using PzLauncher.Desktop.ViewModels.Mods.Modpacks;
+using PzLauncher.Desktop.Services.Shell.Dialogs;
+using PzLauncher.Core.Steam.Workshop.Ids;
 
 namespace PzLauncher.Desktop.ViewModels.Mods.Workshop;
 

@@ -9,6 +9,7 @@ using PzLauncher.Core.Mod.Collections;
 using PzLauncher.Core.Steam.Workshop;
 using PzLauncher.Desktop.Lang;
 using PzLauncher.Desktop.Services.Mods;
+using PzLauncher.Core.Steam.Workshop.Ids;
 
 namespace PzLauncher.Desktop.ViewModels.Mods.Modpacks;
 

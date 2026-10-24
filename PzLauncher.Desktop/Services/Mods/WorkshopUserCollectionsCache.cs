@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using PzLauncher.Core.Steam.Workshop.Actions;
+using PzLauncher.Desktop.Services.Preferences.Records;
 using PzLauncher.Desktop.Services.Preferences;
 
 namespace PzLauncher.Desktop.Services.Mods;

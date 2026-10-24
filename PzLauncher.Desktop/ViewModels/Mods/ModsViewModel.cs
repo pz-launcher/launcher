@@ -13,9 +13,12 @@ using PzLauncher.Core.Steam.Workshop.Actions;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Services.Launch;
 using PzLauncher.Desktop.Services.Mods;
+using PzLauncher.Desktop.Services.Shell.Dialogs;
 using PzLauncher.Desktop.Services.Shell;
 using PzLauncher.Desktop.ViewModels.Installs;
 using PzLauncher.Desktop.ViewModels.Mods.Modpacks;
+using PzLauncher.Desktop.ViewModels.Mods.Collections;
+using PzLauncher.Desktop.ViewModels.Mods.Installed;
 using PzLauncher.Desktop.ViewModels.Mods.Workshop;
 
 namespace PzLauncher.Desktop.ViewModels.Mods;

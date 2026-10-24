@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~545 | Active |
+| `journal-1.md` | ~561 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -30,6 +30,7 @@
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
 | 23 | 2026-10-24 | Share a Workshop collection with a mod preset (modpacks) | `efab630` | `feat/modpacks` |
+| 22 | 2026-10-24 | Web server management: plan, server-host-core, folder split | `e601524`, `3003e80`, `6310198`, `fd3b04f`, `cf12183` | `server-host-core` |
 | 21 | 2026-10-21 | Rename the game's mod lists to mod presets | `581717b` | `feat/mod-preset-term` |
 | 20 | 2026-10-20 | Launcher window behavior after game launch | `4bbc2d6` | `feat/after-launch-window-behavior` |
 | 19 | 2026-10-19 | Local Workshop favorites with share/import | `bcbc0af` | `feat/workshop-management` |

@@ -3,6 +3,7 @@ using System.Text.Json.Serialization.Metadata;
 using Microsoft.Extensions.Logging;
 using PzLauncher.Core.Common;
 using PzLauncher.Core.Net;
+using PzLauncher.Core.Steam.Workshop.Ids;
 
 namespace PzLauncher.Core.Steam.Workshop.Sources;
 

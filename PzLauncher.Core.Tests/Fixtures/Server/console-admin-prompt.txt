@@ -1,0 +1,109 @@
+LOG  : General      f:0 st:3,189,794> SLF4J(W): No SLF4J providers were found.
+LOG  : General      f:0 st:3,189,794> SLF4J(W): Defaulting to no-operation (NOP) logger implementation
+LOG  : General      f:0 st:3,189,795> SLF4J(W): See https://www.slf4j.org/codes.html#noProviders for further details.
+LOG  : General      f:0 st:3,189,834> version=42.21.0 4a0e9546ec demo=false
+LOG  : General      f:0 st:3,189,834> revision=4a0e9546ec
+LOG  : General      f:0 st:3,189,836> unknown option "-statistic"
+LOG  : General      f:0 st:3,189,836> unknown option "0"
+LOG  : General      f:0 st:3,189,836> You can setup the log levels in the debuglog-server.cfg file
+LOG  : General      f:0 st:3,189,837> Logs configuration:
+LOG  : General      f:0 st:3,189,838>      General: General
+LOG  : General      f:0 st:3,189,838>      Network: General
+LOG  : General      f:0 st:3,189,839>          Lua: General
+LOG  : General      f:0 st:3,189,839>          Mod: General
+LOG  : General      f:0 st:3,189,839>  Multiplayer: General
+LOG  : General      f:0 st:3,189,839> ClientCommand: General
+LOG  : General      f:0 st:3,189,839>       Packet: Warning
+LOG  : General      f:0 st:3,189,839> NetworkFileDebug: Warning
+LOG  : General      f:0 st:3,189,840>         ZNet: Warning
+LOG  : General      f:0 st:3,189,840>    LuaObject: Warning
+LOG  : General      f:0 st:3,189,840>   GameOption: Warning
+LOG  : General      f:0 st:3,189,840>        Sound: Warning
+LOG  : General      f:0 st:3,189,840>       Zombie: Warning
+LOG  : General      f:0 st:3,189,840>       Combat: Warning
+LOG  : General      f:0 st:3,189,841>      Objects: Warning
+LOG  : General      f:0 st:3,189,841>    Fireplace: Warning
+LOG  : General      f:0 st:3,189,841>        Radio: Warning
+LOG  : General      f:0 st:3,189,841>   MapLoading: Warning
+LOG  : General      f:0 st:3,189,841>     Clothing: Warning
+LOG  : General      f:0 st:3,189,841>    Animation: Warning
+LOG  : General      f:0 st:3,189,842> AnimationDetailed: Warning
+LOG  : General      f:0 st:3,189,842> AnimationLayers: Warning
+LOG  : General      f:0 st:3,189,842>        Asset: Warning
+LOG  : General      f:0 st:3,189,842>       Script: Warning
+LOG  : General      f:0 st:3,189,842>       Shader: Warning
+LOG  : General      f:0 st:3,189,843>       Sprite: Warning
+LOG  : General      f:0 st:3,189,843>        Input: Warning
+LOG  : General      f:0 st:3,189,843>       Recipe: Warning
+LOG  : General      f:0 st:3,189,843> ActionSystem: Warning
+LOG  : General      f:0 st:3,189,843> ActionSystemEvents: Warning
+LOG  : General      f:0 st:3,189,843>    IsoRegion: Warning
+LOG  : General      f:0 st:3,189,843>       FileIO: Warning
+LOG  : General      f:0 st:3,189,844>       Damage: Warning
+LOG  : General      f:0 st:3,189,844>        Death: Warning
+LOG  : General      f:0 st:3,189,844>      Discord: Warning
+LOG  : General      f:0 st:3,189,844>    Statistic: Warning
+LOG  : General      f:0 st:3,189,844>      Vehicle: Warning
+LOG  : General      f:0 st:3,189,845>   VehicleHit: Warning
+LOG  : General      f:0 st:3,189,845>        Voice: Warning
+LOG  : General      f:0 st:3,189,845>     Checksum: Warning
+LOG  : General      f:0 st:3,189,845>       Animal: Warning
+LOG  : General      f:0 st:3,189,845>   ItemPicker: Warning
+LOG  : General      f:0 st:3,189,846>   CraftLogic: Warning
+LOG  : General      f:0 st:3,189,846>       Action: Warning
+LOG  : General      f:0 st:3,189,846>       Entity: Warning
+LOG  : General      f:0 st:3,189,846>    Lightning: Warning
+LOG  : General      f:0 st:3,189,846>      Grapple: Warning
+LOG  : General      f:0 st:3,189,846>    ExitDebug: Warning
+LOG  : General      f:0 st:3,189,846>   BodyDamage: Warning
+LOG  : General      f:0 st:3,189,847>          Xml: Warning
+LOG  : General      f:0 st:3,189,847>      Physics: Warning
+LOG  : General      f:0 st:3,189,847>   Ballistics: Warning
+LOG  : General      f:0 st:3,189,847>      Ragdoll: Warning
+LOG  : General      f:0 st:3,189,847>     PZBullet: Warning
+LOG  : General      f:0 st:3,189,847> ModelManager: Warning
+LOG  : General      f:0 st:3,189,848> LoadAnimation: Warning
+LOG  : General      f:0 st:3,189,848>         Zone: Warning
+LOG  : General      f:0 st:3,189,848>     WorldGen: Warning
+LOG  : General      f:0 st:3,189,848>     Foraging: Warning
+LOG  : General      f:0 st:3,189,848>       Saving: Warning
+LOG  : General      f:0 st:3,189,848>        Fluid: Warning
+LOG  : General      f:0 st:3,189,848>       Energy: Warning
+LOG  : General      f:0 st:3,189,849>  Translation: Warning
+LOG  : General      f:0 st:3,189,849>     Moveable: Warning
+LOG  : General      f:0 st:3,189,849>     Basement: Warning
+LOG  : General      f:0 st:3,189,849>   FallDamage: Warning
+LOG  : General      f:0 st:3,189,849>        ImGui: Warning
+LOG  : General      f:0 st:3,189,849> CharacterTrait: Warning
+LOG  : General      f:0 st:3,189,849>         ISUI: Warning
+LOG  : General      f:0 st:3,189,849> ISUIStackTrace: Warning
+LOG  : General      f:0 st:3,189,850> FaceLocationFix: Warning
+LOG  : General      f:0 st:3,189,850>      Context: Warning
+LOG  : General      f:0 st:3,189,850> VehicleClientCommand: Warning
+LOG  : General      f:0 st:3,189,850>     UnitTest: Warning
+LOG  : General      f:0 st:3,189,850> AnimationRecorder: Warning
+LOG  : General      f:0 st:3,189,850>      Default: Warning
+LOG  : General      f:0 st:3,189,851> server name is "spike2"
+LOG  : General      f:0 st:3,189,852> map_t.bin does not exist, cannot determine the server's WorldVersion.  This is ok the first time a server is started.
+LOG  : General      f:0 st:3,189,853> Loading networking libraries...
+LOG  : General      f:0 st:3,189,853> Loading RakNet64...
+LOG  : General      f:0 st:3,189,855> Loading ZNetNoSteam64...
+LOG  : General      f:0 st:3,189,873> SteamUtils started without Steam
+LOG  : General      f:0 st:3,190,856> LightingFPS set to 15
+LOG  : General      f:0 st:3,190,874> Start making backup
+LOG  : General      f:0 st:3,190,946> compressionElapsed=32ms, mergingElapsed=37ms
+LOG  : General      f:0 st:3,190,947> Backup made in 72 ms
+LOG  : General      f:0 st:3,191,093> User 'admin' not found, creating it 
+LOG  : General      f:0 st:3,191,093> Command line admin password: null
+LOG  : General      f:0 st:3,191,093> Enter new administrator password: 
+LOG  : General      f:0 st:3,191,094> Exception in thread "main" LOG  : General      f:0 st:3,191,094> java.util.NoSuchElementException: No line found
+LOG  : General      f:0 st:3,191,094> 	at java.base/java.util.Scanner.nextLine(Unknown Source)
+LOG  : General      f:0 st:3,191,094> 	at zombie.network.ServerWorldDatabase.create(ServerWorldDatabase.java:705)
+LOG  : General      f:0 st:3,191,094> 	at zombie.network.GameServer.main(GameServer.java:761)
+LOG  : General      f:0 st:3,191,095> Shutdown handling started
+LOG  : Network      f:0 st:3,191,095> Server exited
+LOG  : General      f:0 st:3,191,096> Exception in thread "Thread-0" LOG  : General      f:0 st:3,191,097> java.lang.NullPointerException: Cannot invoke "zombie.iso.IsoMetaGrid.save()" because "this.grid" is null
+LOG  : General      f:0 st:3,191,097> 	at zombie.network.ServerMap.SaveAll(ServerMap.java:181)
+LOG  : General      f:0 st:3,191,097> 	at zombie.network.ServerMap.QueuedSaveAll(ServerMap.java:827)
+LOG  : General      f:0 st:3,191,097> 	at zombie.network.ServerMap.QueuedQuit(ServerMap.java:784)
+LOG  : General      f:0 st:3,191,097> 	at zombie.network.GameServer$1.run(GameServer.java:380)

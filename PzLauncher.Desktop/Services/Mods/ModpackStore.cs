@@ -4,6 +4,7 @@ using System.Linq;
 using PzLauncher.Core.Mod.Collections;
 using PzLauncher.Core.Platform;
 using PzLauncher.Desktop.Services.Preferences;
+using PzLauncher.Desktop.Services.Preferences.Records;
 
 namespace PzLauncher.Desktop.Services.Mods;
 

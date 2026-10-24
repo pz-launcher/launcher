@@ -2,6 +2,8 @@ using System.Threading.Tasks;
 using PzLauncher.Core.Common;
 using PzLauncher.Core.Launch;
 using PzLauncher.Desktop.Lang;
+using PzLauncher.Desktop.Services.Shell.Dialogs;
+using PzLauncher.Desktop.Services.Shell.Lifetime;
 using PzLauncher.Desktop.Services.Shell;
 
 namespace PzLauncher.Desktop.Services.Launch;

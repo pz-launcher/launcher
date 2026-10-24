@@ -1,6 +1,6 @@
 using PzLauncher.Core.Mod;
 using PzLauncher.Desktop.Services.Mods;
-using static PzLauncher.Desktop.Tests.TestSupport.TestMods;
+using static PzLauncher.Desktop.Tests.TestSupport.Fakes.TestMods;
 
 namespace PzLauncher.Desktop.Tests.Services.Mods;
 

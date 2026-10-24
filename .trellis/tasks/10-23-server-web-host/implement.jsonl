@@ -1,0 +1,7 @@
+{"file": ".trellis/spec/common/architecture.md", "reason": "PzLauncher.Server dependency direction; update the Future row"}
+{"file": ".trellis/spec/common/coding-rules.md", "reason": "comments, async, AOT rules"}
+{"file": ".trellis/spec/common/test-strategy.md", "reason": "new PzLauncher.Server.Tests project"}
+{"file": ".trellis/spec/core/service-api.md", "reason": "Core -> HTTP mapping contract (7807, SSE, cancellation)"}
+{"file": ".trellis/spec/core/error-handling.md", "reason": "ErrorKind -> HTTP status, error wire names"}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "Core -> HTTP -> SPA data flow"}
+{"file": ".trellis/tasks/10-23-web-server-management/design.md", "reason": "shared design: auth, data dir, jobs, packaging"}

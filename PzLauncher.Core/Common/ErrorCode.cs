@@ -109,6 +109,23 @@ public enum ErrorCode
     [JsonStringEnumMemberName("network.proxy_port_invalid")] NetworkProxyPortInvalid,
     [JsonStringEnumMemberName("network.unreachable")] NetworkUnreachable,
     [JsonStringEnumMemberName("network.timeout")] NetworkTimeout,
+
+    // ── server ────────────────────────────────────────────────
+    [JsonStringEnumMemberName("server.name_invalid")] ServerNameInvalid,
+    [JsonStringEnumMemberName("server.already_exists")] ServerAlreadyExists,
+    [JsonStringEnumMemberName("server.not_found")] ServerNotFound,
+    [JsonStringEnumMemberName("server.not_a_server_install")] ServerNotAServerInstall,
+    [JsonStringEnumMemberName("server.already_running")] ServerAlreadyRunning,
+    [JsonStringEnumMemberName("server.not_running")] ServerNotRunning,
+    [JsonStringEnumMemberName("server.not_ready")] ServerNotReady,
+    [JsonStringEnumMemberName("server.admin_password_required")] ServerAdminPasswordRequired,
+    [JsonStringEnumMemberName("server.start_failed")] ServerStartFailed,
+    [JsonStringEnumMemberName("server.exited_early")] ServerExitedEarly,
+    [JsonStringEnumMemberName("server.exited_unexpectedly")] ServerExitedUnexpectedly,
+    [JsonStringEnumMemberName("server.rcon_failed")] ServerRconFailed,
+    [JsonStringEnumMemberName("server.command_invalid")] ServerCommandInvalid,
+    [JsonStringEnumMemberName("server.stop_timeout")] ServerStopTimeout,
+    [JsonStringEnumMemberName("server.file_access_failed")] ServerFileAccessFailed,
 }
 
 public static class ErrorCodeExtensions

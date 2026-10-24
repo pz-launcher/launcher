@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging.Abstractions;
 using PzLauncher.Core.Common;
 using PzLauncher.Core.Net;
+using PzLauncher.Core.Steam.Workshop.Ids;
 using PzLauncher.Core.Steam;
 using PzLauncher.Core.Steam.Workshop;
 using PzLauncher.Core.Steam.Workshop.Sources;

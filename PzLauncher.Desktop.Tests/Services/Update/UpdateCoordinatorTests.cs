@@ -1,10 +1,11 @@
 using PzLauncher.Core.Common;
+using PzLauncher.Core.Update.Releases;
 using PzLauncher.Core.Update;
 using PzLauncher.Desktop.Services.Launch;
 using PzLauncher.Desktop.Services.Preferences;
 using PzLauncher.Desktop.Services.Update;
 using PzLauncher.Desktop.Tests.TestSupport;
-using static PzLauncher.Desktop.Tests.TestSupport.TestUpdates;
+using static PzLauncher.Desktop.Tests.TestSupport.Fakes.TestUpdates;
 
 namespace PzLauncher.Desktop.Tests.Services.Update;
 

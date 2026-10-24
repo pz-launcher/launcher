@@ -1,4 +1,5 @@
 using System;
+using PzLauncher.Desktop.Services.Shell.Lifetime;
 using PzLauncher.Desktop.Services.Shell;
 
 namespace PzLauncher.Desktop.Views;

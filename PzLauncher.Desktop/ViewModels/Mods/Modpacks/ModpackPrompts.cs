@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using PzLauncher.Desktop.Lang;
 using PzLauncher.Desktop.Services.Mods;
 using PzLauncher.Desktop.Services.Shell;
+using PzLauncher.Desktop.Services.Shell.Dialogs;
 
 namespace PzLauncher.Desktop.ViewModels.Mods.Modpacks;
 
