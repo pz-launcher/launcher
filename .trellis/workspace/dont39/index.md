@@ -8,8 +8,8 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 21
-- **Last Active**: 2026-10-21
+- **Total Sessions**: 23
+- **Last Active**: 2026-10-24
 <!-- @@@/auto:current-status -->
 
 ---
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~523 | Active |
+| `journal-1.md` | ~545 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 23 | 2026-10-24 | Share a Workshop collection with a mod preset (modpacks) | `efab630` | `feat/modpacks` |
 | 21 | 2026-10-21 | Rename the game's mod lists to mod presets | `581717b` | `feat/mod-preset-term` |
 | 20 | 2026-10-20 | Launcher window behavior after game launch | `4bbc2d6` | `feat/after-launch-window-behavior` |
 | 19 | 2026-10-19 | Local Workshop favorites with share/import | `bcbc0af` | `feat/workshop-management` |
