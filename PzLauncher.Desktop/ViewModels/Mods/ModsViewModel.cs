@@ -16,6 +16,7 @@ using PzLauncher.Desktop.Services.Mods;
 using PzLauncher.Desktop.Services.Shell.Dialogs;
 using PzLauncher.Desktop.Services.Shell;
 using PzLauncher.Desktop.ViewModels.Installs;
+using PzLauncher.Desktop.ViewModels.Mods.Modpacks;
 using PzLauncher.Desktop.ViewModels.Mods.Collections;
 using PzLauncher.Desktop.ViewModels.Mods.Installed;
 using PzLauncher.Desktop.ViewModels.Mods.Workshop;
@@ -30,6 +31,7 @@ public partial class ModsViewModel : ViewModelBase
     private readonly IDialogService _dialogs;
     private readonly GameRunState _runState;
     private readonly IModCollectionOrderWriter _orderWriter;
+    private readonly ModpackStore _modpacks;
 
     private readonly LocalizedText _error;
     private bool _activated;
@@ -55,6 +57,8 @@ public partial class ModsViewModel : ViewModelBase
         WorkshopUserCollectionsCache workshopUserCollections,
         WorkshopFavorites workshopFavorites,
         WorkshopTitles workshopTitles,
+        LocalCollections localCollections,
+        ModpackStore modpacks,
         ILocalizationService localization)
     {
         _installs = installs;
@@ -64,12 +68,20 @@ public partial class ModsViewModel : ViewModelBase
         _dialogs = dialogs;
         _runState = runState;
         _orderWriter = orderWriter;
+        _modpacks = modpacks;
         Mods = new InstalledModsViewModel(this);
-        Collections = new ModCollectionsViewModel(this, defaults, applier, dialogs, clipboard);
-        WorkshopSubscriptions = new WorkshopSubscriptionsViewModel(this, workshop, workshopActions, dialogs, clipboard, urls, workshopFavorites, workshopTitles);
+        Collections = new ModCollectionsViewModel(this, defaults, applier, dialogs, clipboard, modpacks);
+        Modpacks = new ModpacksViewModel(
+            this, workshop, workshopActions, dialogs, clipboard, urls, workshopFavorites, workshopTitles, localCollections, modpacks, workshopHistory,
+            workshopUserCollections);
+        WorkshopSubscriptions = new WorkshopSubscriptionsViewModel(
+            this, workshop, workshopActions, dialogs, clipboard, urls, workshopFavorites, workshopTitles, localCollections);
         WorkshopCollections = new WorkshopCollectionsViewModel(
-            this, workshop, workshopActions, dialogs, urls, workshopHistory, workshopUserCollections, workshopFavorites, workshopTitles);
-        WorkshopFavorites = new WorkshopFavoritesViewModel(this, workshop, workshopActions, dialogs, clipboard, urls, workshopFavorites, workshopTitles);
+            this, workshop, workshopActions, dialogs, urls, workshopHistory, workshopUserCollections, workshopFavorites, workshopTitles, localCollections);
+        LocalCollections = new LocalCollectionsViewModel(
+            this, workshop, workshopActions, dialogs, clipboard, urls, workshopFavorites, workshopTitles, localCollections, modpacks);
+        WorkshopFavorites = new WorkshopFavoritesViewModel(
+            this, workshop, workshopActions, dialogs, clipboard, urls, workshopFavorites, workshopTitles, localCollections);
         _error = new LocalizedText(text => ErrorText = text);
 
         // Never unsubscribed: these are app-lifetime singletons.
@@ -83,9 +95,13 @@ public partial class ModsViewModel : ViewModelBase
 
     public ModCollectionsViewModel Collections { get; }
 
+    public ModpacksViewModel Modpacks { get; }
+
     public WorkshopSubscriptionsViewModel WorkshopSubscriptions { get; }
 
     public WorkshopCollectionsViewModel WorkshopCollections { get; }
+
+    public LocalCollectionsViewModel LocalCollections { get; }
 
     public WorkshopFavoritesViewModel WorkshopFavorites { get; }
 
@@ -94,7 +110,7 @@ public partial class ModsViewModel : ViewModelBase
     public partial ModsSection Section { get; set; }
 
     /// <summary>The section shows the game's mod files, whose load state and error are the page's own.</summary>
-    public bool ShowsGameFiles => WorkshopSection is null;
+    public bool ShowsGameFiles => WorkshopSection is null || Section == ModsSection.Modpacks;
 
     /// <summary><c>null</c> when the install in use is none or a dedicated server.</summary>
     public PzInstall? Install => _installs.SelectedInstall is { Kind: PzInstallKind.Game } install ? install : null;
@@ -133,12 +149,14 @@ public partial class ModsViewModel : ViewModelBase
     private WorkshopSectionViewModel? WorkshopSection => Section switch
     {
         ModsSection.Mods or ModsSection.Collections => null,
+        ModsSection.Modpacks => Modpacks,
         ModsSection.WorkshopSubscriptions => WorkshopSubscriptions,
         ModsSection.WorkshopCollections => WorkshopCollections,
+        ModsSection.LocalCollections => LocalCollections,
         ModsSection.WorkshopFavorites => WorkshopFavorites,
     };
 
-    private WorkshopSectionViewModel[] WorkshopSections => [WorkshopSubscriptions, WorkshopCollections, WorkshopFavorites];
+    private WorkshopSectionViewModel[] WorkshopSections => [Modpacks, WorkshopSubscriptions, WorkshopCollections, LocalCollections, WorkshopFavorites];
 
     // The view calls this on every load: the files may have changed in-game since the last visit.
     [RelayCommand]
@@ -177,6 +195,10 @@ public partial class ModsViewModel : ViewModelBase
     internal Task<string?> CreateCollectionAsync(string title, string initialName, IReadOnlyList<string> modIds) =>
         Collections.CreateAsync(title, initialName, modIds);
 
+    /// <summary>Applies the install's mod collection as the enabled mod list and marks it current, as its own section does; a failure is shown.</summary>
+    /// <returns><c>null</c> when it couldn't start.</returns>
+    internal Task<ModCollectionApplyOutcome?> ApplyCollectionAsync(string name) => Collections.ApplyAsync(name);
+
     internal async Task ReloadAsync()
     {
         var version = ++_loadVersion;
@@ -205,6 +227,9 @@ public partial class ModsViewModel : ViewModelBase
             }
 
             _error.Clear();
+
+            // Before the state shows: its listeners read the modpacks.
+            _modpacks.SyncPresets(install.RootPath, result.Value.Collections);
             State = result.Value;
         }
         finally

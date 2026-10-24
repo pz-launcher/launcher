@@ -32,7 +32,7 @@
                     <TextBlock Text="{Binding OutdatedCount, StringFormat='({0})'}" VerticalAlignment="Center" />
                 </StackPanel>
             </Button>
-            <Button Command="{Binding GenerateCommand}" Margin="0,0,6,6"
+            <Button Command="{Binding GenerateCommand}" Margin="0,0,6,6" IsVisible="{Binding $parent[local:WorkshopItemListActions].ShowsGenerate}"
                     ToolTip.Tip="{x:Static lang:UiText.WorkshopCollections_GenerateHint}" ToolTip.ShowOnDisabled="True">
                 <StackPanel Orientation="Horizontal" Spacing="6">
                     <ic:FluentIcon Icon="Collections" IconVariant="Regular" FontSize="16" VerticalAlignment="Center" />

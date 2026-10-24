@@ -10,6 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using PzLauncher.Core.Launch;
+using PzLauncher.Core.Mod.Collections;
 using PzLauncher.Core.Mod.ZombieBuddy;
 using PzLauncher.Core.Net;
 using PzLauncher.Core.Steam.Workshop.Actions;
@@ -17,6 +18,7 @@ using PzLauncher.Core.Update.Releases;
 using PzLauncher.Core.Update;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Services.Launch;
+using PzLauncher.Desktop.Services.Mods;
 using PzLauncher.Desktop.Services.Preferences.Records;
 using PzLauncher.Desktop.Services.Preferences.Secrets;
 using PzLauncher.Desktop.Services.Shell.Lifetime;
@@ -27,7 +29,7 @@ namespace PzLauncher.Desktop.Services.Preferences;
 
 public sealed partial class JsonPreferenceStore(string filePath, ILogger logger, ISecretProtector secrets) : IPreferenceStore
 {
-    private static readonly PreferencesFile Empty = new(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+    private static readonly PreferencesFile Empty = new(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
 
     private delegate bool EntryReader<T>(JsonElement element, [MaybeNullWhen(false)] out T value);
 
@@ -126,6 +128,18 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger,
             LogInvalidWorkshopFavorites(logger, filePath);
         }
 
+        var localCollections = ToLocalCollections(file.LocalCollections, out var localCollectionsValid);
+        if (!localCollectionsValid)
+        {
+            LogInvalidLocalCollections(logger, filePath);
+        }
+
+        var modpacks = ToModpacks(file.Modpacks, out var modpacksValid);
+        if (!modpacksValid)
+        {
+            LogInvalidModpacks(logger, filePath);
+        }
+
         return new UserPreferences(language, theme, window)
         {
             UpdateSource = updateSource,
@@ -140,6 +154,8 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger,
             WorkshopUserCollections = userCollections,
             WorkshopFavorites = favorites,
             AfterLaunch = afterLaunch,
+            LocalCollections = localCollections,
+            Modpacks = modpacks,
         };
     }
 
@@ -222,6 +238,52 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger,
         var element = JsonSerializer.SerializeToElement(
             new WorkshopFavoritesFile(ToElement(favorites.Collections), ToElement(favorites.Items)), DesktopJsonContext.Default.WorkshopFavoritesFile);
         return SaveAsync(file => file with { WorkshopFavorites = element }, ct);
+    }
+
+    public Task SaveLocalCollectionsAsync(IReadOnlyList<SavedLocalCollection> collections, CancellationToken ct = default)
+    {
+        LocalCollectionFile[] files =
+        [
+            .. collections.Select(collection =>
+                new LocalCollectionFile(collection.Id.ToString("D", CultureInfo.InvariantCulture), collection.Name, ToElement(collection.Items))),
+        ];
+        var element = JsonSerializer.SerializeToElement(files, DesktopJsonContext.Default.LocalCollectionFileArray);
+        return SaveAsync(file => file with { LocalCollections = element }, ct);
+    }
+
+    public Task SaveModpacksAsync(string installRoot, IReadOnlyList<Modpack> modpacks, CancellationToken ct = default)
+    {
+        JsonElement? entry = modpacks.Count == 0
+            ? null
+            : JsonSerializer.SerializeToElement(modpacks.Select(ToFile).ToArray(), DesktopJsonContext.Default.ModpackFileArray);
+        return SaveAsync(file => file with { Modpacks = WithPerInstall(file.Modpacks, installRoot, entry) }, ct);
+    }
+
+    private static ModpackFile ToFile(Modpack modpack)
+    {
+        var preset = modpack.Preset;
+        ModpackCollectionFile collection;
+        switch (modpack.Collection)
+        {
+            case ModpackCollection.Local local:
+                collection = new ModpackCollectionFile(
+                    null,
+                    new ModpackLocalCollectionFile(
+                        local.Linked?.ToString("D", CultureInfo.InvariantCulture),
+                        new ModpackLocalCollectionCopyFile(local.Name, ToElement([.. local.Items.Select(item => new SavedWorkshopEntry(item.Id, item.Title))]))));
+                break;
+            case ModpackCollection.Steam steam:
+                collection = new ModpackCollectionFile(steam.Id.ToString(CultureInfo.InvariantCulture), null);
+                break;
+            default:
+                throw new ArgumentException($"Unknown modpack collection {modpack.Collection}.", nameof(modpack));
+        }
+
+        return new ModpackFile(
+            modpack.Name,
+            new ModpackPresetFile(preset.IsLinked ? preset.Name : null, new ModpackPresetCopyFile(preset.Name, [.. preset.ModIds.Select(TextElement)])),
+            collection,
+            [.. modpack.ExtraItems.Select(id => TextElement(id.ToString(CultureInfo.InvariantCulture)))]);
     }
 
     private static JsonElement ToElement(IReadOnlyList<SavedWorkshopEntry> entries)
@@ -316,7 +378,9 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger,
         where T : struct =>
         element is { ValueKind: JsonValueKind.String } name ? fromPreferenceName(name.GetString()) : null;
 
-    private static JsonElement NameElement(string preferenceName) => JsonSerializer.SerializeToElement(preferenceName, DesktopJsonContext.Default.String);
+    private static JsonElement NameElement(string preferenceName) => TextElement(preferenceName);
+
+    private static JsonElement TextElement(string text) => JsonSerializer.SerializeToElement(text, DesktopJsonContext.Default.String);
 
     private static List<string> ToManualJavaHomes(IReadOnlyList<JsonElement>? entries) =>
     [
@@ -367,6 +431,137 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger,
         var items = ToWorkshopEntries(file.Items, out var itemsValid);
         valid = collectionsValid && itemsValid;
         return new SavedWorkshopFavorites(collections, items);
+    }
+
+    // An entry with a bad id, name or item list, or one repeating an id or name read before, is dropped; a bad item is dropped from its entry.
+    private static List<SavedLocalCollection> ToLocalCollections(JsonElement? element, out bool valid)
+    {
+        if (element is not { ValueKind: JsonValueKind.Array } array)
+        {
+            valid = element is null or { ValueKind: JsonValueKind.Null };
+            return [];
+        }
+
+        valid = true;
+        var result = new List<SavedLocalCollection>();
+        var ids = new HashSet<Guid>();
+        var names = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var entry in array.EnumerateArray())
+        {
+            if (entry.ValueKind == JsonValueKind.Object
+                && TryDeserialize(entry, DesktopJsonContext.Default.LocalCollectionFile) is { Name: { } name, Items: { ValueKind: JsonValueKind.Array } items } read
+                && Guid.TryParseExact(read.Id, "D", out var id)
+                && id != Guid.Empty
+                && LocalCollectionName.IsValid(name)
+                && ids.Add(id)
+                && names.Add(name))
+            {
+                result.Add(new SavedLocalCollection(id, name, ToWorkshopEntries(items, out var itemsValid)));
+                valid &= itemsValid;
+            }
+            else
+            {
+                valid = false;
+            }
+        }
+
+        return result;
+    }
+
+    // Per install: a bad root or a non-array is dropped. In a list, a modpack with a bad name, preset or collection, or repeating a name read
+    // before, is dropped; a bad or repeated id is dropped from its modpack.
+    private static Dictionary<string, IReadOnlyList<Modpack>> ToModpacks(IReadOnlyDictionary<string, JsonElement>? entries, out bool valid)
+    {
+        var entriesValid = true;
+        var result = ReadPerInstall(entries, (JsonElement element, [MaybeNullWhen(false)] out IReadOnlyList<Modpack> modpacks) =>
+        {
+            modpacks = element.ValueKind == JsonValueKind.Array ? ToModpackList(element, ref entriesValid) : null;
+            return modpacks is not null;
+        });
+        valid = entriesValid && result.Count == (entries?.Count ?? 0);
+        return result;
+    }
+
+    private static List<Modpack> ToModpackList(JsonElement array, ref bool valid)
+    {
+        var modpacks = new List<Modpack>();
+        var names = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var entry in array.EnumerateArray())
+        {
+            if (ToModpack(entry, ref valid) is { } modpack && names.Add(modpack.Name))
+            {
+                modpacks.Add(modpack);
+            }
+            else
+            {
+                valid = false;
+            }
+        }
+
+        return modpacks;
+    }
+
+    private static Modpack? ToModpack(JsonElement element, ref bool valid)
+    {
+        if (element.ValueKind != JsonValueKind.Object
+            || TryDeserialize(element, DesktopJsonContext.Default.ModpackFile) is not
+            { Name: { } name, Preset: { Copy: { Name: { } copyName, ModIds: { } modIdEntries } } preset, Collection: { } collectionFile } file
+            || !ModpackName.IsValid(name)
+            || ToModpackCollection(collectionFile, ref valid) is not { } collection)
+        {
+            return null;
+        }
+
+        // A linked copy carries its preset's name.
+        var presetName = preset.Linked ?? copyName;
+        if (!ModCollectionName.IsValid(presetName))
+        {
+            return null;
+        }
+
+        List<string> modIds =
+        [
+            .. modIdEntries
+                .Where(entry => entry.ValueKind == JsonValueKind.String)
+                .Select(entry => entry.GetString() ?? "")
+                .Where(id => id.Length > 0),
+        ];
+        valid &= modIds.Count == modIdEntries.Count;
+        var extraItems = ReadById<ulong>(file.ExtraItems ?? [], TryReadIdText, id => id, ref valid);
+        return new Modpack(name, new ModpackPreset(presetName, modIds, preset.Linked is not null), collection, extraItems);
+    }
+
+    private static ModpackCollection? ToModpackCollection(ModpackCollectionFile file, ref bool valid)
+    {
+        switch (file)
+        {
+            case { Steam: { } steam, Local: null }:
+                return TryReadWorkshopId(steam, out var id) ? new ModpackCollection.Steam(id) : null;
+            case { Steam: null, Local: { Copy: { Name: { } name, Items: { ValueKind: JsonValueKind.Array } items } } local }
+                when LocalCollectionName.IsValid(name):
+                Guid? linked = null;
+                if (local.Linked is { } linkedText)
+                {
+                    if (!Guid.TryParseExact(linkedText, "D", out var guid) || guid == Guid.Empty)
+                    {
+                        return null;
+                    }
+
+                    linked = guid;
+                }
+
+                var entries = ToWorkshopEntries(items, out var itemsValid);
+                valid &= itemsValid;
+                return new ModpackCollection.Local(linked, name, [.. entries.Select(entry => new WorkshopEntry(entry.Id, entry.Title))]);
+            default:
+                return null;
+        }
+    }
+
+    private static bool TryReadIdText(JsonElement element, out ulong id)
+    {
+        id = 0;
+        return element.ValueKind == JsonValueKind.String && TryReadWorkshopId(element.GetString(), out id);
     }
 
     // A missing account, time or list makes the whole entry invalid; a bad or repeated list entry is dropped.
@@ -621,6 +816,12 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger,
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Workshop favorites preference {Path} holds entries that aren't valid; ignoring them")]
     private static partial void LogInvalidWorkshopFavorites(ILogger logger, string path);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Local collection preference {Path} holds entries that aren't valid; ignoring them")]
+    private static partial void LogInvalidLocalCollections(ILogger logger, string path);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Modpack preference {Path} holds entries that aren't valid; ignoring them")]
+    private static partial void LogInvalidModpacks(ILogger logger, string path);
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Proxy preference {Path} is not valid; using the system proxy")]
     private static partial void LogInvalidProxy(ILogger logger, string path);

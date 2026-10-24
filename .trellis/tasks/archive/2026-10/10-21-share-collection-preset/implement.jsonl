@@ -1,0 +1,10 @@
+{"file": ".trellis/spec/common/coding-rules.md", "reason": "comments, async, nullability"}
+{"file": ".trellis/spec/common/architecture.md", "reason": "Core vs Desktop boundary for share text and services"}
+{"file": ".trellis/spec/core/directory-structure.md", "reason": "new Mod/Modpacks folder"}
+{"file": ".trellis/spec/core/error-handling.md", "reason": "share text parse of untrusted input"}
+{"file": ".trellis/spec/desktop/directory-structure.md", "reason": "new sections, VMs, services, views layout"}
+{"file": ".trellis/spec/desktop/preferences.md", "reason": "new localCollections and modpacks fields"}
+{"file": ".trellis/spec/desktop/shell-and-theming.md", "reason": "page sidebars, list rows, shared styles"}
+{"file": ".trellis/spec/desktop/localization.md", "reason": "new strings in every resx, game terminology"}
+{"file": ".trellis/spec/guides/code-reuse-thinking-guide.md", "reason": "reuse item list section, reorder code, entry lists"}
+{"file": ".trellis/spec/common/test-strategy.md", "reason": "test placement and fakes"}

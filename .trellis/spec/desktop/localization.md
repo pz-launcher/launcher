@@ -20,7 +20,8 @@ Reference: `PzLauncher.Desktop/Lang/` → `UiText.resx` (English) and one `UiTex
 
 - A game concept takes the game's own term for that language, from `media/lua/shared/Translate/<LANG>/UI.json`. A language whose game translation is missing or empty uses its nearest regional sibling (`es-AR`, `es-CL` follow `ES_MX`).
 - The game's mod lists (`ModCollection`) are the game's "mods preset" (`UI_mods_SavePrompt`): en "mod preset", zh-Hans 模组预设, zh-Hant 模組預設. Always write the full term, never a bare "preset"/预设/預設. Grammatical forms (plural, case, article and gender agreement) follow the term.
-- "Collection" (zh-Hans 合集, zh-Hant 合輯) means only Steam Workshop collections.
+- "Collection" (zh-Hans 合集, zh-Hant 合輯) means only Steam Workshop collections; the launcher's own lists of Workshop items are always "local collection" (本地合集, 本機合輯), never a bare "collection".
+- "Modpack" (zh-Hans/zh-Hant 整合包) is the launcher's pairing of a mod preset with a collection; the game has no term for it.
 
 ## Using text
 

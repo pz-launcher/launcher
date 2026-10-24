@@ -772,11 +772,17 @@
   <data name="Mods_SectionCollections" xml:space="preserve">
     <value>Conjuntos de mods</value>
   </data>
+  <data name="Mods_SectionModpacks" xml:space="preserve">
+    <value>Modpacks</value>
+  </data>
   <data name="Mods_SectionWorkshopSubscriptions" xml:space="preserve">
     <value>Suscripciones de Workshop</value>
   </data>
   <data name="Mods_SectionWorkshopCollections" xml:space="preserve">
     <value>Colecciones de Workshop</value>
+  </data>
+  <data name="Mods_SectionLocalCollections" xml:space="preserve">
+    <value>Colecciones locales</value>
   </data>
   <data name="Mods_SectionWorkshopFavorites" xml:space="preserve">
     <value>Favoritos locales</value>
@@ -987,6 +993,9 @@
   </data>
   <data name="ModCollections_ImportNameInvalid" xml:space="preserve">
     <value>"{0}" no se puede usar como nombre de conjunto de mods.</value>
+  </data>
+  <data name="ModCollections_ImportModpack" xml:space="preserve">
+    <value>Esto es un modpack. Impórtalo en Modpacks para obtener también su colección.</value>
   </data>
   <data name="Workshop_SearchPlaceholder" xml:space="preserve">
     <value>Buscar por título, ID del elemento o ID del mod</value>
@@ -1263,6 +1272,246 @@
   </data>
   <data name="WorkshopFavorites_Imported" xml:space="preserve">
     <value>Se han añadido {0} colecciones y {1} elementos; se han omitido {2} líneas.</value>
+  </data>
+  <data name="LocalCollections_Empty" xml:space="preserve">
+    <value>Todavía no hay colecciones locales. Crea una o guarda como colección local una colección de Workshop abierta.</value>
+  </data>
+  <data name="LocalCollections_NoSelection" xml:space="preserve">
+    <value>Selecciona una colección local.</value>
+  </data>
+  <data name="LocalCollections_ItemsEmpty" xml:space="preserve">
+    <value>Esta colección local no tiene elementos. Pega enlaces de Workshop o añade elementos desde Suscripciones de Workshop, una colección o Favoritos locales.</value>
+  </data>
+  <data name="LocalCollections_NewTitle" xml:space="preserve">
+    <value>Nueva colección local</value>
+  </data>
+  <data name="LocalCollections_RenameTitle" xml:space="preserve">
+    <value>Renombrar colección local</value>
+  </data>
+  <data name="LocalCollections_NameMessage" xml:space="preserve">
+    <value>Nombre de la colección local:</value>
+  </data>
+  <data name="LocalCollections_NameInvalid" xml:space="preserve">
+    <value>Escribe un nombre en una sola línea.</value>
+  </data>
+  <data name="LocalCollections_NameTaken" xml:space="preserve">
+    <value>Ya existe una colección local con este nombre.</value>
+  </data>
+  <data name="LocalCollections_DeleteTitle" xml:space="preserve">
+    <value>¿Eliminar la colección local?</value>
+  </data>
+  <data name="LocalCollections_DeleteMessage" xml:space="preserve">
+    <value>¿Eliminar la colección local "{0}"? Tus suscripciones de Workshop no cambian.</value>
+  </data>
+  <data name="LocalCollections_AddItems" xml:space="preserve">
+    <value>Pegar elementos</value>
+  </data>
+  <data name="LocalCollections_AddItemsTitle" xml:space="preserve">
+    <value>Añadir elementos a la colección local</value>
+  </data>
+  <data name="LocalCollections_AddItemsMessage" xml:space="preserve">
+    <value>Pega enlaces de Workshop o ID de elementos, uno por línea. Se omiten los elementos que ya están en la lista y las colecciones de Workshop.</value>
+  </data>
+  <data name="LocalCollections_AddItemsNothing" xml:space="preserve">
+    <value>No se ha encontrado ningún enlace ni ID de Workshop.</value>
+  </data>
+  <data name="LocalCollections_ItemsAdded" xml:space="preserve">
+    <value>Se han añadido {0} elementos; se han omitido {1} que ya estaban, {2} colecciones y {3} líneas más.</value>
+  </data>
+  <data name="LocalCollections_RemoveItem" xml:space="preserve">
+    <value>Quitar de la colección local</value>
+  </data>
+  <data name="LocalCollections_AddTo" xml:space="preserve">
+    <value>Añadir a colección local…</value>
+  </data>
+  <data name="LocalCollections_PickTitle" xml:space="preserve">
+    <value>Añadir a colección local</value>
+  </data>
+  <data name="LocalCollections_PickMessage" xml:space="preserve">
+    <value>Añadir los elementos a:</value>
+  </data>
+  <data name="LocalCollections_PickNew" xml:space="preserve">
+    <value>Una nueva colección local</value>
+  </data>
+  <data name="LocalCollections_PickAccept" xml:space="preserve">
+    <value>Añadir</value>
+  </data>
+  <data name="LocalCollections_AddedTo" xml:space="preserve">
+    <value>Se han añadido {0} elementos a "{1}"; {2} ya estaban.</value>
+  </data>
+  <data name="LocalCollections_SaveAs" xml:space="preserve">
+    <value>Guardar como colección local</value>
+  </data>
+  <data name="LocalCollections_SaveAsTitle" xml:space="preserve">
+    <value>Guardar como colección local</value>
+  </data>
+  <data name="LocalCollections_SavedAs" xml:space="preserve">
+    <value>Se han guardado {0} elementos como la colección local "{1}".</value>
+  </data>
+  <data name="LocalCollections_OverwriteTitle" xml:space="preserve">
+    <value>¿Sobrescribir la colección local?</value>
+  </data>
+  <data name="LocalCollections_OverwriteMessage" xml:space="preserve">
+    <value>Ya existe una colección local llamada "{0}". ¿Sobrescribirla?</value>
+  </data>
+  <data name="Modpacks_Empty" xml:space="preserve">
+    <value>Aún no hay modpacks. Un modpack une un conjunto de mods con una colección de Workshop, para usarlos y compartirlos juntos.</value>
+  </data>
+  <data name="Modpacks_NoSelection" xml:space="preserve">
+    <value>Selecciona un modpack.</value>
+  </data>
+  <data name="Modpacks_ItemsEmpty" xml:space="preserve">
+    <value>Este modpack no incluye elementos de Workshop.</value>
+  </data>
+  <data name="Modpacks_NewTitle" xml:space="preserve">
+    <value>Nuevo modpack</value>
+  </data>
+  <data name="Modpacks_EditTitle" xml:space="preserve">
+    <value>Editar modpack</value>
+  </data>
+  <data name="Modpacks_Edit" xml:space="preserve">
+    <value>Editar</value>
+  </data>
+  <data name="Modpacks_RenameTitle" xml:space="preserve">
+    <value>Renombrar modpack</value>
+  </data>
+  <data name="Modpacks_NameMessage" xml:space="preserve">
+    <value>Nombre del modpack:</value>
+  </data>
+  <data name="Modpacks_NameInvalid" xml:space="preserve">
+    <value>Escribe un nombre en una sola línea.</value>
+  </data>
+  <data name="Modpacks_NameTaken" xml:space="preserve">
+    <value>Esta instalación ya tiene un modpack con este nombre.</value>
+  </data>
+  <data name="Modpacks_DeleteTitle" xml:space="preserve">
+    <value>¿Eliminar el modpack?</value>
+  </data>
+  <data name="Modpacks_DeleteMessage" xml:space="preserve">
+    <value>¿Eliminar el modpack "{0}"? Su conjunto de mods, su colección y tus suscripciones de Workshop no cambian.</value>
+  </data>
+  <data name="Modpacks_Preset" xml:space="preserve">
+    <value>Conjunto de mods</value>
+  </data>
+  <data name="Modpacks_Collection" xml:space="preserve">
+    <value>Colección</value>
+  </data>
+  <data name="Modpacks_SteamCollection" xml:space="preserve">
+    <value>Colección de Workshop</value>
+  </data>
+  <data name="Modpacks_LocalCollection" xml:space="preserve">
+    <value>Colección local</value>
+  </data>
+  <data name="Modpacks_Independent" xml:space="preserve">
+    <value>Independiente</value>
+  </data>
+  <data name="Modpacks_IndependentHint" xml:space="preserve">
+    <value>Su origen se eliminó o se renombró, así que el modpack conserva su propia copia. Edita el modpack para vincularlo de nuevo.</value>
+  </data>
+  <data name="Modpacks_OwnCopy" xml:space="preserve">
+    <value>copia propia del modpack</value>
+  </data>
+  <data name="Modpacks_ExtraCountFormat" xml:space="preserve">
+    <value>{0} solo del conjunto de mods</value>
+  </data>
+  <data name="Modpacks_ExtraHint" xml:space="preserve">
+    <value>Elementos de Workshop de los mods del conjunto que la colección no incluye. Se muestran después de los de la colección.</value>
+  </data>
+  <data name="Modpacks_UsePreset" xml:space="preserve">
+    <value>Usar conjunto de mods</value>
+  </data>
+  <data name="Modpacks_UsePresetHint" xml:space="preserve">
+    <value>Convierte el conjunto de mods del modpack en el actual y activa sus mods. Un conjunto independiente se vuelve a añadir antes a los conjuntos del juego.</value>
+  </data>
+  <data name="Modpacks_NewName" xml:space="preserve">
+    <value>Nuevo nombre</value>
+  </data>
+  <data name="Modpacks_RestoreTitle" xml:space="preserve">
+    <value>Nombre del conjunto de mods restaurado</value>
+  </data>
+  <data name="Modpacks_PresetUsedMessage" xml:space="preserve">
+    <value>Estos modpacks usan el conjunto de mods "{0}". ¿Eliminarlo y que conserven su propia copia, o eliminar también los modpacks?</value>
+  </data>
+  <data name="Modpacks_LocalCollectionUsedMessage" xml:space="preserve">
+    <value>Estos modpacks usan la colección local "{0}". ¿Eliminarla y que conserven su propia copia, o eliminar también los modpacks?</value>
+  </data>
+  <data name="Modpacks_DeleteKeep" xml:space="preserve">
+    <value>Eliminar y conservar modpacks</value>
+  </data>
+  <data name="Modpacks_DeleteWithModpacks" xml:space="preserve">
+    <value>Eliminar con los modpacks</value>
+  </data>
+  <data name="Modpacks_UserInInstall" xml:space="preserve">
+    <value>{0} ({1})</value>
+  </data>
+  <data name="Modpacks_EditNoPresets" xml:space="preserve">
+    <value>Esta instalación aún no tiene conjuntos de mods. Crea uno primero en Conjuntos de mods.</value>
+  </data>
+  <data name="Modpacks_EditNoLocalCollections" xml:space="preserve">
+    <value>Todavía no hay colecciones locales.</value>
+  </data>
+  <data name="Modpacks_Save" xml:space="preserve">
+    <value>Guardar</value>
+  </data>
+  <data name="Modpacks_ImportHint" xml:space="preserve">
+    <value>Pega un modpack que alguien ha compartido: suscríbete a sus elementos de Workshop y añade su conjunto de mods.</value>
+  </data>
+  <data name="Modpacks_ShareHint" xml:space="preserve">
+    <value>Copia el modpack como texto para compartirlo. Su última línea sola también importa el conjunto de mods en el juego.</value>
+  </data>
+  <data name="Modpacks_Shared" xml:space="preserve">
+    <value>Se ha copiado al portapapeles el texto para compartir del modpack "{0}".</value>
+  </data>
+  <data name="Modpacks_SharedPartly" xml:space="preserve">
+    <value>Se ha copiado al portapapeles el texto para compartir del modpack "{0}". Mods de su conjunto que no puede incluir: {1} no son de Workshop, {2} no están instalados.</value>
+  </data>
+  <data name="Modpacks_ImportTitle" xml:space="preserve">
+    <value>Importar modpack</value>
+  </data>
+  <data name="Modpacks_ImportMessage" xml:space="preserve">
+    <value>Pega el texto para compartir de un modpack de PzLauncher.</value>
+  </data>
+  <data name="Modpacks_ImportContinue" xml:space="preserve">
+    <value>Continuar</value>
+  </data>
+  <data name="Modpacks_ImportNothing" xml:space="preserve">
+    <value>No se ha encontrado ningún modpack. Su texto empieza con #pzlauncher-modpack.</value>
+  </data>
+  <data name="Modpacks_ImportNewer" xml:space="preserve">
+    <value>Este modpack se ha compartido desde una versión más reciente de PzLauncher. Actualiza el lanzador para importarlo.</value>
+  </data>
+  <data name="Modpacks_ImportIncomplete" xml:space="preserve">
+    <value>El texto del modpack está incompleto o dañado. Vuelve a copiarlo de quien lo envió.</value>
+  </data>
+  <data name="Modpacks_ImportConfirmMessage" xml:space="preserve">
+    <value>¿Importar el modpack "{0}" y suscribirse a sus elementos de Workshop que faltan?</value>
+  </data>
+  <data name="Modpacks_ImportSteamCollection" xml:space="preserve">
+    <value>Colección de Workshop {0}</value>
+  </data>
+  <data name="Modpacks_ImportLocalCollection" xml:space="preserve">
+    <value>Colección local "{0}" ({1} elementos)</value>
+  </data>
+  <data name="Modpacks_ImportExtraItems" xml:space="preserve">
+    <value>{0} elementos más para el conjunto de mods</value>
+  </data>
+  <data name="Modpacks_ImportPreset" xml:space="preserve">
+    <value>Conjunto de mods "{0}" ({1} mods)</value>
+  </data>
+  <data name="Modpacks_ImportSkipped" xml:space="preserve">
+    <value>Se han omitido {0} líneas ilegibles</value>
+  </data>
+  <data name="Modpacks_SubscribeAndImport" xml:space="preserve">
+    <value>Suscribirse e importar</value>
+  </data>
+  <data name="Modpacks_Imported" xml:space="preserve">
+    <value>Se ha importado el modpack "{0}".</value>
+  </data>
+  <data name="Modpacks_OverwriteTitle" xml:space="preserve">
+    <value>¿Sobrescribir el modpack?</value>
+  </data>
+  <data name="Modpacks_OverwriteMessage" xml:space="preserve">
+    <value>Esta instalación ya tiene un modpack llamado "{0}". ¿Sobrescribirlo?</value>
   </data>
   <data name="WorkshopLaunch_Title" xml:space="preserve">
     <value>Hay actualizaciones de Workshop</value>

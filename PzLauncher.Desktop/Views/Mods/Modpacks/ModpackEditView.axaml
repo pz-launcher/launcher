@@ -1,0 +1,90 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:PzLauncher.Desktop.ViewModels.Mods.Modpacks"
+             xmlns:design="using:PzLauncher.Desktop.ViewModels.Design"
+             xmlns:lang="using:PzLauncher.Desktop.Lang"
+             mc:Ignorable="d" d:DesignWidth="520"
+             x:Class="PzLauncher.Desktop.Views.Mods.Modpacks.ModpackEditView"
+             x:DataType="vm:ModpackEditViewModel">
+
+    <Design.DataContext>
+        <x:Static Member="design:DesignData.ModpackEdit" />
+    </Design.DataContext>
+
+    <UserControl.Resources>
+        <DataTemplate x:Key="OptionTemplate" x:DataType="vm:ModpackEditOption">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <TextBlock Text="{Binding Text}" TextTrimming="CharacterEllipsis" MaxWidth="300" />
+                <TextBlock Text="{Binding Detail}" Foreground="{DynamicResource Shell.TextMuted}" />
+            </StackPanel>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <StackPanel Margin="16" Spacing="12">
+        <StackPanel Spacing="4">
+            <TextBlock Text="{x:Static lang:UiText.Modpacks_NameMessage}" />
+            <TextBox Text="{Binding Name}" />
+            <TextBlock Text="{Binding NameError}" Classes="error" TextWrapping="Wrap"
+                       IsVisible="{Binding NameError, Converter={x:Static ObjectConverters.IsNotNull}}" />
+        </StackPanel>
+
+        <!-- Radios in groups: the view model keeps one checked per group. -->
+        <StackPanel Spacing="4">
+            <TextBlock Text="{x:Static lang:UiText.Modpacks_Preset}" Classes="sectionTitle" />
+            <TextBlock Text="{x:Static lang:UiText.Modpacks_EditNoPresets}" Classes="hint" TextWrapping="Wrap" IsVisible="{Binding !HasPresets}" />
+            <ScrollViewer MaxHeight="150" IsVisible="{Binding HasPresets}">
+                <ItemsControl ItemsSource="{Binding Presets}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:ModpackEditOption">
+                            <RadioButton GroupName="ModpackPreset" IsChecked="{Binding IsChecked}" AutomationProperties.Name="{Binding Text}"
+                                         Content="{Binding}" ContentTemplate="{StaticResource OptionTemplate}" />
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </StackPanel>
+
+        <StackPanel Spacing="4">
+            <TextBlock Text="{x:Static lang:UiText.Modpacks_Collection}" Classes="sectionTitle" />
+
+            <RadioButton GroupName="ModpackCollectionKind" IsChecked="{Binding IsSteamChecked}" Content="{x:Static lang:UiText.Modpacks_SteamCollection}" />
+            <StackPanel Spacing="4" Margin="28,0,0,0" IsVisible="{Binding IsSteamChecked}">
+                <ScrollViewer MaxHeight="150" IsVisible="{Binding HasSteamCollections}">
+                    <ItemsControl ItemsSource="{Binding SteamCollections}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:ModpackEditOption">
+                                <RadioButton GroupName="ModpackSteamCollection" IsChecked="{Binding IsChecked}" AutomationProperties.Name="{Binding Text}"
+                                             Content="{Binding}" ContentTemplate="{StaticResource OptionTemplate}" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+                <TextBox Text="{Binding SteamLinkText}" PlaceholderText="{x:Static lang:UiText.WorkshopCollections_LinkPlaceholder}" />
+                <TextBlock Text="{Binding SteamLinkError}" Classes="error" TextWrapping="Wrap"
+                           IsVisible="{Binding SteamLinkError, Converter={x:Static ObjectConverters.IsNotNull}}" />
+            </StackPanel>
+
+            <RadioButton GroupName="ModpackCollectionKind" IsChecked="{Binding IsLocalChecked}" Content="{x:Static lang:UiText.Modpacks_LocalCollection}" />
+            <StackPanel Spacing="4" Margin="28,0,0,0" IsVisible="{Binding IsLocalChecked}">
+                <TextBlock Text="{x:Static lang:UiText.Modpacks_EditNoLocalCollections}" Classes="hint" TextWrapping="Wrap" IsVisible="{Binding !HasLocalCollections}" />
+                <ScrollViewer MaxHeight="150" IsVisible="{Binding HasLocalCollections}">
+                    <ItemsControl ItemsSource="{Binding LocalCollections}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:ModpackEditOption">
+                                <RadioButton GroupName="ModpackLocalCollection" IsChecked="{Binding IsChecked}" AutomationProperties.Name="{Binding Text}"
+                                             Content="{Binding}" ContentTemplate="{StaticResource OptionTemplate}" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </StackPanel>
+        </StackPanel>
+
+        <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+            <Button Classes="accent" Content="{x:Static lang:UiText.Modpacks_Save}" Command="{Binding AcceptCommand}" IsDefault="True" />
+            <Button Content="{x:Static lang:UiText.Dialog_Cancel}" Command="{Binding CancelCommand}" IsCancel="True" />
+        </StackPanel>
+    </StackPanel>
+</UserControl>

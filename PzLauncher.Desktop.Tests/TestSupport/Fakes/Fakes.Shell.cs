@@ -4,6 +4,7 @@ using PzLauncher.Desktop.Services.Shell;
 using PzLauncher.Desktop.Themes;
 using PzLauncher.Desktop.ViewModels.Mods.Workshop.Actions;
 using PzLauncher.Desktop.ViewModels.Mods;
+using PzLauncher.Desktop.ViewModels.Mods.Modpacks;
 using PzLauncher.Desktop.ViewModels.Mods.Workshop;
 using PzLauncher.Desktop.ViewModels.ZombieBuddy;
 
@@ -12,7 +13,8 @@ namespace PzLauncher.Desktop.Tests.TestSupport.Fakes;
 /// <summary>
 /// The Workshop action dialog runs its action, as the real dialog does on open, unless <see cref="WorkshopActionHandler"/> says otherwise.
 /// The setup dialog returns <see cref="SetupResult"/>'s answer without running the operation unless the handler starts it.
-/// The mod pick dialog answers with <see cref="ModPickResult"/>, which may change the choices first.
+/// The mod pick dialog answers with <see cref="ModPickResult"/>, which may change the choices first; the local collection pick dialog likewise
+/// with <see cref="LocalCollectionPickResult"/> and the modpack dialog with <see cref="ModpackEditResult"/>.
 /// Prompts, confirms and single choices take their answers from the queues in order; an empty queue cancels.
 /// </summary>
 public sealed class FakeDialogService : IDialogService
@@ -48,6 +50,16 @@ public sealed class FakeDialogService : IDialogService
     public List<WorkshopModPickViewModel> ModPicks { get; } = [];
 
     public Func<WorkshopModPickViewModel, bool> ModPickResult { get; set; } = _ => true;
+
+    public List<LocalCollectionPickViewModel> LocalCollectionPicks { get; } = [];
+
+    /// <summary>Cancels by default; <see cref="PicksLocalCollection"/> and <see cref="PicksNewLocalCollection"/> accept.</summary>
+    public Func<LocalCollectionPickViewModel, bool> LocalCollectionPickResult { get; set; } = _ => false;
+
+    public List<ModpackEditViewModel> ModpackEdits { get; } = [];
+
+    /// <summary>Cancels by default; <see cref="EditsModpack"/> accepts.</summary>
+    public Func<ModpackEditViewModel, bool> ModpackEditResult { get; set; } = _ => false;
 
     /// <summary>Each a <see cref="ChoicePrompt{T}"/>.</summary>
     public List<object> SingleChoices { get; } = [];
@@ -113,12 +125,62 @@ public sealed class FakeDialogService : IDialogService
         return Task.FromResult(ModPickResult(pick));
     }
 
+    public Task<bool> PickLocalCollectionAsync(LocalCollectionPickViewModel pick)
+    {
+        LocalCollectionPicks.Add(pick);
+        Shown?.Invoke();
+        return Task.FromResult(LocalCollectionPickResult(pick));
+    }
+
+    public Task<bool> EditModpackAsync(ModpackEditViewModel edit)
+    {
+        ModpackEdits.Add(edit);
+        Shown?.Invoke();
+        return Task.FromResult(ModpackEditResult(edit));
+    }
+
+    /// <summary>Fills the dialog as the user would, then accepts; false when accept is disabled.</summary>
+    public static Func<ModpackEditViewModel, bool> EditsModpack(Action<ModpackEditViewModel> fill) => edit =>
+    {
+        fill(edit);
+        var accepted = false;
+        edit.CloseRequested += (_, result) => accepted = result;
+        if (edit.AcceptCommand.CanExecute(null))
+        {
+            edit.AcceptCommand.Execute(null);
+        }
+
+        return accepted;
+    };
+
+    /// <summary>Checks the existing collection of this name and accepts, as the user would.</summary>
+    public static Func<LocalCollectionPickViewModel, bool> PicksLocalCollection(string name) => pick =>
+    {
+        pick.Options.Single(option => option.Name == name).IsChecked = true;
+        return Accept(pick);
+    };
+
+    /// <summary>Types the new collection's name and accepts, as the user would.</summary>
+    public static Func<LocalCollectionPickViewModel, bool> PicksNewLocalCollection(string name) => pick =>
+    {
+        pick.NewName = name;
+        return Accept(pick);
+    };
+
     public Task<T?> ChooseOneAsync<T>(ChoicePrompt<T> prompt)
         where T : struct
     {
         SingleChoices.Add(prompt);
         Shown?.Invoke();
         return Task.FromResult<T?>(SingleChoiceAnswers.Count > 0 ? (T)SingleChoiceAnswers.Dequeue() : null);
+    }
+
+    private static bool Accept(LocalCollectionPickViewModel pick)
+    {
+        var accepted = false;
+        pick.CloseRequested += (_, result) => accepted = result;
+        pick.AcceptCommand.Execute(null);
+        return accepted;
     }
 
     /// <summary>Runs the operation as the real dialog does on open, then answers.</summary>

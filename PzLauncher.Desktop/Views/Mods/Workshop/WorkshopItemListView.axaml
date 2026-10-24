@@ -20,66 +20,114 @@
             <Setter Property="Foreground" Value="{DynamicResource Shell.TextMuted}" />
             <Setter Property="TextTrimming" Value="CharacterEllipsis" />
         </Style>
+        <Style Selector="Border.dragHandle">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Cursor" Value="SizeNorthSouth" />
+        </Style>
+        <Style Selector="Border.dragHandle:disabled">
+            <Setter Property="Cursor" Value="Arrow" />
+            <Setter Property="Opacity" Value="0.4" />
+        </Style>
+        <Style Selector="ContentControl.lifted Border.itemRow">
+            <Setter Property="Background" Value="{DynamicResource Shell.ListRowHoverBackground}" />
+            <Setter Property="BoxShadow" Value="{DynamicResource Shell.LiftedShadow}" />
+        </Style>
     </UserControl.Styles>
+
+    <UserControl.Resources>
+        <!-- Shared by the list and the lifted copy of a dragged row, so commands bind through the view, not the ItemsControl. -->
+        <DataTemplate x:Key="ItemRowTemplate" x:DataType="vm:WorkshopItemRow">
+            <Panel Height="{Binding $parent[local:WorkshopItemListView].RowHeight}">
+                <Border Classes="itemRow" Padding="12,6" Margin="0,0,0,4" CornerRadius="4" BorderThickness="1" BorderBrush="{DynamicResource Shell.Border}">
+                    <local:WorkshopItemGrid>
+                        <CheckBox Grid.Column="0" Width="36" IsChecked="{Binding IsSelected}" VerticalAlignment="Center" MinWidth="0"
+                                  AutomationProperties.Name="{Binding Title}"
+                                  IsVisible="{Binding $parent[local:WorkshopItemListView].ShowsSelection}" />
+                        <Border Grid.Column="0" Width="36" Classes="dragHandle" ToolTip.Tip="{x:Static lang:UiText.ModCollections_DragHint}"
+                                IsVisible="{Binding $parent[local:WorkshopItemListView].Reorder, Converter={x:Static ObjectConverters.IsNotNull}}"
+                                IsEnabled="{Binding $parent[local:WorkshopItemListView].Reorder.CanReorder, FallbackValue=False}">
+                            <ic:FluentIcon Icon="ReOrderDotsVertical" IconVariant="Regular" FontSize="16" VerticalAlignment="Center" HorizontalAlignment="Left"
+                                           Foreground="{DynamicResource Shell.TextMuted}" />
+                        </Border>
+                        <TextBlock Grid.Column="1" Classes="cell" Text="{Binding Title}" FontWeight="SemiBold" ToolTip.Tip="{Binding Title}" />
+                        <TextBlock Grid.Column="2" Classes="cell" Text="{Binding IdText}" Foreground="{DynamicResource Shell.TextMuted}" />
+                        <TextBlock Grid.Column="3" Classes="cell" Text="{Binding ModIds}" ToolTip.Tip="{Binding ModIds}" />
+                        <TextBlock Grid.Column="4" Classes="cell" Text="{Binding SizeMb, StringFormat={x:Static lang:UiText.Workshop_SizeFormat}}"
+                                   Foreground="{DynamicResource Shell.TextMuted}"
+                                   IsVisible="{Binding SizeMb, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                        <Panel Grid.Column="5" Width="130" IsVisible="{Binding $parent[local:WorkshopItemListView].ShowsUpdated}">
+                            <TextBlock Classes="cell" Text="{Binding Updated, StringFormat='{}{0:g}'}"
+                                       Foreground="{DynamicResource Shell.TextMuted}"
+                                       IsVisible="{Binding Updated, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                        </Panel>
+                        <local:WorkshopItemStateCell Grid.Column="6" />
+                        <TextBlock Grid.Column="7" Classes="cell" Text="{Binding CollectionNames}" ToolTip.Tip="{Binding CollectionNames}" />
+                        <Button Grid.Column="8" VerticalAlignment="Center" Classes.favorite="{Binding IsFavorite}"
+                                Command="{Binding $parent[local:WorkshopItemListView].((vm:WorkshopSectionViewModel)DataContext).ToggleFavoriteCommand}"
+                                CommandParameter="{Binding}"
+                                ToolTip.Tip="{x:Static lang:UiText.Workshop_FavoriteToggle}" AutomationProperties.Name="{x:Static lang:UiText.Workshop_FavoriteToggle}">
+                            <ic:FluentIcon Classes="favoriteStar" />
+                        </Button>
+                        <Button Grid.Column="9" HorizontalAlignment="Right" VerticalAlignment="Center"
+                                Command="{Binding $parent[local:WorkshopItemListView].((vm:WorkshopSectionViewModel)DataContext).OpenInSteamCommand}"
+                                CommandParameter="{Binding}"
+                                ToolTip.Tip="{x:Static lang:UiText.Workshop_OpenInSteam}" AutomationProperties.Name="{x:Static lang:UiText.Workshop_OpenInSteam}">
+                            <ic:FluentIcon Icon="Globe" IconVariant="Regular" FontSize="14" />
+                        </Button>
+                        <Panel Grid.Column="10" Width="{x:Static local:WorkshopItemListView.AddColumnWidth}"
+                               IsVisible="{Binding $parent[local:WorkshopItemListView].ShowsAddToLocalCollection}">
+                            <Button HorizontalAlignment="Right" VerticalAlignment="Center"
+                                    Command="{Binding $parent[local:WorkshopItemListView].((vm:WorkshopSectionViewModel)DataContext).AddToLocalCollectionCommand}"
+                                    CommandParameter="{Binding}"
+                                    ToolTip.Tip="{x:Static lang:UiText.LocalCollections_AddTo}" AutomationProperties.Name="{x:Static lang:UiText.LocalCollections_AddTo}">
+                                <ic:FluentIcon Icon="CollectionsAdd" IconVariant="Regular" FontSize="14" />
+                            </Button>
+                        </Panel>
+                        <ContentControl Grid.Column="11" VerticalAlignment="Center" Content="{Binding}"
+                                        Width="{Binding $parent[local:WorkshopItemListView].RowActionsWidth}"
+                                        ContentTemplate="{Binding $parent[local:WorkshopItemListView].RowActions}"
+                                        IsVisible="{Binding $parent[local:WorkshopItemListView].RowActions, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                    </local:WorkshopItemGrid>
+                </Border>
+            </Panel>
+        </DataTemplate>
+    </UserControl.Resources>
 
     <!-- A Workshop section's item rows, with each item's state, star and Steam page. -->
     <DockPanel>
         <Panel DockPanel.Dock="Top" Margin="13,0,13,4">
             <local:WorkshopItemGrid IsVisible="{Binding $parent[local:WorkshopItemListView].ColumnHeader, Converter={x:Static ObjectConverters.IsNull}}">
+                <Panel Grid.Column="0" Width="36"
+                       IsVisible="{Binding $parent[local:WorkshopItemListView].Reorder, Converter={x:Static ObjectConverters.IsNotNull}}" />
                 <TextBlock Grid.Column="1" Classes="columnHeader" Text="{x:Static lang:UiText.Workshop_ColumnTitle}" />
                 <TextBlock Grid.Column="2" Classes="columnHeader" Text="{x:Static lang:UiText.Workshop_ColumnItemId}" />
                 <TextBlock Grid.Column="3" Classes="columnHeader" Text="{x:Static lang:UiText.Workshop_ColumnMods}" />
                 <TextBlock Grid.Column="4" Classes="columnHeader" Text="{x:Static lang:UiText.Workshop_ColumnSize}" />
                 <TextBlock Grid.Column="6" Classes="columnHeader" Text="{x:Static lang:UiText.Workshop_ColumnState}" />
                 <TextBlock Grid.Column="7" Classes="columnHeader" Text="{x:Static lang:UiText.Mods_ColumnCollections}" />
+                <Panel Grid.Column="10" Width="{x:Static local:WorkshopItemListView.AddColumnWidth}"
+                       IsVisible="{Binding $parent[local:WorkshopItemListView].ShowsAddToLocalCollection}" />
+                <Panel Grid.Column="11" Width="{Binding $parent[local:WorkshopItemListView].RowActionsWidth}"
+                       IsVisible="{Binding $parent[local:WorkshopItemListView].RowActions, Converter={x:Static ObjectConverters.IsNotNull}}" />
             </local:WorkshopItemGrid>
             <ContentPresenter Content="{Binding $parent[local:WorkshopItemListView].ColumnHeader}" />
         </Panel>
 
-        <ScrollViewer>
-            <ItemsControl ItemsSource="{Binding $parent[local:WorkshopItemListView].Rows}">
-                <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <VirtualizingStackPanel />
-                    </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate x:DataType="vm:WorkshopItemRow">
-                        <Border Padding="12,6" Margin="0,0,0,4" CornerRadius="4" BorderThickness="1" BorderBrush="{DynamicResource Shell.Border}">
-                            <local:WorkshopItemGrid>
-                                <CheckBox Grid.Column="0" Width="36" IsChecked="{Binding IsSelected}" VerticalAlignment="Center" MinWidth="0"
-                                          AutomationProperties.Name="{Binding Title}"
-                                          IsVisible="{Binding $parent[local:WorkshopItemListView].ShowsSelection}" />
-                                <TextBlock Grid.Column="1" Classes="cell" Text="{Binding Title}" FontWeight="SemiBold" ToolTip.Tip="{Binding Title}" />
-                                <TextBlock Grid.Column="2" Classes="cell" Text="{Binding IdText}" Foreground="{DynamicResource Shell.TextMuted}" />
-                                <TextBlock Grid.Column="3" Classes="cell" Text="{Binding ModIds}" ToolTip.Tip="{Binding ModIds}" />
-                                <TextBlock Grid.Column="4" Classes="cell" Text="{Binding SizeMb, StringFormat={x:Static lang:UiText.Workshop_SizeFormat}}"
-                                           Foreground="{DynamicResource Shell.TextMuted}"
-                                           IsVisible="{Binding SizeMb, Converter={x:Static ObjectConverters.IsNotNull}}" />
-                                <Panel Grid.Column="5" Width="130" IsVisible="{Binding $parent[local:WorkshopItemListView].ShowsUpdated}">
-                                    <TextBlock Classes="cell" Text="{Binding Updated, StringFormat='{}{0:g}'}"
-                                               Foreground="{DynamicResource Shell.TextMuted}"
-                                               IsVisible="{Binding Updated, Converter={x:Static ObjectConverters.IsNotNull}}" />
-                                </Panel>
-                                <local:WorkshopItemStateCell Grid.Column="6" />
-                                <TextBlock Grid.Column="7" Classes="cell" Text="{Binding CollectionNames}" ToolTip.Tip="{Binding CollectionNames}" />
-                                <Button Grid.Column="8" VerticalAlignment="Center" Classes.favorite="{Binding IsFavorite}"
-                                        Command="{Binding $parent[local:WorkshopItemListView].((vm:WorkshopSectionViewModel)DataContext).ToggleFavoriteCommand}"
-                                        CommandParameter="{Binding}"
-                                        ToolTip.Tip="{x:Static lang:UiText.Workshop_FavoriteToggle}" AutomationProperties.Name="{x:Static lang:UiText.Workshop_FavoriteToggle}">
-                                    <ic:FluentIcon Classes="favoriteStar" />
-                                </Button>
-                                <Button Grid.Column="9" HorizontalAlignment="Right" VerticalAlignment="Center"
-                                        Command="{Binding $parent[local:WorkshopItemListView].((vm:WorkshopSectionViewModel)DataContext).OpenInSteamCommand}"
-                                        CommandParameter="{Binding}"
-                                        ToolTip.Tip="{x:Static lang:UiText.Workshop_OpenInSteam}" AutomationProperties.Name="{x:Static lang:UiText.Workshop_OpenInSteam}">
-                                    <ic:FluentIcon Icon="Globe" IconVariant="Regular" FontSize="14" />
-                                </Button>
-                            </local:WorkshopItemGrid>
-                        </Border>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
-        </ScrollViewer>
+        <!-- With Reorder set, a row is dragged by its handle (ListReorderDrag lifts it into DragLayer). -->
+        <Panel>
+            <ScrollViewer x:Name="ItemsScroller">
+                <ItemsControl x:Name="ItemsList" ItemsSource="{Binding $parent[local:WorkshopItemListView].Rows}" ItemTemplate="{StaticResource ItemRowTemplate}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <!-- The cache realizes rows past the viewport's edges, so a row sliding in during a drag is there to show. -->
+                            <VirtualizingStackPanel CacheLength="1" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                </ItemsControl>
+            </ScrollViewer>
+            <Canvas x:Name="DragLayer" IsHitTestVisible="False">
+                <ContentControl x:Name="DragFloat" Classes="lifted" IsVisible="False" ContentTemplate="{StaticResource ItemRowTemplate}" />
+            </Canvas>
+        </Panel>
     </DockPanel>
 </UserControl>

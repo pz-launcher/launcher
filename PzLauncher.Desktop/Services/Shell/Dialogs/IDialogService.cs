@@ -1,6 +1,7 @@
 using System.Threading.Tasks;
 using PzLauncher.Desktop.ViewModels.Mods.Workshop.Actions;
 using PzLauncher.Desktop.ViewModels.Mods;
+using PzLauncher.Desktop.ViewModels.Mods.Modpacks;
 using PzLauncher.Desktop.ViewModels.Mods.Workshop;
 using PzLauncher.Desktop.ViewModels.ZombieBuddy;
 
@@ -30,6 +31,12 @@ public interface IDialogService
 
     /// <summary><c>true</c> only for the accept button; the choices stay on the view model.</summary>
     Task<bool> PickWorkshopModsAsync(WorkshopModPickViewModel pick);
+
+    /// <summary><c>true</c> only for the accept button; the target is on the view model.</summary>
+    Task<bool> PickLocalCollectionAsync(LocalCollectionPickViewModel pick);
+
+    /// <summary><c>true</c> only for the accept button; the result is on the view model.</summary>
+    Task<bool> EditModpackAsync(ModpackEditViewModel edit);
 
     /// <summary>One radio per option and an OK button; <c>null</c> when dismissed (Esc or the window's close button).</summary>
     Task<T?> ChooseOneAsync<T>(ChoicePrompt<T> prompt)

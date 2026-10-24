@@ -136,6 +136,12 @@
                                         <TextBlock Text="{x:Static lang:UiText.Workshop_OpenInSteam}" VerticalAlignment="Center" />
                                     </StackPanel>
                                 </Button>
+                                <Button Command="{Binding SaveAsLocalCollectionCommand}" Margin="0,0,6,6">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <ic:FluentIcon Icon="SaveCopy" IconVariant="Regular" FontSize="16" VerticalAlignment="Center" />
+                                        <TextBlock Text="{x:Static lang:UiText.LocalCollections_SaveAs}" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
                                 <Button Command="{Binding UnsubscribeAllCommand}" Margin="0,0,6,6">
                                     <StackPanel Orientation="Horizontal" Spacing="6">
                                         <ic:FluentIcon Icon="Dismiss" IconVariant="Regular" FontSize="16" VerticalAlignment="Center" />
@@ -147,7 +153,7 @@
                     </local:WorkshopItemListActions>
 
                     <Panel>
-                        <local:WorkshopItemListView Rows="{Binding Rows}" />
+                        <local:WorkshopItemListView Rows="{Binding Rows}" ShowsAddToLocalCollection="True" />
                         <TextBlock Text="{x:Static lang:UiText.WorkshopCollections_Empty}" IsVisible="{Binding IsListEmpty}" TextWrapping="Wrap"
                                    Foreground="{DynamicResource Shell.TextMuted}" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" />
                     </Panel>

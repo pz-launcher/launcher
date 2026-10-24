@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -9,6 +10,7 @@ using CommunityToolkit.Mvvm.Input;
 using PzLauncher.Core.Common;
 using PzLauncher.Core.Steam.Workshop;
 using PzLauncher.Core.Steam.Workshop.Actions;
+using PzLauncher.Desktop.Lang;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Services.Mods;
 using PzLauncher.Desktop.Services.Shell.Dialogs;
@@ -19,7 +21,7 @@ namespace PzLauncher.Desktop.ViewModels.Mods.Workshop;
 
 /// <summary>
 /// What the Workshop sections of the Mods page share: their loads, texts and item rows, running a Steam action on the rows, opening an item in
-/// Steam and starring it locally.
+/// Steam, starring it locally and adding it to a local collection.
 /// </summary>
 public abstract partial class WorkshopSectionViewModel : ViewModelBase
 {
@@ -37,7 +39,8 @@ public abstract partial class WorkshopSectionViewModel : ViewModelBase
         IDialogService dialogs,
         IUrlLauncher urls,
         WorkshopFavorites favorites,
-        WorkshopTitles titles)
+        WorkshopTitles titles,
+        LocalCollections localCollections)
     {
         Page = page;
         Service = service;
@@ -45,6 +48,7 @@ public abstract partial class WorkshopSectionViewModel : ViewModelBase
         Dialogs = dialogs;
         Favorites = favorites;
         Titles = titles;
+        LocalCollections = localCollections;
         _urls = urls;
         Rows = [];
         ShownError = new LocalizedText(text => ErrorText = text);
@@ -90,6 +94,8 @@ public abstract partial class WorkshopSectionViewModel : ViewModelBase
     protected WorkshopFavorites Favorites { get; }
 
     protected WorkshopTitles Titles { get; }
+
+    protected LocalCollections LocalCollections { get; }
 
     protected LocalizedText ShownError { get; }
 
@@ -206,6 +212,43 @@ public abstract partial class WorkshopSectionViewModel : ViewModelBase
 
     protected Task OpenInSteamAsync(ulong id) => WorkshopActionFlow.OpenInSteamAsync(_urls, Dialogs, id);
 
+    protected static WorkshopEntry EntryOf(WorkshopItemRow row) => new(row.Id, WorkshopItemRow.WebTitle(row.Item));
+
+    /// <summary>Asks for a local collection, existing or new, and adds the items not in it yet at its end.</summary>
+    protected async Task AddEntriesToLocalCollectionAsync(IReadOnlyList<WorkshopEntry> items)
+    {
+        if (items.Count == 0)
+        {
+            return;
+        }
+
+        var pick = new LocalCollectionPickViewModel(LocalCollections);
+        if (!await Dialogs.PickLocalCollectionAsync(pick))
+        {
+            return;
+        }
+
+        string name;
+        int added;
+        switch (pick.Target)
+        {
+            case LocalCollectionTarget.Existing existing when LocalCollections.Find(existing.Id) is { } collection:
+                name = collection.Name;
+                added = LocalCollections.Add(collection.Id, items);
+                break;
+            case LocalCollectionTarget.New created:
+                var made = LocalCollections.Create(created.Name, items);
+                name = made.Name;
+                added = made.Items.Count;
+                break;
+            default:
+                return;
+        }
+
+        var skipped = items.DistinctBy(item => item.Id).Count() - added;
+        ShownStatus.Show(() => string.Format(CultureInfo.CurrentCulture, UiText.LocalCollections_AddedTo, added, name, skipped));
+    }
+
     private bool CanUpdateOutdated() => CanRunActions && OutdatedCount > 0;
 
     [RelayCommand(CanExecute = nameof(CanUpdateOutdated))]
@@ -217,6 +260,10 @@ public abstract partial class WorkshopSectionViewModel : ViewModelBase
     // A local write, never Steam's: available while a game or a Steam action runs.
     [RelayCommand]
     private void ToggleFavorite(WorkshopItemRow row) => Favorites.Toggle(WorkshopFavoriteKind.Item, row.Id, WorkshopItemRow.WebTitle(row.Item));
+
+    // A local write, never Steam's: available while a game or a Steam action runs.
+    [RelayCommand]
+    private Task AddToLocalCollectionAsync(WorkshopItemRow row) => AddEntriesToLocalCollectionAsync([EntryOf(row)]);
 
     partial void OnIsActionRunningChanged(bool value) => NotifyStateCommands();
 

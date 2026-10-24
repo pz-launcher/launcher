@@ -538,6 +538,7 @@ Planned web-based dedicated-server management (parent 10-23-web-server-managemen
 
 | Hash | Message |
 |------|---------|
+| `efab630` | Share a Workshop collection and a mod preset as a modpack |
 | `e601524` | Host named dedicated servers from Core: detached start, re-attach, RCON, console |
 | `3003e80` | Group Core/Server into Config, ConsoleLog and Rcon subfolders |
 | `6310198` | Split folders with more than 12 files into sub-concept subfolders |
@@ -547,3 +548,14 @@ Planned web-based dedicated-server management (parent 10-23-web-server-managemen
 ### Status
 
 [OK] **Completed**
+
+## Session 23: Share a Workshop collection with a mod preset (modpacks)
+<!-- trellis-session: v=2 fp=4e8271a1028f4a65 -->
+
+**Date**: 2026-10-24
+**Task**: Share a Workshop collection with a mod preset (modpacks)
+**Branch**: `feat/modpacks`
+
+### Summary
+
+Added 本地合集 (launcher-wide local Workshop item lists) and 整合包 (per-install modpacks: a Steam or local collection plus a mod preset, linked with backup copies). Modpacks share as clipboard text ending in the game's preset line; import writes the preset and collection and subscribes missing items in one Steam action. Tests pass; drag reorder, the new dialogs, cross-install share/import and pasting into the game are not yet tried in the running launcher.

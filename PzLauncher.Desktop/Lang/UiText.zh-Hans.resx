@@ -772,11 +772,17 @@
   <data name="Mods_SectionCollections" xml:space="preserve">
     <value>模组预设</value>
   </data>
+  <data name="Mods_SectionModpacks" xml:space="preserve">
+    <value>整合包</value>
+  </data>
   <data name="Mods_SectionWorkshopSubscriptions" xml:space="preserve">
     <value>工坊订阅</value>
   </data>
   <data name="Mods_SectionWorkshopCollections" xml:space="preserve">
     <value>工坊合集</value>
+  </data>
+  <data name="Mods_SectionLocalCollections" xml:space="preserve">
+    <value>本地合集</value>
   </data>
   <data name="Mods_SectionWorkshopFavorites" xml:space="preserve">
     <value>本地收藏</value>
@@ -987,6 +993,9 @@
   </data>
   <data name="ModCollections_ImportNameInvalid" xml:space="preserve">
     <value>“{0}”不能用作模组预设名称。</value>
+  </data>
+  <data name="ModCollections_ImportModpack" xml:space="preserve">
+    <value>这是整合包。请在“整合包”中导入，以同时获得其合集。</value>
   </data>
   <data name="Workshop_SearchPlaceholder" xml:space="preserve">
     <value>按标题、物品 ID 或模组 ID 搜索</value>
@@ -1263,6 +1272,246 @@
   </data>
   <data name="WorkshopFavorites_Imported" xml:space="preserve">
     <value>已添加 {0} 个合集和 {1} 个物品，跳过 {2} 行。</value>
+  </data>
+  <data name="LocalCollections_Empty" xml:space="preserve">
+    <value>还没有本地合集。新建一个，或把打开的工坊合集另存为本地合集。</value>
+  </data>
+  <data name="LocalCollections_NoSelection" xml:space="preserve">
+    <value>选择一个本地合集。</value>
+  </data>
+  <data name="LocalCollections_ItemsEmpty" xml:space="preserve">
+    <value>这个本地合集里没有物品。粘贴工坊链接，或从工坊订阅、合集或本地收藏添加物品。</value>
+  </data>
+  <data name="LocalCollections_NewTitle" xml:space="preserve">
+    <value>新建本地合集</value>
+  </data>
+  <data name="LocalCollections_RenameTitle" xml:space="preserve">
+    <value>重命名本地合集</value>
+  </data>
+  <data name="LocalCollections_NameMessage" xml:space="preserve">
+    <value>本地合集名称：</value>
+  </data>
+  <data name="LocalCollections_NameInvalid" xml:space="preserve">
+    <value>请输入单行名称。</value>
+  </data>
+  <data name="LocalCollections_NameTaken" xml:space="preserve">
+    <value>已有同名的本地合集。</value>
+  </data>
+  <data name="LocalCollections_DeleteTitle" xml:space="preserve">
+    <value>删除本地合集？</value>
+  </data>
+  <data name="LocalCollections_DeleteMessage" xml:space="preserve">
+    <value>要删除本地合集“{0}”吗？你的工坊订阅不会改变。</value>
+  </data>
+  <data name="LocalCollections_AddItems" xml:space="preserve">
+    <value>粘贴物品</value>
+  </data>
+  <data name="LocalCollections_AddItemsTitle" xml:space="preserve">
+    <value>向本地合集添加物品</value>
+  </data>
+  <data name="LocalCollections_AddItemsMessage" xml:space="preserve">
+    <value>粘贴工坊链接或物品 ID，每行一个。已在列表中的物品和工坊合集会被跳过。</value>
+  </data>
+  <data name="LocalCollections_AddItemsNothing" xml:space="preserve">
+    <value>未找到工坊链接或 ID。</value>
+  </data>
+  <data name="LocalCollections_ItemsAdded" xml:space="preserve">
+    <value>已添加 {0} 个物品；跳过 {1} 个已在列表中的物品、{2} 个合集和 {3} 行其他内容。</value>
+  </data>
+  <data name="LocalCollections_RemoveItem" xml:space="preserve">
+    <value>从本地合集移除</value>
+  </data>
+  <data name="LocalCollections_AddTo" xml:space="preserve">
+    <value>添加到本地合集…</value>
+  </data>
+  <data name="LocalCollections_PickTitle" xml:space="preserve">
+    <value>添加到本地合集</value>
+  </data>
+  <data name="LocalCollections_PickMessage" xml:space="preserve">
+    <value>将物品添加到：</value>
+  </data>
+  <data name="LocalCollections_PickNew" xml:space="preserve">
+    <value>新的本地合集</value>
+  </data>
+  <data name="LocalCollections_PickAccept" xml:space="preserve">
+    <value>添加</value>
+  </data>
+  <data name="LocalCollections_AddedTo" xml:space="preserve">
+    <value>已向“{1}”添加 {0} 个物品，{2} 个已在其中。</value>
+  </data>
+  <data name="LocalCollections_SaveAs" xml:space="preserve">
+    <value>另存为本地合集</value>
+  </data>
+  <data name="LocalCollections_SaveAsTitle" xml:space="preserve">
+    <value>另存为本地合集</value>
+  </data>
+  <data name="LocalCollections_SavedAs" xml:space="preserve">
+    <value>已将 {0} 个物品另存为本地合集“{1}”。</value>
+  </data>
+  <data name="LocalCollections_OverwriteTitle" xml:space="preserve">
+    <value>覆盖本地合集？</value>
+  </data>
+  <data name="LocalCollections_OverwriteMessage" xml:space="preserve">
+    <value>已存在名为“{0}”的本地合集。要覆盖它吗？</value>
+  </data>
+  <data name="Modpacks_Empty" xml:space="preserve">
+    <value>还没有整合包。整合包把一个模组预设和一个工坊合集组合在一起，便于一起使用和分享。</value>
+  </data>
+  <data name="Modpacks_NoSelection" xml:space="preserve">
+    <value>选择一个整合包。</value>
+  </data>
+  <data name="Modpacks_ItemsEmpty" xml:space="preserve">
+    <value>这个整合包没有工坊物品。</value>
+  </data>
+  <data name="Modpacks_NewTitle" xml:space="preserve">
+    <value>新建整合包</value>
+  </data>
+  <data name="Modpacks_EditTitle" xml:space="preserve">
+    <value>编辑整合包</value>
+  </data>
+  <data name="Modpacks_Edit" xml:space="preserve">
+    <value>编辑</value>
+  </data>
+  <data name="Modpacks_RenameTitle" xml:space="preserve">
+    <value>重命名整合包</value>
+  </data>
+  <data name="Modpacks_NameMessage" xml:space="preserve">
+    <value>整合包名称：</value>
+  </data>
+  <data name="Modpacks_NameInvalid" xml:space="preserve">
+    <value>请输入单行名称。</value>
+  </data>
+  <data name="Modpacks_NameTaken" xml:space="preserve">
+    <value>此安装中已有同名的整合包。</value>
+  </data>
+  <data name="Modpacks_DeleteTitle" xml:space="preserve">
+    <value>删除整合包？</value>
+  </data>
+  <data name="Modpacks_DeleteMessage" xml:space="preserve">
+    <value>要删除整合包“{0}”吗？它的模组预设、合集和你的工坊订阅不会改变。</value>
+  </data>
+  <data name="Modpacks_Preset" xml:space="preserve">
+    <value>模组预设</value>
+  </data>
+  <data name="Modpacks_Collection" xml:space="preserve">
+    <value>合集</value>
+  </data>
+  <data name="Modpacks_SteamCollection" xml:space="preserve">
+    <value>工坊合集</value>
+  </data>
+  <data name="Modpacks_LocalCollection" xml:space="preserve">
+    <value>本地合集</value>
+  </data>
+  <data name="Modpacks_Independent" xml:space="preserve">
+    <value>独立</value>
+  </data>
+  <data name="Modpacks_IndependentHint" xml:space="preserve">
+    <value>来源已被删除或重命名，因此整合包保留了自己的副本。编辑整合包可重新关联。</value>
+  </data>
+  <data name="Modpacks_OwnCopy" xml:space="preserve">
+    <value>整合包自己的副本</value>
+  </data>
+  <data name="Modpacks_ExtraCountFormat" xml:space="preserve">
+    <value>其中 {0} 个仅来自模组预设</value>
+  </data>
+  <data name="Modpacks_ExtraHint" xml:space="preserve">
+    <value>模组预设中的模组所属、但合集里没有的工坊物品，排在合集物品之后。</value>
+  </data>
+  <data name="Modpacks_UsePreset" xml:space="preserve">
+    <value>使用模组预设</value>
+  </data>
+  <data name="Modpacks_UsePresetHint" xml:space="preserve">
+    <value>将整合包的模组预设设为当前模组预设，并启用其中的模组。独立的模组预设会先重新加入游戏的模组预设。</value>
+  </data>
+  <data name="Modpacks_NewName" xml:space="preserve">
+    <value>新名称</value>
+  </data>
+  <data name="Modpacks_RestoreTitle" xml:space="preserve">
+    <value>恢复的模组预设名称</value>
+  </data>
+  <data name="Modpacks_PresetUsedMessage" xml:space="preserve">
+    <value>这些整合包使用了模组预设“{0}”。删除它并让整合包保留自己的副本，还是连整合包一起删除？</value>
+  </data>
+  <data name="Modpacks_LocalCollectionUsedMessage" xml:space="preserve">
+    <value>这些整合包使用了本地合集“{0}”。删除它并让整合包保留自己的副本，还是连整合包一起删除？</value>
+  </data>
+  <data name="Modpacks_DeleteKeep" xml:space="preserve">
+    <value>删除，保留整合包</value>
+  </data>
+  <data name="Modpacks_DeleteWithModpacks" xml:space="preserve">
+    <value>连同整合包删除</value>
+  </data>
+  <data name="Modpacks_UserInInstall" xml:space="preserve">
+    <value>{0}（{1}）</value>
+  </data>
+  <data name="Modpacks_EditNoPresets" xml:space="preserve">
+    <value>此安装还没有模组预设。请先在“模组预设”中新建一个。</value>
+  </data>
+  <data name="Modpacks_EditNoLocalCollections" xml:space="preserve">
+    <value>还没有本地合集。</value>
+  </data>
+  <data name="Modpacks_Save" xml:space="preserve">
+    <value>保存</value>
+  </data>
+  <data name="Modpacks_ImportHint" xml:space="preserve">
+    <value>粘贴别人分享的整合包：订阅其工坊物品并添加其模组预设。</value>
+  </data>
+  <data name="Modpacks_ShareHint" xml:space="preserve">
+    <value>将整合包复制为文本以便分享。单独复制最后一行也能在游戏中导入模组预设。</value>
+  </data>
+  <data name="Modpacks_Shared" xml:space="preserve">
+    <value>已将整合包“{0}”的分享文本复制到剪贴板。</value>
+  </data>
+  <data name="Modpacks_SharedPartly" xml:space="preserve">
+    <value>已将整合包“{0}”的分享文本复制到剪贴板。模组预设中有些模组无法分享：{1} 个不是来自工坊，{2} 个未安装。</value>
+  </data>
+  <data name="Modpacks_ImportTitle" xml:space="preserve">
+    <value>导入整合包</value>
+  </data>
+  <data name="Modpacks_ImportMessage" xml:space="preserve">
+    <value>粘贴 PzLauncher 整合包的分享文本。</value>
+  </data>
+  <data name="Modpacks_ImportContinue" xml:space="preserve">
+    <value>继续</value>
+  </data>
+  <data name="Modpacks_ImportNothing" xml:space="preserve">
+    <value>没有找到整合包。整合包文本以 #pzlauncher-modpack 开头。</value>
+  </data>
+  <data name="Modpacks_ImportNewer" xml:space="preserve">
+    <value>此整合包由更新版本的 PzLauncher 分享。请更新启动器后再导入。</value>
+  </data>
+  <data name="Modpacks_ImportIncomplete" xml:space="preserve">
+    <value>整合包文本不完整或已损坏。请重新从分享者处复制。</value>
+  </data>
+  <data name="Modpacks_ImportConfirmMessage" xml:space="preserve">
+    <value>导入整合包“{0}”并订阅其缺失的工坊物品？</value>
+  </data>
+  <data name="Modpacks_ImportSteamCollection" xml:space="preserve">
+    <value>工坊合集 {0}</value>
+  </data>
+  <data name="Modpacks_ImportLocalCollection" xml:space="preserve">
+    <value>本地合集“{0}”（{1} 个物品）</value>
+  </data>
+  <data name="Modpacks_ImportExtraItems" xml:space="preserve">
+    <value>模组预设另需 {0} 个物品</value>
+  </data>
+  <data name="Modpacks_ImportPreset" xml:space="preserve">
+    <value>模组预设“{0}”（{1} 个模组）</value>
+  </data>
+  <data name="Modpacks_ImportSkipped" xml:space="preserve">
+    <value>跳过 {0} 行无法识别的内容</value>
+  </data>
+  <data name="Modpacks_SubscribeAndImport" xml:space="preserve">
+    <value>订阅并导入</value>
+  </data>
+  <data name="Modpacks_Imported" xml:space="preserve">
+    <value>已导入整合包“{0}”。</value>
+  </data>
+  <data name="Modpacks_OverwriteTitle" xml:space="preserve">
+    <value>覆盖整合包？</value>
+  </data>
+  <data name="Modpacks_OverwriteMessage" xml:space="preserve">
+    <value>此安装已有名为“{0}”的整合包。要覆盖它吗？</value>
   </data>
   <data name="WorkshopLaunch_Title" xml:space="preserve">
     <value>创意工坊有更新</value>
