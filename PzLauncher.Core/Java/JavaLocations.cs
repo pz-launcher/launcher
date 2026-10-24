@@ -25,6 +25,13 @@ internal static class JavaLocations
         PlatformKind.MacOS or PlatformKind.Linux => "java",
     };
 
+    /// <summary>The console launcher the dedicated server runs with (<c>StartServer64.bat</c>), unlike the game's <see cref="ExecutableName"/>.</summary>
+    public static string ConsoleExecutableName(PlatformKind os) => os switch
+    {
+        PlatformKind.Windows => "java.exe",
+        PlatformKind.MacOS or PlatformKind.Linux => "java",
+    };
+
     /// <summary>Relative to the Java home; a jlink runtime without <c>java.instrument</c> lacks it.</summary>
     public static string InstrumentLibrary(PlatformKind os) => os switch
     {

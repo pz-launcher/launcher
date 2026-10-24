@@ -314,6 +314,53 @@
   <data name="Error_NetworkTimeout" xml:space="preserve">
     <value>{0} 在 {1} 秒内没有响应。</value>
   </data>
+  <data name="Error_ServerNameInvalid" xml:space="preserve">
+    <value>{0} 不是有效的服务器名称。请使用 1 到 64 个字符：A–Z、a–z、0–9、_ 或 -。</value>
+  </data>
+  <data name="Error_ServerAlreadyExists" xml:space="preserve">
+    <value>已存在名为 {0} 的服务器。</value>
+  </data>
+  <data name="Error_ServerNotFound" xml:space="preserve">
+    <value>不存在名为 {0} 的服务器。</value>
+  </data>
+  <data name="Error_ServerNotAServerInstall" xml:space="preserve">
+    <value>{0} 不是 Project Zomboid 专用服务器文件夹。</value>
+  </data>
+  <data name="Error_ServerAlreadyRunning" xml:space="preserve">
+    <value>服务器 {0} 已在运行。同一时间只能运行一个服务器。</value>
+  </data>
+  <data name="Error_ServerNotRunning" xml:space="preserve">
+    <value>没有正在运行的服务器。</value>
+  </data>
+  <data name="Error_ServerNotReady" xml:space="preserve">
+    <value>服务器仍在启动中。请等待其开始运行，或强制停止。</value>
+  </data>
+  <data name="Error_ServerAdminPasswordRequired" xml:space="preserve">
+    <value>服务器 {0} 还没有管理员账户。请输入管理员密码以创建账户。</value>
+  </data>
+  <data name="Error_ServerStartFailed" xml:space="preserve">
+    <value>无法使用 {0} 启动服务器。</value>
+  </data>
+  <data name="Error_ServerExitedEarly" xml:space="preserve">
+    <value>服务器 {0} 在启动过程中停止了。控制台最后几行：
+{1}</value>
+  </data>
+  <data name="Error_ServerExitedUnexpectedly" xml:space="preserve">
+    <value>服务器 {0} 意外停止了。控制台最后几行：
+{1}</value>
+  </data>
+  <data name="Error_ServerRconFailed" xml:space="preserve">
+    <value>无法通过 RCON 连接服务器：{0}</value>
+  </data>
+  <data name="Error_ServerCommandInvalid" xml:space="preserve">
+    <value>请在一行内输入命令，长度不超过 4000 字节。</value>
+  </data>
+  <data name="Error_ServerStopTimeout" xml:space="preserve">
+    <value>服务器未在 {0} 秒内停止。</value>
+  </data>
+  <data name="Error_ServerFileAccessFailed" xml:space="preserve">
+    <value>无法读取或写入 {0}。</value>
+  </data>
   <data name="Error_WorkshopSubscriptionsUnreadable" xml:space="preserve">
     <value>无法读取 Steam 创意工坊订阅列表 {0}。请确认 Steam 已安装并已登录，然后刷新。</value>
   </data>

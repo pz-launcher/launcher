@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using PzLauncher.Core.Common;
+using PzLauncher.Core.Steam.Workshop.Ids;
 
 namespace PzLauncher.Core.Steam.Workshop.Sources;
 

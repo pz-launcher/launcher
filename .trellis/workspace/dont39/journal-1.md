@@ -521,3 +521,29 @@ The game's mod lists (ModCollection) were called 合集/Collection, the same wor
 ### Status
 
 [OK] **Completed**
+
+
+## Session 22: Web server management: plan, server-host-core, folder split
+<!-- trellis-session: v=2 fp=dc864a36c473d106 -->
+
+**Date**: 2026-10-24
+**Task**: Web server management: plan, server-host-core, folder split
+**Branch**: `server-host-core`
+
+### Summary
+
+Planned web-based dedicated-server management (parent 10-23-web-server-management, decisions D1-D14, five children). Ran the B42 runtime spike and implemented server-host-core: named servers, detached start that survives a manager restart, PID-file re-attach, RCON, console tail, stop/kill, persisted last failure. Added the folder-size rule (more than 12 files splits) and split 13 folders. Applied the PR #18 review fixes (shared LaunchCommand, GameTextFile in Common, per-site locks, stop wait outside the lock, server Linux environment). Dropped B41: strict UTF-8 ini, no -statistic 0. The Linux manual check moved to server-web-host.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `e601524` | Host named dedicated servers from Core: detached start, re-attach, RCON, console |
+| `3003e80` | Group Core/Server into Config, ConsoleLog and Rcon subfolders |
+| `6310198` | Split folders with more than 12 files into sub-concept subfolders |
+| `fd3b04f` | Share the launch builder and text file reader; let a kill run during a stop's wait |
+| `cf12183` | Support B42 servers only: strict UTF-8 server ini, no -statistic 0 |
+
+### Status
+
+[OK] **Completed**

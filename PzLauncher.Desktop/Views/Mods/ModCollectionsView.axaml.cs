@@ -11,6 +11,7 @@ using Avalonia.Interactivity;
 using Avalonia.Media.Transformation;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
+using PzLauncher.Desktop.ViewModels.Mods.Collections;
 using PzLauncher.Desktop.ViewModels.Mods;
 
 namespace PzLauncher.Desktop.Views.Mods;

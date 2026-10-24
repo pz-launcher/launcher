@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using PzLauncher.Core.Common;
+using PzLauncher.Core.Update.Releases;
 using PzLauncher.Core.Update;
 
 namespace PzLauncher.Core.Net;

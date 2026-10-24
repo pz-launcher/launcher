@@ -3,7 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:PzLauncher.Desktop.ViewModels.Update"
-             xmlns:update="using:PzLauncher.Core.Update"
+             xmlns:update="using:PzLauncher.Core.Update.Releases"
              xmlns:design="using:PzLauncher.Desktop.ViewModels.Design"
              xmlns:controls="using:PzLauncher.Desktop.Views.Controls"
              xmlns:lang="using:PzLauncher.Desktop.Lang"

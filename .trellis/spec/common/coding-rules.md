@@ -38,7 +38,7 @@ validated yet" or "error".
 | Fields that are null together | One nullable sub-record; derive flags from it | `PzInstall` |
 | Collections on DTOs | Non-null, empty by default | `Error.Details` |
 | Value set at startup and used right away | Local or constructor parameter, not a nullable field | `PzLauncher.Desktop/App.axaml.cs` |
-| Service with several outcomes | Explicit result type; `null` at most means "cancelled" | `PzLauncher.Desktop/Services/Shell/FolderPickResult.cs` |
+| Service with several outcomes | Explicit result type; `null` at most means "cancelled" | `PzLauncher.Desktop/Services/Shell/Dialogs/FolderPickResult.cs` |
 
 - No `!` in production code. Tests use it only on genuinely nullable APIs.
 
@@ -66,3 +66,14 @@ Core and the app are `IsAotCompatible`; IL2xxx/IL3xxx warnings fail the build.
 - Public classes and records `sealed` or `static` unless designed for inheritance; Core types `internal` unless a host needs them.
 - Named constants for domain values (e.g. `PzSteamApps`). No static mutable state.
 - Switches over an enum list every member with no `_ =>` arm: a discard silences CS8509 (an error per `.editorconfig`), so a new member would compile without a case.
+
+## Folder size
+
+A folder holds at most 12 source files directly; an `.axaml` + `.axaml.cs` pair counts once. Test projects count too, `TestSupport/` included.
+
+- Past the limit, split by sub-concept: the feature's service, interface, errors, constants and main DTOs stay at the top; a self-contained part (a file format, a protocol client, a flow with its rows, a group of saved records) moves into a subfolder. Never by kind (`Models/`, `Interfaces/`).
+- Namespace = folder path.
+- A subfolder name doesn't shadow a type the code uses unqualified (`Console`, `Window`, `Process`, `Launch` inside another feature): `ConsoleLog`, `Lifetime`, `Processes`.
+- Files of one partial type stay in one folder.
+
+Reference: `PzLauncher.Core/Server/` (`Config/`, `ConsoleLog/`, `Rcon/`), `PzLauncher.Desktop/Services/Shell/` (`Dialogs/`, `Lifetime/`).

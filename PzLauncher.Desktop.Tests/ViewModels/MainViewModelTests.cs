@@ -5,11 +5,12 @@ using PzLauncher.Desktop.Themes;
 using PzLauncher.Desktop.ViewModels;
 using PzLauncher.Desktop.ViewModels.Home;
 using PzLauncher.Desktop.ViewModels.Installs;
+using PzLauncher.Desktop.ViewModels.Mods.Collections;
 using PzLauncher.Desktop.ViewModels.Mods;
 using PzLauncher.Desktop.ViewModels.Settings;
 using PzLauncher.Desktop.ViewModels.LaunchSettings;
 using PzLauncher.Desktop.ViewModels.Update;
-using static PzLauncher.Desktop.Tests.TestSupport.TestInstalls;
+using static PzLauncher.Desktop.Tests.TestSupport.Fakes.TestInstalls;
 
 namespace PzLauncher.Desktop.Tests.ViewModels;
 

@@ -1,0 +1,4 @@
+{"file": ".trellis/spec/common/coding-rules.md", "reason": "new Folder size section goes here"}
+{"file": ".trellis/spec/common/test-strategy.md", "reason": "test folders mirror source folders"}
+{"file": ".trellis/spec/core/directory-structure.md", "reason": "Core tree and domain-constant file paths to update"}
+{"file": ".trellis/spec/desktop/directory-structure.md", "reason": "Desktop tree, Services groups, VM/View layout"}

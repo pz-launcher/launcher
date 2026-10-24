@@ -1,9 +1,11 @@
 using PzLauncher.Core.Common;
 using PzLauncher.Core.Platform;
+using PzLauncher.Core.Steam.LaunchHook;
 using PzLauncher.Core.Steam;
 using PzLauncher.Desktop.Lang;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Services.Preferences;
+using PzLauncher.Desktop.Services.Shell.Dialogs;
 using PzLauncher.Desktop.Services.Shell;
 using PzLauncher.Desktop.Tests.TestSupport;
 using PzLauncher.Desktop.ViewModels.Settings;

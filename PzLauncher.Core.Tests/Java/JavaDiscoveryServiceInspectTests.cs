@@ -2,7 +2,7 @@ using PzLauncher.Core.Common;
 using PzLauncher.Core.Java;
 using PzLauncher.Core.Platform;
 using PzLauncher.Core.Tests.TestSupport;
-using static PzLauncher.Core.Tests.TestSupport.JavaHomeBuilder;
+using static PzLauncher.Core.Tests.TestSupport.Builders.JavaHomeBuilder;
 
 namespace PzLauncher.Core.Tests.Java;
 

@@ -12,6 +12,7 @@ using PzLauncher.Core.Platform;
 using PzLauncher.Desktop.Lang;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Services.Preferences;
+using PzLauncher.Desktop.Services.Shell.Dialogs;
 using PzLauncher.Desktop.Services.Shell;
 
 namespace PzLauncher.Desktop.ViewModels.Java;

@@ -6,13 +6,15 @@ using PzLauncher.Desktop.Lang;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Services.Launch;
 using PzLauncher.Desktop.Services.Mods;
+using PzLauncher.Desktop.Services.Preferences.Records;
 using PzLauncher.Desktop.Services.Preferences;
 using PzLauncher.Desktop.Tests.TestSupport;
 using PzLauncher.Desktop.ViewModels.Installs;
+using PzLauncher.Desktop.ViewModels.Mods.Collections;
 using PzLauncher.Desktop.ViewModels.Mods;
 using PzLauncher.Desktop.ViewModels.Mods.Workshop;
-using static PzLauncher.Desktop.Tests.TestSupport.TestInstalls;
-using static PzLauncher.Desktop.Tests.TestSupport.TestWorkshop;
+using static PzLauncher.Desktop.Tests.TestSupport.Fakes.TestInstalls;
+using static PzLauncher.Desktop.Tests.TestSupport.Fakes.TestWorkshop;
 
 namespace PzLauncher.Desktop.Tests.ViewModels.Mods.Workshop;
 

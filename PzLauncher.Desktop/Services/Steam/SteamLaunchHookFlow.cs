@@ -3,9 +3,11 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using PzLauncher.Core.Common;
+using PzLauncher.Core.Steam.LaunchHook;
 using PzLauncher.Core.Steam;
 using PzLauncher.Desktop.Lang;
 using PzLauncher.Desktop.Localization;
+using PzLauncher.Desktop.Services.Shell.Dialogs;
 using PzLauncher.Desktop.Services.Shell;
 
 namespace PzLauncher.Desktop.Services.Steam;

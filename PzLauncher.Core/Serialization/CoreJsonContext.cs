@@ -5,12 +5,18 @@ using PzLauncher.Core.Java;
 using PzLauncher.Core.Launch;
 using PzLauncher.Core.Mod.Collections;
 using PzLauncher.Core.Mod.Workshop;
+using PzLauncher.Core.Mod.ZombieBuddy.Preload;
 using PzLauncher.Core.Mod.ZombieBuddy;
 using PzLauncher.Core.Mod;
 using PzLauncher.Core.Net;
+using PzLauncher.Core.Server.ConsoleLog;
+using PzLauncher.Core.Server;
+using PzLauncher.Core.Steam.LaunchHook;
 using PzLauncher.Core.Steam.Workshop.Actions;
+using PzLauncher.Core.Steam.Workshop.Ids;
 using PzLauncher.Core.Steam.Workshop;
 using PzLauncher.Core.Steam;
+using PzLauncher.Core.Update.Releases;
 using PzLauncher.Core.Update;
 
 namespace PzLauncher.Core.Serialization;
@@ -84,4 +90,12 @@ namespace PzLauncher.Core.Serialization;
 [JsonSerializable(typeof(WorkshopActionEvent))]
 [JsonSerializable(typeof(WorkshopCollectionSummary))]
 [JsonSerializable(typeof(WorkshopUserCollections))]
+[JsonSerializable(typeof(ServerSite))]
+[JsonSerializable(typeof(NamedServer))]
+[JsonSerializable(typeof(IReadOnlyList<NamedServer>))]
+[JsonSerializable(typeof(StartServerRequest))]
+[JsonSerializable(typeof(ServerState))]
+[JsonSerializable(typeof(ServerStatus))]
+[JsonSerializable(typeof(ServerConsoleLine))]
+[JsonSerializable(typeof(ServerConsoleLineKind))]
 public sealed partial class CoreJsonContext : JsonSerializerContext;

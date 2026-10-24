@@ -2,7 +2,9 @@ using System.ComponentModel;
 using System.Globalization;
 using Microsoft.Extensions.Logging;
 using PzLauncher.Core.Common;
+using PzLauncher.Core.Platform.Processes;
 using PzLauncher.Core.Platform;
+using PzLauncher.Core.Update.Releases;
 
 namespace PzLauncher.Core.Update;
 

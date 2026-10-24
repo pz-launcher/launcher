@@ -9,14 +9,16 @@ using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Services.Launch;
 using PzLauncher.Desktop.Services.Mods;
 using PzLauncher.Desktop.Services.Preferences;
+using PzLauncher.Desktop.Services.Shell.Dialogs;
 using PzLauncher.Desktop.Services.Shell;
 using PzLauncher.Desktop.Tests.TestSupport;
 using PzLauncher.Desktop.ViewModels.Home;
 using PzLauncher.Desktop.ViewModels.Installs;
+using PzLauncher.Desktop.ViewModels.Mods.Collections;
 using PzLauncher.Desktop.ViewModels.Mods;
 using PzLauncher.Desktop.ViewModels.ZombieBuddy;
-using static PzLauncher.Desktop.Tests.TestSupport.TestInstalls;
-using static PzLauncher.Desktop.Tests.TestSupport.TestZombieBuddy;
+using static PzLauncher.Desktop.Tests.TestSupport.Fakes.TestInstalls;
+using static PzLauncher.Desktop.Tests.TestSupport.Fakes.TestZombieBuddy;
 
 namespace PzLauncher.Desktop.Tests.ViewModels.Home;
 

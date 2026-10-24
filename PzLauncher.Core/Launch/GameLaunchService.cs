@@ -4,6 +4,8 @@ using Microsoft.Extensions.Logging;
 using PzLauncher.Core.Common;
 using PzLauncher.Core.Installs;
 using PzLauncher.Core.Java;
+using PzLauncher.Core.Launch.Command;
+using PzLauncher.Core.Platform.Processes;
 using PzLauncher.Core.Platform;
 
 namespace PzLauncher.Core.Launch;
@@ -40,17 +42,17 @@ internal sealed partial class GameLaunchService(
         }
 
         var game = PzLaunchFiles.ResolveGameFolder(install.Value.RootPath);
-        var bundled = await javaDiscovery.InspectAsync(Path.Combine(game, PzLaunchFiles.BundledJreFolder), ct).ConfigureAwait(false);
+        var bundled = await javaDiscovery.InspectAsync(LaunchCommand.BundledJavaHome(game), ct).ConfigureAwait(false);
         var bundledJava = bundled.IsSuccess ? bundled.Value : null;
         var systemMemoryMb = (int)Math.Min(platform.TotalMemoryBytes / BytesPerMb, int.MaxValue);
 
-        var config = await ReadConfigAsync(game, ct).ConfigureAwait(false);
-        if (!config.IsSuccess)
+        var command = await ReadCommandAsync(game, ct).ConfigureAwait(false);
+        if (!command.IsSuccess)
         {
-            return new GameLaunchDefaults(null, null, [], bundledJava, systemMemoryMb, [config.Error], null, false);
+            return new GameLaunchDefaults(null, null, [], bundledJava, systemMemoryMb, [command.Error], null, false);
         }
 
-        var vmArgs = config.Value.JvmArgs(platform.Os, platform.OsVersion);
+        var vmArgs = command.Value.JsonJvmArgs(platform);
         var gc = GarbageCollectors.FromFlag(vmArgs.LastOrDefault(GarbageCollectors.IsFlag));
         return new GameLaunchDefaults(
             LaunchArguments.HeapSizeMb(vmArgs, LaunchArguments.MaxHeapPrefix),
@@ -135,16 +137,16 @@ internal sealed partial class GameLaunchService(
         }
 
         var game = PzLaunchFiles.ResolveGameFolder(install.Value.RootPath);
-        var config = await ReadConfigAsync(game, ct).ConfigureAwait(false);
-        if (!config.IsSuccess)
+        var command = await ReadCommandAsync(game, ct).ConfigureAwait(false);
+        if (!command.IsSuccess)
         {
-            return config.Error;
+            return command.Error;
         }
 
         string javaHome;
         if (overrides.JavaHome is null)
         {
-            javaHome = Path.Combine(game, PzLaunchFiles.BundledJreFolder);
+            javaHome = LaunchCommand.BundledJavaHome(game);
         }
         else if (!PathNormalizer.TryNormalizeAbsolute(overrides.JavaHome, out var normalizedHome))
         {
@@ -155,13 +157,13 @@ internal sealed partial class GameLaunchService(
             javaHome = normalizedHome;
         }
 
-        var executable = PzLaunchFiles.JavaExecutable(javaHome, platform.Os);
-        if (!File.Exists(executable))
+        var executable = LaunchCommand.FindJava(javaHome, JavaLocations.ExecutableName(platform.Os));
+        if (!executable.IsSuccess)
         {
-            return LaunchErrors.JavaMissing(executable);
+            return executable.Error;
         }
 
-        var jsonJvmArgs = config.Value.JvmArgs(platform.Os, platform.OsVersion);
+        var jsonJvmArgs = command.Value.JsonJvmArgs(platform);
         var maxMb = overrides.MaxMemoryMb ?? LaunchArguments.HeapSizeMb(jsonJvmArgs, LaunchArguments.MaxHeapPrefix);
         var minMb = overrides.MinMemoryMb ?? LaunchArguments.HeapSizeMb(jsonJvmArgs, LaunchArguments.InitialHeapPrefix);
         if (minMb is int min && maxMb is int max && min > max)
@@ -183,11 +185,7 @@ internal sealed partial class GameLaunchService(
             return gcCheck.Error;
         }
 
-        var start = new ProcessStartRequest(
-            executable,
-            LaunchArguments.Build(config.Value, platform.Os, jvmArgs, overrides),
-            game,
-            BuildEnvironment(game, javaHome));
+        var start = command.Value.Start(platform, executable.Value, javaHome, jvmArgs, overrides, [], LinuxLaunchEnvironment.Build);
         return new LaunchPlan(install.Value.RootPath, game, start, jvmArgs);
     }
 
@@ -303,26 +301,16 @@ internal sealed partial class GameLaunchService(
 
     private static bool HasViewpointBackup(string game) => File.Exists(Path.Combine(game, PzLaunchFiles.ViewpointBackupFile));
 
-    private async Task<Result<PzLaunchConfig>> ReadConfigAsync(string game, CancellationToken ct)
+    private async Task<Result<LaunchCommand>> ReadCommandAsync(string game, CancellationToken ct)
     {
-        var config = await PzLaunchConfig.ReadAsync(Path.Combine(game, PzLaunchFiles.ConfigFile), ct).ConfigureAwait(false);
-        if (!config.IsSuccess)
+        var command = await LaunchCommand.ReadAsync(game, ct).ConfigureAwait(false);
+        if (!command.IsSuccess)
         {
-            LogWarning(logger, config.Error.Code.ToWireName(), config.Error.Message);
+            LogWarning(logger, command.Error.Code.ToWireName(), command.Error.Message);
         }
 
-        return config;
+        return command;
     }
-
-    private Dictionary<string, string> BuildEnvironment(string game, string javaHome) => platform.Os switch
-    {
-        PlatformKind.Linux => LinuxLaunchEnvironment.Build(
-            game,
-            javaHome,
-            platform.GetEnvironmentVariable(LinuxLaunchEnvironment.LibraryPathVariable),
-            platform.GetEnvironmentVariable(LinuxLaunchEnvironment.PreloadVariable)),
-        PlatformKind.Windows or PlatformKind.MacOS => [],
-    };
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Game launch: {Code}: {Detail}")]
     private static partial void LogWarning(ILogger logger, string code, string detail);

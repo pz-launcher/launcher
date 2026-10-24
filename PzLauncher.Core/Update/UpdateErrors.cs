@@ -1,4 +1,5 @@
 using PzLauncher.Core.Common;
+using PzLauncher.Core.Update.Releases;
 
 namespace PzLauncher.Core.Update;
 

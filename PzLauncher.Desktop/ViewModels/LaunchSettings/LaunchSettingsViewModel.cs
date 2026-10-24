@@ -15,6 +15,7 @@ using PzLauncher.Core.Mod.ZombieBuddy;
 using PzLauncher.Core.Platform;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Services.Launch;
+using PzLauncher.Desktop.Services.Shell.Dialogs;
 using PzLauncher.Desktop.Services.Shell;
 using PzLauncher.Desktop.Services.ZombieBuddy;
 using PzLauncher.Desktop.ViewModels.Installs;

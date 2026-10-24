@@ -1,0 +1,7 @@
+{"file": ".trellis/spec/common/architecture.md", "reason": "Core vs host boundary; PzLauncher.Server placement"}
+{"file": ".trellis/spec/common/coding-rules.md", "reason": "comments, async, nullability, AOT"}
+{"file": ".trellis/spec/common/test-strategy.md", "reason": "test placement and fakes"}
+{"file": ".trellis/spec/core/directory-structure.md", "reason": "new Server/ and SteamCmd/ feature folders, one-file domain constants"}
+{"file": ".trellis/spec/core/service-api.md", "reason": "service shape, DTOs, IProcessRunner/TimeProvider seams, HTTP mapping"}
+{"file": ".trellis/spec/core/error-handling.md", "reason": "new ErrorCodes, untrusted files and process output"}
+{"file": ".trellis/tasks/10-23-web-server-management/design.md", "reason": "shared design: ServerSite, hosting/config/SteamCMD shape, risks"}

@@ -8,8 +8,8 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 21
-- **Last Active**: 2026-10-21
+- **Total Sessions**: 22
+- **Last Active**: 2026-10-24
 <!-- @@@/auto:current-status -->
 
 ---
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~523 | Active |
+| `journal-1.md` | ~549 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 22 | 2026-10-24 | Web server management: plan, server-host-core, folder split | `e601524`, `3003e80`, `6310198`, `fd3b04f`, `cf12183` | `server-host-core` |
 | 21 | 2026-10-21 | Rename the game's mod lists to mod presets | `581717b` | `feat/mod-preset-term` |
 | 20 | 2026-10-20 | Launcher window behavior after game launch | `4bbc2d6` | `feat/after-launch-window-behavior` |
 | 19 | 2026-10-19 | Local Workshop favorites with share/import | `bcbc0af` | `feat/workshop-management` |
