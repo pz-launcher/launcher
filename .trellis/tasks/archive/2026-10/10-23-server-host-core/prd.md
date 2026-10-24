@@ -34,13 +34,14 @@ saved.
 
 ## Acceptance criteria
 
-- [ ] Unit tests cover: list/create (name validation, ini contents), start
+- [x] Unit tests cover: list/create (name validation, ini contents), start
       command line incl. first-run admin password, already-running refusal,
       PID-file re-attach and stale-file cleanup, RCON auth + command +
       multi-packet response against a loopback fake, console tail incl.
       truncation, stop timeout → `server.stop_timeout`.
 - [ ] Manual on Linux: start a server through a test harness, kill the
       harness, start it again → status running, command works, `quit` stops it
-      and the world is saved.
+      and the world is saved. Moved to `10-23-server-web-host`, which runs
+      on Linux anyway.
 - [x] Verification spike findings (parent R1/R2) recorded in
       `research/pz-server-runtime.md` (Windows, B42; Linux items open).
