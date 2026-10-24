@@ -46,15 +46,15 @@ subfolders, as a pure move (no behaviour change).
 
 ## Acceptance criteria
 
-- [ ] A re-run of the counting script (in `implement.md`) lists no folder over
+- [x] A re-run of the counting script (in `implement.md`) lists no folder over
       12 in any project.
-- [ ] `git diff -M` shows every moved file as a rename whose content change is
+- [x] `git diff -M` shows every moved file as a rename whose content change is
       only its namespace line / usings.
-- [ ] `dotnet build PzLauncher.slnx -warnaserror` and `dotnet test
+- [x] `dotnet build PzLauncher.slnx -warnaserror` and `dotnet test
       PzLauncher.slnx` pass with the same test count as before the move.
-- [ ] Desktop app starts and every page opens (DataTemplates still resolve
+- [x] Desktop app starts and every page opens (DataTemplates still resolve
       VM → View after namespace changes).
-- [ ] No spec / doc reference to an old path remains (grep in `implement.md`).
+- [x] No spec / doc reference to an old path remains (grep in `implement.md`).
 
 ## Out of scope
 
