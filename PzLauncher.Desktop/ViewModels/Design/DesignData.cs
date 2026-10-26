@@ -24,9 +24,13 @@ using PzLauncher.Core.Steam.Workshop.Actions;
 using PzLauncher.Core.Steam.Workshop.Ids;
 using PzLauncher.Core.Update.Releases;
 using PzLauncher.Core.Update;
+using PzLauncher.Desktop.Lang;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Services.Launch;
 using PzLauncher.Desktop.Services.Mods;
+using PzLauncher.Desktop.Services.Mods.Library;
+using PzLauncher.Desktop.Services.Mods.LocalCollections;
+using PzLauncher.Desktop.Services.Mods.Modpacks;
 using PzLauncher.Desktop.Services.Net;
 using PzLauncher.Desktop.Services.Preferences.Records;
 using PzLauncher.Desktop.Services.Preferences;
@@ -45,7 +49,9 @@ using PzLauncher.Desktop.ViewModels.Mods.Collections;
 using PzLauncher.Desktop.ViewModels.Mods.Installed;
 using PzLauncher.Desktop.ViewModels.Mods.Workshop.Actions;
 using PzLauncher.Desktop.ViewModels.Mods;
+using PzLauncher.Desktop.ViewModels.Mods.Modpacks;
 using PzLauncher.Desktop.ViewModels.Mods.Workshop;
+using PzLauncher.Desktop.ViewModels.Mods.Workshop.LocalCollections;
 using PzLauncher.Desktop.ViewModels.Net;
 using PzLauncher.Desktop.ViewModels.Settings;
 using PzLauncher.Desktop.ViewModels.Update;
@@ -76,6 +82,8 @@ public static class DesignData
     private static readonly LocalizationService Localization = new(AppLanguage.English);
 
     private static readonly NoPreferenceStore Preferences = new();
+
+    private static readonly NoModLibraryFile Library = new();
 
     public static InstallsViewModel Installs { get; } = CreateInstalls();
 
@@ -113,6 +121,14 @@ public static class DesignData
     public static WorkshopCollectionsViewModel WorkshopCollections => Mods.WorkshopCollections;
 
     public static WorkshopFavoritesViewModel WorkshopFavorites => Mods.WorkshopFavorites;
+
+    public static LocalCollectionsViewModel LocalCollections => Mods.LocalCollections;
+
+    public static ModpacksViewModel Modpacks => Mods.Modpacks;
+
+    public static ModpackEditViewModel ModpackEdit { get; } = CreateModpackEdit();
+
+    public static LocalCollectionPickViewModel LocalCollectionPick { get; } = new(CreateLocalCollections());
 
     public static WorkshopItemRow WorkshopRow => WorkshopSubscriptions.VisibleRows.First(row => row.IsDownloading);
 
@@ -198,10 +214,11 @@ public static class DesignData
         var history = CreateWorkshopHistory();
         var userCollections = CreateWorkshopUserCollections();
         var favorites = CreateWorkshopFavorites();
+        var localCollections = CreateLocalCollections();
         var vm = new ModsViewModel(
             Installs, ModCollectionsSample, InstallOverrides, ModCollectionDefaults, Applier, new NoDialogs(), new NoClipboard(), RunState, OrderWriter,
             workshop, workshop, new SampleWorkshopActions(), new NoUrlLauncher(), history, userCollections, favorites,
-            new WorkshopTitles(history, userCollections, favorites), Localization);
+            new WorkshopTitles(history, userCollections, favorites, localCollections), localCollections, CreateModpacks(localCollections), Localization);
         vm.ActivateCommand.Execute(null);
 
         // Completes synchronously: the sample answers at once. One outdated item shows as downloading.
@@ -210,6 +227,8 @@ public static class DesignData
         _ = vm.WorkshopCollections.LoadCollectionAsync(vm.WorkshopCollections.Remembered[0].Id);
         _ = vm.WorkshopCollections.ShowAsync();
         _ = vm.WorkshopFavorites.ShowAsync();
+        _ = vm.LocalCollections.ShowAsync();
+        _ = vm.Modpacks.ShowAsync();
         return vm;
     }
 
@@ -228,6 +247,64 @@ public static class DesignData
                 [new SavedWorkshopEntry(1000900, "Example Collection"), new SavedWorkshopEntry(1000902, null)],
                 [new SavedWorkshopEntry(1000102, "Example Map Pack"), new SavedWorkshopEntry(1000107, "Example Weather Pack")]),
         });
+
+    private static LocalCollectionStore CreateLocalCollections() =>
+        new(Library, ModLibrary.Empty with
+        {
+            LocalCollections =
+            [
+                new SavedLocalCollection(
+                    new Guid("6f1c2b0e-4d3a-4f5e-9a8b-1c2d3e4f5a6b"),
+                    "Example Server",
+                    [new SavedWorkshopEntry(1000103, "Example Vehicles"), new SavedWorkshopEntry(1000101, "Example Core Library"), new SavedWorkshopEntry(1000108, null)]),
+                new SavedLocalCollection(new Guid("0a9b8c7d-6e5f-4a3b-8c2d-1e0f9a8b7c6d"), "Weather tests", [new SavedWorkshopEntry(1000105, "Example Weather")]),
+            ],
+        });
+
+    // One modpack linked to a preset and a Steam collection, one independent of both its sources.
+    private static ModpackStore CreateModpacks(LocalCollectionStore localCollections) =>
+        new(
+            Library,
+            ModLibrary.Empty with
+            {
+                Modpacks = new Dictionary<string, IReadOnlyList<SavedModpack>>
+                {
+                    [SampleAppPath("ProjectZomboid")] =
+                    [
+                        new SavedModpack(
+                            "Example Server",
+                            new SavedModpackPreset("Survival", ["ExampleCore", "ExampleMaps", "ExampleTweaks"], IsLinked: true),
+                            new SavedModpackCollection.Steam(1000900),
+                            [1000105]),
+                        new SavedModpack(
+                            "Weather night",
+                            new SavedModpackPreset("Old weather", ["ExampleWeather", "ExampleCore"], IsLinked: false),
+                            new SavedModpackCollection.Local(null, "Weather tests", [new SavedWorkshopEntry(1000105, "Example Weather")]),
+                            [1000101]),
+                    ],
+                },
+            },
+            new SamplePlatform(),
+            localCollections);
+
+    private static ModpackEditViewModel CreateModpackEdit()
+    {
+        return new ModpackEditViewModel(
+            UiText.Modpacks_EditTitle,
+            new Modpack(
+                "Weather night",
+                new ModpackPreset("Old weather", ["ExampleWeather", "ExampleCore"], IsLinked: false),
+                new ModpackCollection.Steam(1000901),
+                []),
+            _ => null,
+            Mods.State?.Collections ?? [],
+            [
+                new ModpackSteamOption(1000900, "Example Collection", UiText.Mods_SectionWorkshopFavorites),
+                new ModpackSteamOption(1000902, null, UiText.Mods_SectionWorkshopFavorites),
+                new ModpackSteamOption(1000901, null, UiText.WorkshopCollections_Remembered),
+            ],
+            CreateLocalCollections().All);
+    }
 
     private static WorkshopModPickViewModel CreateWorkshopModPick()
     {
@@ -349,6 +426,10 @@ public static class DesignData
         public Task ShowWorkshopActionAsync(WorkshopActionViewModel action) => Task.CompletedTask;
 
         public Task<bool> PickWorkshopModsAsync(WorkshopModPickViewModel pick) => Task.FromResult(false);
+
+        public Task<bool> PickLocalCollectionAsync(LocalCollectionPickViewModel pick) => Task.FromResult(false);
+
+        public Task<bool> EditModpackAsync(ModpackEditViewModel edit) => Task.FromResult(false);
 
         public Task<T?> ChooseOneAsync<T>(ChoicePrompt<T> prompt)
             where T : struct => Task.FromResult<T?>(null);
@@ -620,6 +701,17 @@ public static class DesignData
         public Task SaveWorkshopFavoritesAsync(SavedWorkshopFavorites favorites, CancellationToken ct = default) => Task.CompletedTask;
 
         public Task SaveAfterLaunchAsync(AfterLaunchAction action, CancellationToken ct = default) => Task.CompletedTask;
+    }
+
+    private sealed class NoModLibraryFile : IModLibraryFile
+    {
+        public ModLibrary Load() => ModLibrary.Empty;
+
+        public Task SaveLocalCollectionsAsync(IReadOnlyList<SavedLocalCollection> collections, CancellationToken ct = default) => Task.CompletedTask;
+
+        public Task SaveModpacksAsync(IReadOnlyDictionary<string, IReadOnlyList<SavedModpack>> modpacks, CancellationToken ct = default) => Task.CompletedTask;
+
+        public Task FlushAsync(CancellationToken ct = default) => Task.CompletedTask;
     }
 
     // Steam opens a launcher in another folder, so the account, the switch and the other path all show.

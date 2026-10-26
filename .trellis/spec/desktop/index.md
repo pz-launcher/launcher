@@ -8,3 +8,4 @@
 | [Localization](./localization.md) | resx layout, keys, game terminology, using text in XAML/VMs, `UiText.Culture` rule, tests | Filled |
 | [Shell and Theming](./shell-and-theming.md) | Custom title bar, navigation, page sidebars, `Shell.*` colors, light/dark | Filled |
 | [Preferences](./preferences.md) | Preference store and the persisted `preferences.json` contract | Filled |
+| [Mod library](./mod-library.md) | Local collections and modpacks: the persisted `mod-library.json` contract | Filled |

@@ -17,6 +17,9 @@ using PzLauncher.Desktop.Lang;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Services.Launch;
 using PzLauncher.Desktop.Services.Mods;
+using PzLauncher.Desktop.Services.Mods.Library;
+using PzLauncher.Desktop.Services.Mods.LocalCollections;
+using PzLauncher.Desktop.Services.Mods.Modpacks;
 using PzLauncher.Desktop.Services.Net;
 using PzLauncher.Desktop.Services.Preferences.Secrets;
 using PzLauncher.Desktop.Services.Preferences;
@@ -57,8 +60,7 @@ public partial class App : Application
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            var preferencesPath = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "PzLauncher", "preferences.json");
+            var dataFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "PzLauncher");
 
             // Composition root: the only place that builds the container.
             var services = new ServiceCollection();
@@ -79,8 +81,11 @@ public partial class App : Application
                 PlatformKind.MacOS or PlatformKind.Linux => new PlainSecretProtector(),
             });
             services.AddSingleton<IPreferenceStore>(sp => new JsonPreferenceStore(
-                preferencesPath, sp.GetRequiredService<ILogger<JsonPreferenceStore>>(), sp.GetRequiredService<ISecretProtector>()));
+                Path.Combine(dataFolder, "preferences.json"), sp.GetRequiredService<ILogger<JsonPreferenceStore>>(), sp.GetRequiredService<ISecretProtector>()));
             services.AddSingleton(sp => sp.GetRequiredService<IPreferenceStore>().Load());
+            services.AddSingleton<IModLibraryFile>(sp => new JsonModLibraryFile(
+                Path.Combine(dataFolder, "mod-library.json"), sp.GetRequiredService<ILogger<JsonModLibraryFile>>(), sp.GetRequiredService<TimeProvider>()));
+            services.AddSingleton(sp => sp.GetRequiredService<IModLibraryFile>().Load());
             services.AddSingleton<IProxySettingsService, ProxySettingsService>();
             services.AddSingleton<IInstallOverridesService, InstallOverridesService>();
             services.AddSingleton<IZombieBuddyChannelService, ZombieBuddyChannelService>();
@@ -90,6 +95,8 @@ public partial class App : Application
             services.AddSingleton<WorkshopCollectionHistory>();
             services.AddSingleton<WorkshopUserCollectionsCache>();
             services.AddSingleton<WorkshopFavorites>();
+            services.AddSingleton<LocalCollectionStore>();
+            services.AddSingleton<ModpackStore>();
             services.AddSingleton<WorkshopTitles>();
             services.AddSingleton<WorkshopLaunchCheck>();
             services.AddSingleton<GameRunState>();
@@ -137,13 +144,14 @@ public partial class App : Application
             };
             var installOverrides = provider.GetRequiredService<IInstallOverridesService>();
             var orderWriter = provider.GetRequiredService<IModCollectionOrderWriter>();
+            var modLibrary = provider.GetRequiredService<IModLibraryFile>();
             var updates = provider.GetRequiredService<UpdateCoordinator>();
             windowPlacement = WindowPlacementPersistence.Attach(
                 mainWindow,
                 provider.GetRequiredService<IPreferenceStore>(),
                 provider.GetRequiredService<UserPreferences>().Window,
                 // A failed order write is already logged by Core; closing goes on without it.
-                ct => Task.WhenAll(installOverrides.FlushAsync(ct), orderWriter.FlushAsync(ct), proxy.FlushAsync(ct)),
+                ct => Task.WhenAll(installOverrides.FlushAsync(ct), orderWriter.FlushAsync(ct), proxy.FlushAsync(ct), modLibrary.FlushAsync(ct)),
                 // A staged update installs whether or not "Later" was clicked; a failure is logged and offered again next start.
                 updates.InstallPendingOnCloseAsync,
                 provider.GetRequiredService<ILogger<WindowPlacementPersistence>>());

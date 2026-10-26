@@ -5,6 +5,9 @@ using PzLauncher.Core.Steam;
 using PzLauncher.Core.Steam.Workshop;
 using PzLauncher.Core.Steam.Workshop.Actions;
 using PzLauncher.Core.Steam.Workshop.Ids;
+using PzLauncher.Desktop.Services.Mods.Library;
+using PzLauncher.Desktop.Services.Mods.LocalCollections;
+using PzLauncher.Desktop.Services.Mods.Modpacks;
 using PzLauncher.Desktop.Services.Mods;
 using PzLauncher.Desktop.Services.Preferences.Records;
 using PzLauncher.Desktop.Services.Preferences;
@@ -41,6 +44,9 @@ public sealed class FakeWorkshopService : IWorkshopService, IWorkshopModsService
     public List<IReadOnlyList<ulong>> ClassifyRequests { get; } = [];
 
     public List<IReadOnlyList<ulong>> CheckRequests { get; } = [];
+
+    /// <summary>The token of each entry in <see cref="CheckRequests"/>.</summary>
+    public List<CancellationToken> CheckTokens { get; } = [];
 
     /// <summary>Child ids in collection order, nested collections already expanded; the title is the collection's <see cref="Published"/> one.</summary>
     public Dictionary<ulong, ulong[]> Collections { get; } = [];
@@ -137,6 +143,7 @@ public sealed class FakeWorkshopService : IWorkshopService, IWorkshopModsService
     public async Task<Result<IReadOnlyList<WorkshopItemDetails>>> CheckUpdatesAsync(IReadOnlyList<ulong> ids, CancellationToken ct = default)
     {
         CheckRequests.Add(ids);
+        CheckTokens.Add(ct);
         if (CheckGate is { } gate)
         {
             await gate.Task.WaitAsync(ct);
@@ -301,6 +308,26 @@ public static class TestWorkshop
 
     public static WorkshopFavorites Favorites(FakePreferenceStore? store = null, SavedWorkshopFavorites? saved = null) =>
         new(store ?? new FakePreferenceStore(), new UserPreferences(null, null, null) { WorkshopFavorites = saved ?? SavedWorkshopFavorites.None });
+
+    public static LocalCollectionStore LocalCollectionStore(FakeModLibraryFile? file = null, params SavedLocalCollection[] saved) =>
+        new(file ?? new FakeModLibraryFile(), ModLibrary.Empty with { LocalCollections = saved });
+
+    public static ModpackStore ModpackStoreOf(
+        LocalCollectionStore localCollections,
+        FakeModLibraryFile? file = null,
+        IReadOnlyDictionary<string, IReadOnlyList<Modpack>>? saved = null,
+        bool localCollectionsComplete = true,
+        StringComparison pathComparison = StringComparison.OrdinalIgnoreCase) =>
+        new(
+            file ?? new FakeModLibraryFile(),
+            ModLibrary.Empty with
+            {
+                Modpacks = (saved ?? new Dictionary<string, IReadOnlyList<Modpack>>())
+                    .ToDictionary(entry => entry.Key, IReadOnlyList<SavedModpack> (entry) => [.. entry.Value.Select(modpack => modpack.ToSaved())]),
+                LocalCollectionsComplete = localCollectionsComplete,
+            },
+            new FakePlatformEnvironment { PathComparison = pathComparison },
+            localCollections);
 
     public static WorkshopUserCollectionsCache UserCollections(FakePreferenceStore? store = null, SavedWorkshopUserCollections? saved = null, TimeProvider? time = null) =>
         new(store ?? new FakePreferenceStore(), new UserPreferences(null, null, null) { WorkshopUserCollections = saved }, time ?? new ManualTimeProvider());

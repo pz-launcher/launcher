@@ -5,15 +5,18 @@ using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using PzLauncher.Core.Common;
+using PzLauncher.Core.Mod.Modpacks;
 using PzLauncher.Core.Steam.Workshop;
 using PzLauncher.Core.Steam.Workshop.Actions;
 using PzLauncher.Core.Steam.Workshop.Ids;
 using PzLauncher.Desktop.Lang;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Services.Mods;
+using PzLauncher.Desktop.Services.Mods.LocalCollections;
 using PzLauncher.Desktop.Services.Shell.Dialogs;
 using PzLauncher.Desktop.Services.Shell;
 using PzLauncher.Desktop.ViewModels.Mods.Workshop.Actions;
+using PzLauncher.Desktop.ViewModels.Mods.Workshop.LocalCollections;
 
 namespace PzLauncher.Desktop.ViewModels.Mods.Workshop;
 
@@ -45,8 +48,9 @@ public partial class WorkshopCollectionsViewModel : WorkshopItemListSectionViewM
         WorkshopCollectionHistory history,
         WorkshopUserCollectionsCache userCache,
         WorkshopFavorites favorites,
-        WorkshopTitles titles)
-        : base(page, service, runner, dialogs, urls, favorites, titles)
+        WorkshopTitles titles,
+        LocalCollectionStore localCollections)
+        : base(page, service, runner, dialogs, urls, favorites, titles, localCollections)
     {
         _history = history;
         _userCache = userCache;
@@ -123,10 +127,10 @@ public partial class WorkshopCollectionsViewModel : WorkshopItemListSectionViewM
     internal override Task RefreshAsync() => _collection is { } collection ? LoadCollectionAsync(collection.Id) : Task.CompletedTask;
 
     /// <summary>Opens the collection from the Web API and remembers it.</summary>
-    internal Task LoadCollectionAsync(ulong id) => RunLoadAsync(async version =>
+    internal Task LoadCollectionAsync(ulong id) => RunLoadAsync(async (version, ct) =>
     {
         ShownStatus.Clear();
-        var result = await Service.GetCollectionAsync(id);
+        var result = await Service.GetCollectionAsync(id, ct);
         if (!IsLatest(version))
         {
             return;
@@ -144,7 +148,7 @@ public partial class WorkshopCollectionsViewModel : WorkshopItemListSectionViewM
         Titles.SeenCollections([new WorkshopEntry(id, result.Value.Title)]);
         SetCollection(result.Value);
         LinkText = "";
-        await MergeAsync(version);
+        await MergeAsync(version, ct);
     });
 
     internal override void RenderTexts()
@@ -189,6 +193,29 @@ public partial class WorkshopCollectionsViewModel : WorkshopItemListSectionViewM
     [RelayCommand(CanExecute = nameof(CanOpenCollectionInSteam))]
     private Task OpenCollectionInSteamAsync() =>
         _collection is { } open ? OpenInSteamAsync(open.Id) : Task.CompletedTask;
+
+    private bool CanSaveAsLocalCollection() => HasCollection;
+
+    /// <summary>A local collection of the open collection's items, in collection order.</summary>
+    [RelayCommand(CanExecute = nameof(CanSaveAsLocalCollection))]
+    private async Task SaveAsLocalCollectionAsync()
+    {
+        if (_collection is not { } open)
+        {
+            return;
+        }
+
+        var initial = open.Title is { } openTitle && ModpackNames.IsValid(openTitle) ? openTitle.Trim() : "";
+        if (await LocalCollectionPrompts.AskNameAsync(
+                Dialogs, LocalCollections, UiText.LocalCollections_SaveAsTitle, initial, UiText.ModCollections_Create) is not { } name)
+        {
+            return;
+        }
+
+        var saved = LocalCollections.Create(name, [.. open.Items.Select(item => new WorkshopEntry(item.Id, item.Details?.Title is { Length: > 0 } itemTitle ? itemTitle : null))]);
+        var count = saved.Items.Count;
+        ShownStatus.Show(() => string.Format(CultureInfo.CurrentCulture, UiText.LocalCollections_SavedAs, count, name));
+    }
 
     private bool CanUnsubscribeAll() => CanRunActions && SubscribedCount > 0;
 
@@ -288,6 +315,7 @@ public partial class WorkshopCollectionsViewModel : WorkshopItemListSectionViewM
         IdText = collection?.Id.ToString(CultureInfo.InvariantCulture);
         OpenCollectionInSteamCommand.NotifyCanExecuteChanged();
         ToggleOpenCollectionFavoriteCommand.NotifyCanExecuteChanged();
+        SaveAsLocalCollectionCommand.NotifyCanExecuteChanged();
         RefreshCollectionLists();
     }
 

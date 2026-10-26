@@ -7,26 +7,26 @@ using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using PzLauncher.Core.Common;
 using PzLauncher.Core.Mod;
 using PzLauncher.Core.Mod.Collections;
+using PzLauncher.Core.Mod.Modpacks;
 using PzLauncher.Desktop.Lang;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Services.Mods;
 using PzLauncher.Desktop.Services.Shell.Dialogs;
 using PzLauncher.Desktop.Services.Shell;
+using PzLauncher.Desktop.ViewModels.Mods.Modpacks;
 using PzLauncher.Desktop.ViewModels.Mods.Installed;
 
 namespace PzLauncher.Desktop.ViewModels.Mods.Collections;
 
 /// <summary>The game's mod collections of the install in use: edit, order, share, import, and use one as the current collection.</summary>
-public partial class ModCollectionsViewModel : ViewModelBase
+public partial class ModCollectionsViewModel : ViewModelBase, IReorderableList
 {
     private const int MaxAddCandidates = 50;
 
     private readonly ModsViewModel _page;
     private readonly IModCollectionDefaultsService _defaults;
-    private readonly ModCollectionApplier _applier;
     private readonly IDialogService _dialogs;
     private readonly IClipboardService _clipboard;
 
@@ -35,16 +35,10 @@ public partial class ModCollectionsViewModel : ViewModelBase
     private string? _selectedName;
     private readonly LocalizedText _status;
 
-    internal ModCollectionsViewModel(
-        ModsViewModel page,
-        IModCollectionDefaultsService defaults,
-        ModCollectionApplier applier,
-        IDialogService dialogs,
-        IClipboardService clipboard)
+    internal ModCollectionsViewModel(ModsViewModel page, IModCollectionDefaultsService defaults, IDialogService dialogs, IClipboardService clipboard)
     {
         _page = page;
         _defaults = defaults;
-        _applier = applier;
         _dialogs = dialogs;
         _clipboard = clipboard;
         Rows = [];
@@ -147,7 +141,7 @@ public partial class ModCollectionsViewModel : ViewModelBase
         var imported = new List<SharedModCollection>();
         foreach (var collection in ModCollectionShareText.Parse(accepted.Text))
         {
-            if (!Exists(collection.Name) || await ModCollectionPrompts.ConfirmOverwriteAsync(_dialogs, collection.Name))
+            if (!_page.PresetExists(collection.Name) || await ModCollectionPrompts.ConfirmOverwriteAsync(_dialogs, collection.Name))
             {
                 imported.Add(collection);
             }
@@ -158,19 +152,7 @@ public partial class ModCollectionsViewModel : ViewModelBase
             return;
         }
 
-        if (await _page.WriteAsync(async (root, extraGameArgs) =>
-            {
-                foreach (var collection in imported)
-                {
-                    var saved = await _page.Service.SaveAsync(new SaveModCollectionRequest(root, extraGameArgs, null, collection.Name, collection.ModIds));
-                    if (!saved.IsSuccess)
-                    {
-                        return saved;
-                    }
-                }
-
-                return Result.Ok();
-            }))
+        if (await _page.SavePresetsAsync(imported))
         {
             SelectByName(imported[^1].Name);
         }
@@ -193,19 +175,10 @@ public partial class ModCollectionsViewModel : ViewModelBase
             return;
         }
 
-        IReadOnlyList<string> ids = [.. _ids];
-        if (!await _page.WriteAsync((root, extraGameArgs) =>
-                _page.Service.SaveAsync(new SaveModCollectionRequest(root, extraGameArgs, original, name, ids))))
+        if (await _page.SavePresetAsync(name, [.. _ids], original))
         {
-            return;
+            SelectByName(name);
         }
-
-        if (_page.Install is { } install && _defaults.Get(install.RootPath) == original)
-        {
-            _defaults.Save(install.RootPath, name);
-        }
-
-        SelectByName(name);
     }
 
     [RelayCommand(CanExecute = nameof(CanWriteSelected))]
@@ -217,22 +190,16 @@ public partial class ModCollectionsViewModel : ViewModelBase
         }
 
         var name = row.Name;
-        var confirmed = await _dialogs.ConfirmAsync(new ConfirmPrompt(
+        var choice = await ModpackPrompts.ConfirmDeleteAsync(
+            _dialogs,
             UiText.ModCollections_DeleteTitle,
             Format(UiText.ModCollections_DeleteMessage, name),
-            UiText.ModCollections_Delete,
-            UiText.Dialog_Cancel));
-        if (!confirmed || !await _page.WriteAsync((root, extraGameArgs) => _page.Service.DeleteAsync(root, extraGameArgs, name)))
+            Format(UiText.Modpacks_PresetUsedMessage, name),
+            _page.PresetUsers(name));
+        if (choice != ConfirmChoice.Cancel && await _page.DeletePresetAsync(name, deleteUsers: choice == ConfirmChoice.Alternative))
         {
-            return;
+            SelectByName(null);
         }
-
-        if (_page.Install is { } install && _defaults.Get(install.RootPath) == name)
-        {
-            _defaults.Clear(install.RootPath);
-        }
-
-        SelectByName(null);
     }
 
     private bool CanUse() => CanWriteSelected() && Selected is not { IsCurrent: true, IsActiveInOrder: true };
@@ -246,26 +213,10 @@ public partial class ModCollectionsViewModel : ViewModelBase
         }
 
         var name = row.Name;
-        ModCollectionApplyOutcome? outcome = null;
-        await _page.RunAsync(async (root, extraGameArgs) =>
+        if (await _page.ApplyCollectionAsync(name) is ModCollectionApplyOutcome.Applied applied)
         {
-            outcome = await _applier.ApplyAsync(root, extraGameArgs, name);
-            if (outcome is ModCollectionApplyOutcome.Applied && _defaults.Get(root) != name)
-            {
-                _defaults.Save(root, name);
-            }
-        });
-        switch (outcome)
-        {
-            case ModCollectionApplyOutcome.Applied applied:
-                var count = applied.Result.EnabledIds.Count;
-                _status.Show(() => Format(UiText.ModCollections_Applied, name, count));
-                break;
-            case ModCollectionApplyOutcome.Failed failed:
-                await _dialogs.ShowErrorAsync(ErrorMessages.ToUserText(failed.Error));
-                break;
-            case ModCollectionApplyOutcome.Cancelled or null:
-                break;
+            var count = applied.Result.EnabledIds.Count;
+            _status.Show(() => Format(UiText.ModCollections_Applied, name, count));
         }
     }
 
@@ -366,8 +317,7 @@ public partial class ModCollectionsViewModel : ViewModelBase
             return;
         }
 
-        var name = row.Name;
-        await _page.WriteAsync((root, extraGameArgs) => _page.Service.SaveAsync(new SaveModCollectionRequest(root, extraGameArgs, name, name, ids)));
+        await _page.SavePresetAsync(row.Name, ids, row.Name);
     }
 
     /// <inheritdoc cref="ModsViewModel.CreateCollectionAsync"/>
@@ -379,8 +329,7 @@ public partial class ModCollectionsViewModel : ViewModelBase
 
     private async Task<bool> SaveAndSelectAsync(string name, IReadOnlyList<string> ids)
     {
-        if (!await _page.WriteAsync((root, extraGameArgs) =>
-                _page.Service.SaveAsync(new SaveModCollectionRequest(root, extraGameArgs, null, name, ids))))
+        if (!await _page.SavePresetAsync(name, ids))
         {
             return false;
         }
@@ -392,12 +341,18 @@ public partial class ModCollectionsViewModel : ViewModelBase
     /// <summary>The trimmed name, or <c>null</c> when cancelled.</summary>
     /// <param name="original">The collection being renamed, which its own name doesn't clash with.</param>
     private async Task<string?> AskNameAsync(TextPrompt prompt, string? original) =>
-        await ModCollectionPrompts.AskNameAsync(_dialogs, prompt, name => name != original && Exists(name)) is TextPromptResult.Accepted accepted
+        await ModCollectionPrompts.AskNameAsync(_dialogs, prompt, name => name != original && _page.PresetExists(name)) is TextPromptResult.Accepted accepted
             ? accepted.Text
             : null;
 
     private static string? ValidateImport(string text)
     {
+        // Its last line is a preset line, but importing it alone would leave the modpack and its collection behind.
+        if (ModpackShareText.Parse(text) is not ModpackShareTextResult.NotModpack)
+        {
+            return UiText.ModCollections_ImportModpack;
+        }
+
         var collections = ModCollectionShareText.Parse(text);
         if (collections.Count == 0)
         {
@@ -408,8 +363,6 @@ public partial class ModCollectionsViewModel : ViewModelBase
             ? Format(UiText.ModCollections_ImportNameInvalid, invalid.Name)
             : null;
     }
-
-    private bool Exists(string name) => _page.State?.Collections.Any(collection => collection.Name == name) ?? false;
 
     private void SelectByName(string? name)
     {

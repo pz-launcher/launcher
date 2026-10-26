@@ -22,6 +22,7 @@ PzLauncher.Core/
 ├── Mod/             # any PZ mod: mod.info reading, lookup in the game's mod order, installed-mod catalog
 │   ├── Collections/ # the game's mod collections and active mod list: load order, share text, apply
 │   │   └── Files/   # the game's collection, collection order, active-list and mod-list settings files
+│   ├── Modpacks/    # modpack share text (a Workshop collection with a mod preset), its extra items and name rule
 │   ├── Workshop/    # Workshop items with their mods and collections
 │   ├── ZombieBuddy/ # ZombieBuddy setup in a game install
 │   │   ├── Preload/     # Java mod preload check and preload list

@@ -2,8 +2,32 @@ using PzLauncher.Core.Common;
 using PzLauncher.Core.Mod;
 using PzLauncher.Core.Mod.Collections;
 using PzLauncher.Desktop.Services.Mods;
+using PzLauncher.Desktop.Services.Mods.Library;
 
 namespace PzLauncher.Desktop.Tests.TestSupport.Fakes;
+
+public sealed class FakeModLibraryFile : IModLibraryFile
+{
+    public List<IReadOnlyList<SavedLocalCollection>> SavedLocalCollections { get; } = [];
+
+    public List<IReadOnlyDictionary<string, IReadOnlyList<SavedModpack>>> SavedModpacks { get; } = [];
+
+    public ModLibrary Load() => ModLibrary.Empty;
+
+    public Task SaveLocalCollectionsAsync(IReadOnlyList<SavedLocalCollection> collections, CancellationToken ct = default)
+    {
+        SavedLocalCollections.Add(collections);
+        return Task.CompletedTask;
+    }
+
+    public Task SaveModpacksAsync(IReadOnlyDictionary<string, IReadOnlyList<SavedModpack>> modpacks, CancellationToken ct = default)
+    {
+        SavedModpacks.Add(modpacks);
+        return Task.CompletedTask;
+    }
+
+    public Task FlushAsync(CancellationToken ct = default) => Task.CompletedTask;
+}
 
 public sealed class FakeModCollectionDefaultsService : IModCollectionDefaultsService
 {

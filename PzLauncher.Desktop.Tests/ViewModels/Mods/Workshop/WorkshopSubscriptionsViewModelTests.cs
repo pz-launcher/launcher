@@ -56,10 +56,11 @@ public class WorkshopSubscriptionsViewModelTests : UiTextCultureTest
         var orderWriter = new ModCollectionOrderWriter(_collections, _runState, new FakePlatformEnvironment(), new ManualTimeProvider());
         var history = TestWorkshop.History();
         var userCollections = TestWorkshop.UserCollections();
+        var localCollections = TestWorkshop.LocalCollectionStore();
         var page = new ModsViewModel(
             Installs, _collections, _overrides, new FakeModCollectionDefaultsService(), new ModCollectionApplier(_collections, _dialogs), _dialogs,
             _clipboard, _runState, orderWriter, _service, _service, _runner, _urls, history, userCollections, _favorites,
-            new WorkshopTitles(history, userCollections, _favorites), Localization)
+            new WorkshopTitles(history, userCollections, _favorites, localCollections), localCollections, TestWorkshop.ModpackStoreOf(localCollections), Localization)
         {
             Section = section,
         };

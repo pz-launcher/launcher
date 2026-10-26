@@ -5,7 +5,6 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
-using System.Text.Json.Serialization.Metadata;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -22,6 +21,7 @@ using PzLauncher.Desktop.Services.Preferences.Secrets;
 using PzLauncher.Desktop.Services.Shell.Lifetime;
 using PzLauncher.Desktop.Services.Shell;
 using PzLauncher.Desktop.Themes;
+using static PzLauncher.Desktop.Services.Preferences.PreferenceJson;
 
 namespace PzLauncher.Desktop.Services.Preferences;
 
@@ -29,12 +29,10 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger,
 {
     private static readonly PreferencesFile Empty = new(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
 
-    private delegate bool EntryReader<T>(JsonElement element, [MaybeNullWhen(false)] out T value);
-
     // Saves are fire-and-forget; one at a time so the last choice is the one left on disk.
     private readonly SemaphoreSlim _saveGate = new(1, 1);
 
-    // Every save rewrites the whole file from this, so saving one field never drops the other.
+    // Every save rewrites the whole file from this, so saving one field never drops another, unknown ones included.
     private PreferencesFile? _file;
 
     public UserPreferences Load()
@@ -224,12 +222,6 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger,
         return SaveAsync(file => file with { WorkshopFavorites = element }, ct);
     }
 
-    private static JsonElement ToElement(IReadOnlyList<SavedWorkshopEntry> entries)
-    {
-        WorkshopEntryFile[] files = [.. entries.Select(entry => new WorkshopEntryFile(entry.Id.ToString(CultureInfo.InvariantCulture), entry.Title))];
-        return JsonSerializer.SerializeToElement(files, DesktopJsonContext.Default.WorkshopEntryFileArray);
-    }
-
     public Task SaveWorkshopUserCollectionsAsync(SavedWorkshopUserCollections collections, CancellationToken ct = default)
     {
         var entry = JsonSerializer.SerializeToElement(
@@ -316,7 +308,7 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger,
         where T : struct =>
         element is { ValueKind: JsonValueKind.String } name ? fromPreferenceName(name.GetString()) : null;
 
-    private static JsonElement NameElement(string preferenceName) => JsonSerializer.SerializeToElement(preferenceName, DesktopJsonContext.Default.String);
+    private static JsonElement NameElement(string preferenceName) => TextElement(preferenceName);
 
     private static List<string> ToManualJavaHomes(IReadOnlyList<JsonElement>? entries) =>
     [
@@ -325,28 +317,6 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger,
             .Select(entry => entry.GetString() ?? "")
             .Where(IsAbsolutePath),
     ];
-
-    private static List<SavedWorkshopEntry> ToWorkshopEntries(JsonElement? element, out bool valid)
-    {
-        if (element is not { ValueKind: JsonValueKind.Array } array)
-        {
-            valid = element is null or { ValueKind: JsonValueKind.Null };
-            return [];
-        }
-
-        valid = true;
-        return ReadById<SavedWorkshopEntry>(array.EnumerateArray(), TryReadWorkshopEntry, entry => entry.Id, ref valid);
-    }
-
-    private static bool TryReadWorkshopEntry(JsonElement element, [MaybeNullWhen(false)] out SavedWorkshopEntry entry)
-    {
-        entry = element.ValueKind == JsonValueKind.Object
-            && TryDeserialize(element, DesktopJsonContext.Default.WorkshopEntryFile) is { } read
-            && TryReadWorkshopId(read.Id, out var id)
-                ? new SavedWorkshopEntry(id, read.Title is { Length: > 0 } title ? title : null)
-                : null;
-        return entry is not null;
-    }
 
     // A non-object loads none; a list that is missing loads empty, one that isn't an array or a bad entry is dropped.
     private static SavedWorkshopFavorites ToWorkshopFavorites(JsonElement? element, out bool valid)
@@ -400,44 +370,6 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger,
         return summary is not null;
     }
 
-    // Decimal text, never zero.
-    private static bool TryReadWorkshopId(string? text, out ulong id) =>
-        ulong.TryParse(text, NumberStyles.None, CultureInfo.InvariantCulture, out id) && id != 0;
-
-    // An entry that can't be read, or repeats an id read before, is dropped and makes the list invalid.
-    private static List<T> ReadById<T>(IEnumerable<JsonElement> entries, EntryReader<T> tryRead, Func<T, ulong> idOf, ref bool valid)
-    {
-        var result = new List<T>();
-        var ids = new HashSet<ulong>();
-        foreach (var element in entries)
-        {
-            if (tryRead(element, out var value) && ids.Add(idOf(value)))
-            {
-                result.Add(value);
-            }
-            else
-            {
-                valid = false;
-            }
-        }
-
-        return result;
-    }
-
-    private static Dictionary<string, T> ReadPerInstall<T>(IReadOnlyDictionary<string, JsonElement>? entries, EntryReader<T> tryRead)
-    {
-        var result = new Dictionary<string, T>(StringComparer.Ordinal);
-        foreach (var (root, element) in entries ?? new Dictionary<string, JsonElement>())
-        {
-            if (IsAbsolutePath(root) && tryRead(element, out var value))
-            {
-                result[root] = value;
-            }
-        }
-
-        return result;
-    }
-
     // A null entry removes the install's value.
     private static Dictionary<string, JsonElement> WithPerInstall(
         IReadOnlyDictionary<string, JsonElement>? entries, string installRoot, JsonElement? entry)
@@ -484,22 +416,6 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger,
                 GarbageCollectorPreferences.FromPreferenceName(entry.Gc))
             : null;
 
-    private static T? TryDeserialize<T>(JsonElement element, JsonTypeInfo<T> typeInfo)
-        where T : class
-    {
-        try
-        {
-            return element.Deserialize(typeInfo);
-        }
-        catch (JsonException)
-        {
-            return null;
-        }
-    }
-
-    private static bool IsAbsolutePath(string path) =>
-        path.AsSpan().IndexOfAny(Path.GetInvalidPathChars()) < 0 && Path.IsPathFullyQualified(path);
-
     private static WindowPlacement? ToPlacement(WindowFile? window) =>
         window is { X: { } x, Y: { } y, Width: { } width, Height: { } height, Maximized: { } maximized }
         && double.IsFinite(width) && width > 0 && double.IsFinite(height) && height > 0
@@ -513,20 +429,7 @@ public sealed partial class JsonPreferenceStore(string filePath, ILogger logger,
         {
             var file = update(_file ?? Read());
             _file = file;
-
-            if (Path.GetDirectoryName(filePath) is { Length: > 0 } directory)
-            {
-                Directory.CreateDirectory(directory);
-            }
-
-            // Write then rename, so a crash mid-write never leaves a truncated preference file.
-            var tempPath = filePath + ".tmp";
-            await using (var stream = new FileStream(tempPath, FileMode.Create, FileAccess.Write, FileShare.None, 4096, FileOptions.Asynchronous))
-            {
-                await JsonSerializer.SerializeAsync(stream, file, DesktopJsonContext.Default.PreferencesFile, ct);
-            }
-
-            File.Move(tempPath, filePath, overwrite: true);
+            await WriteAsync(filePath, file, DesktopJsonContext.Default.PreferencesFile, ct);
         }
         catch (IOException ex)
         {

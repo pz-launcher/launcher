@@ -4,12 +4,12 @@ using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using PzLauncher.Core.Common;
 using PzLauncher.Core.Steam.Workshop;
 using PzLauncher.Core.Steam.Workshop.Actions;
 using PzLauncher.Desktop.Lang;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Services.Mods;
+using PzLauncher.Desktop.Services.Mods.LocalCollections;
 using PzLauncher.Desktop.Services.Shell.Dialogs;
 using PzLauncher.Desktop.Services.Shell;
 
@@ -32,8 +32,9 @@ public sealed partial class WorkshopFavoritesViewModel : WorkshopItemListSection
         IClipboardService clipboard,
         IUrlLauncher urls,
         WorkshopFavorites favorites,
-        WorkshopTitles titles)
-        : base(page, service, runner, dialogs, urls, favorites, titles)
+        WorkshopTitles titles,
+        LocalCollectionStore localCollections)
+        : base(page, service, runner, dialogs, urls, favorites, titles, localCollections)
     {
         _clipboard = clipboard;
         _favoritesStatus = new LocalizedText(text => FavoritesStatusText = text);
@@ -147,37 +148,12 @@ public sealed partial class WorkshopFavoritesViewModel : WorkshopItemListSection
     protected override Task ShowAgainAsync() => LoadItemsAsync();
 
     /// <summary>The starred items: their latest versions from the Web API, merged with the subscriptions like an opened collection.</summary>
-    private Task LoadItemsAsync() => RunLoadAsync(async version =>
-    {
-        List<ulong> ids = [.. Favorites.Items.Select(entry => entry.Id)];
-        Dictionary<ulong, WorkshopItemDetails> latest = [];
-        Error? detailsError = null;
-        if (ids.Count > 0)
-        {
-            var details = await Service.CheckUpdatesAsync(ids);
-            if (!IsLatest(version))
-            {
-                return;
-            }
-
-            if (details.IsSuccess)
-            {
-                latest = details.Value.ToDictionary(item => item.Id);
-            }
-            else
-            {
-                detailsError = details.Error;
-            }
-        }
-
+    private Task LoadItemsAsync() => RunLoadAsync((version, ct) => ListLatestAsync(
+        [.. Favorites.Items.Select(entry => entry.Id)],
         // The list as it is now: a star may have changed while the Web API answered.
-        SetItems([.. Favorites.Items.Select(entry => new WorkshopCollectionItem(entry.Id, latest.GetValueOrDefault(entry.Id)))]);
-        await MergeAsync(version);
-        if (IsLatest(version) && detailsError is not null)
-        {
-            AddWarning(detailsError);
-        }
-    });
+        latest => [.. Favorites.Items.Select(entry => new WorkshopCollectionItem(entry.Id, latest.GetValueOrDefault(entry.Id)))],
+        version,
+        ct));
 
     // Titles for starred ids saved without one; a failed lookup leaves them as ids.
     private async Task FillFavoriteTitlesAsync()

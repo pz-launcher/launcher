@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -13,12 +15,16 @@ using PzLauncher.Core.Steam.Workshop.Actions;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Services.Launch;
 using PzLauncher.Desktop.Services.Mods;
+using PzLauncher.Desktop.Services.Mods.LocalCollections;
+using PzLauncher.Desktop.Services.Mods.Modpacks;
 using PzLauncher.Desktop.Services.Shell.Dialogs;
 using PzLauncher.Desktop.Services.Shell;
 using PzLauncher.Desktop.ViewModels.Installs;
+using PzLauncher.Desktop.ViewModels.Mods.Modpacks;
 using PzLauncher.Desktop.ViewModels.Mods.Collections;
 using PzLauncher.Desktop.ViewModels.Mods.Installed;
 using PzLauncher.Desktop.ViewModels.Mods.Workshop;
+using PzLauncher.Desktop.ViewModels.Mods.Workshop.LocalCollections;
 
 namespace PzLauncher.Desktop.ViewModels.Mods;
 
@@ -30,12 +36,20 @@ public partial class ModsViewModel : ViewModelBase
     private readonly IDialogService _dialogs;
     private readonly GameRunState _runState;
     private readonly IModCollectionOrderWriter _orderWriter;
+    private readonly IModCollectionDefaultsService _defaults;
+    private readonly ModCollectionApplier _applier;
+    private readonly LocalCollectionStore _localCollections;
+    private readonly ModpackStore _modpacks;
+    private readonly PresetWriter _presets;
 
     private readonly LocalizedText _error;
     private bool _activated;
 
     // A newer load supersedes one still in flight.
     private int _loadVersion;
+
+    // The shown install's subscriptions, read or being read, which the list sections share until a show, refresh, Steam action or install change.
+    private SharedSubscriptions? _subscriptions;
 
     public ModsViewModel(
         InstallsViewModel installs,
@@ -55,6 +69,8 @@ public partial class ModsViewModel : ViewModelBase
         WorkshopUserCollectionsCache workshopUserCollections,
         WorkshopFavorites workshopFavorites,
         WorkshopTitles workshopTitles,
+        LocalCollectionStore localCollections,
+        ModpackStore modpacks,
         ILocalizationService localization)
     {
         _installs = installs;
@@ -64,12 +80,24 @@ public partial class ModsViewModel : ViewModelBase
         _dialogs = dialogs;
         _runState = runState;
         _orderWriter = orderWriter;
+        _defaults = defaults;
+        _applier = applier;
+        _localCollections = localCollections;
+        _modpacks = modpacks;
+        _presets = new PresetWriter(service, defaults, modpacks);
         Mods = new InstalledModsViewModel(this);
-        Collections = new ModCollectionsViewModel(this, defaults, applier, dialogs, clipboard);
-        WorkshopSubscriptions = new WorkshopSubscriptionsViewModel(this, workshop, workshopActions, dialogs, clipboard, urls, workshopFavorites, workshopTitles);
+        Collections = new ModCollectionsViewModel(this, defaults, dialogs, clipboard);
+        Modpacks = new ModpacksViewModel(
+            this, workshop, workshopActions, dialogs, clipboard, urls, workshopFavorites, workshopTitles, localCollections, modpacks, workshopHistory,
+            workshopUserCollections, new ModpackImport(_presets, localCollections, modpacks, workshopHistory));
+        WorkshopSubscriptions = new WorkshopSubscriptionsViewModel(
+            this, workshop, workshopActions, dialogs, clipboard, urls, workshopFavorites, workshopTitles, localCollections);
         WorkshopCollections = new WorkshopCollectionsViewModel(
-            this, workshop, workshopActions, dialogs, urls, workshopHistory, workshopUserCollections, workshopFavorites, workshopTitles);
-        WorkshopFavorites = new WorkshopFavoritesViewModel(this, workshop, workshopActions, dialogs, clipboard, urls, workshopFavorites, workshopTitles);
+            this, workshop, workshopActions, dialogs, urls, workshopHistory, workshopUserCollections, workshopFavorites, workshopTitles, localCollections);
+        LocalCollections = new LocalCollectionsViewModel(
+            this, workshop, workshopActions, dialogs, clipboard, urls, workshopFavorites, workshopTitles, localCollections);
+        WorkshopFavorites = new WorkshopFavoritesViewModel(
+            this, workshop, workshopActions, dialogs, clipboard, urls, workshopFavorites, workshopTitles, localCollections);
         _error = new LocalizedText(text => ErrorText = text);
 
         // Never unsubscribed: these are app-lifetime singletons.
@@ -83,9 +111,13 @@ public partial class ModsViewModel : ViewModelBase
 
     public ModCollectionsViewModel Collections { get; }
 
+    public ModpacksViewModel Modpacks { get; }
+
     public WorkshopSubscriptionsViewModel WorkshopSubscriptions { get; }
 
     public WorkshopCollectionsViewModel WorkshopCollections { get; }
+
+    public LocalCollectionsViewModel LocalCollections { get; }
 
     public WorkshopFavoritesViewModel WorkshopFavorites { get; }
 
@@ -94,7 +126,7 @@ public partial class ModsViewModel : ViewModelBase
     public partial ModsSection Section { get; set; }
 
     /// <summary>The section shows the game's mod files, whose load state and error are the page's own.</summary>
-    public bool ShowsGameFiles => WorkshopSection is null;
+    public bool ShowsGameFiles => WorkshopSection is null || Section == ModsSection.Modpacks;
 
     /// <summary><c>null</c> when the install in use is none or a dedicated server.</summary>
     public PzInstall? Install => _installs.SelectedInstall is { Kind: PzInstallKind.Game } install ? install : null;
@@ -133,12 +165,14 @@ public partial class ModsViewModel : ViewModelBase
     private WorkshopSectionViewModel? WorkshopSection => Section switch
     {
         ModsSection.Mods or ModsSection.Collections => null,
+        ModsSection.Modpacks => Modpacks,
         ModsSection.WorkshopSubscriptions => WorkshopSubscriptions,
         ModsSection.WorkshopCollections => WorkshopCollections,
+        ModsSection.LocalCollections => LocalCollections,
         ModsSection.WorkshopFavorites => WorkshopFavorites,
     };
 
-    private WorkshopSectionViewModel[] WorkshopSections => [WorkshopSubscriptions, WorkshopCollections, WorkshopFavorites];
+    private WorkshopSectionViewModel[] WorkshopSections => [Modpacks, WorkshopSubscriptions, WorkshopCollections, LocalCollections, WorkshopFavorites];
 
     // The view calls this on every load: the files may have changed in-game since the last visit.
     [RelayCommand]
@@ -151,7 +185,11 @@ public partial class ModsViewModel : ViewModelBase
     private bool CanRefresh() => Install is not null && !IsBusy;
 
     [RelayCommand(CanExecute = nameof(CanRefresh))]
-    private Task RefreshAsync() => WorkshopSection?.RefreshAsync() ?? ReloadAsync();
+    private Task RefreshAsync()
+    {
+        DropSubscriptions();
+        return WorkshopSection?.RefreshAsync() ?? ReloadAsync();
+    }
 
     // Steam may have changed the subscriptions since the last visit.
     partial void OnSectionChanged(ModsSection value)
@@ -162,7 +200,44 @@ public partial class ModsViewModel : ViewModelBase
         }
     }
 
-    private Task ShowWorkshopSectionAsync() => WorkshopSection?.ShowAsync() ?? Task.CompletedTask;
+    private Task ShowWorkshopSectionAsync()
+    {
+        DropSubscriptions();
+        return WorkshopSection?.ShowAsync() ?? Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// The install's subscriptions joined with its mods and with its presets as last read; Steam's files are read once until
+    /// <see cref="DropSubscriptions"/>, so a list section switching entries only merges again.
+    /// </summary>
+    internal async Task<Result<WorkshopModSubscriptions>> GetSubscriptionsAsync(PzInstall install, CancellationToken ct)
+    {
+        if (_subscriptions is not { } shared || shared.Root != install.RootPath)
+        {
+            // Not the asking load's token: a newer load shares the read, and a superseded one only stops waiting for it.
+            shared = new SharedSubscriptions(install.RootPath, WorkshopMods.GetSubscriptionsAsync(install.RootPath, ExtraGameArgs(install), CancellationToken.None));
+            _subscriptions = shared;
+        }
+
+        var result = await shared.Read.WaitAsync(ct);
+        if (!result.IsSuccess)
+        {
+            // The next load tries again.
+            if (_subscriptions == shared)
+            {
+                _subscriptions = null;
+            }
+
+            return result;
+        }
+
+        return State is { } state ? result.Value.WithCollections(state.Collections) : result;
+    }
+
+    /// <summary>Steam's files may have changed: the next <see cref="GetSubscriptionsAsync"/> reads them again.</summary>
+    internal void DropSubscriptions() => _subscriptions = null;
+
+    internal bool PresetExists(string name) => State?.Collections.Any(collection => collection.Name == name) ?? false;
 
     /// <summary>Shows the Workshop collections section with this collection open.</summary>
     internal Task OpenWorkshopCollectionAsync(ulong id)
@@ -176,6 +251,74 @@ public partial class ModsViewModel : ViewModelBase
     /// <returns>The name saved under; <c>null</c> when cancelled or the save failed.</returns>
     internal Task<string?> CreateCollectionAsync(string title, string initialName, IReadOnlyList<string> modIds) =>
         Collections.CreateAsync(title, initialName, modIds);
+
+    /// <summary>Applies the install's mod collection as the enabled mod list and marks it current; a failure is shown.</summary>
+    /// <returns><c>null</c> when it couldn't start.</returns>
+    internal async Task<ModCollectionApplyOutcome?> ApplyCollectionAsync(string name)
+    {
+        ModCollectionApplyOutcome? outcome = null;
+        await RunAsync(async (root, extraGameArgs) =>
+        {
+            outcome = await _applier.ApplyAsync(root, extraGameArgs, name);
+            if (outcome is ModCollectionApplyOutcome.Applied && _defaults.Get(root) != name)
+            {
+                _defaults.Save(root, name);
+            }
+        });
+        if (outcome is ModCollectionApplyOutcome.Failed failed)
+        {
+            await _dialogs.ShowErrorAsync(ErrorMessages.ToUserText(failed.Error));
+        }
+
+        return outcome;
+    }
+
+    // Every preset write goes through these, so the current preset and the modpacks' links are in step before the presets are read again.
+
+    /// <summary>Saves the preset; with <paramref name="original"/>, under its new name. True when it was written; a failure is shown.</summary>
+    internal Task<bool> SavePresetAsync(string name, IReadOnlyList<string> modIds, string? original = null) =>
+        WriteAsync((root, extraGameArgs) => _presets.SaveAsync(root, extraGameArgs, name, modIds, original));
+
+    /// <summary>Saves the presets in order, stopping at the first failure. True when all were written; a failure is shown.</summary>
+    internal Task<bool> SavePresetsAsync(IReadOnlyList<SharedModCollection> presets) =>
+        WriteAsync(async (root, extraGameArgs) =>
+        {
+            foreach (var preset in presets)
+            {
+                var saved = await _presets.SaveAsync(root, extraGameArgs, preset.Name, preset.ModIds);
+                if (!saved.IsSuccess)
+                {
+                    return saved;
+                }
+            }
+
+            return Result.Ok();
+        });
+
+    /// <inheritdoc cref="PresetWriter.DeleteAsync"/>
+    internal Task<bool> DeletePresetAsync(string name, bool deleteUsers) =>
+        WriteAsync((root, extraGameArgs) => _presets.DeleteAsync(root, extraGameArgs, name, deleteUsers));
+
+    /// <inheritdoc cref="PresetWriter.RestoreAsync"/>
+    internal Task<bool> RestorePresetAsync(string modpack, string name, IReadOnlyList<string> modIds) =>
+        WriteAsync((root, extraGameArgs) => _presets.RestoreAsync(root, extraGameArgs, modpack, name, modIds));
+
+    /// <summary>The shown install's modpacks linked to its preset of this name.</summary>
+    internal IReadOnlyList<string> PresetUsers(string name) => Install is { } install ? _modpacks.UsersOfPreset(install.RootPath, name) : [];
+
+    /// <summary>Every install's modpacks linked to the local collection, each with its install when that isn't the shown one.</summary>
+    internal IReadOnlyList<string> LocalCollectionUsers(Guid id) => ModpackPrompts.UserNames(_modpacks, _modpacks.UsersOfLocalCollection(id), Install?.RootPath);
+
+    /// <param name="deleteUsers">Every install's modpacks linked to it are deleted too; otherwise they keep their copy.</param>
+    internal void DeleteLocalCollection(Guid id, bool deleteUsers)
+    {
+        if (deleteUsers)
+        {
+            _modpacks.DeleteUsersOfLocalCollection(id);
+        }
+
+        _localCollections.Delete(id);
+    }
 
     internal async Task ReloadAsync()
     {
@@ -205,6 +348,9 @@ public partial class ModsViewModel : ViewModelBase
             }
 
             _error.Clear();
+
+            // Before the state shows: its listeners read the modpacks.
+            _modpacks.SyncPresets(install.RootPath, result.Value.Collections, result.Value.InstalledMods, Modpacks.SteamCollectionItems);
             State = result.Value;
         }
         finally
@@ -306,6 +452,7 @@ public partial class ModsViewModel : ViewModelBase
 
         State = null;
         _error.Clear();
+        DropSubscriptions();
         OnPropertyChanged(nameof(Install));
         OnPropertyChanged(nameof(HasNoGameInstall));
         OnPropertyChanged(nameof(CanWrite));
@@ -338,4 +485,6 @@ public partial class ModsViewModel : ViewModelBase
             _ = ReloadAsync();
         }
     }
+
+    private sealed record SharedSubscriptions(string Root, Task<Result<WorkshopModSubscriptions>> Read);
 }

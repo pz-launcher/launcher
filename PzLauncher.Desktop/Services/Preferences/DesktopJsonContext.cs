@@ -48,7 +48,13 @@ internal sealed record PreferencesFile(
     JsonElement? WorkshopCollections,
     JsonElement? WorkshopUserCollections,
     JsonElement? WorkshopFavorites,
-    JsonElement? AfterLaunch);
+    JsonElement? AfterLaunch)
+{
+    /// <summary>Fields this build doesn't know (another launcher version's), written back unchanged.</summary>
+    // set, not init: System.Text.Json rejects init-only extension data.
+    [JsonExtensionData]
+    public Dictionary<string, JsonElement>? Unknown { get; set; }
+}
 
 /// <summary>Nullable members, so a missing one is told apart from a zero.</summary>
 internal sealed record WindowFile(int? X, int? Y, double? Width, double? Height, bool? Maximized);

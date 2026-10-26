@@ -275,4 +275,29 @@ public sealed class WorkshopModsServiceTests : IDisposable
         Assert.Equal((details, WorkshopItemState.NotInstalled), (items[1].Item.Latest, items[1].Item.State));
         Assert.Equal(["pack"], items[1].Collections);
     }
+
+    [Fact]
+    public void InListOrder_FilledInLatestVersion_DecidesTheState()
+    {
+        var details = new WorkshopItemDetails(1, "One", "5", DateTimeOffset.FromUnixTimeSeconds(5), 7);
+        var installed = new WorkshopInstall("/steam/workshop/content/108600/1", "4", DateTimeOffset.FromUnixTimeSeconds(4), 7);
+        var subscribed = new WorkshopModItem(new WorkshopItem(1, default, false, installed, null, WorkshopItemState.UpToDate), [], []);
+
+        var items = WorkshopModItem.InListOrder([new WorkshopCollectionItem(1, details)], [subscribed]);
+
+        Assert.Equal((details, WorkshopItemState.NeedsUpdate), (items[0].Item.Latest, items[0].Item.State));
+    }
+
+    [Fact]
+    public void WithCollections_TakesTheCollectionsListingEachItemsMods()
+    {
+        var item = new WorkshopItem(1, default, false, null, null, WorkshopItemState.NotInstalled);
+        var mod = new InstalledMod("ModA", "Mod A", 1, InstalledModSource.SteamWorkshop, [], [], [], []);
+        var subscriptions = new WorkshopModSubscriptions([new WorkshopModItem(item, [mod], ["old"]), new WorkshopModItem(item, [], ["old"])], []);
+
+        var joined = subscriptions.WithCollections(
+            [new ModCollection("pack", ["ModA"], false, false), new ModCollection("other", ["ModB"], false, false), new ModCollection("all", ["ModB", "ModA"], false, false)]);
+
+        Assert.Equal<IEnumerable<string>>([["pack", "all"], []], joined.Items.Select(joinedItem => joinedItem.Collections));
+    }
 }

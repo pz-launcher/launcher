@@ -63,6 +63,7 @@
                            Foreground="{DynamicResource Shell.TextMuted}" />
                 <Button Content="{x:Static lang:UiText.Workshop_UpdateSelected}" Command="{Binding UpdateSelectedCommand}" />
                 <Button Content="{x:Static lang:UiText.Workshop_Unsubscribe}" Command="{Binding UnsubscribeCommand}" />
+                <Button Content="{x:Static lang:UiText.LocalCollections_AddTo}" Command="{Binding AddSelectedToLocalCollectionCommand}" />
                 <Button Content="{x:Static lang:UiText.Mods_ClearSelection}" Command="{Binding ClearSelectionCommand}" />
             </StackPanel>
         </WrapPanel>
@@ -77,7 +78,7 @@
             <TextBlock Text="{x:Static lang:UiText.Workshop_FilterEmpty}" IsVisible="{Binding IsFilterEmpty}" TextWrapping="Wrap"
                        Foreground="{DynamicResource Shell.TextMuted}" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" />
 
-            <local:WorkshopItemListView Rows="{Binding VisibleRows}" ShowsSelection="True" ShowsUpdated="True">
+            <local:WorkshopItemListView Rows="{Binding VisibleRows}" ShowsSelection="True" ShowsUpdated="True" ShowsAddToLocalCollection="True">
                 <local:WorkshopItemListView.ColumnHeader>
                     <local:WorkshopItemGrid Classes.sortDescending="{Binding SortDescending}">
                         <Panel Grid.Column="0" Width="36" />
@@ -146,6 +147,7 @@
                                                IsVisible="{Binding SortColumn, Converter={x:Static controls:EnumMatchConverter.Instance}, ConverterParameter={x:Static vm:WorkshopSubscriptionsSortColumn.Collections}}" />
                             </StackPanel>
                         </Button>
+                        <Panel Grid.Column="10" Width="{x:Static local:WorkshopItemListView.AddColumnWidth}" />
                     </local:WorkshopItemGrid>
                 </local:WorkshopItemListView.ColumnHeader>
             </local:WorkshopItemListView>

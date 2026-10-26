@@ -237,6 +237,32 @@
         <Setter Property="Margin" Value="0,0,8,0" />
     </Style>
 
+    <!-- Reorderable lists (ListReorderDrag): a row's drag handle, and the copy of a dragged row lifted in a ContentControl.lifted. -->
+    <Style Selector="Border.dragHandle">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Cursor" Value="SizeNorthSouth" />
+    </Style>
+    <Style Selector="Border.dragHandle:disabled">
+        <Setter Property="Cursor" Value="Arrow" />
+        <Setter Property="Opacity" Value="0.4" />
+    </Style>
+    <Style Selector="ContentControl.lifted Border.reorderRow">
+        <Setter Property="Background" Value="{DynamicResource Shell.ListRowHoverBackground}" />
+        <Setter Property="BoxShadow" Value="{DynamicResource Shell.LiftedShadow}" />
+    </Style>
+
+    <!-- A small outlined label beside a row's or a heading's text. -->
+    <Style Selector="Border.badge">
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Shell.Border}" />
+        <Setter Property="CornerRadius" Value="3" />
+        <Setter Property="Padding" Value="6,0" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Border.badge > TextBlock">
+        <Setter Property="FontSize" Value="12" />
+    </Style>
+
     <!-- Local favorite toggle: a Button with Classes.favorite bound to the starred state, holding an ic:FluentIcon.favoriteStar. -->
     <Style Selector="ic|FluentIcon.favoriteStar">
         <Setter Property="Icon" Value="Star" />

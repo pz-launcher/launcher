@@ -2,24 +2,29 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Globalization;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using PzLauncher.Core.Common;
 using PzLauncher.Core.Steam.Workshop;
 using PzLauncher.Core.Steam.Workshop.Actions;
+using PzLauncher.Desktop.Lang;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Services.Mods;
+using PzLauncher.Desktop.Services.Mods.LocalCollections;
 using PzLauncher.Desktop.Services.Shell.Dialogs;
 using PzLauncher.Desktop.Services.Shell;
 using PzLauncher.Desktop.ViewModels.Mods.Workshop.Actions;
+using PzLauncher.Desktop.ViewModels.Mods.Workshop.LocalCollections;
 
 namespace PzLauncher.Desktop.ViewModels.Mods.Workshop;
 
 /// <summary>
 /// What the Workshop sections of the Mods page share: their loads, texts and item rows, running a Steam action on the rows, opening an item in
-/// Steam and starring it locally.
+/// Steam, starring it locally and adding it to a local collection.
 /// </summary>
 public abstract partial class WorkshopSectionViewModel : ViewModelBase
 {
@@ -27,8 +32,9 @@ public abstract partial class WorkshopSectionViewModel : ViewModelBase
     private readonly LocalizedErrorList _warnings = new();
     private readonly List<IRelayCommand> _stateCommands = [];
 
-    // A newer load supersedes one still in flight.
+    // A newer load supersedes one still in flight, and cancels it.
     private int _loadVersion;
+    private CancellationTokenSource? _loadCancel;
 
     private protected WorkshopSectionViewModel(
         ModsViewModel page,
@@ -37,7 +43,8 @@ public abstract partial class WorkshopSectionViewModel : ViewModelBase
         IDialogService dialogs,
         IUrlLauncher urls,
         WorkshopFavorites favorites,
-        WorkshopTitles titles)
+        WorkshopTitles titles,
+        LocalCollectionStore localCollections)
     {
         Page = page;
         Service = service;
@@ -45,6 +52,7 @@ public abstract partial class WorkshopSectionViewModel : ViewModelBase
         Dialogs = dialogs;
         Favorites = favorites;
         Titles = titles;
+        LocalCollections = localCollections;
         _urls = urls;
         Rows = [];
         ShownError = new LocalizedText(text => ErrorText = text);
@@ -91,6 +99,8 @@ public abstract partial class WorkshopSectionViewModel : ViewModelBase
 
     protected WorkshopTitles Titles { get; }
 
+    protected LocalCollectionStore LocalCollections { get; }
+
     protected LocalizedText ShownError { get; }
 
     protected LocalizedText ShownStatus { get; }
@@ -105,6 +115,7 @@ public abstract partial class WorkshopSectionViewModel : ViewModelBase
     internal void Clear()
     {
         ++_loadVersion;
+        CancelLoad();
         IsLoading = false;
         ShownError.Clear();
         ShownStatus.Clear();
@@ -130,17 +141,29 @@ public abstract partial class WorkshopSectionViewModel : ViewModelBase
     /// <summary>Commands whose CanExecute reads the page, the rows, a load or a running action; each change re-evaluates them.</summary>
     protected void AddStateCommands(params IRelayCommand[] commands) => _stateCommands.AddRange(commands);
 
-    /// <summary>Runs one load; <see cref="IsLatest"/> tells it whether a newer one started since.</summary>
-    protected async Task RunLoadAsync(Func<int, Task> load)
+    /// <summary>Runs one load; <see cref="IsLatest"/> tells it whether a newer one started since, which also cancels its token.</summary>
+    protected async Task RunLoadAsync(Func<int, CancellationToken, Task> load)
     {
         var version = ++_loadVersion;
+        CancelLoad();
+        using var cancel = new CancellationTokenSource();
+        _loadCancel = cancel;
         IsLoading = true;
         try
         {
-            await load(version);
+            await load(version, cancel.Token);
+        }
+        catch (OperationCanceledException) when (cancel.IsCancellationRequested)
+        {
+            // Superseded: the newer load or the clear shows what's current.
         }
         finally
         {
+            if (_loadCancel == cancel)
+            {
+                _loadCancel = null;
+            }
+
             if (version == _loadVersion)
             {
                 IsLoading = false;
@@ -150,11 +173,21 @@ public abstract partial class WorkshopSectionViewModel : ViewModelBase
 
     protected bool IsLatest(int version) => version == _loadVersion;
 
+    // At once, before the next load starts or the rows clear.
+    private void CancelLoad() => _loadCancel?.Cancel();
+
     /// <summary>Shows the rows, keeping the Web API titles of starred items among them.</summary>
     protected void ShowRows(IReadOnlyList<WorkshopItemRow> rows)
     {
         Rows = rows;
         Titles.SeenItems(rows.Select(row => new WorkshopEntry(row.Id, WorkshopItemRow.WebTitle(row.Item))));
+    }
+
+    /// <summary>For <see cref="Rows"/> changed in place: what follows from them is read again.</summary>
+    protected void OnRowsEdited()
+    {
+        OnPropertyChanged(nameof(OutdatedCount));
+        NotifyStateCommands();
     }
 
     protected void ShowWarnings(IEnumerable<Error> warnings)
@@ -189,6 +222,7 @@ public abstract partial class WorkshopSectionViewModel : ViewModelBase
             IsActionRunning = false;
         }
 
+        Page.DropSubscriptions();
         await ShowAgainAsync();
     }
 
@@ -206,6 +240,43 @@ public abstract partial class WorkshopSectionViewModel : ViewModelBase
 
     protected Task OpenInSteamAsync(ulong id) => WorkshopActionFlow.OpenInSteamAsync(_urls, Dialogs, id);
 
+    protected static WorkshopEntry EntryOf(WorkshopItemRow row) => new(row.Id, WorkshopItemRow.WebTitle(row.Item));
+
+    /// <summary>Asks for a local collection, existing or new, and adds the items not in it yet at its end.</summary>
+    protected async Task AddEntriesToLocalCollectionAsync(IReadOnlyList<WorkshopEntry> items)
+    {
+        if (items.Count == 0)
+        {
+            return;
+        }
+
+        var pick = new LocalCollectionPickViewModel(LocalCollections);
+        if (!await Dialogs.PickLocalCollectionAsync(pick))
+        {
+            return;
+        }
+
+        string name;
+        int added;
+        switch (pick.Target)
+        {
+            case LocalCollectionTarget.Existing existing when LocalCollections.Find(existing.Id) is { } collection:
+                name = collection.Name;
+                added = LocalCollections.Add(collection.Id, items);
+                break;
+            case LocalCollectionTarget.New created:
+                var made = LocalCollections.Create(created.Name, items);
+                name = made.Name;
+                added = made.Items.Count;
+                break;
+            default:
+                return;
+        }
+
+        var skipped = items.DistinctBy(item => item.Id).Count() - added;
+        ShownStatus.Show(() => string.Format(CultureInfo.CurrentCulture, UiText.LocalCollections_AddedTo, added, name, skipped));
+    }
+
     private bool CanUpdateOutdated() => CanRunActions && OutdatedCount > 0;
 
     [RelayCommand(CanExecute = nameof(CanUpdateOutdated))]
@@ -217,6 +288,10 @@ public abstract partial class WorkshopSectionViewModel : ViewModelBase
     // A local write, never Steam's: available while a game or a Steam action runs.
     [RelayCommand]
     private void ToggleFavorite(WorkshopItemRow row) => Favorites.Toggle(WorkshopFavoriteKind.Item, row.Id, WorkshopItemRow.WebTitle(row.Item));
+
+    // A local write, never Steam's: available while a game or a Steam action runs.
+    [RelayCommand]
+    private Task AddToLocalCollectionAsync(WorkshopItemRow row) => AddEntriesToLocalCollectionAsync([EntryOf(row)]);
 
     partial void OnIsActionRunningChanged(bool value) => NotifyStateCommands();
 

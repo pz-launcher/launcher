@@ -1,10 +1,12 @@
 using System.Collections.Generic;
 using System.Linq;
+using PzLauncher.Desktop.Services.Mods.LocalCollections;
 
 namespace PzLauncher.Desktop.Services.Mods;
 
 /// <summary>Records the titles seen for Workshop ids in every store that lists them; a store whose titles didn't change isn't saved.</summary>
-public sealed class WorkshopTitles(WorkshopCollectionHistory history, WorkshopUserCollectionsCache userCollections, WorkshopFavorites favorites)
+public sealed class WorkshopTitles(
+    WorkshopCollectionHistory history, WorkshopUserCollectionsCache userCollections, WorkshopFavorites favorites, LocalCollectionStore localCollections)
 {
     /// <param name="seen"><c>null</c> titles are ignored.</param>
     public void SeenCollections(IEnumerable<WorkshopEntry> seen)
@@ -18,5 +20,10 @@ public sealed class WorkshopTitles(WorkshopCollectionHistory history, WorkshopUs
     }
 
     /// <inheritdoc cref="SeenCollections"/>
-    public void SeenItems(IEnumerable<WorkshopEntry> seen) => favorites.UpdateTitles(WorkshopFavoriteKind.Item, seen);
+    public void SeenItems(IEnumerable<WorkshopEntry> seen)
+    {
+        List<WorkshopEntry> titled = [.. seen.Where(entry => entry.Title is not null)];
+        localCollections.UpdateTitles(titled);
+        favorites.UpdateTitles(WorkshopFavoriteKind.Item, titled);
+    }
 }

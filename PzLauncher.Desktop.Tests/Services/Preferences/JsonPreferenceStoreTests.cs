@@ -338,6 +338,22 @@ public sealed class JsonPreferenceStoreTests : IDisposable
     }
 
     [Fact]
+    public async Task SaveAnyField_FileHasUnknownFields_WritesThemBackUnchanged()
+    {
+        const string Unknown = """{"theme":"dark","future":{"list":[1,"two",null]},"localCollections":[{"id":"x"}]}""";
+        WriteFile(Unknown);
+        var store = CreateStore();
+        store.Load();
+
+        await store.SaveLanguageAsync(AppLanguage.Russian, TestContext.Current.CancellationToken);
+        await CreateStore().SaveThemeAsync(AppTheme.Light, TestContext.Current.CancellationToken);
+
+        Assert.Equal(
+            """{"language":"ru","theme":"light","future":{"list":[1,"two",null]},"localCollections":[{"id":"x"}]}""",
+            await File.ReadAllTextAsync(FilePath, TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
     public void Load_MissingFile_ReturnsNoChoices() => Assert.Equal(new UserPreferences(null, null, null), CreateStore().Load());
 
     [Fact]

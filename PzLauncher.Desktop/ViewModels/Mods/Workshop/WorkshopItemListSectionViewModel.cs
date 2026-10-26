@@ -1,9 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.Input;
+using PzLauncher.Core.Common;
 using PzLauncher.Core.Mod;
 using PzLauncher.Core.Mod.Collections;
 using PzLauncher.Core.Mod.Workshop;
@@ -12,6 +15,7 @@ using PzLauncher.Core.Steam.Workshop.Actions;
 using PzLauncher.Desktop.Lang;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Services.Mods;
+using PzLauncher.Desktop.Services.Mods.LocalCollections;
 using PzLauncher.Desktop.Services.Shell.Dialogs;
 using PzLauncher.Desktop.Services.Shell;
 using PzLauncher.Desktop.ViewModels.Mods.Workshop.Actions;
@@ -27,6 +31,9 @@ public abstract partial class WorkshopItemListSectionViewModel : WorkshopSection
     // In list order, with the Web API details known for them; null when nothing is listed.
     private IReadOnlyList<WorkshopCollectionItem>? _items;
 
+    // The rows shown; one moved or removed changes it in place, so the list keeps the other rows' views.
+    private ObservableCollection<WorkshopItemRow> _rows = [];
+
     private protected WorkshopItemListSectionViewModel(
         ModsViewModel page,
         IWorkshopService service,
@@ -34,8 +41,9 @@ public abstract partial class WorkshopItemListSectionViewModel : WorkshopSection
         IDialogService dialogs,
         IUrlLauncher urls,
         WorkshopFavorites favorites,
-        WorkshopTitles titles)
-        : base(page, service, runner, dialogs, urls, favorites, titles)
+        WorkshopTitles titles,
+        LocalCollectionStore localCollections)
+        : base(page, service, runner, dialogs, urls, favorites, titles, localCollections)
     {
         AddStateCommands(SubscribeMissingCommand, GenerateCommand);
     }
@@ -151,18 +159,91 @@ public abstract partial class WorkshopItemListSectionViewModel : WorkshopSection
         }
 
         SetItems([.. items.Where(entry => keep(entry.Id))]);
-        ShowListRows([.. Rows.Where(row => keep(row.Id))]);
+        RearrangeRows([.. _rows.Where(row => keep(row.Id))]);
+    }
+
+    /// <summary>Lists the items in this order, rows included, without asking Steam or the Web API again; false when one isn't listed yet.</summary>
+    protected bool ArrangeItems(IReadOnlyList<ulong> ids)
+    {
+        if (_items is not { } items)
+        {
+            return false;
+        }
+
+        var listed = items.ToDictionary(item => item.Id);
+        if (!ids.All(listed.ContainsKey))
+        {
+            return false;
+        }
+
+        if (!items.Select(item => item.Id).SequenceEqual(ids))
+        {
+            var rows = _rows.ToDictionary(row => row.Id);
+            SetItems([.. ids.Select(id => listed[id])]);
+            RearrangeRows([.. ids.Where(rows.ContainsKey).Select(id => rows[id])]);
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// Reads the Web API's latest details of <paramref name="ids"/>, then lists what <paramref name="list"/> makes of them (<c>null</c>: nothing)
+    /// merged with the subscriptions. Without the details the items are listed anyway; the error shows as a warning after <paramref name="warnings"/>.
+    /// </summary>
+    protected async Task ListLatestAsync(
+        IReadOnlyList<ulong> ids,
+        Func<IReadOnlyDictionary<ulong, WorkshopItemDetails>, IReadOnlyList<WorkshopCollectionItem>?> list,
+        int version,
+        CancellationToken ct,
+        IReadOnlyList<Error>? warnings = null)
+    {
+        Dictionary<ulong, WorkshopItemDetails> latest = [];
+        List<Error> shown = [.. warnings ?? []];
+        if (ids.Count > 0)
+        {
+            var details = await Service.CheckUpdatesAsync(ids, ct);
+            if (!IsLatest(version))
+            {
+                return;
+            }
+
+            if (details.IsSuccess)
+            {
+                latest = details.Value.ToDictionary(item => item.Id);
+            }
+            else
+            {
+                shown.Add(details.Error);
+            }
+        }
+
+        if (list(latest) is not { } items)
+        {
+            SetItems(null);
+            SetRows([]);
+            return;
+        }
+
+        SetItems(items);
+        await MergeAsync(version, ct);
+        if (IsLatest(version))
+        {
+            foreach (var warning in shown)
+            {
+                AddWarning(warning);
+            }
+        }
     }
 
     /// <summary>Shows the listed items as of now with their state in the install's subscriptions.</summary>
-    protected async Task MergeAsync(int version)
+    protected async Task MergeAsync(int version, CancellationToken ct)
     {
         if (_items is null || Page.Install is not { } install)
         {
             return;
         }
 
-        var result = await Page.WorkshopMods.GetSubscriptionsAsync(install.RootPath, Page.ExtraGameArgs(install));
+        var result = await Page.GetSubscriptionsAsync(install, ct);
         if (!IsLatest(version) || _items is not { } items)
         {
             return;
@@ -185,7 +266,82 @@ public abstract partial class WorkshopItemListSectionViewModel : WorkshopSection
 
     private void ShowListRows(IReadOnlyList<WorkshopItemRow> rows)
     {
-        ShowRows(rows);
+        _rows = [.. rows];
+        ShowRows(_rows);
+        OnCountsChanged();
+    }
+
+    // Rows already shown, so their titles are known.
+    private void RearrangeRows(IReadOnlyList<WorkshopItemRow> rows)
+    {
+        if (EditInPlace(rows))
+        {
+            OnRowsEdited();
+        }
+        else
+        {
+            _rows = [.. rows];
+            Rows = _rows;
+        }
+
+        OnCountsChanged();
+    }
+
+    /// <summary>Turns the shown rows into <paramref name="rows"/> by removing or moving one; false, changing nothing, when that can't.</summary>
+    private bool EditInPlace(IReadOnlyList<WorkshopItemRow> rows)
+    {
+        var first = 0;
+        while (first < rows.Count && first < _rows.Count && _rows[first] == rows[first])
+        {
+            first++;
+        }
+
+        if (rows.Count == _rows.Count - 1)
+        {
+            List<WorkshopItemRow> rest = [.. _rows];
+            rest.RemoveAt(first);
+            if (!rest.SequenceEqual(rows))
+            {
+                return false;
+            }
+
+            _rows.RemoveAt(first);
+            return true;
+        }
+
+        if (rows.Count != _rows.Count)
+        {
+            return false;
+        }
+
+        if (first == rows.Count)
+        {
+            return true;
+        }
+
+        var last = rows.Count - 1;
+        while (_rows[last] == rows[last])
+        {
+            last--;
+        }
+
+        foreach (var (from, to) in new[] { (first, last), (last, first) })
+        {
+            List<WorkshopItemRow> moved = [.. _rows];
+            moved.RemoveAt(from);
+            moved.Insert(to, _rows[from]);
+            if (moved.SequenceEqual(rows))
+            {
+                _rows.Move(from, to);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private void OnCountsChanged()
+    {
         OnPropertyChanged(nameof(ItemCount));
         OnPropertyChanged(nameof(MissingCount));
         OnPropertyChanged(nameof(SubscribedCount));

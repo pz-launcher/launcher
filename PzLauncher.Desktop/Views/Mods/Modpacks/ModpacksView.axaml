@@ -1,0 +1,162 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:PzLauncher.Desktop.ViewModels.Mods.Modpacks"
+             xmlns:workshop="using:PzLauncher.Desktop.Views.Mods.Workshop"
+             xmlns:design="using:PzLauncher.Desktop.ViewModels.Design"
+             xmlns:lang="using:PzLauncher.Desktop.Lang"
+             xmlns:ic="using:FluentIcons.Avalonia"
+             mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="560"
+             x:Class="PzLauncher.Desktop.Views.Mods.Modpacks.ModpacksView"
+             x:DataType="vm:ModpacksViewModel">
+
+    <Design.DataContext>
+        <x:Static Member="design:DesignData.Modpacks" />
+    </Design.DataContext>
+
+    <Grid ColumnDefinitions="260,16,*">
+        <!-- The install's modpacks. Rows are buttons, not ListBox items: a click shows the modpack. -->
+        <DockPanel Grid.Column="0">
+            <WrapPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,8">
+                <Button Command="{Binding NewCommand}" Margin="0,0,6,6">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <ic:FluentIcon Icon="Add" IconVariant="Regular" FontSize="16" VerticalAlignment="Center" />
+                        <TextBlock Text="{x:Static lang:UiText.ModCollections_New}" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+                <Button Command="{Binding ImportCommand}" Margin="0,0,6,6" ToolTip.Tip="{x:Static lang:UiText.Modpacks_ImportHint}">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <ic:FluentIcon Icon="ClipboardPaste" IconVariant="Regular" FontSize="16" VerticalAlignment="Center" />
+                        <TextBlock Text="{x:Static lang:UiText.ModCollections_Import}" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+            </WrapPanel>
+
+            <Panel>
+                <TextBlock Text="{x:Static lang:UiText.Modpacks_Empty}" IsVisible="{Binding IsEmpty}" TextWrapping="Wrap"
+                           Foreground="{DynamicResource Shell.TextMuted}" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" />
+
+                <ScrollViewer>
+                    <ItemsControl ItemsSource="{Binding Modpacks}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Spacing="4" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:ModpackRow">
+                                <Button Theme="{StaticResource Shell.ListRow}" Classes.inUse="{Binding IsSelected}"
+                                        Command="{Binding $parent[ItemsControl].((vm:ModpacksViewModel)DataContext).SelectCommand}"
+                                        CommandParameter="{Binding}">
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <StackPanel Grid.Column="0" Spacing="2">
+                                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Name}" />
+                                            <TextBlock Text="{Binding PresetName}" FontSize="12" Foreground="{DynamicResource Shell.TextMuted}" TextTrimming="CharacterEllipsis" />
+                                        </StackPanel>
+                                        <Border Grid.Column="1" Classes="badge" Margin="8,0,0,0" IsVisible="{Binding IsIndependent}"
+                                                ToolTip.Tip="{x:Static lang:UiText.Modpacks_IndependentHint}">
+                                            <TextBlock Text="{x:Static lang:UiText.Modpacks_Independent}" Classes="warning" />
+                                        </Border>
+                                    </Grid>
+                                </Button>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Panel>
+        </DockPanel>
+
+        <!-- The selected modpack. -->
+        <Panel Grid.Column="2">
+            <TextBlock Text="{x:Static lang:UiText.Modpacks_NoSelection}" IsVisible="{Binding !HasSelection}" TextWrapping="Wrap"
+                       Foreground="{DynamicResource Shell.TextMuted}" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" />
+
+            <DockPanel IsVisible="{Binding HasSelection}">
+                <TextBlock DockPanel.Dock="Top" Text="{Binding Selected.Name}" FontSize="18" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"
+                           ToolTip.Tip="{Binding Selected.Name}" Margin="0,0,0,8" />
+
+                <!-- Its sources: linked ones follow the preset or local collection, independent ones are the modpack's own copy. -->
+                <Grid DockPanel.Dock="Top" ColumnDefinitions="Auto,12,*" RowDefinitions="Auto,6,Auto" Margin="0,0,0,12">
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="{x:Static lang:UiText.Modpacks_Preset}" Foreground="{DynamicResource Shell.TextMuted}"
+                               VerticalAlignment="Center" />
+                    <StackPanel Grid.Row="0" Grid.Column="2" Orientation="Horizontal" Spacing="8">
+                        <TextBlock Text="{Binding Selected.PresetName}" FontWeight="SemiBold" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                        <TextBlock Text="{Binding Selected.PresetModCount, StringFormat={x:Static lang:UiText.ModCollections_CountFormat}}"
+                                   Foreground="{DynamicResource Shell.TextMuted}" VerticalAlignment="Center" />
+                        <Border Classes="badge" IsVisible="{Binding !Selected.IsPresetLinked, FallbackValue=False}"
+                                ToolTip.Tip="{x:Static lang:UiText.Modpacks_IndependentHint}">
+                            <TextBlock Text="{x:Static lang:UiText.Modpacks_Independent}" Classes="warning" />
+                        </Border>
+                    </StackPanel>
+
+                    <TextBlock Grid.Row="2" Grid.Column="0" Text="{x:Static lang:UiText.Modpacks_Collection}" Foreground="{DynamicResource Shell.TextMuted}"
+                               VerticalAlignment="Center" />
+                    <StackPanel Grid.Row="2" Grid.Column="2" Orientation="Horizontal" Spacing="8">
+                        <TextBlock Text="{x:Static lang:UiText.Modpacks_SteamCollection}" Foreground="{DynamicResource Shell.TextMuted}" VerticalAlignment="Center"
+                                   IsVisible="{Binding Selected.IsSteamCollection, FallbackValue=False}" />
+                        <TextBlock Text="{x:Static lang:UiText.Modpacks_LocalCollection}" Foreground="{DynamicResource Shell.TextMuted}" VerticalAlignment="Center"
+                                   IsVisible="{Binding !Selected.IsSteamCollection, FallbackValue=False}" />
+                        <TextBlock Text="{Binding Selected.CollectionTitle}" FontWeight="SemiBold" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                        <TextBlock Text="{Binding Selected.CollectionIdText}" Foreground="{DynamicResource Shell.TextMuted}" VerticalAlignment="Center"
+                                   IsVisible="{Binding Selected.IsSteamCollection, FallbackValue=False}" />
+                        <Border Classes="badge" IsVisible="{Binding !Selected.IsCollectionLinked, FallbackValue=False}"
+                                ToolTip.Tip="{x:Static lang:UiText.Modpacks_IndependentHint}">
+                            <TextBlock Text="{x:Static lang:UiText.Modpacks_Independent}" Classes="warning" />
+                        </Border>
+                    </StackPanel>
+                </Grid>
+
+                <WrapPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,4">
+                    <Button Classes="accent" Command="{Binding UsePresetCommand}" Margin="0,0,6,6"
+                            ToolTip.Tip="{x:Static lang:UiText.Modpacks_UsePresetHint}" ToolTip.ShowOnDisabled="True">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <ic:FluentIcon Icon="CheckmarkCircle" IconVariant="Regular" FontSize="16" VerticalAlignment="Center" />
+                            <TextBlock Text="{x:Static lang:UiText.Modpacks_UsePreset}" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <Button Command="{Binding EditCommand}" Margin="0,0,6,6">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <ic:FluentIcon Icon="Edit" IconVariant="Regular" FontSize="16" VerticalAlignment="Center" />
+                            <TextBlock Text="{x:Static lang:UiText.Modpacks_Edit}" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <Button Command="{Binding ShareCommand}" Margin="0,0,6,6" ToolTip.Tip="{x:Static lang:UiText.Modpacks_ShareHint}">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <ic:FluentIcon Icon="Share" IconVariant="Regular" FontSize="16" VerticalAlignment="Center" />
+                            <TextBlock Text="{x:Static lang:UiText.ModCollections_Share}" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <Button Command="{Binding RenameCommand}" Margin="0,0,6,6">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <ic:FluentIcon Icon="Rename" IconVariant="Regular" FontSize="16" VerticalAlignment="Center" />
+                            <TextBlock Text="{x:Static lang:UiText.ModCollections_Rename}" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <Button Command="{Binding DeleteCommand}" Margin="0,0,6,6">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <ic:FluentIcon Icon="Delete" IconVariant="Regular" FontSize="16" VerticalAlignment="Center" />
+                            <TextBlock Text="{x:Static lang:UiText.ModCollections_Delete}" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                </WrapPanel>
+
+                <!-- The collection's items in its order, then the preset's Workshop items it lacks. -->
+                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="8" Margin="0,0,0,8">
+                    <TextBlock Text="{Binding ItemCount, StringFormat={x:Static lang:UiText.WorkshopCollections_ItemCountFormat}}" VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding Selected.ExtraItemCount, StringFormat={x:Static lang:UiText.Modpacks_ExtraCountFormat}}"
+                               Foreground="{DynamicResource Shell.TextMuted}" VerticalAlignment="Center" ToolTip.Tip="{x:Static lang:UiText.Modpacks_ExtraHint}" />
+                </StackPanel>
+
+                <workshop:WorkshopSectionStatus DockPanel.Dock="Top" />
+                <workshop:WorkshopItemListActions DockPanel.Dock="Top" ShowsGenerate="False" />
+
+                <Panel>
+                    <workshop:WorkshopItemListView Rows="{Binding Rows}" />
+                    <TextBlock Text="{x:Static lang:UiText.Modpacks_ItemsEmpty}" IsVisible="{Binding IsListEmpty}" TextWrapping="Wrap"
+                               Foreground="{DynamicResource Shell.TextMuted}" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" />
+                </Panel>
+            </DockPanel>
+        </Panel>
+    </Grid>
+</UserControl>

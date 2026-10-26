@@ -49,5 +49,33 @@ public static class WorkshopLinks
         return false;
     }
 
+    /// <summary>One id or link per line, each id once in first-seen order; blank lines are ignored.</summary>
+    public static PastedWorkshopIds ParseLines(string text)
+    {
+        List<ulong> ids = [];
+        var skipped = 0;
+        foreach (var line in text.Split('\n'))
+        {
+            if (line.Trim().Length == 0)
+            {
+                continue;
+            }
+
+            if (!TryParseItemId(line, out var id))
+            {
+                skipped++;
+            }
+            else if (!ids.Contains(id))
+            {
+                ids.Add(id);
+            }
+        }
+
+        return new PastedWorkshopIds(ids, skipped);
+    }
+
     public static Uri ClientPage(ulong id) => new(WorkshopFiles.ClientPageUrl + id.ToString(CultureInfo.InvariantCulture));
 }
+
+/// <param name="SkippedLines">Non-blank lines that are neither an id nor a Workshop link.</param>
+public sealed record PastedWorkshopIds(IReadOnlyList<ulong> Ids, int SkippedLines);

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -13,6 +14,7 @@ using PzLauncher.Core.Steam.Workshop.Ids;
 using PzLauncher.Desktop.Lang;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Services.Mods;
+using PzLauncher.Desktop.Services.Mods.LocalCollections;
 using PzLauncher.Desktop.Services.Shell.Dialogs;
 using PzLauncher.Desktop.Services.Shell;
 using PzLauncher.Desktop.ViewModels.Mods.Workshop.Actions;
@@ -34,8 +36,9 @@ public partial class WorkshopSubscriptionsViewModel : WorkshopSectionViewModel
         IClipboardService clipboard,
         IUrlLauncher urls,
         WorkshopFavorites favorites,
-        WorkshopTitles titles)
-        : base(page, service, runner, dialogs, urls, favorites, titles)
+        WorkshopTitles titles,
+        LocalCollectionStore localCollections)
+        : base(page, service, runner, dialogs, urls, favorites, titles, localCollections)
     {
         _clipboard = clipboard;
         VisibleRows = [];
@@ -92,9 +95,10 @@ public partial class WorkshopSubscriptionsViewModel : WorkshopSectionViewModel
         if (ids.Count > 0)
         {
             Error? error = null;
-            await RunLoadAsync(async _ =>
+            await RunLoadAsync(async (_, _) =>
             {
-                var result = await Service.CheckUpdatesAsync(ids);
+                // Not cancelled by a newer load: the check's answer is kept for it.
+                var result = await Service.CheckUpdatesAsync(ids, CancellationToken.None);
                 if (result.IsSuccess)
                 {
                     await LoadAsync();
@@ -158,6 +162,12 @@ public partial class WorkshopSubscriptionsViewModel : WorkshopSectionViewModel
     [RelayCommand(CanExecute = nameof(CanRunOnSelection))]
     private Task UpdateSelectedAsync() => RunAsync(WorkshopAction.Update, SelectedRows());
 
+    private bool HasSelectedRows() => SelectedCount > 0;
+
+    // A local write, never Steam's: available while a game or a Steam action runs.
+    [RelayCommand(CanExecute = nameof(HasSelectedRows))]
+    private Task AddSelectedToLocalCollectionAsync() => AddEntriesToLocalCollectionAsync([.. SelectedRows().Select(EntryOf)]);
+
     partial void OnSearchTextChanged(string value) => RefreshVisibleRows();
 
     partial void OnFilterChanged(WorkshopSubscriptionsFilter value) => RefreshVisibleRows();
@@ -186,9 +196,9 @@ public partial class WorkshopSubscriptionsViewModel : WorkshopSectionViewModel
 
         var root = install.RootPath;
         var extraGameArgs = Page.ExtraGameArgs(install);
-        return RunLoadAsync(async version =>
+        return RunLoadAsync(async (version, ct) =>
         {
-            var result = await Page.WorkshopMods.GetSubscriptionsAsync(root, extraGameArgs);
+            var result = await Page.WorkshopMods.GetSubscriptionsAsync(root, extraGameArgs, ct);
             if (!IsLatest(version))
             {
                 return;
@@ -209,7 +219,7 @@ public partial class WorkshopSubscriptionsViewModel : WorkshopSectionViewModel
                 return;
             }
 
-            var details = await Service.CheckUpdatesAsync(untitled);
+            var details = await Service.CheckUpdatesAsync(untitled, ct);
             if (!IsLatest(version))
             {
                 return;
@@ -227,7 +237,7 @@ public partial class WorkshopSubscriptionsViewModel : WorkshopSectionViewModel
                 return;
             }
 
-            result = await Page.WorkshopMods.GetSubscriptionsAsync(root, extraGameArgs);
+            result = await Page.WorkshopMods.GetSubscriptionsAsync(root, extraGameArgs, ct);
             if (!IsLatest(version))
             {
                 return;
@@ -257,6 +267,7 @@ public partial class WorkshopSubscriptionsViewModel : WorkshopSectionViewModel
         RefreshVisibleRows();
         OnPropertyChanged(nameof(IsEmpty));
         OnPropertyChanged(nameof(SelectedCount));
+        AddSelectedToLocalCollectionCommand.NotifyCanExecuteChanged();
     }
 
     private void OnRowSelectionChanged(WorkshopItemRow row)
@@ -265,6 +276,7 @@ public partial class WorkshopSubscriptionsViewModel : WorkshopSectionViewModel
         OnPropertyChanged(nameof(SelectedCount));
         UnsubscribeCommand.NotifyCanExecuteChanged();
         UpdateSelectedCommand.NotifyCanExecuteChanged();
+        AddSelectedToLocalCollectionCommand.NotifyCanExecuteChanged();
     }
 
     private void RefreshVisibleRows()
