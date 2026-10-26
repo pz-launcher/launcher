@@ -8,8 +8,8 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 23
-- **Last Active**: 2026-10-24
+- **Total Sessions**: 24
+- **Last Active**: 2026-10-26
 <!-- @@@/auto:current-status -->
 
 ---
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~561 | Active |
+| `journal-1.md` | ~583 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 24 | 2026-10-26 | Filter a mod preset's own entries | `066c306` | `feat/preset-entry-filter` |
 | 23 | 2026-10-24 | Share a Workshop collection with a mod preset (modpacks) | `efab630` | `feat/modpacks` |
 | 22 | 2026-10-24 | Web server management: plan, server-host-core, folder split | `e601524`, `3003e80`, `6310198`, `fd3b04f`, `cf12183` | `server-host-core` |
 | 21 | 2026-10-21 | Rename the game's mod lists to mod presets | `581717b` | `feat/mod-preset-term` |
