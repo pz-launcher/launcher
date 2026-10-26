@@ -919,6 +919,12 @@
   <data name="ModCollections_AddPlaceholder" xml:space="preserve">
     <value>Adicionar um mod: procure mods instalados por nome, ID ou ID da Oficina</value>
   </data>
+  <data name="ModCollections_FilterPlaceholder" xml:space="preserve">
+    <value>Procurar neste modelo de mods por nome, ID ou ID da Oficina</value>
+  </data>
+  <data name="ModCollections_FilterEmpty" xml:space="preserve">
+    <value>Nenhum mod deste modelo de mods corresponde à procura.</value>
+  </data>
   <data name="ModCollections_DragHint" xml:space="preserve">
     <value>Arraste para reordenar</value>
   </data>

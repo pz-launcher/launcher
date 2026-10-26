@@ -919,6 +919,12 @@
   <data name="ModCollections_AddPlaceholder" xml:space="preserve">
     <value>Agregar un mod: buscá mods instalados por nombre, ID o ID del Workshop</value>
   </data>
+  <data name="ModCollections_FilterPlaceholder" xml:space="preserve">
+    <value>Buscar en este preajuste de mods por nombre, ID o ID del Workshop</value>
+  </data>
+  <data name="ModCollections_FilterEmpty" xml:space="preserve">
+    <value>Ningún mod de este preajuste de mods coincide con la búsqueda.</value>
+  </data>
   <data name="ModCollections_DragHint" xml:space="preserve">
     <value>Arrastrá para reordenar</value>
   </data>

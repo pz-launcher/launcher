@@ -559,3 +559,25 @@ Planned web-based dedicated-server management (parent 10-23-web-server-managemen
 ### Summary
 
 Added 本地合集 (launcher-wide local Workshop item lists) and 整合包 (per-install modpacks: a Steam or local collection plus a mod preset, linked with backup copies). Modpacks share as clipboard text ending in the game's preset line; import writes the preset and collection and subscribes missing items in one Steam action. Tests pass; drag reorder, the new dialogs, cross-install share/import and pasting into the game are not yet tried in the running launcher.
+
+
+## Session 24: Filter a mod preset's own entries
+<!-- trellis-session: v=2 fp=fe0b64f7311f57cc -->
+
+**Date**: 2026-10-26
+**Task**: Filter a mod preset's own entries
+**Branch**: `feat/preset-entry-filter`
+
+### Summary
+
+Preset editor gets a filter box over the preset's own entries (name, mod id, Workshop id); the add-mod box is unchanged. Reordering while filtered moves between shown entries in the full order, hidden entries keep their relative order. Strings in all locales; ModsViewModelTests cover matching, moves, disabled ends, add/remove, preset switch, empty hint. PR pz-launcher/launcher#20.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `066c306` | Filter a mod preset's own entries in the preset editor |
+
+### Status
+
+[OK] **Completed**

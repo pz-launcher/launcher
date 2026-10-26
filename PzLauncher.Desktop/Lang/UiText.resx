@@ -919,6 +919,12 @@
   <data name="ModCollections_AddPlaceholder" xml:space="preserve">
     <value>Add a mod: search installed mods by name, ID or Workshop ID</value>
   </data>
+  <data name="ModCollections_FilterPlaceholder" xml:space="preserve">
+    <value>Find in this mod preset by name, ID or Workshop ID</value>
+  </data>
+  <data name="ModCollections_FilterEmpty" xml:space="preserve">
+    <value>No mod in this mod preset matches the search.</value>
+  </data>
   <data name="ModCollections_DragHint" xml:space="preserve">
     <value>Drag to reorder</value>
   </data>

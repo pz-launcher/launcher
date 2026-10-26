@@ -919,6 +919,12 @@
   <data name="ModCollections_AddPlaceholder" xml:space="preserve">
     <value>加入模組：依名稱、ID 或工作坊 ID 搜尋已安裝的模組</value>
   </data>
+  <data name="ModCollections_FilterPlaceholder" xml:space="preserve">
+    <value>依名稱、ID 或工作坊 ID 在此模組預設中尋找</value>
+  </data>
+  <data name="ModCollections_FilterEmpty" xml:space="preserve">
+    <value>此模組預設中沒有符合搜尋條件的模組。</value>
+  </data>
   <data name="ModCollections_DragHint" xml:space="preserve">
     <value>拖曳以調整順序</value>
   </data>

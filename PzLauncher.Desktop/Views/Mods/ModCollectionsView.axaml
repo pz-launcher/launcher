@@ -199,10 +199,15 @@
                     </ScrollViewer>
                 </StackPanel>
 
+                <TextBox DockPanel.Dock="Top" Text="{Binding FilterText}" PlaceholderText="{x:Static lang:UiText.ModCollections_FilterPlaceholder}"
+                         Margin="0,0,0,8" />
+
                 <!-- Drag a row by its handle (code-behind lifts it into DragLayer) or use the arrow buttons; the order is the load order. -->
                 <Panel>
+                    <TextBlock Text="{x:Static lang:UiText.ModCollections_FilterEmpty}" IsVisible="{Binding IsFilterEmpty}" TextWrapping="Wrap"
+                               Foreground="{DynamicResource Shell.TextMuted}" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" />
                     <ScrollViewer x:Name="EntriesScroller">
-                        <ItemsControl x:Name="EntriesList" ItemsSource="{Binding Entries}" ItemTemplate="{StaticResource EntryRowTemplate}">
+                        <ItemsControl x:Name="EntriesList" ItemsSource="{Binding VisibleEntries}" ItemTemplate="{StaticResource EntryRowTemplate}">
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
                                     <!-- The cache realizes rows past the viewport's edges, so a row sliding in during a drag is there to show. -->
