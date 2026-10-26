@@ -919,6 +919,12 @@
   <data name="ModCollections_AddPlaceholder" xml:space="preserve">
     <value>Добавить мод: поиск установленных по названию, ID или ID в мастерской</value>
   </data>
+  <data name="ModCollections_FilterPlaceholder" xml:space="preserve">
+    <value>Найти в этом наборе модов по названию, ID или ID в мастерской</value>
+  </data>
+  <data name="ModCollections_FilterEmpty" xml:space="preserve">
+    <value>В этом наборе модов нет модов, подходящих под поиск.</value>
+  </data>
   <data name="ModCollections_DragHint" xml:space="preserve">
     <value>Перетащите, чтобы изменить порядок</value>
   </data>

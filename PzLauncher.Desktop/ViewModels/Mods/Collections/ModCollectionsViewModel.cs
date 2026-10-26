@@ -77,7 +77,15 @@ public partial class ModCollectionsViewModel : ViewModelBase, IReorderableList
     /// <summary>Loaded, and the cache folder holds no collection.</summary>
     public bool IsEmpty => _page.State is not null && Rows.Count == 0;
 
+    /// <summary>Every mod of the selected collection, in load order.</summary>
     public ObservableCollection<ModCollectionEntryRow> Entries { get; } = [];
+
+    /// <summary>The <see cref="Entries"/> matching <see cref="FilterText"/>, in load order; moves take indexes in this list.</summary>
+    public ObservableCollection<ModCollectionEntryRow> VisibleEntries { get; } = [];
+
+    [ObservableProperty] public partial string FilterText { get; set; } = "";
+
+    public bool IsFilterEmpty => Entries.Count > 0 && VisibleEntries.Count == 0;
 
     [ObservableProperty] public partial string AddSearchText { get; set; } = "";
 
@@ -100,6 +108,7 @@ public partial class ModCollectionsViewModel : ViewModelBase, IReorderableList
 
         _selectedName = row.Name;
         AddSearchText = "";
+        FilterText = "";
         _status.Clear();
         Rebuild(_page.State);
     }
@@ -263,42 +272,53 @@ public partial class ModCollectionsViewModel : ViewModelBase, IReorderableList
     public bool CanReorder => _page.CanWrite;
 
     // The parameter is null while a row's bindings are still being set up.
-    private bool CanMoveEarlier(ModCollectionEntryRow entry) => _page.CanWrite && entry is not null && entry.Number > 1;
+    private bool CanMoveEarlier(ModCollectionEntryRow entry) => _page.CanWrite && entry is not null && VisibleEntries.IndexOf(entry) > 0;
 
-    private bool CanMoveLater(ModCollectionEntryRow entry) => _page.CanWrite && entry is not null && entry.Number < Entries.Count;
-
-    [RelayCommand(CanExecute = nameof(CanMoveEarlier))]
-    private void MoveUp(ModCollectionEntryRow entry) => Move(Entries.IndexOf(entry), Entries.IndexOf(entry) - 1);
-
-    [RelayCommand(CanExecute = nameof(CanMoveLater))]
-    private void MoveDown(ModCollectionEntryRow entry) => Move(Entries.IndexOf(entry), Entries.IndexOf(entry) + 1);
+    private bool CanMoveLater(ModCollectionEntryRow entry) =>
+        _page.CanWrite && entry is not null && VisibleEntries.IndexOf(entry) is var index && index >= 0 && index < VisibleEntries.Count - 1;
 
     [RelayCommand(CanExecute = nameof(CanMoveEarlier))]
-    private void MoveToTop(ModCollectionEntryRow entry) => Move(Entries.IndexOf(entry), 0);
+    private void MoveUp(ModCollectionEntryRow entry) => Move(VisibleEntries.IndexOf(entry), VisibleEntries.IndexOf(entry) - 1);
 
     [RelayCommand(CanExecute = nameof(CanMoveLater))]
-    private void MoveToBottom(ModCollectionEntryRow entry) => Move(Entries.IndexOf(entry), Entries.Count - 1);
+    private void MoveDown(ModCollectionEntryRow entry) => Move(VisibleEntries.IndexOf(entry), VisibleEntries.IndexOf(entry) + 1);
 
-    /// <summary>Moves one mod of the selected collection; the new order is written after a short pause, so quick moves write once.</summary>
+    [RelayCommand(CanExecute = nameof(CanMoveEarlier))]
+    private void MoveToTop(ModCollectionEntryRow entry) => Move(VisibleEntries.IndexOf(entry), 0);
+
+    [RelayCommand(CanExecute = nameof(CanMoveLater))]
+    private void MoveToBottom(ModCollectionEntryRow entry) => Move(VisibleEntries.IndexOf(entry), VisibleEntries.Count - 1);
+
+    /// <summary>Moves one shown mod to a shown slot, hidden ones keeping their order; the new order is written after a short pause, so quick moves write once.</summary>
     public void Move(int from, int to)
     {
-        if (!_page.CanEdit || Selected is not { } row || from == to || from < 0 || to < 0 || from >= _ids.Count || to >= _ids.Count)
+        if (!_page.CanEdit || Selected is not { } row || from == to || from < 0 || to < 0 || from >= VisibleEntries.Count || to >= VisibleEntries.Count)
         {
             return;
         }
 
-        var id = _ids[from];
-        _ids.RemoveAt(from);
-        _ids.Insert(to, id);
-        Entries.Move(from, to);
-        for (var i = Math.Min(from, to); i <= Math.Max(from, to); i++)
+        // By reference, not id: a collection may list an id twice.
+        var source = Entries.IndexOf(VisibleEntries[from]);
+        var target = Entries.IndexOf(VisibleEntries[to]);
+        var id = _ids[source];
+        _ids.RemoveAt(source);
+        _ids.Insert(target, id);
+        Entries.Move(source, target);
+        for (var i = Math.Min(source, target); i <= Math.Max(source, target); i++)
         {
             Entries[i].Number = i + 1;
         }
 
+        VisibleEntries.Move(from, to);
         NotifyMoveCommands();
         _page.ScheduleOrderSave(row.Name, [.. _ids]);
         RefreshSelectedInUse(row);
+    }
+
+    partial void OnFilterTextChanged(string value)
+    {
+        RefreshVisibleEntries();
+        NotifyMoveCommands();
     }
 
     partial void OnAddSearchTextChanged(string value) => RefreshCandidates();
@@ -417,6 +437,7 @@ public partial class ModCollectionsViewModel : ViewModelBase, IReorderableList
             Selected = null;
             _ids = [];
             Entries.Clear();
+            RefreshVisibleEntries();
             RefreshCandidates();
             NotifyWriteCommands();
             return;
@@ -454,6 +475,7 @@ public partial class ModCollectionsViewModel : ViewModelBase, IReorderableList
             Entries.Add(names.TryGetValue(id, out var name) ? new ModCollectionEntryRow(id, name, isMissing: false, i + 1) : new ModCollectionEntryRow(id, id, isMissing: true, i + 1));
         }
 
+        RefreshVisibleEntries();
         RefreshCandidates();
         NotifyWriteCommands();
     }
@@ -472,6 +494,27 @@ public partial class ModCollectionsViewModel : ViewModelBase, IReorderableList
             Rows = [.. Rows.Select(other => other.Name == row.Name ? updated : other)];
             Selected = updated;
         }
+    }
+
+    private void RefreshVisibleEntries()
+    {
+        var search = FilterText.Trim();
+        var mods = _page.State is { } state
+            ? state.InstalledMods.ToDictionary(mod => mod.Id, StringComparer.Ordinal)
+            : new Dictionary<string, InstalledMod>(StringComparer.Ordinal);
+        VisibleEntries.Clear();
+        foreach (var entry in Entries)
+        {
+            var matches = mods.TryGetValue(entry.Id, out var mod)
+                ? InstalledModsViewModel.Matches(mod, search)
+                : entry.Id.Contains(search, StringComparison.OrdinalIgnoreCase);
+            if (matches)
+            {
+                VisibleEntries.Add(entry);
+            }
+        }
+
+        OnPropertyChanged(nameof(IsFilterEmpty));
     }
 
     private void RefreshCandidates()

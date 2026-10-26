@@ -671,6 +671,158 @@ public class ModsViewModelTests : UiTextCultureTest
         Assert.False(collections.MoveToBottomCommand.CanExecute(collections.Entries[2]));
     }
 
+    [Theory]
+    [InlineData("core", "Core")]
+    [InlineData("GONE", "Gone")]
+    [InlineData("1002", "Maps")]
+    public async Task Filter_MatchesNameIdOrWorkshopId(string filter, string expected)
+    {
+        var vm = await CreateActivatedAsync();
+
+        vm.Collections.FilterText = filter;
+
+        Assert.Equal([expected], vm.Collections.VisibleEntries.Select(entry => entry.Id));
+        Assert.Equal(3, vm.Collections.Entries.Count);
+    }
+
+    [Fact]
+    public async Task Filter_ShownRowKeepsItsFullNumber()
+    {
+        var vm = await CreateActivatedAsync();
+
+        vm.Collections.FilterText = " core ";
+
+        Assert.Equal(2, Assert.Single(vm.Collections.VisibleEntries).Number);
+    }
+
+    [Fact]
+    public async Task Filter_Blank_ShowsEveryEntry()
+    {
+        var vm = await CreateActivatedAsync();
+
+        vm.Collections.FilterText = "   ";
+
+        Assert.Equal(vm.Collections.Entries, vm.Collections.VisibleEntries);
+    }
+
+    private async Task<ModCollectionsViewModel> CreateFilteredOrderAsync()
+    {
+        _service.WithCollection("Order", "KeepA", "x", "KeepB", "y", "KeepC");
+        var vm = await CreateActivatedAsync();
+        Select(vm, "Order");
+        vm.Collections.FilterText = "keep";
+        return vm.Collections;
+    }
+
+    [Theory]
+    [InlineData("up", "KeepC", "KeepA,x,KeepC,KeepB,y")]
+    [InlineData("top", "KeepC", "KeepC,KeepA,x,KeepB,y")]
+    [InlineData("down", "KeepA", "x,KeepB,KeepA,y,KeepC")]
+    [InlineData("bottom", "KeepA", "x,KeepB,y,KeepC,KeepA")]
+    public async Task Filter_MoveCommands_MoveBetweenShownEntries(string command, string id, string expected)
+    {
+        var collections = await CreateFilteredOrderAsync();
+        var entry = collections.VisibleEntries.Single(row => row.Id == id);
+
+        var move = command switch
+        {
+            "up" => collections.MoveUpCommand,
+            "top" => collections.MoveToTopCommand,
+            "down" => collections.MoveDownCommand,
+            _ => collections.MoveToBottomCommand,
+        };
+        move.Execute(entry);
+
+        AssertFilteredOrder(collections, expected);
+    }
+
+    [Fact]
+    public async Task Filter_Drag_MovesLikeTheCommandToThatShownSlot()
+    {
+        var collections = await CreateFilteredOrderAsync();
+
+        collections.Move(2, 0);
+
+        AssertFilteredOrder(collections, "KeepC,KeepA,x,KeepB,y");
+    }
+
+    private void AssertFilteredOrder(ModCollectionsViewModel collections, string expected)
+    {
+        string[] ids = expected.Split(',');
+        Assert.Equal(ids, collections.Entries.Select(entry => entry.Id));
+        Assert.Equal([1, 2, 3, 4, 5], collections.Entries.Select(entry => entry.Number));
+        Assert.Equal(ids.Where(id => id.StartsWith("Keep", StringComparison.Ordinal)), collections.VisibleEntries.Select(entry => entry.Id));
+        Assert.Equal("keep", collections.FilterText);
+
+        _time.Advance(OrderSaveDelay);
+
+        Assert.Equal(ids, _service.IdsOf("Order"));
+    }
+
+    [Fact]
+    public async Task Filter_MoveCommands_AreDisabledAtTheShownEnds()
+    {
+        var collections = await CreateFilteredOrderAsync();
+        var (first, middle, last) = (collections.VisibleEntries[0], collections.VisibleEntries[1], collections.VisibleEntries[2]);
+
+        Assert.False(collections.MoveToTopCommand.CanExecute(first));
+        Assert.False(collections.MoveUpCommand.CanExecute(first));
+        Assert.True(collections.MoveDownCommand.CanExecute(first));
+        Assert.True(collections.MoveUpCommand.CanExecute(middle));
+        Assert.True(collections.MoveDownCommand.CanExecute(middle));
+        Assert.True(collections.MoveToTopCommand.CanExecute(last));
+        Assert.False(collections.MoveDownCommand.CanExecute(last));
+        Assert.False(collections.MoveToBottomCommand.CanExecute(last));
+    }
+
+    [Fact]
+    public async Task Filter_SurvivesRemoveAndAdd()
+    {
+        var vm = await CreateActivatedAsync();
+        var collections = vm.Collections;
+        collections.FilterText = "c";
+
+        Assert.Equal(["Maps", "Core"], collections.VisibleEntries.Select(entry => entry.Id));
+
+        await collections.RemoveModCommand.ExecuteAsync(collections.VisibleEntries[0]);
+
+        Assert.Equal(["Core"], collections.VisibleEntries.Select(entry => entry.Id));
+
+        await collections.AddModCommand.ExecuteAsync(_service.InstalledMods.Single(mod => mod.Id == "Cars"));
+
+        Assert.Equal("c", collections.FilterText);
+        Assert.Equal(["Core", "Cars"], collections.VisibleEntries.Select(entry => entry.Id));
+        Assert.Equal([1, 3], collections.VisibleEntries.Select(entry => entry.Number));
+    }
+
+    [Fact]
+    public async Task Filter_SelectingAnotherPreset_ClearsIt()
+    {
+        var vm = await CreateActivatedAsync();
+        vm.Collections.FilterText = "core";
+
+        Select(vm, "Driving");
+
+        Assert.Equal("", vm.Collections.FilterText);
+        Assert.Equal(["Cars"], vm.Collections.VisibleEntries.Select(entry => entry.Id));
+    }
+
+    [Fact]
+    public async Task Filter_MatchesNothing_IsFilterEmptyUntilCleared()
+    {
+        var vm = await CreateActivatedAsync();
+
+        vm.Collections.FilterText = "no such mod";
+
+        Assert.True(vm.Collections.IsFilterEmpty);
+        Assert.Empty(vm.Collections.VisibleEntries);
+
+        vm.Collections.FilterText = "";
+
+        Assert.False(vm.Collections.IsFilterEmpty);
+        Assert.Equal(3, vm.Collections.VisibleEntries.Count);
+    }
+
     [Fact]
     public async Task AutoSort_SavesTheGamesOrder()
     {
