@@ -16,9 +16,6 @@ namespace PzLauncher.Desktop.Services.Preferences;
 [JsonSerializable(typeof(WorkshopUserCollectionsFile))]
 [JsonSerializable(typeof(WorkshopUserCollectionFile))]
 [JsonSerializable(typeof(WorkshopFavoritesFile))]
-[JsonSerializable(typeof(LocalCollectionFile))]
-[JsonSerializable(typeof(LocalCollectionFile[]))]
-[JsonSerializable(typeof(ModpackFile[]))]
 [JsonSerializable(typeof(string))]
 [JsonSerializable(typeof(bool))]
 internal sealed partial class DesktopJsonContext : JsonSerializerContext;
@@ -36,8 +33,6 @@ internal sealed partial class DesktopJsonContext : JsonSerializerContext;
 /// <param name="WorkshopUserCollections">A <see cref="WorkshopUserCollectionsFile"/>; an element for the same reason as <paramref name="JavaRuntimes"/>.</param>
 /// <param name="WorkshopFavorites">A <see cref="WorkshopFavoritesFile"/>; an element for the same reason as <paramref name="JavaRuntimes"/>.</param>
 /// <param name="AfterLaunch"><see cref="AfterLaunchPreferences.PreferenceName"/>; an element for the same reason as <paramref name="JavaRuntimes"/>.</param>
-/// <param name="LocalCollections">An array of <see cref="LocalCollectionFile"/> objects, read like <paramref name="WorkshopCollections"/>.</param>
-/// <param name="Modpacks">Keyed by install root; arrays of <see cref="ModpackFile"/> objects, elements for the same reason as <paramref name="JavaRuntimes"/>.</param>
 internal sealed record PreferencesFile(
     string? Language,
     string? Theme,
@@ -53,9 +48,13 @@ internal sealed record PreferencesFile(
     JsonElement? WorkshopCollections,
     JsonElement? WorkshopUserCollections,
     JsonElement? WorkshopFavorites,
-    JsonElement? AfterLaunch,
-    JsonElement? LocalCollections,
-    IReadOnlyDictionary<string, JsonElement>? Modpacks);
+    JsonElement? AfterLaunch)
+{
+    /// <summary>Fields this build doesn't know (another launcher version's), written back unchanged.</summary>
+    // set, not init: System.Text.Json rejects init-only extension data.
+    [JsonExtensionData]
+    public Dictionary<string, JsonElement>? Unknown { get; set; }
+}
 
 /// <summary>Nullable members, so a missing one is told apart from a zero.</summary>
 internal sealed record WindowFile(int? X, int? Y, double? Width, double? Height, bool? Maximized);
@@ -80,26 +79,3 @@ internal sealed record WorkshopUserCollectionFile(string? Id, string? Title, uin
 /// <param name="Collections">An array of <see cref="WorkshopEntryFile"/> objects, read like <see cref="PreferencesFile.WorkshopCollections"/>.</param>
 /// <param name="Items">As <paramref name="Collections"/>.</param>
 internal sealed record WorkshopFavoritesFile(JsonElement? Collections, JsonElement? Items);
-
-/// <param name="Id">A GUID in its "D" form.</param>
-/// <param name="Items">An array of <see cref="WorkshopEntryFile"/> objects, read like <see cref="PreferencesFile.WorkshopCollections"/>.</param>
-internal sealed record LocalCollectionFile(string? Id, string? Name, JsonElement? Items);
-
-/// <param name="ExtraItems">Item ids as decimal text, as in <see cref="WorkshopEntryFile"/>.</param>
-internal sealed record ModpackFile(string? Name, ModpackPresetFile? Preset, ModpackCollectionFile? Collection, IReadOnlyList<JsonElement>? ExtraItems);
-
-/// <param name="Linked">The install's preset the copy follows; missing when the modpack is independent of it.</param>
-internal sealed record ModpackPresetFile(string? Linked, ModpackPresetCopyFile? Copy);
-
-/// <param name="ModIds">Strings; elements, so one bad id doesn't drop the whole modpack.</param>
-internal sealed record ModpackPresetCopyFile(string? Name, IReadOnlyList<JsonElement>? ModIds);
-
-/// <summary>Exactly one member is set.</summary>
-/// <param name="Steam">The collection's id as decimal text, as in <see cref="WorkshopEntryFile"/>.</param>
-internal sealed record ModpackCollectionFile(string? Steam, ModpackLocalCollectionFile? Local);
-
-/// <param name="Linked">The local collection's id (a GUID in its "D" form) the copy follows; missing when the modpack is independent of it.</param>
-internal sealed record ModpackLocalCollectionFile(string? Linked, ModpackLocalCollectionCopyFile? Copy);
-
-/// <param name="Items">An array of <see cref="WorkshopEntryFile"/> objects, read like <see cref="PreferencesFile.WorkshopCollections"/>.</param>
-internal sealed record ModpackLocalCollectionCopyFile(string? Name, JsonElement? Items);

@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using PzLauncher.Desktop.Services.Mods.Library;
+using PzLauncher.Desktop.Services.Preferences.Records;
 
-namespace PzLauncher.Desktop.Services.Mods;
+namespace PzLauncher.Desktop.Services.Mods.Modpacks;
 
 /// <summary>A mod preset of one install paired with a Workshop collection, kept by the launcher.</summary>
 /// <param name="ExtraItems">Workshop items of the preset's mods that the collection lacks, in preset order.</param>
@@ -13,6 +15,32 @@ public sealed record Modpack(string Name, ModpackPreset Preset, ModpackCollectio
         other is not null && Name == other.Name && Preset == other.Preset && Collection == other.Collection && ExtraItems.SequenceEqual(other.ExtraItems);
 
     public override int GetHashCode() => HashCode.Combine(Name, Preset, Collection, ExtraItems.Count);
+
+    public static Modpack FromSaved(SavedModpack saved) =>
+        new(
+            saved.Name,
+            new ModpackPreset(saved.Preset.Name, saved.Preset.ModIds, saved.Preset.IsLinked),
+            saved.Collection switch
+            {
+                SavedModpackCollection.Local local => new ModpackCollection.Local(
+                    local.Linked, local.Name, [.. local.Items.Select(item => new WorkshopEntry(item.Id, item.Title))]),
+                SavedModpackCollection.Steam steam => new ModpackCollection.Steam(steam.Id),
+                _ => throw new ArgumentException($"Unknown modpack collection {saved.Collection}.", nameof(saved)),
+            },
+            saved.ExtraItems);
+
+    public SavedModpack ToSaved() =>
+        new(
+            Name,
+            new SavedModpackPreset(Preset.Name, Preset.ModIds, Preset.IsLinked),
+            Collection switch
+            {
+                ModpackCollection.Local local => new SavedModpackCollection.Local(
+                    local.Linked, local.Name, [.. local.Items.Select(item => new SavedWorkshopEntry(item.Id, item.Title))]),
+                ModpackCollection.Steam steam => new SavedModpackCollection.Steam(steam.Id),
+                _ => throw new InvalidOperationException($"Unknown modpack collection {Collection}."),
+            },
+            ExtraItems);
 }
 
 /// <summary>The modpack's copy of a mod preset.</summary>
@@ -48,9 +76,3 @@ public abstract record ModpackCollection
 
 /// <summary>A modpack that uses a source about to be deleted.</summary>
 public sealed record ModpackUser(string InstallRoot, string Name);
-
-public static class ModpackName
-{
-    /// <summary>Non-blank and on one line, so share text can hold it on a line of its own; names are saved trimmed.</summary>
-    public static bool IsValid(string name) => name.Trim().Length > 0 && !name.Any(char.IsControl);
-}

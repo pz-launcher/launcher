@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -13,9 +14,11 @@ using PzLauncher.Core.Steam.Workshop.Actions;
 using PzLauncher.Desktop.Lang;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Services.Mods;
+using PzLauncher.Desktop.Services.Mods.LocalCollections;
 using PzLauncher.Desktop.Services.Shell.Dialogs;
 using PzLauncher.Desktop.Services.Shell;
 using PzLauncher.Desktop.ViewModels.Mods.Workshop.Actions;
+using PzLauncher.Desktop.ViewModels.Mods.Workshop.LocalCollections;
 
 namespace PzLauncher.Desktop.ViewModels.Mods.Workshop;
 
@@ -29,8 +32,9 @@ public abstract partial class WorkshopSectionViewModel : ViewModelBase
     private readonly LocalizedErrorList _warnings = new();
     private readonly List<IRelayCommand> _stateCommands = [];
 
-    // A newer load supersedes one still in flight.
+    // A newer load supersedes one still in flight, and cancels it.
     private int _loadVersion;
+    private CancellationTokenSource? _loadCancel;
 
     private protected WorkshopSectionViewModel(
         ModsViewModel page,
@@ -40,7 +44,7 @@ public abstract partial class WorkshopSectionViewModel : ViewModelBase
         IUrlLauncher urls,
         WorkshopFavorites favorites,
         WorkshopTitles titles,
-        LocalCollections localCollections)
+        LocalCollectionStore localCollections)
     {
         Page = page;
         Service = service;
@@ -95,7 +99,7 @@ public abstract partial class WorkshopSectionViewModel : ViewModelBase
 
     protected WorkshopTitles Titles { get; }
 
-    protected LocalCollections LocalCollections { get; }
+    protected LocalCollectionStore LocalCollections { get; }
 
     protected LocalizedText ShownError { get; }
 
@@ -111,6 +115,7 @@ public abstract partial class WorkshopSectionViewModel : ViewModelBase
     internal void Clear()
     {
         ++_loadVersion;
+        CancelLoad();
         IsLoading = false;
         ShownError.Clear();
         ShownStatus.Clear();
@@ -136,17 +141,29 @@ public abstract partial class WorkshopSectionViewModel : ViewModelBase
     /// <summary>Commands whose CanExecute reads the page, the rows, a load or a running action; each change re-evaluates them.</summary>
     protected void AddStateCommands(params IRelayCommand[] commands) => _stateCommands.AddRange(commands);
 
-    /// <summary>Runs one load; <see cref="IsLatest"/> tells it whether a newer one started since.</summary>
-    protected async Task RunLoadAsync(Func<int, Task> load)
+    /// <summary>Runs one load; <see cref="IsLatest"/> tells it whether a newer one started since, which also cancels its token.</summary>
+    protected async Task RunLoadAsync(Func<int, CancellationToken, Task> load)
     {
         var version = ++_loadVersion;
+        CancelLoad();
+        using var cancel = new CancellationTokenSource();
+        _loadCancel = cancel;
         IsLoading = true;
         try
         {
-            await load(version);
+            await load(version, cancel.Token);
+        }
+        catch (OperationCanceledException) when (cancel.IsCancellationRequested)
+        {
+            // Superseded: the newer load or the clear shows what's current.
         }
         finally
         {
+            if (_loadCancel == cancel)
+            {
+                _loadCancel = null;
+            }
+
             if (version == _loadVersion)
             {
                 IsLoading = false;
@@ -156,11 +173,21 @@ public abstract partial class WorkshopSectionViewModel : ViewModelBase
 
     protected bool IsLatest(int version) => version == _loadVersion;
 
+    // At once, before the next load starts or the rows clear.
+    private void CancelLoad() => _loadCancel?.Cancel();
+
     /// <summary>Shows the rows, keeping the Web API titles of starred items among them.</summary>
     protected void ShowRows(IReadOnlyList<WorkshopItemRow> rows)
     {
         Rows = rows;
         Titles.SeenItems(rows.Select(row => new WorkshopEntry(row.Id, WorkshopItemRow.WebTitle(row.Item))));
+    }
+
+    /// <summary>For <see cref="Rows"/> changed in place: what follows from them is read again.</summary>
+    protected void OnRowsEdited()
+    {
+        OnPropertyChanged(nameof(OutdatedCount));
+        NotifyStateCommands();
     }
 
     protected void ShowWarnings(IEnumerable<Error> warnings)
@@ -195,6 +222,7 @@ public abstract partial class WorkshopSectionViewModel : ViewModelBase
             IsActionRunning = false;
         }
 
+        Page.DropSubscriptions();
         await ShowAgainAsync();
     }
 

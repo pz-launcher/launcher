@@ -11,12 +11,13 @@ using PzLauncher.Core.Steam.Workshop.Actions;
 using PzLauncher.Desktop.Lang;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Services.Mods;
+using PzLauncher.Desktop.Services.Mods.LocalCollections;
 using PzLauncher.Desktop.Services.Shell;
 using PzLauncher.Desktop.ViewModels.Mods.Modpacks;
 using PzLauncher.Desktop.Services.Shell.Dialogs;
 using PzLauncher.Core.Steam.Workshop.Ids;
 
-namespace PzLauncher.Desktop.ViewModels.Mods.Workshop;
+namespace PzLauncher.Desktop.ViewModels.Mods.Workshop.LocalCollections;
 
 /// <summary>
 /// The launcher's local collections: kept, named and ordered here; the selected one's items listed with their state for the account Steam
@@ -25,7 +26,6 @@ namespace PzLauncher.Desktop.ViewModels.Mods.Workshop;
 public sealed partial class LocalCollectionsViewModel : WorkshopItemListSectionViewModel, IReorderableList
 {
     private readonly IClipboardService _clipboard;
-    private readonly ModpackStore _modpacks;
 
     // The selected collection; null shows the first one.
     private Guid? _selectedId;
@@ -39,12 +39,10 @@ public sealed partial class LocalCollectionsViewModel : WorkshopItemListSectionV
         IUrlLauncher urls,
         WorkshopFavorites favorites,
         WorkshopTitles titles,
-        LocalCollections localCollections,
-        ModpackStore modpacks)
+        LocalCollectionStore localCollections)
         : base(page, service, runner, dialogs, urls, favorites, titles, localCollections)
     {
         _clipboard = clipboard;
-        _modpacks = modpacks;
         Collections = [];
         AddStateCommands(MoveUpCommand, MoveDownCommand, MoveToTopCommand, MoveToBottomCommand);
         RefreshCollections();
@@ -131,26 +129,20 @@ public sealed partial class LocalCollectionsViewModel : WorkshopItemListSectionV
             return;
         }
 
-        var users = _modpacks.UsersOfLocalCollection(collection.Id);
-        var choice = await ConfirmDeleteAsync(collection, users);
+        var choice = await ModpackPrompts.ConfirmDeleteAsync(
+            Dialogs,
+            UiText.LocalCollections_DeleteTitle,
+            string.Format(CultureInfo.CurrentCulture, UiText.LocalCollections_DeleteMessage, collection.Name),
+            string.Format(CultureInfo.CurrentCulture, UiText.Modpacks_LocalCollectionUsedMessage, collection.Name),
+            Page.LocalCollectionUsers(collection.Id));
         if (choice == ConfirmChoice.Cancel)
         {
             return;
         }
 
-        if (choice == ConfirmChoice.Alternative)
-        {
-            foreach (var install in users.GroupBy(user => user.InstallRoot))
-            {
-                _modpacks.Delete(install.Key, [.. install.Select(user => user.Name)]);
-            }
-        }
-
         _selectedId = null;
         ShownStatus.Clear();
-
-        // The modpacks still using it keep their copy: the store makes them independent of it.
-        LocalCollections.Delete(collection.Id);
+        Page.DeleteLocalCollection(collection.Id, deleteUsers: choice == ConfirmChoice.Alternative);
         await LoadItemsAsync();
     }
 
@@ -262,72 +254,13 @@ public sealed partial class LocalCollectionsViewModel : WorkshopItemListSectionV
 
     protected override Task ShowAgainAsync() => LoadItemsAsync();
 
-    /// <summary>Asks before deleting the collection; <see cref="ConfirmChoice.Alternative"/> only when modpacks use it.</summary>
-    private async Task<ConfirmChoice> ConfirmDeleteAsync(LocalCollection collection, IReadOnlyList<ModpackUser> users)
-    {
-        if (users.Count > 0)
-        {
-            return await ModpackPrompts.ConfirmDeleteUsedAsync(
-                Dialogs,
-                UiText.LocalCollections_DeleteTitle,
-                string.Format(CultureInfo.CurrentCulture, UiText.Modpacks_LocalCollectionUsedMessage, collection.Name),
-                ModpackPrompts.UserNames(_modpacks, users, Page.Install?.RootPath));
-        }
-
-        var confirmed = await Dialogs.ConfirmAsync(new ConfirmPrompt(
-            UiText.LocalCollections_DeleteTitle,
-            string.Format(CultureInfo.CurrentCulture, UiText.LocalCollections_DeleteMessage, collection.Name),
-            UiText.ModCollections_Delete,
-            UiText.Dialog_Cancel));
-        return confirmed ? ConfirmChoice.Confirm : ConfirmChoice.Cancel;
-    }
-
     /// <summary>The selected collection's items: their latest versions from the Web API, merged with the subscriptions like an opened collection.</summary>
-    private Task LoadItemsAsync() => RunLoadAsync(async version =>
-    {
-        if (Current is not { } collection)
-        {
-            SetItems(null);
-            SetRows([]);
-            return;
-        }
-
-        List<ulong> ids = [.. collection.Items.Select(entry => entry.Id)];
-        Dictionary<ulong, WorkshopItemDetails> latest = [];
-        Error? detailsError = null;
-        if (ids.Count > 0)
-        {
-            var details = await Service.CheckUpdatesAsync(ids);
-            if (!IsLatest(version))
-            {
-                return;
-            }
-
-            if (details.IsSuccess)
-            {
-                latest = details.Value.ToDictionary(item => item.Id);
-            }
-            else
-            {
-                detailsError = details.Error;
-            }
-        }
-
+    private Task LoadItemsAsync() => RunLoadAsync((version, ct) => ListLatestAsync(
+        [.. Current?.Items.Select(entry => entry.Id) ?? []],
         // The list as it is now: it may have changed while the Web API answered.
-        if (Current is not { } current)
-        {
-            SetItems(null);
-            SetRows([]);
-            return;
-        }
-
-        SetItems([.. current.Items.Select(entry => new WorkshopCollectionItem(entry.Id, latest.GetValueOrDefault(entry.Id)))]);
-        await MergeAsync(version);
-        if (IsLatest(version) && detailsError is not null)
-        {
-            AddWarning(detailsError);
-        }
-    });
+        latest => Current is { } current ? [.. current.Items.Select(entry => new WorkshopCollectionItem(entry.Id, latest.GetValueOrDefault(entry.Id)))] : null,
+        version,
+        ct));
 
     // Removals, moves, renames and titles show at once; added items wait for the next load, which reads their details.
     private void OnLocalCollectionsChanged()
@@ -344,7 +277,18 @@ public sealed partial class LocalCollectionsViewModel : WorkshopItemListSectionV
         var all = LocalCollections.All;
         var selected = all.FirstOrDefault(collection => collection.Id == _selectedId) ?? all.FirstOrDefault();
         _selectedId = selected?.Id;
-        Collections = [.. all.Select(collection => new LocalCollectionRow(collection.Id, collection.Name, collection.Items.Count, collection.Id == _selectedId))];
+        if (Collections.Count == all.Count
+            && Collections.Zip(all).All(pair => pair.First.Id == pair.Second.Id && pair.First.Name == pair.Second.Name && pair.First.IsSelected == (pair.Second.Id == _selectedId)))
+        {
+            foreach (var (row, collection) in Collections.Zip(all))
+            {
+                row.ItemCount = collection.Items.Count;
+            }
+
+            return;
+        }
+
+        Collections = [.. all.Select(collection => new LocalCollectionRow(collection.Id, collection.Name, collection.Id == _selectedId) { ItemCount = collection.Items.Count })];
         Selected = Collections.FirstOrDefault(row => row.IsSelected);
     }
 

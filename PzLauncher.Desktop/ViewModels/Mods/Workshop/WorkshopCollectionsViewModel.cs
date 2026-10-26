@@ -5,15 +5,18 @@ using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using PzLauncher.Core.Common;
+using PzLauncher.Core.Mod.Modpacks;
 using PzLauncher.Core.Steam.Workshop;
 using PzLauncher.Core.Steam.Workshop.Actions;
 using PzLauncher.Core.Steam.Workshop.Ids;
 using PzLauncher.Desktop.Lang;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Services.Mods;
+using PzLauncher.Desktop.Services.Mods.LocalCollections;
 using PzLauncher.Desktop.Services.Shell.Dialogs;
 using PzLauncher.Desktop.Services.Shell;
 using PzLauncher.Desktop.ViewModels.Mods.Workshop.Actions;
+using PzLauncher.Desktop.ViewModels.Mods.Workshop.LocalCollections;
 
 namespace PzLauncher.Desktop.ViewModels.Mods.Workshop;
 
@@ -46,7 +49,7 @@ public partial class WorkshopCollectionsViewModel : WorkshopItemListSectionViewM
         WorkshopUserCollectionsCache userCache,
         WorkshopFavorites favorites,
         WorkshopTitles titles,
-        LocalCollections localCollections)
+        LocalCollectionStore localCollections)
         : base(page, service, runner, dialogs, urls, favorites, titles, localCollections)
     {
         _history = history;
@@ -124,10 +127,10 @@ public partial class WorkshopCollectionsViewModel : WorkshopItemListSectionViewM
     internal override Task RefreshAsync() => _collection is { } collection ? LoadCollectionAsync(collection.Id) : Task.CompletedTask;
 
     /// <summary>Opens the collection from the Web API and remembers it.</summary>
-    internal Task LoadCollectionAsync(ulong id) => RunLoadAsync(async version =>
+    internal Task LoadCollectionAsync(ulong id) => RunLoadAsync(async (version, ct) =>
     {
         ShownStatus.Clear();
-        var result = await Service.GetCollectionAsync(id);
+        var result = await Service.GetCollectionAsync(id, ct);
         if (!IsLatest(version))
         {
             return;
@@ -145,7 +148,7 @@ public partial class WorkshopCollectionsViewModel : WorkshopItemListSectionViewM
         Titles.SeenCollections([new WorkshopEntry(id, result.Value.Title)]);
         SetCollection(result.Value);
         LinkText = "";
-        await MergeAsync(version);
+        await MergeAsync(version, ct);
     });
 
     internal override void RenderTexts()
@@ -202,7 +205,7 @@ public partial class WorkshopCollectionsViewModel : WorkshopItemListSectionViewM
             return;
         }
 
-        var initial = open.Title is { } openTitle && LocalCollectionName.IsValid(openTitle) ? openTitle.Trim() : "";
+        var initial = open.Title is { } openTitle && ModpackNames.IsValid(openTitle) ? openTitle.Trim() : "";
         if (await LocalCollectionPrompts.AskNameAsync(
                 Dialogs, LocalCollections, UiText.LocalCollections_SaveAsTitle, initial, UiText.ModCollections_Create) is not { } name)
         {

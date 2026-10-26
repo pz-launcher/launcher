@@ -5,6 +5,8 @@ using PzLauncher.Desktop.Lang;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Services.Launch;
 using PzLauncher.Desktop.Services.Mods;
+using PzLauncher.Desktop.Services.Mods.Library;
+using PzLauncher.Desktop.Services.Mods.LocalCollections;
 using PzLauncher.Desktop.Services.Preferences;
 using PzLauncher.Desktop.Services.Shell;
 using PzLauncher.Desktop.Tests.TestSupport;
@@ -13,10 +15,11 @@ using PzLauncher.Desktop.ViewModels.Mods;
 using PzLauncher.Desktop.ViewModels.Mods.Workshop;
 using PzLauncher.Desktop.Services.Preferences.Records;
 using PzLauncher.Desktop.ViewModels.Mods.Collections;
+using PzLauncher.Desktop.ViewModels.Mods.Workshop.LocalCollections;
 using static PzLauncher.Desktop.Tests.TestSupport.Fakes.TestInstalls;
 using static PzLauncher.Desktop.Tests.TestSupport.Fakes.TestWorkshop;
 
-namespace PzLauncher.Desktop.Tests.ViewModels.Mods.Workshop;
+namespace PzLauncher.Desktop.Tests.ViewModels.Mods.Workshop.LocalCollections;
 
 [Collection(UiTextCultureCollection.Name)]
 public class LocalCollectionsViewModelTests : UiTextCultureTest
@@ -35,9 +38,11 @@ public class LocalCollectionsViewModelTests : UiTextCultureTest
     private readonly FakeWorkshopService _service = new();
     private readonly FakeWorkshopActionRunner _runner = new();
     private readonly FakePreferenceStore _preferences = new();
+
+    private readonly FakeModLibraryFile _library = new();
     private readonly GameRunState _runState = new();
     private readonly FakeClipboardService _clipboard = new();
-    private LocalCollections _localCollections;
+    private LocalCollectionStore _localCollections;
 
     public LocalCollectionsViewModelTests()
     {
@@ -58,9 +63,9 @@ public class LocalCollectionsViewModelTests : UiTextCultureTest
 
     private InstallsViewModel Installs { get; }
 
-    private LocalCollections Saved(params ulong[] serverItems) =>
+    private LocalCollectionStore Saved(params ulong[] serverItems) =>
         LocalCollectionStore(
-            _preferences,
+            _library,
             new SavedLocalCollection(ServerId, "Server", [.. serverItems.Select(id => new SavedWorkshopEntry(id, null))]),
             new SavedLocalCollection(OtherId, "Other", [new SavedWorkshopEntry(1002, "Map Pack")]));
 
@@ -97,6 +102,8 @@ public class LocalCollectionsViewModelTests : UiTextCultureTest
 
     private IEnumerable<ulong> SavedIds(Guid id) => _localCollections.Find(id)!.Items.Select(item => item.Id);
 
+    private static (Guid, string, int, bool) Sidebar(LocalCollectionRow row) => (row.Id, row.Name, row.ItemCount, row.IsSelected);
+
     private static string AddedTo(int added, string name, int skipped) =>
         string.Format(CultureInfo.CurrentCulture, UiText.LocalCollections_AddedTo, added, name, skipped);
 
@@ -107,7 +114,7 @@ public class LocalCollectionsViewModelTests : UiTextCultureTest
     {
         var vm = await CreateAsync();
 
-        Assert.Equal([new LocalCollectionRow(ServerId, "Server", 3, true), new LocalCollectionRow(OtherId, "Other", 1, false)], vm.Collections);
+        Assert.Equal([(ServerId, "Server", 3, true), (OtherId, "Other", 1, false)], vm.Collections.Select(Sidebar));
         Assert.Equal("Server", vm.Selected?.Name);
         Assert.Equal([1003UL, 1005, 1001], vm.Rows.Select(row => row.Id));
         Assert.Equal(("Vehicles", WorkshopItemState.NeedsUpdate), (Row(vm, 1003).Title, Row(vm, 1003).Item.State));
@@ -139,9 +146,65 @@ public class LocalCollectionsViewModelTests : UiTextCultureTest
     }
 
     [Fact]
+    public async Task Select_MergesWithTheSubscriptionsAlreadyReadAndTheItemsLatestVersions()
+    {
+        _localCollections = LocalCollectionStore(
+            _library,
+            new SavedLocalCollection(ServerId, "Server", [new SavedWorkshopEntry(1002, null)]),
+            new SavedLocalCollection(OtherId, "Other", [new SavedWorkshopEntry(1003, null)]));
+        var vm = await CreateAsync();
+        var reads = _service.GetRequests.Count;
+
+        await vm.SelectCommand.ExecuteAsync(vm.Collections[1]);
+        await vm.SelectCommand.ExecuteAsync(vm.Collections[0]);
+
+        Assert.Equal(reads, _service.GetRequests.Count);
+        await vm.SelectCommand.ExecuteAsync(vm.Collections[1]);
+        Assert.Equal(("Vehicles", WorkshopItemState.NeedsUpdate), (Row(vm, 1003).Title, Row(vm, 1003).Item.State));
+    }
+
+    [Fact]
+    public async Task ShowRefreshAndSteamAction_ReadTheSubscriptionsOnceEach()
+    {
+        var page = await CreatePageAsync();
+        var vm = page.LocalCollections;
+        Assert.Single(_service.GetRequests);
+
+        page.Section = ModsSection.Mods;
+        page.Section = ModsSection.LocalCollections;
+        Assert.Equal(2, _service.GetRequests.Count);
+
+        await page.RefreshCommand.ExecuteAsync(null);
+        Assert.Equal(3, _service.GetRequests.Count);
+
+        await vm.SubscribeMissingCommand.ExecuteAsync(null);
+        Assert.Single(_runner.Runs);
+        Assert.Equal(4, _service.GetRequests.Count);
+    }
+
+    [Fact]
+    public async Task Load_SupersededByANewerOne_IsCancelled()
+    {
+        var page = await CreatePageAsync();
+        var vm = page.LocalCollections;
+        var checks = _service.CheckTokens.Count;
+        _service.CheckGate = new TaskCompletionSource();
+
+        var superseded = vm.SelectCommand.ExecuteAsync(vm.Collections[1]);
+        var newer = page.RefreshCommand.ExecuteAsync(null);
+        _service.CheckGate.SetResult();
+        await Task.WhenAll(superseded, newer);
+
+        Assert.Equal([true, false], _service.CheckTokens.Skip(checks).Select(token => token.IsCancellationRequested));
+        Assert.Equal([1002UL], vm.Rows.Select(row => row.Id));
+        Assert.Empty(vm.Warnings);
+        Assert.False(vm.IsLoading);
+    }
+
+    [Fact]
     public async Task NoCollections_ShowsTheEmptyStateWithoutTheWebApi()
     {
-        _localCollections = LocalCollectionStore(_preferences);
+        _localCollections = LocalCollectionStore(_library);
 
         var vm = await CreateAsync();
 
@@ -165,7 +228,7 @@ public class LocalCollectionsViewModelTests : UiTextCultureTest
         Assert.Equal(["Server", "Other", "Weekend"], vm.Collections.Select(row => row.Name));
         Assert.Empty(vm.Rows);
         Assert.True(vm.IsListEmpty);
-        Assert.Equal(["Server", "Other", "Weekend"], _preferences.SavedLocalCollections[^1].Select(collection => collection.Name));
+        Assert.Equal(["Server", "Other", "Weekend"], _library.SavedLocalCollections[^1].Select(collection => collection.Name));
     }
 
     [Fact]
@@ -194,7 +257,7 @@ public class LocalCollectionsViewModelTests : UiTextCultureTest
         var prompt = Assert.Single(_dialogs.Prompts);
         Assert.Equal("Server", prompt.InitialText);
         Assert.Null(prompt.Validate("Server"));
-        Assert.Equal(new LocalCollectionRow(ServerId, "Server B42", 3, true), vm.Selected);
+        Assert.Equal((ServerId, "Server B42", 3, true), Sidebar(vm.Selected!));
         Assert.Equal([1003UL, 1005, 1001], SavedIds(ServerId));
     }
 
@@ -208,7 +271,7 @@ public class LocalCollectionsViewModelTests : UiTextCultureTest
 
         Assert.Contains("Server", Assert.Single(_dialogs.Confirms).Message, StringComparison.Ordinal);
         Assert.Null(_localCollections.Find(ServerId));
-        Assert.Equal([new LocalCollectionRow(OtherId, "Other", 1, true)], vm.Collections);
+        Assert.Equal([(OtherId, "Other", 1, true)], vm.Collections.Select(Sidebar));
         Assert.Equal([1002UL], vm.Rows.Select(row => row.Id));
     }
 
@@ -216,12 +279,12 @@ public class LocalCollectionsViewModelTests : UiTextCultureTest
     public async Task Delete_Cancelled_KeepsIt()
     {
         var vm = await CreateAsync();
-        var saves = _preferences.SavedLocalCollections.Count;
+        var saves = _library.SavedLocalCollections.Count;
 
         await vm.DeleteCommand.ExecuteAsync(null);
 
         Assert.Equal(2, _localCollections.All.Count);
-        Assert.Equal(saves, _preferences.SavedLocalCollections.Count);
+        Assert.Equal(saves, _library.SavedLocalCollections.Count);
         Assert.Equal(ServerId, vm.Selected?.Id);
     }
 
@@ -250,14 +313,14 @@ public class LocalCollectionsViewModelTests : UiTextCultureTest
         var error = TestErrors.Create(ErrorCode.WorkshopNetworkFailed);
         _service.CollectionError = () => error;
         var vm = await CreateAsync();
-        var saves = _preferences.SavedLocalCollections.Count;
+        var saves = _library.SavedLocalCollections.Count;
         _dialogs.Accept("1002");
 
         await vm.AddItemsCommand.ExecuteAsync(null);
 
         Assert.Equal([ErrorMessages.ToUserText(error)], _dialogs.Errors);
         Assert.Equal([1003UL, 1005, 1001], SavedIds(ServerId));
-        Assert.Equal(saves, _preferences.SavedLocalCollections.Count);
+        Assert.Equal(saves, _library.SavedLocalCollections.Count);
         Assert.Null(vm.StatusText);
     }
 
@@ -317,6 +380,23 @@ public class LocalCollectionsViewModelTests : UiTextCultureTest
         Assert.Equal([1001UL, 1003, 1005], vm.Rows.Select(row => row.Id));
         Assert.Equal([1001UL, 1003, 1005], SavedIds(ServerId));
         Assert.Equal(asked, (_service.GetRequests.Count, _service.CheckRequests.Count));
+    }
+
+    [Fact]
+    public async Task MoveAndRemove_KeepTheRowsAndTheSidebarRow()
+    {
+        var vm = await CreateAsync();
+        var rows = vm.Rows;
+        var shown = rows.ToArray();
+        var sidebar = vm.Selected;
+
+        vm.Move(2, 0);
+        vm.RemoveItemCommand.Execute(Row(vm, 1005));
+
+        Assert.Same(rows, vm.Rows);
+        Assert.Equal([shown[2], shown[0]], vm.Rows);
+        Assert.Same(sidebar, vm.Selected);
+        Assert.Equal(2, sidebar?.ItemCount);
     }
 
     [Fact]
@@ -422,11 +502,11 @@ public class LocalCollectionsViewModelTests : UiTextCultureTest
     public async Task AddToLocalCollection_Cancelled_ChangesNothing()
     {
         var page = await CreatePageAsync(ModsSection.WorkshopSubscriptions);
-        var saves = _preferences.SavedLocalCollections.Count;
+        var saves = _library.SavedLocalCollections.Count;
 
         await page.WorkshopSubscriptions.AddToLocalCollectionCommand.ExecuteAsync(Row(page.WorkshopSubscriptions, 1001));
 
-        Assert.Equal(saves, _preferences.SavedLocalCollections.Count);
+        Assert.Equal(saves, _library.SavedLocalCollections.Count);
         Assert.Null(page.WorkshopSubscriptions.StatusText);
     }
 

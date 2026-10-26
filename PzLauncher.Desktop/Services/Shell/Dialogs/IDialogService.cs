@@ -3,6 +3,7 @@ using PzLauncher.Desktop.ViewModels.Mods.Workshop.Actions;
 using PzLauncher.Desktop.ViewModels.Mods;
 using PzLauncher.Desktop.ViewModels.Mods.Modpacks;
 using PzLauncher.Desktop.ViewModels.Mods.Workshop;
+using PzLauncher.Desktop.ViewModels.Mods.Workshop.LocalCollections;
 using PzLauncher.Desktop.ViewModels.ZombieBuddy;
 
 namespace PzLauncher.Desktop.Services.Shell.Dialogs;

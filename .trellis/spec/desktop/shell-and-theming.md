@@ -40,7 +40,7 @@ Reference: `PzLauncher.Desktop/Themes/ShellTheme.axaml`, `PzLauncher.Desktop/App
 
 - Shell colors are `Shell.*` brushes with a `Light` and a `Dark` value each (shadows: `Shell.*` `BoxShadows`, e.g. `Shell.LiftedShadow`). Views use `{DynamicResource}`; no color literals in views.
 - The Fluent accent in `App.axaml` equals `Shell.Accent`.
-- Page titles, section titles, error and warning text and hints use the `TextBlock` classes `pageTitle`, `sectionTitle`, `error`, `warning`, `hint` (`PzLauncher.Desktop/Themes/ShellStyles.axaml`). Never repeat their size, weight or color inline or in a view's local styles; a local style may only add a property (LaunchSettings' 12 px `hint`). `error`/`warning` don't wrap: each site sets `TextWrapping`.
+- Page titles, section titles, error and warning text and hints use the `TextBlock` classes `pageTitle`, `sectionTitle`, `error`, `warning`, `hint` (`PzLauncher.Desktop/Themes/ShellStyles.axaml`); badges, drag handles and a lifted row use `Border.badge`, `Border.dragHandle` and `ContentControl.lifted Border.reorderRow` from the same file. Never repeat their size, weight or color inline or in a view's local styles; a local style may only add a property (LaunchSettings' 12 px `hint`). `error`/`warning` don't wrap: each site sets `TextWrapping`.
 - ViewModels change the theme only through `IThemeService`.
 
 ## Motion
@@ -52,4 +52,5 @@ Reference: `PzLauncher.Desktop/Themes/ShellStyles.axaml` (timing resources, cont
 - Shell control themes animate brushes with `PremultipliedBrushTransition`, never `BrushTransition`: the built-in one blends straight alpha, so a fade from `Transparent` (`#00FFFFFF`) flashes light in dark theme.
 - In-page `IsVisible` toggles are not animated.
 - A drag reorder lifts a copy of the row into an overlay and slides the other rows with render-transform transitions; the list itself changes once, after the drop settles. Reference: `PzLauncher.Desktop/Views/Mods/ListReorderDrag.cs` (the list's view model implements `IReorderableList`), geometry in `ListReorderLayout.cs`.
-- A reorderable list is virtualized with a fixed row height: the drag geometry comes from index × row height and the scroll offset, never from containers. Only realized containers get offsets: set on `ContainerPrepared` without a transition, reset on `ContainerClearing` and when the drag ends.
+- A reorderable list is virtualized with a fixed row height: the drag geometry comes from index × row height and the scroll offset, never from containers. Only realized containers get offsets: set on `ContainerPrepared` without a transition, reset on `ContainerClearing` and when the drag ends. Only a reorderable list raises the panel's `CacheLength` (rows sliding in during a drag); others keep the default. Reference: `WorkshopItemListView.PanelCacheLength`.
+- A move or removal in a reorderable list changes its row collection in place, so the other rows keep their views. Reference: `WorkshopItemListSectionViewModel.ArrangeItems`.

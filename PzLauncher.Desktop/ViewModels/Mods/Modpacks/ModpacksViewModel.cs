@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -12,11 +13,15 @@ using PzLauncher.Core.Mod.Modpacks;
 using PzLauncher.Core.Steam.Workshop;
 using PzLauncher.Core.Steam.Workshop.Actions;
 using PzLauncher.Desktop.Lang;
+using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Services.Mods;
+using PzLauncher.Desktop.Services.Mods.LocalCollections;
+using PzLauncher.Desktop.Services.Mods.Modpacks;
 using PzLauncher.Desktop.Services.Shell;
 using PzLauncher.Desktop.ViewModels.Mods.Workshop;
 using PzLauncher.Desktop.Services.Shell.Dialogs;
 using PzLauncher.Desktop.ViewModels.Mods.Collections;
+using PzLauncher.Desktop.ViewModels.Mods.Workshop.LocalCollections;
 
 namespace PzLauncher.Desktop.ViewModels.Mods.Modpacks;
 
@@ -30,6 +35,7 @@ public sealed partial class ModpacksViewModel : WorkshopItemListSectionViewModel
     private readonly ModpackStore _modpacks;
     private readonly WorkshopCollectionHistory _history;
     private readonly WorkshopUserCollectionsCache _userCollections;
+    private readonly ModpackImport _import;
 
     // Steam collections read this session; a refresh reads the shown one again.
     private readonly Dictionary<ulong, WorkshopCollection> _steamCollections = [];
@@ -37,8 +43,8 @@ public sealed partial class ModpacksViewModel : WorkshopItemListSectionViewModel
     // The selected modpack; null shows the first one.
     private string? _selectedName;
 
-    // The modpack whose items are listed, so a change that lists other items lists them again.
-    private Modpack? _listed;
+    // The modpack as its items were last listed: a change of its collection or preset lists them again.
+    private Modpack? _itemsSource;
 
     private Task _load = Task.CompletedTask;
 
@@ -51,16 +57,18 @@ public sealed partial class ModpacksViewModel : WorkshopItemListSectionViewModel
         IUrlLauncher urls,
         WorkshopFavorites favorites,
         WorkshopTitles titles,
-        LocalCollections localCollections,
+        LocalCollectionStore localCollections,
         ModpackStore modpacks,
         WorkshopCollectionHistory history,
-        WorkshopUserCollectionsCache userCollections)
+        WorkshopUserCollectionsCache userCollections,
+        ModpackImport import)
         : base(page, service, runner, dialogs, urls, favorites, titles, localCollections)
     {
         _clipboard = clipboard;
         _modpacks = modpacks;
         _history = history;
         _userCollections = userCollections;
+        _import = import;
         Modpacks = [];
         AddStateCommands(NewCommand, EditCommand, UsePresetCommand, ImportCommand, ShareCommand);
         RefreshList();
@@ -99,9 +107,11 @@ public sealed partial class ModpacksViewModel : WorkshopItemListSectionViewModel
     /// <summary>Reads the install's presets and the shown Steam collection again.</summary>
     internal override async Task RefreshAsync()
     {
+        // Read before the presets, so their sync recomputes the extra items against the collection as it is now, in the same save.
         if (Current?.Collection is ModpackCollection.Steam steam)
         {
             _steamCollections.Remove(steam.Id);
+            await ReadSteamCollectionAsync(steam.Id);
         }
 
         await Page.ReloadAsync();
@@ -144,19 +154,10 @@ public sealed partial class ModpacksViewModel : WorkshopItemListSectionViewModel
         }
 
         var root = install.RootPath;
-        var prompt = new TextPrompt(
-            UiText.Modpacks_RenameTitle,
-            UiText.Modpacks_NameMessage,
-            modpack.Name,
-            UiText.ModCollections_Rename,
-            text => ModpackPrompts.ValidateName(_modpacks, root, text, modpack.Name));
-        if (await Dialogs.PromptTextAsync(prompt) is not TextPromptResult.Accepted accepted || Page.Install?.RootPath != root)
-        {
-            return;
-        }
-
-        var name = accepted.Text.Trim();
-        if (name == modpack.Name)
+        if (await ModpackPrompts.AskNameAsync(
+                Dialogs, _modpacks, root, UiText.Modpacks_RenameTitle, modpack.Name, UiText.ModCollections_Rename, modpack.Name) is not { } name
+            || Page.Install?.RootPath != root
+            || name == modpack.Name)
         {
             return;
         }
@@ -245,28 +246,19 @@ public sealed partial class ModpacksViewModel : WorkshopItemListSectionViewModel
             return;
         }
 
-        var extras = ModpackExtraItems.Compute(modpack.ExtraItems, modpack.Preset.ModIds, state.InstalledMods, collectionIds);
-        if (!extras.SequenceEqual(modpack.ExtraItems))
-        {
-            _modpacks.SetExtraItems(install.RootPath, modpack.Name, extras);
-        }
-
         var preset = modpack.Preset;
+        var summary = ModpackExtraItems.Summarize(RefreshExtras(install.RootPath, modpack, collectionIds), preset.ModIds, state.InstalledMods, collectionIds);
         await _clipboard.SetTextAsync(ModpackShareText.Format(
-            new SharedModpack(modpack.Name, collection, extras, new SharedModCollection(preset.Name, preset.ModIds))));
+            new SharedModpack(modpack.Name, collection, summary.ExtraItems, new SharedModCollection(preset.Name, preset.ModIds))));
 
-        // The copy the game loads of each mod, as the extra items take it.
-        var loaded = state.InstalledMods.DistinctBy(mod => mod.Id, StringComparer.Ordinal).ToDictionary(mod => mod.Id, StringComparer.Ordinal);
-        var notInstalled = preset.ModIds.Count(id => !loaded.ContainsKey(id));
-        var notWorkshop = preset.ModIds.Count(id => loaded.GetValueOrDefault(id) is { WorkshopId: null });
         var name = modpack.Name;
-        if (notInstalled + notWorkshop == 0)
+        if (summary.NotInstalled + summary.NotWorkshop == 0)
         {
             ShownStatus.Show(() => Format(UiText.Modpacks_Shared, name));
         }
         else
         {
-            ShownStatus.Show(() => Format(UiText.Modpacks_SharedPartly, name, notWorkshop, notInstalled));
+            ShownStatus.Show(() => Format(UiText.Modpacks_SharedPartly, name, summary.NotWorkshop, summary.NotInstalled));
         }
     }
 
@@ -302,40 +294,28 @@ public sealed partial class ModpacksViewModel : WorkshopItemListSectionViewModel
         }
 
         var shared = read.Modpack;
-        if (!await Page.WriteAsync((writeRoot, extraGameArgs) =>
-                Page.Service.SaveAsync(new SaveModCollectionRequest(writeRoot, extraGameArgs, null, names.Preset, shared.Preset.ModIds))))
+        var steamTitle = shared.Collection is SharedModpackCollection.Steam steam ? SteamTitle(steam.Id) : null;
+        ModpackImportResult? result = null;
+        await Page.RunAsync(async (writeRoot, extraGameArgs) => result = await _import.ImportAsync(writeRoot, extraGameArgs, shared, names, steamTitle));
+        switch (result)
         {
-            return;
-        }
+            case ModpackImportResult.Imported { Name: var name }:
+                _selectedName = name;
+                ShownStatus.Clear();
+                await ShowSelectedAsync();
+                ShownStatus.Show(() => Format(UiText.Modpacks_Imported, name));
+                if (Current?.Name == name)
+                {
+                    await RunAsync(WorkshopAction.Subscribe, Rows.Where(row => row.Item.State == WorkshopItemState.NotSubscribed));
+                }
 
-        ModpackCollection collection;
-        switch (shared.Collection)
-        {
-            case SharedModpackCollection.Steam steam:
-                _history.Remember(steam.Id, SteamTitle(steam.Id));
-                collection = new ModpackCollection.Steam(steam.Id);
                 break;
-            case SharedModpackCollection.Local local:
-                var target = names.Local ?? new ImportedLocalName(local.Name, null);
-                List<WorkshopEntry> items = [.. local.Items.Select(id => new WorkshopEntry(id, null))];
-                var kept = (target.Replaces is { } replaced ? LocalCollections.Replace(replaced, items) : null) ?? LocalCollections.Create(target.Name, items);
-                collection = new ModpackCollection.Local(kept.Id, kept.Name, kept.Items);
+            case ModpackImportResult.NameTaken { Kind: var kind }:
+                await Dialogs.ShowErrorAsync(kind == ModpackImportNameKind.Modpack ? UiText.Modpacks_NameTaken : UiText.LocalCollections_NameTaken);
                 break;
-            default:
-                throw new InvalidOperationException($"Unknown shared collection {shared.Collection}.");
-        }
-
-        var modpack = new Modpack(names.Modpack, new ModpackPreset(names.Preset, shared.Preset.ModIds, IsLinked: true), collection, shared.ExtraItems);
-        _selectedName = modpack.Name;
-        ShownStatus.Clear();
-        _modpacks.Save(root, modpack, names.ReplacesModpack ? modpack.Name : null);
-        await SettledLoadAsync();
-
-        var name = modpack.Name;
-        ShownStatus.Show(() => Format(UiText.Modpacks_Imported, name));
-        if (Current?.Name == name)
-        {
-            await RunAsync(WorkshopAction.Subscribe, Rows.Where(row => row.Item.State == WorkshopItemState.NotSubscribed));
+            case ModpackImportResult.Failed failed:
+                await Dialogs.ShowErrorAsync(ErrorMessages.ToUserText(failed.Error));
+                break;
         }
     }
 
@@ -344,10 +324,7 @@ public sealed partial class ModpacksViewModel : WorkshopItemListSectionViewModel
         switch (ModpackShareText.Parse(text))
         {
             case ModpackShareTextResult.Read { Modpack: var shared }:
-                return !ModCollectionName.IsValid(shared.Preset.Name) ? Format(UiText.ModCollections_ImportNameInvalid, shared.Preset.Name)
-                    : !ModpackName.IsValid(shared.Name) || shared.Collection is SharedModpackCollection.Local local && !LocalCollectionName.IsValid(local.Name)
-                        ? UiText.Modpacks_ImportIncomplete
-                        : null;
+                return !ModCollectionName.IsValid(shared.Preset.Name) ? Format(UiText.ModCollections_ImportNameInvalid, shared.Preset.Name) : null;
             case ModpackShareTextResult.NewerVersion:
                 return UiText.Modpacks_ImportNewer;
             case ModpackShareTextResult.Incomplete:
@@ -385,74 +362,36 @@ public sealed partial class ModpacksViewModel : WorkshopItemListSectionViewModel
     }
 
     /// <summary>Settles each name clash of the import before anything is written; <c>null</c> when one was cancelled.</summary>
-    private async Task<ImportNames?> ResolveImportNamesAsync(string root, SharedModpack shared)
+    private async Task<ModpackImportNames?> ResolveImportNamesAsync(string root, SharedModpack shared)
     {
-        var modpack = shared.Name.Trim();
-        var replacesModpack = false;
-        if (_modpacks.IsNameTaken(root, modpack))
-        {
-            switch (await AskOverwriteAsync(UiText.Modpacks_OverwriteTitle, UiText.Modpacks_OverwriteMessage, modpack))
-            {
-                case ConfirmChoice.Confirm:
-                    replacesModpack = true;
-                    break;
-                case ConfirmChoice.Alternative:
-                    var prompt = new TextPrompt(
-                        UiText.Modpacks_ImportTitle,
-                        UiText.Modpacks_NameMessage,
-                        modpack,
-                        UiText.Modpacks_ImportContinue,
-                        text => ModpackPrompts.ValidateName(_modpacks, root, text));
-                    if (await Dialogs.PromptTextAsync(prompt) is not TextPromptResult.Accepted accepted)
-                    {
-                        return null;
-                    }
-
-                    modpack = accepted.Text.Trim();
-                    break;
-                case ConfirmChoice.Cancel:
-                    return null;
-            }
-        }
-
-        if (await ResolvePresetNameAsync(shared.Preset.Name, UiText.Modpacks_ImportTitle, UiText.Modpacks_ImportContinue) is not { } preset)
+        if (await NameClashPrompts.ResolveAsync(
+                Dialogs,
+                name => _modpacks.IsNameTaken(root, name),
+                UiText.Modpacks_OverwriteTitle,
+                UiText.Modpacks_OverwriteMessage,
+                shared.Name.Trim(),
+                name => ModpackPrompts.AskNameAsync(Dialogs, _modpacks, root, UiText.Modpacks_ImportTitle, name, UiText.Modpacks_ImportContinue)) is not { } modpack
+            || await ResolvePresetNameAsync(shared.Preset.Name, UiText.Modpacks_ImportTitle, UiText.Modpacks_ImportContinue) is not { } preset)
         {
             return null;
         }
 
         if (shared.Collection is not SharedModpackCollection.Local local)
         {
-            return new ImportNames(modpack, replacesModpack, preset, null);
+            return new ModpackImportNames(modpack.Name, modpack.Overwrites, preset, null);
         }
 
         var localName = local.Name.Trim();
-        if (LocalCollections.All.FirstOrDefault(collection => collection.Name == localName) is not { } existing)
-        {
-            return new ImportNames(modpack, replacesModpack, preset, new ImportedLocalName(localName, null));
-        }
-
-        var target = await AskOverwriteAsync(UiText.LocalCollections_OverwriteTitle, UiText.LocalCollections_OverwriteMessage, localName) switch
-        {
-            ConfirmChoice.Confirm => new ImportedLocalName(localName, existing.Id),
-            ConfirmChoice.Alternative =>
-                await LocalCollectionPrompts.AskNameAsync(Dialogs, LocalCollections, UiText.Modpacks_ImportTitle, localName, UiText.Modpacks_ImportContinue) is { } newName
-                    ? new ImportedLocalName(newName, null)
-                    : null,
-            ConfirmChoice.Cancel => null,
-        };
-        return target is null ? null : new ImportNames(modpack, replacesModpack, preset, target);
-    }
-
-    /// <summary>Lets the loads the import started finish, each superseding the one before.</summary>
-    private async Task SettledLoadAsync()
-    {
-        Task load;
-        do
-        {
-            load = _load;
-            await load;
-        }
-        while (load != _load);
+        var existing = LocalCollections.All.FirstOrDefault(collection => collection.Name == localName)?.Id;
+        return await NameClashPrompts.ResolveAsync(
+                Dialogs,
+                _ => existing is not null,
+                UiText.LocalCollections_OverwriteTitle,
+                UiText.LocalCollections_OverwriteMessage,
+                localName,
+                name => LocalCollectionPrompts.AskNameAsync(Dialogs, LocalCollections, UiText.Modpacks_ImportTitle, name, UiText.Modpacks_ImportContinue)) is { } target
+            ? new ModpackImportNames(modpack.Name, modpack.Overwrites, preset, new ModpackImportLocalName(target.Name, target.Overwrites ? existing : null))
+            : null;
     }
 
     protected override void OnFavoritesChanged()
@@ -467,15 +406,16 @@ public sealed partial class ModpacksViewModel : WorkshopItemListSectionViewModel
     {
         base.ClearRows();
         SetItems(null);
-        _listed = null;
+        _itemsSource = null;
         _selectedName = null;
         RefreshList();
     }
 
-    private static bool SameItems(Modpack? a, Modpack? b) =>
+    // The extra items are left out: the load listing them recomputes them.
+    private static bool SameSource(Modpack? a, Modpack? b) =>
         a is null || b is null
             ? a is null && b is null
-            : a.ExtraItems.SequenceEqual(b.ExtraItems) && (a.Collection, b.Collection) switch
+            : a.Preset.ModIds.SequenceEqual(b.Preset.ModIds, StringComparer.Ordinal) && (a.Collection, b.Collection) switch
             {
                 (ModpackCollection.Steam x, ModpackCollection.Steam y) => x.Id == y.Id,
                 (ModpackCollection.Local x, ModpackCollection.Local y) => x.Items.Select(item => item.Id).SequenceEqual(y.Items.Select(item => item.Id)),
@@ -541,56 +481,32 @@ public sealed partial class ModpacksViewModel : WorkshopItemListSectionViewModel
 
     /// <summary>Writes the modpack's own preset copy to the game's presets and links it to that preset.</summary>
     /// <returns>The name it was written under; <c>null</c> when cancelled or the write failed.</returns>
-    private async Task<string?> RestorePresetAsync(Modpack modpack)
-    {
-        if (await ResolvePresetNameAsync(modpack.Preset.Name, UiText.Modpacks_RestoreTitle, UiText.ModCollections_Create) is not { } target)
-        {
-            return null;
-        }
-
-        var written = await Page.WriteAsync(async (root, extraGameArgs) =>
-        {
-            var saved = await Page.Service.SaveAsync(new SaveModCollectionRequest(root, extraGameArgs, null, target, modpack.Preset.ModIds));
-
-            // Before the re-read, which would otherwise leave the copy independent.
-            if (saved.IsSuccess)
-            {
-                _modpacks.LinkPreset(root, modpack.Name, target);
-            }
-
-            return saved;
-        });
-        return written ? target : null;
-    }
+    private async Task<string?> RestorePresetAsync(Modpack modpack) =>
+        await ResolvePresetNameAsync(modpack.Preset.Name, UiText.Modpacks_RestoreTitle, UiText.ModCollections_Create) is { } target
+        && await Page.RestorePresetAsync(modpack.Name, target, modpack.Preset.ModIds)
+            ? target
+            : null;
 
     /// <summary>The name to write a preset under: its own when free, else the same one to overwrite or a new one, as the user chooses.</summary>
     /// <returns><c>null</c> when cancelled.</returns>
     private async Task<string?> ResolvePresetNameAsync(string name, string title, string accept) =>
-        !PresetExists(name) ? name
-        : await AskOverwriteAsync(UiText.ModCollections_OverwriteTitle, UiText.ModCollections_OverwriteMessage, name) switch
-        {
-            ConfirmChoice.Confirm => name,
-            ConfirmChoice.Alternative =>
-                await ModCollectionPrompts.AskNameAsync(Dialogs, ModCollectionPrompts.NamePrompt(title, name, accept), PresetExists) is TextPromptResult.Accepted accepted
-                    ? accepted.Text
-                    : null,
-            ConfirmChoice.Cancel => null,
-        };
-
-    /// <summary>Asks whether a name clash overwrites its namesake (<see cref="ConfirmChoice.Confirm"/>) or takes a new name (<see cref="ConfirmChoice.Alternative"/>).</summary>
-    private Task<ConfirmChoice> AskOverwriteAsync(string title, string message, string name) =>
-        Dialogs.ChooseAsync(
-            new ConfirmPrompt(title, Format(message, name), UiText.ModCollections_Overwrite, UiText.Dialog_Cancel),
-            UiText.Modpacks_NewName);
-
-    private bool PresetExists(string name) => Page.State?.Collections.Any(collection => collection.Name == name) ?? false;
+        (await NameClashPrompts.ResolveAsync(
+            Dialogs,
+            Page.PresetExists,
+            UiText.ModCollections_OverwriteTitle,
+            UiText.ModCollections_OverwriteMessage,
+            name,
+            async taken => await ModCollectionPrompts.AskNameAsync(
+                Dialogs, ModCollectionPrompts.NamePrompt(title, taken, accept), Page.PresetExists) is TextPromptResult.Accepted accepted
+                ? accepted.Text
+                : null))?.Name;
 
     /// <summary>Shows the list again, and lists the selected modpack's items again when they aren't the listed ones.</summary>
     /// <returns>The latest load of the items.</returns>
     private Task ShowSelectedAsync()
     {
         RefreshList();
-        if (Page.Section == ModsSection.Modpacks && !SameItems(Current, _listed))
+        if (Page.Section == ModsSection.Modpacks && !SameSource(Current, _itemsSource))
         {
             _load = LoadItemsAsync();
         }
@@ -602,10 +518,10 @@ public sealed partial class ModpacksViewModel : WorkshopItemListSectionViewModel
     /// The selected modpack's collection items, then its extra items, recomputed from the install's mods and saved when they changed: their
     /// latest versions from the Web API, merged with the subscriptions like an opened collection.
     /// </summary>
-    private Task LoadItemsAsync() => RunLoadAsync(async version =>
+    private Task LoadItemsAsync() => RunLoadAsync(async (version, ct) =>
     {
-        _listed = Current;
-        if (Page.Install is not { } install || _listed is not { } modpack)
+        _itemsSource = Current;
+        if (Page.Install is not { } install || _itemsSource is not { } modpack)
         {
             SetItems(null);
             SetRows([]);
@@ -613,11 +529,11 @@ public sealed partial class ModpacksViewModel : WorkshopItemListSectionViewModel
         }
 
         IReadOnlyList<WorkshopCollectionItem> collectionItems = [];
-        Error? collectionError = null;
+        List<Error> warnings = [];
         switch (modpack.Collection)
         {
             case ModpackCollection.Steam steam:
-                var read = await ReadSteamCollectionAsync(steam.Id);
+                var read = await ReadSteamCollectionAsync(steam.Id, ct);
                 if (!IsLatest(version))
                 {
                     return;
@@ -629,7 +545,7 @@ public sealed partial class ModpacksViewModel : WorkshopItemListSectionViewModel
                 }
                 else
                 {
-                    collectionError = read.Error;
+                    warnings.Add(read.Error);
                 }
 
                 break;
@@ -639,60 +555,33 @@ public sealed partial class ModpacksViewModel : WorkshopItemListSectionViewModel
         }
 
         var collectionIds = collectionItems.Select(item => item.Id).ToHashSet();
-        var extras = ComputeExtras(modpack, collectionIds) ?? modpack.ExtraItems;
-        if (!extras.SequenceEqual(modpack.ExtraItems))
-        {
-            // Listed first, so the change it raises doesn't list the items again.
-            _listed = modpack with { ExtraItems = extras };
-            _modpacks.SetExtraItems(install.RootPath, modpack.Name, extras);
-        }
 
         // An unread Steam collection lists none, and its items may be among the extra ones.
-        List<ulong> extraIds = [.. extras.Where(id => !collectionIds.Contains(id))];
-        List<ulong> unknown = [.. collectionItems.Where(item => item.Details is null).Select(item => item.Id), .. extraIds];
-        Dictionary<ulong, WorkshopItemDetails> latest = [];
-        Error? detailsError = null;
-        if (unknown.Count > 0)
-        {
-            var details = await Service.CheckUpdatesAsync(unknown);
-            if (!IsLatest(version))
-            {
-                return;
-            }
-
-            if (details.IsSuccess)
-            {
-                latest = details.Value.ToDictionary(item => item.Id);
-            }
-            else
-            {
-                detailsError = details.Error;
-            }
-        }
-
-        SetItems(
-        [
-            .. collectionItems.Select(item => item.Details is null ? item with { Details = latest.GetValueOrDefault(item.Id) } : item),
-            .. extraIds.Select(id => new WorkshopCollectionItem(id, latest.GetValueOrDefault(id))),
-        ]);
-        await MergeAsync(version);
-        if (IsLatest(version))
-        {
-            foreach (var warning in new[] { collectionError, detailsError }.OfType<Error>())
-            {
-                AddWarning(warning);
-            }
-        }
+        List<ulong> extraIds = [.. RefreshExtras(install.RootPath, modpack, collectionIds).Where(id => !collectionIds.Contains(id))];
+        await ListLatestAsync(
+            [.. collectionItems.Where(item => item.Details is null).Select(item => item.Id), .. extraIds],
+            latest =>
+            [
+                .. collectionItems.Select(item => item.Details is null ? item with { Details = latest.GetValueOrDefault(item.Id) } : item),
+                .. extraIds.Select(id => new WorkshopCollectionItem(id, latest.GetValueOrDefault(id))),
+            ],
+            version,
+            ct,
+            warnings);
     });
 
-    private async Task<Result<WorkshopCollection>> ReadSteamCollectionAsync(ulong id)
+    /// <summary>The Steam collection's item ids, when it was read this session.</summary>
+    internal IReadOnlyCollection<ulong>? SteamCollectionItems(ulong id) =>
+        _steamCollections.TryGetValue(id, out var collection) ? collection.Items.Select(item => item.Id).ToHashSet() : null;
+
+    private async Task<Result<WorkshopCollection>> ReadSteamCollectionAsync(ulong id, CancellationToken ct = default)
     {
         if (_steamCollections.TryGetValue(id, out var cached))
         {
             return cached;
         }
 
-        var read = await Service.GetCollectionAsync(id);
+        var read = await Service.GetCollectionAsync(id, ct);
         if (read.IsSuccess)
         {
             _steamCollections[id] = read.Value;
@@ -703,34 +592,26 @@ public sealed partial class ModpacksViewModel : WorkshopItemListSectionViewModel
         return read;
     }
 
-    /// <summary><c>null</c> while the install's mods are unknown.</summary>
-    private IReadOnlyList<ulong>? ComputeExtras(Modpack modpack, IReadOnlyCollection<ulong> collectionIds) =>
-        Page.State is { } state ? ModpackExtraItems.Compute(modpack.ExtraItems, modpack.Preset.ModIds, state.InstalledMods, collectionIds) : null;
+    /// <summary>
+    /// The modpack's extra items, recomputed and saved first while the install's mods are known. The page's preset sync recomputes them too,
+    /// except for a Steam collection not read yet: this catches that and a new modpack.
+    /// </summary>
+    private IReadOnlyList<ulong> RefreshExtras(string root, Modpack modpack, IReadOnlyCollection<ulong> collectionIds)
+    {
+        if (Page.State is { } state)
+        {
+            _modpacks.RefreshExtraItems(root, modpack.Name, state.InstalledMods, collectionIds);
+        }
 
-    // The install's mods may have changed: the shown modpack's extra items are recomputed, and listed again when they changed.
+        return _modpacks.Find(root, modpack.Name)?.ExtraItems ?? modpack.ExtraItems;
+    }
+
+    // The install's mods may have changed, and with them the extra items.
     private void OnPageStateChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName != nameof(ModsViewModel.State))
+        if (e.PropertyName == nameof(ModsViewModel.State) && Page.State is not null && Page.Section == ModsSection.Modpacks)
         {
-            return;
-        }
-
-        RefreshList();
-        if (Page.Section != ModsSection.Modpacks || Page.Install is not { } install || Current is not { } modpack)
-        {
-            return;
-        }
-
-        // Without asking Steam: a Steam collection not read yet is left to the load reading it.
-        IReadOnlyCollection<ulong>? collectionIds = modpack.Collection switch
-        {
-            ModpackCollection.Steam steam => _steamCollections.GetValueOrDefault(steam.Id)?.Items.Select(item => item.Id).ToHashSet(),
-            ModpackCollection.Local local => local.Items.Select(item => item.Id).ToHashSet(),
-            _ => null,
-        };
-        if (collectionIds is not null && ComputeExtras(modpack, collectionIds) is { } extras && !extras.SequenceEqual(modpack.ExtraItems))
-        {
-            _modpacks.SetExtraItems(install.RootPath, modpack.Name, extras);
+            _load = LoadItemsAsync();
         }
     }
 
@@ -760,11 +641,4 @@ public sealed partial class ModpacksViewModel : WorkshopItemListSectionViewModel
         _steamCollections.GetValueOrDefault(id)?.Title
         ?? _history.Items.FirstOrDefault(entry => entry.Id == id)?.Title
         ?? Favorites.Collections.FirstOrDefault(entry => entry.Id == id)?.Title;
-
-    /// <param name="ReplacesModpack">The install's modpack of this name is overwritten.</param>
-    /// <param name="Local">For a local collection; <c>null</c> for a Steam one.</param>
-    private sealed record ImportNames(string Modpack, bool ReplacesModpack, string Preset, ImportedLocalName? Local);
-
-    /// <param name="Replaces">The local collection overwritten; <c>null</c> when a new one is made.</param>
-    private sealed record ImportedLocalName(string Name, Guid? Replaces);
 }

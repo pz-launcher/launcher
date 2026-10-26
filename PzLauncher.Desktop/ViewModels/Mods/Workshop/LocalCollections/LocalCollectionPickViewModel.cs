@@ -4,15 +4,16 @@ using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using PzLauncher.Desktop.Services.Mods;
+using PzLauncher.Desktop.Services.Mods.LocalCollections;
 
-namespace PzLauncher.Desktop.ViewModels.Mods.Workshop;
+namespace PzLauncher.Desktop.ViewModels.Mods.Workshop.LocalCollections;
 
 /// <summary>One per dialog before Workshop items are added to a local collection: an existing one, or a new one by name.</summary>
 public sealed partial class LocalCollectionPickViewModel : DialogViewModel
 {
-    private readonly LocalCollections _collections;
+    private readonly LocalCollectionStore _collections;
 
-    public LocalCollectionPickViewModel(LocalCollections collections)
+    public LocalCollectionPickViewModel(LocalCollectionStore collections)
     {
         _collections = collections;
         Options = [.. collections.All.Select(collection => new LocalCollectionPickOption(collection.Id, collection.Name, collection.Items.Count, OnOptionChecked))];

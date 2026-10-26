@@ -56,6 +56,15 @@ public sealed class ModpackShareTextTests
     }
 
     [Theory]
+    [InlineData("two\nlines", "My list", "Example Server")]
+    [InlineData(" ", "My list", "Example Server")]
+    [InlineData("2042", "tab\tinside", "Example Server")]
+    [InlineData("2042", "My list", "two\nlines")]
+    public void Format_NameNotOnOneLine_Throws(string name, string localName, string presetName) =>
+        Assert.Throws<ArgumentException>(() => ModpackShareText.Format(
+            new SharedModpack(name, new SharedModpackCollection.Local(localName, []), [], new SharedModCollection(presetName, ["ModA"]))));
+
+    [Theory]
     [InlineData(true)]
     [InlineData(false)]
     public void Parse_FormattedText_RoundTrips(bool steam)
@@ -157,5 +166,12 @@ public sealed class ModpackShareTextTests
     [InlineData("#pzlauncher-modpack 1\n#name\nP\n#name\nQ\n#steam-collection\n10\n#preset\nP:A;\n")]
     [InlineData("#pzlauncher-modpack 1\n#name\nP\n#steam-collection\n10\n#preset\nP:A;\n#PRESET\nQ:B;\n")]
     public void Parse_MissingOrRepeatedSection_IsIncomplete(string text) =>
+        Assert.IsType<ModpackShareTextResult.Incomplete>(ModpackShareText.Parse(text));
+
+    [Theory]
+    [InlineData("#pzlauncher-modpack 1\n#name\nP\tQ\n#steam-collection\n10\n#preset\nP:A;\n")]
+    [InlineData("#pzlauncher-modpack 1\n#name\nP\n#local-collection\nL\rM\n10\n#preset\nP:A;\n")]
+    [InlineData("#pzlauncher-modpack 1\n#name\nP\n#steam-collection\n10\n#preset\nP\u000bQ:A;\n")]
+    public void Parse_NameNotOnOneLine_IsIncomplete(string text) =>
         Assert.IsType<ModpackShareTextResult.Incomplete>(ModpackShareText.Parse(text));
 }

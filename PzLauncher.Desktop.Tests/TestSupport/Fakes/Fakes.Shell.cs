@@ -3,6 +3,7 @@ using PzLauncher.Desktop.Services.Shell.Lifetime;
 using PzLauncher.Desktop.Services.Shell;
 using PzLauncher.Desktop.Themes;
 using PzLauncher.Desktop.ViewModels.Mods.Workshop.Actions;
+using PzLauncher.Desktop.ViewModels.Mods.Workshop.LocalCollections;
 using PzLauncher.Desktop.ViewModels.Mods;
 using PzLauncher.Desktop.ViewModels.Mods.Modpacks;
 using PzLauncher.Desktop.ViewModels.Mods.Workshop;

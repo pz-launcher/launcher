@@ -32,6 +32,13 @@ public static class ModpackShareText
 
     public static string Format(SharedModpack modpack)
     {
+        if (!ModpackNames.IsValid(modpack.Name)
+            || modpack.Collection is SharedModpackCollection.Local { Name: var localName } && !ModpackNames.IsValid(localName)
+            || !ModpackNames.IsValid(modpack.Preset.Name))
+        {
+            throw new ArgumentException("A name in the modpack is blank or not on one line.", nameof(modpack));
+        }
+
         var text = new StringBuilder();
         AppendLine(text, Header + " " + Version.ToString(CultureInfo.InvariantCulture));
         AppendLine(text, NameMarker);
@@ -153,7 +160,9 @@ public static class ModpackShareText
             (false, { } listName) => new SharedModpackCollection.Local(listName, localItems),
             _ => null,
         };
-        return name is not null && collection is not null && preset is not null
+        return name is not null && ModpackNames.IsValid(name)
+            && collection is not null && (collection is not SharedModpackCollection.Local local || ModpackNames.IsValid(local.Name))
+            && preset is not null && ModpackNames.IsValid(preset.Name)
             ? new ModpackShareTextResult.Read(new SharedModpack(name, collection, extraItems, preset), skipped)
             : new ModpackShareTextResult.Incomplete();
     }
@@ -228,6 +237,6 @@ public abstract record ModpackShareTextResult
     /// <summary>Written by a later launcher in a format this one can't read.</summary>
     public sealed record NewerVersion(int Version) : ModpackShareTextResult;
 
-    /// <summary>A modpack header, but the version, name, collection or preset is missing, unreadable or given twice.</summary>
+    /// <summary>A modpack header, but the version, a name, the collection or the preset is missing, unreadable or given twice.</summary>
     public sealed record Incomplete : ModpackShareTextResult;
 }

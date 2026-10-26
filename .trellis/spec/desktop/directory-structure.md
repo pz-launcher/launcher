@@ -17,11 +17,11 @@ PzLauncher.Desktop/
 └── Assets/
 ```
 
-`<Feature>` matches the Core feature folder (`Installs`, ...), or names a desktop-only page (`Home`, `Settings`, `Mods`, which spans Core's `Mod/` and `Mod/Collections/`). A sub-folder becomes a namespace that hides any type of the same name in sibling namespaces, so no type is named after a folder (`ViewModels/Mods/Modpacks/` → the store is `ModpackStore`).
+`<Feature>` matches the Core feature folder (`Installs`, ...), or names a desktop-only page (`Home`, `Settings`, `Mods`, which spans Core's `Mod/` and `Mod/Collections/`). A sub-folder becomes a namespace that hides any type of the same name in sibling namespaces, so no type is named after a folder (`Services/Mods/Modpacks/` → the store is `ModpackStore`, `Services/Mods/LocalCollections/` → `LocalCollectionStore`).
 
-`<Group>` under `Services/` is a feature folder (`Launch`, `Mods`, `Net`, `Steam`, `Update`, `ZombieBuddy`), `Shell` (clipboard, theme, URLs, UI-thread progress; `Dialogs/`: dialogs, prompts, folder picker; `Lifetime/`: app lifetime, single instance, window and its placement) or `Preferences` (preference store and its JSON context; `Records/`: saved records; `Secrets/`: secret protection). Namespace `PzLauncher.Desktop.Services.<Group>`; no files directly under `Services/`.
+`<Group>` under `Services/` is a feature folder (`Launch`, `Mods` with `Modpacks/` and `LocalCollections/` for the launcher's own lists (`Modpacks/` also holds their import and the preset writes that keep their links) and `Library/` for their file, `Net`, `Steam`, `Update`, `ZombieBuddy`), `Shell` (clipboard, theme, URLs, UI-thread progress; `Dialogs/`: dialogs, prompts, folder picker; `Lifetime/`: app lifetime, single instance, window and its placement) or `Preferences` (preference store, its JSON context and the JSON helpers other launcher files share; `Records/`: saved records; `Secrets/`: secret protection). Namespace `PzLauncher.Desktop.Services.<Group>`; no files directly under `Services/`.
 
-A folder over the size limit splits into subfolders per [Folder size](../common/coding-rules.md#folder-size), e.g. `ViewModels/Mods/` into `Installed/`, `Collections/` and `Workshop/` (with `Workshop/Actions/`).
+A folder over the size limit splits into subfolders per [Folder size](../common/coding-rules.md#folder-size), e.g. `ViewModels/Mods/` into `Installed/`, `Collections/`, `Modpacks/` and `Workshop/` (with `Workshop/Actions/` and `Workshop/LocalCollections/`).
 
 ## ViewModels
 
@@ -32,6 +32,7 @@ Reference: `PzLauncher.Desktop/ViewModels/Installs/InstallsViewModel.cs`.
 - Bind to Core DTOs directly unless a row needs its own commands or state.
 - A page section with its own state, commands and loads is a child ViewModel the page creates and exposes as a property; the page forwards clear, load and re-render to it. Reference: `ModsViewModel`, `LaunchSettingsViewModel.ZombieBuddy`.
 - State several pages observe (e.g. whether a game from this session runs) is an app-lifetime `ObservableObject` service, not a property one page owns. Reference: `PzLauncher.Desktop/Services/Launch/GameRunState.cs`.
+- A section's loads run through one runner that cancels the previous load's token and drops its `OperationCanceledException`; the Workshop list sections share the install's subscriptions, read again only on a section show, a refresh, a finished Steam action or an install change. Reference: `WorkshopSectionViewModel.RunLoadAsync`, `ModsViewModel.GetSubscriptionsAsync`.
 - Core `IProgress<T>` reports are consumed in report order on the UI thread: report inline when already on the captured context, post otherwise. Not `Progress<T>`, which uses the thread pool without a context (tests) and can reorder or report after the result. Reference: `PzLauncher.Desktop/Services/Shell/ContextProgress.cs`.
 
 ## Views

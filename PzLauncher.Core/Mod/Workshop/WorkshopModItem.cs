@@ -1,3 +1,4 @@
+using PzLauncher.Core.Mod.Collections;
 using PzLauncher.Core.Steam.Workshop;
 
 namespace PzLauncher.Core.Mod.Workshop;
@@ -9,7 +10,7 @@ public sealed record WorkshopModItem(WorkshopItem Item, IReadOnlyList<InstalledM
 {
     /// <summary>
     /// A list's items (a collection's, the starred ones) in list order: a subscribed one as <paramref name="subscriptions"/> has it, the list's
-    /// own details filling in a title not fetched yet; any other one not subscribed.
+    /// own details filling in a latest version not fetched yet, and the state that follows from it; any other one not subscribed.
     /// </summary>
     public static IReadOnlyList<WorkshopModItem> InListOrder(IReadOnlyList<WorkshopCollectionItem> items, IReadOnlyList<WorkshopModItem> subscriptions)
     {
@@ -20,8 +21,20 @@ public sealed record WorkshopModItem(WorkshopItem Item, IReadOnlyList<InstalledM
         }
 
         return items.Select(entry => subscribed.TryGetValue(entry.Id, out var item)
-                ? item.Item.Latest is null && entry.Details is not null ? item with { Item = item.Item with { Latest = entry.Details } } : item
+                ? item.Item.Latest is null && entry.Details is { } details ? item with { Item = item.Item.WithLatest(details) } : item
                 : new WorkshopModItem(WorkshopItem.NotSubscribed(entry.Id, entry.Details), [], []))
             .ToList();
+    }
+
+    /// <summary>Names of <paramref name="collections"/> listing one of <paramref name="mods"/>, in their order.</summary>
+    internal static IReadOnlyList<string> UsedBy(IReadOnlyList<InstalledMod> mods, IReadOnlyList<ModCollection> collections)
+    {
+        if (mods.Count == 0)
+        {
+            return [];
+        }
+
+        var ids = mods.Select(mod => mod.Id).ToHashSet(StringComparer.Ordinal);
+        return [.. collections.Where(collection => collection.ModIds.Any(ids.Contains)).Select(collection => collection.Name)];
     }
 }

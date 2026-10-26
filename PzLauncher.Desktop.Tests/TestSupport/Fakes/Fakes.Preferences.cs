@@ -4,7 +4,6 @@ using PzLauncher.Core.Update.Releases;
 using PzLauncher.Core.Update;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Services.Launch;
-using PzLauncher.Desktop.Services.Mods;
 using PzLauncher.Desktop.Services.Preferences.Records;
 using PzLauncher.Desktop.Services.Preferences;
 using PzLauncher.Desktop.Services.Shell.Lifetime;
@@ -126,22 +125,6 @@ public sealed class FakePreferenceStore : IPreferenceStore
     public Task SaveWorkshopFavoritesAsync(SavedWorkshopFavorites favorites, CancellationToken ct = default)
     {
         SavedWorkshopFavorites.Add(favorites);
-        return Task.CompletedTask;
-    }
-
-    public List<IReadOnlyList<SavedLocalCollection>> SavedLocalCollections { get; } = [];
-
-    public Task SaveLocalCollectionsAsync(IReadOnlyList<SavedLocalCollection> collections, CancellationToken ct = default)
-    {
-        SavedLocalCollections.Add(collections);
-        return Task.CompletedTask;
-    }
-
-    public List<(string Root, IReadOnlyList<Modpack> Modpacks)> SavedModpacks { get; } = [];
-
-    public Task SaveModpacksAsync(string installRoot, IReadOnlyList<Modpack> modpacks, CancellationToken ct = default)
-    {
-        SavedModpacks.Add((installRoot, modpacks));
         return Task.CompletedTask;
     }
 

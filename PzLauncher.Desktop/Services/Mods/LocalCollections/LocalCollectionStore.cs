@@ -1,20 +1,21 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using PzLauncher.Desktop.Services.Preferences;
+using PzLauncher.Core.Mod.Modpacks;
+using PzLauncher.Desktop.Services.Mods.Library;
 using PzLauncher.Desktop.Services.Preferences.Records;
 
-namespace PzLauncher.Desktop.Services.Mods;
+namespace PzLauncher.Desktop.Services.Mods.LocalCollections;
 
 /// <summary>A named list of Steam Workshop items kept by the launcher, each id once, in the user's order.</summary>
 /// <param name="Id">Stable across renames.</param>
 public sealed record LocalCollection(Guid Id, string Name, IReadOnlyList<WorkshopEntry> Items);
 
 /// <summary>
-/// The launcher's local collections, shared by every install and Steam account, persisted through <see cref="IPreferenceStore"/>.
-/// Names are unique (ordinal) and valid by <see cref="LocalCollectionName"/>. Every change applies at once; the file write is fire-and-forget.
+/// The launcher's local collections, shared by every install and Steam account, persisted through <see cref="IModLibraryFile"/>.
+/// Names are unique (ordinal) and valid by <see cref="ModpackNames"/>. Every change applies at once; the file write is fire-and-forget.
 /// </summary>
-public sealed class LocalCollections(IPreferenceStore store, UserPreferences saved)
+public sealed class LocalCollectionStore(IModLibraryFile file, ModLibrary saved)
 {
     private readonly List<LocalCollection> _collections =
     [
@@ -38,9 +39,17 @@ public sealed class LocalCollections(IPreferenceStore store, UserPreferences sav
     }
 
     /// <summary>A repeated id is kept once, where it first appears.</summary>
-    public LocalCollection Create(string name, IReadOnlyList<WorkshopEntry> items)
+    public LocalCollection Create(string name, IReadOnlyList<WorkshopEntry> items) => TryCreate(name, items) ?? throw NotFree(name);
+
+    /// <summary><see cref="Create"/>; <c>null</c>, changing nothing, when the name is invalid or taken.</summary>
+    public LocalCollection? TryCreate(string name, IReadOnlyList<WorkshopEntry> items)
     {
-        var created = new LocalCollection(Guid.NewGuid(), CheckedName(name, except: null), [.. items.DistinctBy(item => item.Id)]);
+        if (!IsFreeName(name, except: null))
+        {
+            return null;
+        }
+
+        var created = new LocalCollection(Guid.NewGuid(), name.Trim(), [.. items.DistinctBy(item => item.Id)]);
         _collections.Add(created);
         Commit();
         return created;
@@ -144,16 +153,12 @@ public sealed class LocalCollections(IPreferenceStore store, UserPreferences sav
         }
     }
 
-    // A name the caller didn't validate is a bug, not an expected failure.
-    private string CheckedName(string name, Guid? except)
-    {
-        if (!LocalCollectionName.IsValid(name) || IsNameTaken(name, except))
-        {
-            throw new ArgumentException($"'{name}' is not a free local collection name.", nameof(name));
-        }
+    private bool IsFreeName(string name, Guid? except) => ModpackNames.IsValid(name) && !IsNameTaken(name, except);
 
-        return name.Trim();
-    }
+    private string CheckedName(string name, Guid? except) => IsFreeName(name, except) ? name.Trim() : throw NotFree(name);
+
+    // A name the caller didn't validate is a bug, not an expected failure.
+    private static ArgumentException NotFree(string name) => new($"'{name}' is not a free local collection name.", nameof(name));
 
     /// <param name="change">The changed collection; <c>null</c> when nothing changes.</param>
     private void Update(Guid id, Func<LocalCollection, LocalCollection?> change)
@@ -175,7 +180,7 @@ public sealed class LocalCollections(IPreferenceStore store, UserPreferences sav
         ];
 
         // SaveLocalCollectionsAsync never throws for I/O, and a failed save must not undo the change.
-        _ = store.SaveLocalCollectionsAsync(collections);
+        _ = file.SaveLocalCollectionsAsync(collections);
         Changed?.Invoke(this, EventArgs.Empty);
     }
 }

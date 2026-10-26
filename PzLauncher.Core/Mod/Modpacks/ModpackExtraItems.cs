@@ -1,9 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using PzLauncher.Core.Mod;
-
-namespace PzLauncher.Desktop.Services.Mods;
+namespace PzLauncher.Core.Mod.Modpacks;
 
 /// <summary>The Workshop items a modpack lists after its collection's: those of its preset's mods that the collection lacks.</summary>
 public static class ModpackExtraItems
@@ -37,4 +32,20 @@ public static class ModpackExtraItems
 
         return items;
     }
+
+    /// <summary>The extra items to share, as <see cref="Compute"/> gives them, and the preset's mods a receiver can't get from them.</summary>
+    public static ModpackShareSummary Summarize(
+        IReadOnlyList<ulong> stored, IReadOnlyList<string> presetModIds, IReadOnlyList<InstalledMod> installed, IReadOnlyCollection<ulong> collectionItems)
+    {
+        // The copy the game loads of each mod, as the extra items take it.
+        var loaded = installed.DistinctBy(mod => mod.Id, StringComparer.Ordinal).ToDictionary(mod => mod.Id, StringComparer.Ordinal);
+        return new ModpackShareSummary(
+            Compute(stored, presetModIds, installed, collectionItems),
+            presetModIds.Count(id => !loaded.ContainsKey(id)),
+            presetModIds.Count(id => loaded.GetValueOrDefault(id) is { WorkshopId: null }));
+    }
 }
+
+/// <param name="NotInstalled">Preset mods not installed here, so their Workshop items are unknown.</param>
+/// <param name="NotWorkshop">Preset mods installed from outside the Workshop.</param>
+public sealed record ModpackShareSummary(IReadOnlyList<ulong> ExtraItems, int NotInstalled, int NotWorkshop);

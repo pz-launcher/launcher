@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using PzLauncher.Desktop.Services.Preferences.Records;
 
-namespace PzLauncher.Desktop.Services.Preferences;
+namespace PzLauncher.Desktop.Services.Mods.Library;
 
 /// <summary>A named list of Steam Workshop items kept by the launcher, in the user's order.</summary>
 /// <param name="Id">Stable across renames, so other saved values can refer to it.</param>

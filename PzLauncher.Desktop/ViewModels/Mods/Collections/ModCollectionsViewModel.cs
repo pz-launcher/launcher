@@ -7,7 +7,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using PzLauncher.Core.Common;
 using PzLauncher.Core.Mod;
 using PzLauncher.Core.Mod.Collections;
 using PzLauncher.Core.Mod.Modpacks;
@@ -28,30 +27,20 @@ public partial class ModCollectionsViewModel : ViewModelBase, IReorderableList
 
     private readonly ModsViewModel _page;
     private readonly IModCollectionDefaultsService _defaults;
-    private readonly ModCollectionApplier _applier;
     private readonly IDialogService _dialogs;
     private readonly IClipboardService _clipboard;
-    private readonly ModpackStore _modpacks;
 
     // The selected collection's ids in the shown order, ahead of the file while a reorder waits.
     private List<string> _ids = [];
     private string? _selectedName;
     private readonly LocalizedText _status;
 
-    internal ModCollectionsViewModel(
-        ModsViewModel page,
-        IModCollectionDefaultsService defaults,
-        ModCollectionApplier applier,
-        IDialogService dialogs,
-        IClipboardService clipboard,
-        ModpackStore modpacks)
+    internal ModCollectionsViewModel(ModsViewModel page, IModCollectionDefaultsService defaults, IDialogService dialogs, IClipboardService clipboard)
     {
         _page = page;
         _defaults = defaults;
-        _applier = applier;
         _dialogs = dialogs;
         _clipboard = clipboard;
-        _modpacks = modpacks;
         Rows = [];
         AddCandidates = [];
         _status = new LocalizedText(text => StatusText = text);
@@ -152,7 +141,7 @@ public partial class ModCollectionsViewModel : ViewModelBase, IReorderableList
         var imported = new List<SharedModCollection>();
         foreach (var collection in ModCollectionShareText.Parse(accepted.Text))
         {
-            if (!Exists(collection.Name) || await ModCollectionPrompts.ConfirmOverwriteAsync(_dialogs, collection.Name))
+            if (!_page.PresetExists(collection.Name) || await ModCollectionPrompts.ConfirmOverwriteAsync(_dialogs, collection.Name))
             {
                 imported.Add(collection);
             }
@@ -163,19 +152,7 @@ public partial class ModCollectionsViewModel : ViewModelBase, IReorderableList
             return;
         }
 
-        if (await _page.WriteAsync(async (root, extraGameArgs) =>
-            {
-                foreach (var collection in imported)
-                {
-                    var saved = await _page.Service.SaveAsync(new SaveModCollectionRequest(root, extraGameArgs, null, collection.Name, collection.ModIds));
-                    if (!saved.IsSuccess)
-                    {
-                        return saved;
-                    }
-                }
-
-                return Result.Ok();
-            }))
+        if (await _page.SavePresetsAsync(imported))
         {
             SelectByName(imported[^1].Name);
         }
@@ -198,29 +175,10 @@ public partial class ModCollectionsViewModel : ViewModelBase, IReorderableList
             return;
         }
 
-        IReadOnlyList<string> ids = [.. _ids];
-        if (!await _page.WriteAsync(async (root, extraGameArgs) =>
-            {
-                var saved = await _page.Service.SaveAsync(new SaveModCollectionRequest(root, extraGameArgs, original, name, ids));
-
-                // Before the re-read, which would otherwise find the linked preset gone.
-                if (saved.IsSuccess)
-                {
-                    _modpacks.RenamePreset(root, original, name);
-                }
-
-                return saved;
-            }))
+        if (await _page.SavePresetAsync(name, [.. _ids], original))
         {
-            return;
+            SelectByName(name);
         }
-
-        if (_page.Install is { } install && _defaults.Get(install.RootPath) == original)
-        {
-            _defaults.Save(install.RootPath, name);
-        }
-
-        SelectByName(name);
     }
 
     [RelayCommand(CanExecute = nameof(CanWriteSelected))]
@@ -232,50 +190,16 @@ public partial class ModCollectionsViewModel : ViewModelBase, IReorderableList
         }
 
         var name = row.Name;
-        var users = _page.Install is { } shown ? _modpacks.UsersOfPreset(shown.RootPath, name) : [];
-        ConfirmChoice choice;
-        if (users.Count > 0)
+        var choice = await ModpackPrompts.ConfirmDeleteAsync(
+            _dialogs,
+            UiText.ModCollections_DeleteTitle,
+            Format(UiText.ModCollections_DeleteMessage, name),
+            Format(UiText.Modpacks_PresetUsedMessage, name),
+            _page.PresetUsers(name));
+        if (choice != ConfirmChoice.Cancel && await _page.DeletePresetAsync(name, deleteUsers: choice == ConfirmChoice.Alternative))
         {
-            choice = await ModpackPrompts.ConfirmDeleteUsedAsync(
-                _dialogs, UiText.ModCollections_DeleteTitle, Format(UiText.Modpacks_PresetUsedMessage, name), users);
+            SelectByName(null);
         }
-        else
-        {
-            var confirmed = await _dialogs.ConfirmAsync(new ConfirmPrompt(
-                UiText.ModCollections_DeleteTitle,
-                Format(UiText.ModCollections_DeleteMessage, name),
-                UiText.ModCollections_Delete,
-                UiText.Dialog_Cancel));
-            choice = confirmed ? ConfirmChoice.Confirm : ConfirmChoice.Cancel;
-        }
-
-        if (choice == ConfirmChoice.Cancel || !await _page.WriteAsync(async (root, extraGameArgs) =>
-            {
-                var deleted = await _page.Service.DeleteAsync(root, extraGameArgs, name);
-                if (deleted.IsSuccess)
-                {
-                    if (choice == ConfirmChoice.Alternative)
-                    {
-                        _modpacks.Delete(root, _modpacks.UsersOfPreset(root, name));
-                    }
-                    else
-                    {
-                        _modpacks.UnlinkPreset(root, name);
-                    }
-                }
-
-                return deleted;
-            }))
-        {
-            return;
-        }
-
-        if (_page.Install is { } install && _defaults.Get(install.RootPath) == name)
-        {
-            _defaults.Clear(install.RootPath);
-        }
-
-        SelectByName(null);
     }
 
     private bool CanUse() => CanWriteSelected() && Selected is not { IsCurrent: true, IsActiveInOrder: true };
@@ -289,31 +213,11 @@ public partial class ModCollectionsViewModel : ViewModelBase, IReorderableList
         }
 
         var name = row.Name;
-        if (await ApplyAsync(name) is ModCollectionApplyOutcome.Applied applied)
+        if (await _page.ApplyCollectionAsync(name) is ModCollectionApplyOutcome.Applied applied)
         {
             var count = applied.Result.EnabledIds.Count;
             _status.Show(() => Format(UiText.ModCollections_Applied, name, count));
         }
-    }
-
-    /// <inheritdoc cref="ModsViewModel.ApplyCollectionAsync"/>
-    internal async Task<ModCollectionApplyOutcome?> ApplyAsync(string name)
-    {
-        ModCollectionApplyOutcome? outcome = null;
-        await _page.RunAsync(async (root, extraGameArgs) =>
-        {
-            outcome = await _applier.ApplyAsync(root, extraGameArgs, name);
-            if (outcome is ModCollectionApplyOutcome.Applied && _defaults.Get(root) != name)
-            {
-                _defaults.Save(root, name);
-            }
-        });
-        if (outcome is ModCollectionApplyOutcome.Failed failed)
-        {
-            await _dialogs.ShowErrorAsync(ErrorMessages.ToUserText(failed.Error));
-        }
-
-        return outcome;
     }
 
     [RelayCommand(CanExecute = nameof(CanWriteSelected))]
@@ -413,8 +317,7 @@ public partial class ModCollectionsViewModel : ViewModelBase, IReorderableList
             return;
         }
 
-        var name = row.Name;
-        await _page.WriteAsync((root, extraGameArgs) => _page.Service.SaveAsync(new SaveModCollectionRequest(root, extraGameArgs, name, name, ids)));
+        await _page.SavePresetAsync(row.Name, ids, row.Name);
     }
 
     /// <inheritdoc cref="ModsViewModel.CreateCollectionAsync"/>
@@ -426,8 +329,7 @@ public partial class ModCollectionsViewModel : ViewModelBase, IReorderableList
 
     private async Task<bool> SaveAndSelectAsync(string name, IReadOnlyList<string> ids)
     {
-        if (!await _page.WriteAsync((root, extraGameArgs) =>
-                _page.Service.SaveAsync(new SaveModCollectionRequest(root, extraGameArgs, null, name, ids))))
+        if (!await _page.SavePresetAsync(name, ids))
         {
             return false;
         }
@@ -439,7 +341,7 @@ public partial class ModCollectionsViewModel : ViewModelBase, IReorderableList
     /// <summary>The trimmed name, or <c>null</c> when cancelled.</summary>
     /// <param name="original">The collection being renamed, which its own name doesn't clash with.</param>
     private async Task<string?> AskNameAsync(TextPrompt prompt, string? original) =>
-        await ModCollectionPrompts.AskNameAsync(_dialogs, prompt, name => name != original && Exists(name)) is TextPromptResult.Accepted accepted
+        await ModCollectionPrompts.AskNameAsync(_dialogs, prompt, name => name != original && _page.PresetExists(name)) is TextPromptResult.Accepted accepted
             ? accepted.Text
             : null;
 
@@ -461,8 +363,6 @@ public partial class ModCollectionsViewModel : ViewModelBase, IReorderableList
             ? Format(UiText.ModCollections_ImportNameInvalid, invalid.Name)
             : null;
     }
-
-    private bool Exists(string name) => _page.State?.Collections.Any(collection => collection.Name == name) ?? false;
 
     private void SelectByName(string? name)
     {

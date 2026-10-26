@@ -8,7 +8,6 @@ using PzLauncher.Core.Update.Releases;
 using PzLauncher.Core.Update;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Services.Launch;
-using PzLauncher.Desktop.Services.Mods;
 using PzLauncher.Desktop.Services.Preferences.Records;
 using PzLauncher.Desktop.Services.Preferences.Secrets;
 using PzLauncher.Desktop.Services.Preferences;
@@ -50,26 +49,6 @@ public sealed class JsonPreferenceStoreTests : IDisposable
     private static readonly SavedWorkshopFavorites Favorites = new(
         [SteamCollection],
         [new SavedWorkshopEntry(2002, "物品 \"one\""), new SavedWorkshopEntry(18446744073709551614, null)]);
-
-    private static readonly SavedLocalCollection LocalCollection = new(
-        new Guid("6f1c2b0e-4d3a-4f5e-9a8b-1c2d3e4f5a6b"),
-        "服务器 \"B42\"",
-        [new SavedWorkshopEntry(18446744073709551615, "物品 \"one\""), new SavedWorkshopEntry(2002, null)]);
-
-    private static readonly Modpack SteamModpack = new(
-        "服务器 \"B42\"",
-        new ModpackPreset("Survival", ["Core", "Maps"], IsLinked: true),
-        new ModpackCollection.Steam(18446744073709551615),
-        [2002, 18446744073709551614]);
-
-    private static readonly Modpack LocalModpack = new(
-        "Night",
-        new ModpackPreset("Old", ["Cars"], IsLinked: false),
-        new ModpackCollection.Local(LocalCollection.Id, "List", [new WorkshopEntry(2002, "物品"), new WorkshopEntry(2003, null)]),
-        []);
-
-    private static UserPreferences WithModpacks(params (string Root, Modpack[] Modpacks)[] installs) =>
-        new(null, null, null) { Modpacks = installs.ToDictionary(install => install.Root, IReadOnlyList<Modpack> (install) => install.Modpacks) };
 
     private static UserPreferences WithJava(params string[] homes) => new(null, null, null) { ManualJavaHomes = homes };
 
@@ -242,8 +221,6 @@ public sealed class JsonPreferenceStoreTests : IDisposable
     [InlineData(12)]
     [InlineData(13)]
     [InlineData(14)]
-    [InlineData(15)]
-    [InlineData(16)]
     public async Task SaveOneField_FileHoldsTheOthers_KeepsAll(int savedLast)
     {
         var ct = TestContext.Current.CancellationToken;
@@ -264,8 +241,6 @@ public sealed class JsonPreferenceStoreTests : IDisposable
             () => CreateStore().SaveWorkshopUserCollectionsAsync(UserCollections, ct),
             () => CreateStore().SaveWorkshopFavoritesAsync(Favorites, ct),
             () => CreateStore().SaveAfterLaunchAsync(AfterLaunchAction.MinimizeToTray, ct),
-            () => CreateStore().SaveLocalCollectionsAsync([LocalCollection], ct),
-            () => CreateStore().SaveModpacksAsync(GameRoot, [SteamModpack], ct),
         ];
 
         // Separate stores, as across app runs.
@@ -289,8 +264,6 @@ public sealed class JsonPreferenceStoreTests : IDisposable
                 WorkshopUserCollections = UserCollections,
                 WorkshopFavorites = Favorites,
                 AfterLaunch = AfterLaunchAction.MinimizeToTray,
-                LocalCollections = [LocalCollection],
-                Modpacks = WithModpacks((GameRoot, [SteamModpack])).Modpacks,
             },
             CreateStore().Load());
     }
@@ -319,10 +292,7 @@ public sealed class JsonPreferenceStoreTests : IDisposable
             store.SaveWorkshopCollectionsAsync([SteamCollection], TestContext.Current.CancellationToken),
             store.SaveWorkshopUserCollectionsAsync(UserCollections, TestContext.Current.CancellationToken),
             store.SaveWorkshopFavoritesAsync(Favorites, TestContext.Current.CancellationToken),
-            store.SaveAfterLaunchAsync(AfterLaunchAction.Close, TestContext.Current.CancellationToken),
-            store.SaveLocalCollectionsAsync([LocalCollection], TestContext.Current.CancellationToken),
-            store.SaveModpacksAsync(GameRoot, [SteamModpack, LocalModpack], TestContext.Current.CancellationToken),
-            store.SaveModpacksAsync(OtherRoot, [LocalModpack], TestContext.Current.CancellationToken));
+            store.SaveAfterLaunchAsync(AfterLaunchAction.Close, TestContext.Current.CancellationToken));
 
         Assert.Equal(
             new UserPreferences(AppLanguage.PortugueseBrazil, AppTheme.Dark, Placement)
@@ -339,8 +309,6 @@ public sealed class JsonPreferenceStoreTests : IDisposable
                 WorkshopUserCollections = UserCollections,
                 WorkshopFavorites = Favorites,
                 AfterLaunch = AfterLaunchAction.Close,
-                LocalCollections = [LocalCollection],
-                Modpacks = WithModpacks((GameRoot, [SteamModpack, LocalModpack]), (OtherRoot, [LocalModpack])).Modpacks,
             },
             CreateStore().Load());
     }
@@ -365,10 +333,24 @@ public sealed class JsonPreferenceStoreTests : IDisposable
         await CreateStore().SaveWorkshopUserCollectionsAsync(UserCollections, TestContext.Current.CancellationToken);
         await CreateStore().SaveWorkshopFavoritesAsync(Favorites, TestContext.Current.CancellationToken);
         await CreateStore().SaveAfterLaunchAsync(AfterLaunchAction.Close, TestContext.Current.CancellationToken);
-        await CreateStore().SaveLocalCollectionsAsync([LocalCollection], TestContext.Current.CancellationToken);
-        await CreateStore().SaveModpacksAsync(GameRoot, [SteamModpack], TestContext.Current.CancellationToken);
 
         Assert.Equal(new UserPreferences(null, null, null), CreateStore().Load());
+    }
+
+    [Fact]
+    public async Task SaveAnyField_FileHasUnknownFields_WritesThemBackUnchanged()
+    {
+        const string Unknown = """{"theme":"dark","future":{"list":[1,"two",null]},"localCollections":[{"id":"x"}]}""";
+        WriteFile(Unknown);
+        var store = CreateStore();
+        store.Load();
+
+        await store.SaveLanguageAsync(AppLanguage.Russian, TestContext.Current.CancellationToken);
+        await CreateStore().SaveThemeAsync(AppTheme.Light, TestContext.Current.CancellationToken);
+
+        Assert.Equal(
+            """{"language":"ru","theme":"light","future":{"list":[1,"two",null]},"localCollections":[{"id":"x"}]}""",
+            await File.ReadAllTextAsync(FilePath, TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -429,10 +411,6 @@ public sealed class JsonPreferenceStoreTests : IDisposable
     [InlineData("""{"zombieBuddyChannels":["beta"]}""")]
     [InlineData("""{"defaultModCollections":5}""")]
     [InlineData("""{"defaultModCollections":["B42 pack"]}""")]
-    [InlineData("""{"localCollections":5}""")]
-    [InlineData("""{"localCollections":{}}""")]
-    [InlineData("""{"modpacks":5}""")]
-    [InlineData("""{"modpacks":[]}""")]
     public void Load_CorruptOrUnknownContent_ReturnsNoChoices(string content)
     {
         WriteFile(content);
@@ -1016,109 +994,6 @@ public sealed class JsonPreferenceStoreTests : IDisposable
         WriteFile($$"""{"theme":"dark","workshopFavorites":{{value}}}""");
 
         Assert.Equal(new UserPreferences(null, AppTheme.Dark, null), CreateStore().Load());
-    }
-
-    [Fact]
-    public void Load_LocalCollectionsWithInvalidEntries_KeepsTheValidOnesAndOtherFields()
-    {
-        WriteFile("""
-            {"theme":"dark","localCollections":[
-              {"id":"6f1c2b0e-4d3a-4f5e-9a8b-1c2d3e4f5a6b","name":"List","items":[{"id":"2002","title":"Item"},{"id":"abc"},{"id":"2002"},{"id":"2003"}]},
-              {"id":"6f1c2b0e-4d3a-4f5e-9a8b-1c2d3e4f5a6b","name":"Repeated id","items":[]},
-              {"id":"0b0c2b0e-4d3a-4f5e-9a8b-1c2d3e4f5a6b","name":"List","items":[]},
-              {"id":"not a guid","name":"Bad id","items":[]},
-              {"id":"00000000-0000-0000-0000-000000000000","name":"Empty id","items":[]},
-              {"id":"1a1c2b0e-4d3a-4f5e-9a8b-1c2d3e4f5a6b","name":" ","items":[]},
-              {"id":"2a1c2b0e-4d3a-4f5e-9a8b-1c2d3e4f5a6b","name":"Two\nlines","items":[]},
-              {"id":"3a1c2b0e-4d3a-4f5e-9a8b-1c2d3e4f5a6b","name":"No items"},
-              {"id":"4a1c2b0e-4d3a-4f5e-9a8b-1c2d3e4f5a6b","name":"Empty","items":[]},
-              5
-            ]}
-            """);
-
-        Assert.Equal(
-            new UserPreferences(null, AppTheme.Dark, null)
-            {
-                LocalCollections =
-                [
-                    new SavedLocalCollection(
-                        new Guid("6f1c2b0e-4d3a-4f5e-9a8b-1c2d3e4f5a6b"), "List", [new SavedWorkshopEntry(2002, "Item"), new SavedWorkshopEntry(2003, null)]),
-                    new SavedLocalCollection(new Guid("4a1c2b0e-4d3a-4f5e-9a8b-1c2d3e4f5a6b"), "Empty", []),
-                ],
-            },
-            CreateStore().Load());
-    }
-
-    [Fact]
-    public async Task SaveModpacksAsync_WritesTheLinkOnlyWhenLinkedAndIdsAsText()
-    {
-        var independent = LocalModpack with { Collection = new ModpackCollection.Local(null, "List", [new WorkshopEntry(2002, "Item")]) };
-
-        await CreateStore().SaveModpacksAsync(GameRoot, [independent, SteamModpack with { Name = "Pack" }], TestContext.Current.CancellationToken);
-
-        Assert.Equal(
-            "{\"modpacks\":{" + JsonSerializer.Serialize(GameRoot) + ":["
-            + """{"name":"Night","preset":{"copy":{"name":"Old","modIds":["Cars"]}},"collection":{"local":{"copy":{"name":"List","items":[{"id":"2002","title":"Item"}]}}},"extraItems":[]},"""
-            + """{"name":"Pack","preset":{"linked":"Survival","copy":{"name":"Survival","modIds":["Core","Maps"]}},"collection":{"steam":"18446744073709551615"},"extraItems":["2002","18446744073709551614"]}"""
-            + "]}}",
-            await File.ReadAllTextAsync(FilePath, TestContext.Current.CancellationToken));
-    }
-
-    [Fact]
-    public async Task SaveModpacksAsync_NoModpacks_RemovesTheInstallsEntry()
-    {
-        await CreateStore().SaveModpacksAsync(GameRoot, [SteamModpack], TestContext.Current.CancellationToken);
-        await CreateStore().SaveModpacksAsync(OtherRoot, [LocalModpack], TestContext.Current.CancellationToken);
-
-        await CreateStore().SaveModpacksAsync(GameRoot, [], TestContext.Current.CancellationToken);
-
-        Assert.Equal(WithModpacks((OtherRoot, [LocalModpack])), CreateStore().Load());
-    }
-
-    [Fact]
-    public void Load_ModpacksWithInvalidEntries_KeepsTheValidOnesAndOtherFields()
-    {
-        string Key(string root) => JsonSerializer.Serialize(root);
-        const string Preset = """{"copy":{"name":"P","modIds":[]}}""";
-        WriteFile("""
-            {"theme":"dark","modpacks":{
-              GAME:[
-                {"name":"Linked","preset":{"linked":"Survival","copy":{"name":"Survival","modIds":["Core",5,"","Maps"]}},"collection":{"steam":"9000"},"extraItems":["2002","abc",2003,"2002","2004"]},
-                {"name":"Linked","preset":PRESET,"collection":{"steam":"9001"}},
-                {"name":"Own","preset":{"copy":{"name":"Old","modIds":["Cars"]}},"collection":{"local":{"copy":{"name":"List","items":[{"id":"2002","title":"Item"},{"id":"x"}]}}}},
-                {"name":" ","preset":PRESET,"collection":{"steam":"9000"}},
-                {"name":"No preset","collection":{"steam":"9000"}},
-                {"name":"Bad preset name","preset":{"copy":{"name":"a:b","modIds":[]}},"collection":{"steam":"9000"}},
-                {"name":"No collection","preset":PRESET},
-                {"name":"Both collections","preset":PRESET,"collection":{"steam":"9000","local":{"copy":{"name":"L","items":[]}}}},
-                {"name":"Bad Steam id","preset":PRESET,"collection":{"steam":"abc"}},
-                {"name":"Bad link","preset":PRESET,"collection":{"local":{"linked":"nope","copy":{"name":"L","items":[]}}}},
-                5
-              ],
-              OTHER:5,
-              RELATIVE:[{"name":"Relative","preset":PRESET,"collection":{"steam":"9000"}}]
-            }}
-            """
-            .Replace("PRESET", Preset)
-            .Replace("GAME", Key(GameRoot))
-            .Replace("OTHER", Key(OtherRoot))
-            .Replace("RELATIVE", Key("relative/ProjectZomboid")));
-
-        Assert.Equal(
-            new UserPreferences(null, AppTheme.Dark, null)
-            {
-                Modpacks = WithModpacks((
-                    GameRoot,
-                    [
-                        new Modpack("Linked", new ModpackPreset("Survival", ["Core", "Maps"], IsLinked: true), new ModpackCollection.Steam(9000), [2002, 2004]),
-                        new Modpack(
-                            "Own",
-                            new ModpackPreset("Old", ["Cars"], IsLinked: false),
-                            new ModpackCollection.Local(null, "List", [new WorkshopEntry(2002, "Item")]),
-                            []),
-                    ])).Modpacks,
-            },
-            CreateStore().Load());
     }
 
     public static TheoryData<SavedProxy> Proxies =>

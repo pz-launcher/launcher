@@ -38,6 +38,11 @@ public partial class WorkshopItemListView : UserControl
     public static readonly StyledProperty<double> RowHeightProperty =
         AvaloniaProperty.Register<WorkshopItemListView, double>(nameof(RowHeight), double.NaN);
 
+    public static readonly StyledProperty<double> PanelCacheLengthProperty =
+        AvaloniaProperty.Register<WorkshopItemListView, double>(nameof(PanelCacheLength), DefaultCacheLength);
+
+    private static double DefaultCacheLength => VirtualizingStackPanel.CacheLengthProperty.GetDefaultValue(typeof(VirtualizingStackPanel));
+
     public WorkshopItemListView()
     {
         InitializeComponent();
@@ -106,12 +111,20 @@ public partial class WorkshopItemListView : UserControl
         private set => SetValue(RowHeightProperty, value);
     }
 
+    /// <summary>One viewport while <see cref="Reorder"/> is set, else the panel's default.</summary>
+    public double PanelCacheLength
+    {
+        get => GetValue(PanelCacheLengthProperty);
+        private set => SetValue(PanelCacheLengthProperty, value);
+    }
+
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
     {
         base.OnPropertyChanged(change);
         if (change.Property == ReorderProperty)
         {
             RowHeight = Reorder is null ? double.NaN : ReorderRowHeight;
+            PanelCacheLength = Reorder is null ? DefaultCacheLength : 1;
         }
     }
 }

@@ -273,6 +273,7 @@ public class WorkshopCollectionsViewModelTests : UiTextCultureTest
     [Fact]
     public async Task UnsubscribeAll_ConfirmNamesTheCollectionsUsingTheItems()
     {
+        _collections.WithCollection("Survival", "Core", "Maps").WithCollection("Driving", "MapsExtra");
         _dialogs.ConfirmAnswers.Enqueue(true);
         var vm = await OpenPackAsync();
 

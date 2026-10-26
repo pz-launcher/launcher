@@ -1,10 +1,9 @@
 using PzLauncher.Core.Mod;
-using PzLauncher.Desktop.Services.Mods;
-using static PzLauncher.Desktop.Tests.TestSupport.Fakes.TestMods;
+using PzLauncher.Core.Mod.Modpacks;
 
-namespace PzLauncher.Desktop.Tests.Services.Mods;
+namespace PzLauncher.Core.Tests.Mod.Modpacks;
 
-public class ModpackExtraItemsTests
+public sealed class ModpackExtraItemsTests
 {
     private static readonly InstalledMod[] Installed =
     [
@@ -14,6 +13,9 @@ public class ModpackExtraItemsTests
         Mod("Cars", workshopId: 1003),
         Mod("Tweaks", source: InstalledModSource.Local),
     ];
+
+    private static InstalledMod Mod(string id, ulong? workshopId = null, InstalledModSource source = InstalledModSource.SteamWorkshop) =>
+        new(id, id, workshopId, source, [], [], [], []);
 
     private static IReadOnlyList<ulong> Compute(ulong[] stored, string[] preset, params ulong[] collection) =>
         ModpackExtraItems.Compute(stored, preset, Installed, collection);
@@ -45,4 +47,24 @@ public class ModpackExtraItemsTests
     [Fact]
     public void UnchangedInput_GivesTheStoredList() =>
         Assert.Equal([2001UL, 1001, 1003], Compute([2001, 1001, 1003], ["Core", "Cars"]));
+
+    [Fact]
+    public void Summarize_CountsPresetModsNotInstalledAndNotFromTheWorkshop()
+    {
+        var summary = ModpackExtraItems.Summarize([2001], ["Cars", "Tweaks", "Gone", "Core", "Missing"], Installed, [1001]);
+
+        Assert.Equal([2001UL, 1003], summary.ExtraItems);
+        Assert.Equal((2, 1), (summary.NotInstalled, summary.NotWorkshop));
+    }
+
+    [Fact]
+    public void Summarize_ModInstalledTwice_CountsTheCopyTheGameLoads()
+    {
+        InstalledMod[] installed = [Mod("Cars", source: InstalledModSource.Local), Mod("Cars", workshopId: 1003)];
+
+        var summary = ModpackExtraItems.Summarize([], ["Cars"], installed, []);
+
+        Assert.Empty(summary.ExtraItems);
+        Assert.Equal((0, 1), (summary.NotInstalled, summary.NotWorkshop));
+    }
 }

@@ -8,6 +8,9 @@ using PzLauncher.Desktop.Lang;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Services.Launch;
 using PzLauncher.Desktop.Services.Mods;
+using PzLauncher.Desktop.Services.Mods.Library;
+using PzLauncher.Desktop.Services.Mods.LocalCollections;
+using PzLauncher.Desktop.Services.Mods.Modpacks;
 using PzLauncher.Desktop.Services.Preferences;
 using PzLauncher.Desktop.Services.Shell;
 using PzLauncher.Desktop.Tests.TestSupport;
@@ -48,8 +51,10 @@ public class ModpacksViewModelTests : UiTextCultureTest
     private readonly FakeWorkshopService _service = new();
     private readonly FakeWorkshopActionRunner _runner = new();
     private readonly FakePreferenceStore _preferences = new();
+
+    private readonly FakeModLibraryFile _library = new();
     private readonly GameRunState _runState = new();
-    private readonly LocalCollections _localCollections;
+    private readonly LocalCollectionStore _localCollections;
     private readonly Dictionary<string, IReadOnlyList<Modpack>> _saved = new() { [SteamGame.RootPath] = [Server, Night] };
     private WorkshopFavorites _favorites;
     private WorkshopCollectionHistory _history;
@@ -81,7 +86,7 @@ public class ModpacksViewModelTests : UiTextCultureTest
             .WithPublished(Pack, "Survival Pack", "1");
         _service.Collections[Pack] = [1001, 1004];
         _localCollections = LocalCollectionStore(
-            _preferences, new SavedLocalCollection(ListId, "List", [new SavedWorkshopEntry(1002, "Map Pack"), new SavedWorkshopEntry(1005, "Weather")]));
+            _library, new SavedLocalCollection(ListId, "List", [new SavedWorkshopEntry(1002, "Map Pack"), new SavedWorkshopEntry(1005, "Weather")]));
         _favorites = Favorites(_preferences);
         _history = History(_preferences);
         _userCollections = UserCollections(_preferences);
@@ -96,7 +101,7 @@ public class ModpacksViewModelTests : UiTextCultureTest
     {
         _detection.ScanResults.Enqueue(FakeInstallDetectionService.Found(SteamGame, ManualGame));
         await Installs.ActivateCommand.ExecuteAsync(null);
-        _modpacks = ModpackStoreOf(_localCollections, _preferences, _saved);
+        _modpacks = ModpackStoreOf(_localCollections, _library, _saved);
         var orderWriter = new ModCollectionOrderWriter(_collections, _runState, new FakePlatformEnvironment(), new ManualTimeProvider());
         var page = new ModsViewModel(
             Installs, _collections, _overrides, _defaults, new ModCollectionApplier(_collections, _dialogs), _dialogs, _clipboard,
@@ -170,6 +175,19 @@ public class ModpacksViewModelTests : UiTextCultureTest
         Assert.Equal(new ModpackRow("Night", "Driving", 1, true, "List", null, true, 1, true), vm.Selected);
         Assert.Equal([1002UL, 1005, 1003], vm.Rows.Select(row => row.Id));
         Assert.Equal("Map Pack", Row(vm, 1002).Title);
+    }
+
+    [Fact]
+    public async Task Select_SwitchingModpacks_ReadsNoSubscriptions()
+    {
+        var vm = await CreateAsync();
+        var reads = _service.GetRequests.Count;
+
+        await SelectAsync(vm, "Night");
+        await SelectAsync(vm, "Server");
+
+        Assert.Equal(reads, _service.GetRequests.Count);
+        Assert.Equal([1001UL, 1004, 1002, 1003, 1005], vm.Rows.Select(row => row.Id));
     }
 
     [Fact]
@@ -297,12 +315,12 @@ public class ModpacksViewModelTests : UiTextCultureTest
     public async Task New_Cancelled_SavesNothing()
     {
         var vm = await CreateAsync();
-        _preferences.SavedModpacks.Clear();
+        _library.SavedModpacks.Clear();
 
         await vm.NewCommand.ExecuteAsync(null);
 
         Assert.Single(_dialogs.ModpackEdits);
-        Assert.Empty(_preferences.SavedModpacks);
+        Assert.Empty(_library.SavedModpacks);
     }
 
     [Fact]
@@ -484,6 +502,24 @@ public class ModpacksViewModelTests : UiTextCultureTest
     }
 
     [Fact]
+    public async Task PresetChangedInTheGameWhileShown_SavesTheModpacksOnceWithoutReadingTheSubscriptions()
+    {
+        var page = await CreatePageAsync();
+        _runState.IsGameRunning = true;
+        _collections.Collections[0] = ("Survival", ["Core", "Cars"]);
+        _library.SavedModpacks.Clear();
+        var reads = _service.GetRequests.Count;
+
+        _runState.IsGameRunning = false;
+
+        Assert.Equal(Linked("Survival", "Core", "Cars"), Saved("Server").Preset);
+        Assert.Equal([1003UL], Saved("Server").ExtraItems);
+        Assert.Single(_library.SavedModpacks);
+        Assert.Equal(reads, _service.GetRequests.Count);
+        Assert.Equal([1001UL, 1004, 1003], page.Modpacks.Rows.Select(row => row.Id));
+    }
+
+    [Fact]
     public async Task PresetGoneFromTheGame_MakesTheModpackIndependentOnTheNextRead()
     {
         var page = await CreatePageAsync();
@@ -509,14 +545,31 @@ public class ModpacksViewModelTests : UiTextCultureTest
     }
 
     [Fact]
-    public async Task PresetRenamedInTheLauncher_KeepsTheLink()
+    public async Task PresetRenamedInTheLauncher_KeepsTheLinkAndTheCurrentPresetInOneSave()
     {
+        _defaults.Save(SteamGame.RootPath, "Survival");
         var page = await CreatePageAsync();
+        _library.SavedModpacks.Clear();
         _dialogs.Accept("Survival B42");
 
         await page.Collections.RenameCommand.ExecuteAsync(null);
 
         Assert.Equal(Linked("Survival B42", "Core", "Maps", "Cars", "Weather"), Saved("Server").Preset);
+        Assert.Equal("Survival B42", _defaults.Get(SteamGame.RootPath));
+        Assert.Single(_library.SavedModpacks);
+    }
+
+    [Fact]
+    public async Task PresetEditedInTheLauncher_TheLinkedCopyFollowsInOneSave()
+    {
+        var page = await CreatePageAsync();
+        page.Section = ModsSection.Collections;
+        _library.SavedModpacks.Clear();
+
+        await page.Collections.RemoveModCommand.ExecuteAsync(page.Collections.Entries.Single(entry => entry.Id == "Weather"));
+
+        Assert.Equal(Linked("Survival", "Core", "Maps", "Cars"), Saved("Server").Preset);
+        Assert.Single(_library.SavedModpacks);
     }
 
     [Fact]

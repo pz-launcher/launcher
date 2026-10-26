@@ -20,25 +20,13 @@
             <Setter Property="Foreground" Value="{DynamicResource Shell.TextMuted}" />
             <Setter Property="TextTrimming" Value="CharacterEllipsis" />
         </Style>
-        <Style Selector="Border.dragHandle">
-            <Setter Property="Background" Value="Transparent" />
-            <Setter Property="Cursor" Value="SizeNorthSouth" />
-        </Style>
-        <Style Selector="Border.dragHandle:disabled">
-            <Setter Property="Cursor" Value="Arrow" />
-            <Setter Property="Opacity" Value="0.4" />
-        </Style>
-        <Style Selector="ContentControl.lifted Border.itemRow">
-            <Setter Property="Background" Value="{DynamicResource Shell.ListRowHoverBackground}" />
-            <Setter Property="BoxShadow" Value="{DynamicResource Shell.LiftedShadow}" />
-        </Style>
     </UserControl.Styles>
 
     <UserControl.Resources>
         <!-- Shared by the list and the lifted copy of a dragged row, so commands bind through the view, not the ItemsControl. -->
         <DataTemplate x:Key="ItemRowTemplate" x:DataType="vm:WorkshopItemRow">
             <Panel Height="{Binding $parent[local:WorkshopItemListView].RowHeight}">
-                <Border Classes="itemRow" Padding="12,6" Margin="0,0,0,4" CornerRadius="4" BorderThickness="1" BorderBrush="{DynamicResource Shell.Border}">
+                <Border Classes="reorderRow" Padding="12,6" Margin="0,0,0,4" CornerRadius="4" BorderThickness="1" BorderBrush="{DynamicResource Shell.Border}">
                     <local:WorkshopItemGrid>
                         <CheckBox Grid.Column="0" Width="36" IsChecked="{Binding IsSelected}" VerticalAlignment="Center" MinWidth="0"
                                   AutomationProperties.Name="{Binding Title}"
@@ -119,8 +107,8 @@
                 <ItemsControl x:Name="ItemsList" ItemsSource="{Binding $parent[local:WorkshopItemListView].Rows}" ItemTemplate="{StaticResource ItemRowTemplate}">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
-                            <!-- The cache realizes rows past the viewport's edges, so a row sliding in during a drag is there to show. -->
-                            <VirtualizingStackPanel CacheLength="1" />
+                            <!-- While reorderable, the cache realizes rows past the viewport's edges, so a row sliding in during a drag is there to show. -->
+                            <VirtualizingStackPanel CacheLength="{Binding $parent[local:WorkshopItemListView].PanelCacheLength}" />
                         </ItemsPanelTemplate>
                     </ItemsControl.ItemsPanel>
                 </ItemsControl>

@@ -9,7 +9,6 @@ using PzLauncher.Core.Update.Releases;
 using PzLauncher.Core.Update;
 using PzLauncher.Desktop.Localization;
 using PzLauncher.Desktop.Services.Launch;
-using PzLauncher.Desktop.Services.Mods;
 using PzLauncher.Desktop.Services.Preferences.Records;
 using PzLauncher.Desktop.Services.Preferences.Secrets;
 using PzLauncher.Desktop.Services.Shell.Lifetime;
@@ -52,12 +51,6 @@ public sealed record UserPreferences(AppLanguage? Language, AppTheme? Theme, Win
     /// <summary><c>null</c> until the user has chosen; the first launch asks.</summary>
     public AfterLaunchAction? AfterLaunch { get; init; }
 
-    /// <summary>In the user's order; empty when none are saved.</summary>
-    public IReadOnlyList<SavedLocalCollection> LocalCollections { get; init; } = [];
-
-    /// <summary>Each install's in the user's order, keyed by install root as saved (ordinal); empty when none are saved.</summary>
-    public IReadOnlyDictionary<string, IReadOnlyList<Modpack>> Modpacks { get; init; } = new Dictionary<string, IReadOnlyList<Modpack>>();
-
     // Compares the collections by content; the generated equality would compare references.
     public bool Equals(UserPreferences? other) =>
         other is not null
@@ -73,15 +66,12 @@ public sealed record UserPreferences(AppLanguage? Language, AppTheme? Theme, Win
         && AfterLaunch == other.AfterLaunch
         && ManualJavaHomes.SequenceEqual(other.ManualJavaHomes, StringComparer.Ordinal)
         && WorkshopCollections.SequenceEqual(other.WorkshopCollections)
-        && LocalCollections.SequenceEqual(other.LocalCollections)
         && InstallOverrides.Count == other.InstallOverrides.Count
         && InstallOverrides.All(entry => other.InstallOverrides.TryGetValue(entry.Key, out var value) && entry.Value == value)
         && ZombieBuddyChannels.Count == other.ZombieBuddyChannels.Count
         && ZombieBuddyChannels.All(entry => other.ZombieBuddyChannels.TryGetValue(entry.Key, out var value) && entry.Value == value)
         && DefaultModCollections.Count == other.DefaultModCollections.Count
-        && DefaultModCollections.All(entry => other.DefaultModCollections.TryGetValue(entry.Key, out var value) && entry.Value == value)
-        && Modpacks.Count == other.Modpacks.Count
-        && Modpacks.All(entry => other.Modpacks.TryGetValue(entry.Key, out var value) && entry.Value.SequenceEqual(value));
+        && DefaultModCollections.All(entry => other.DefaultModCollections.TryGetValue(entry.Key, out var value) && entry.Value == value);
 
     public override int GetHashCode() =>
         HashCode.Combine(
@@ -89,10 +79,9 @@ public sealed record UserPreferences(AppLanguage? Language, AppTheme? Theme, Win
             HashCode.Combine(WorkshopFavorites, AfterLaunch),
             ManualJavaHomes.Count,
             WorkshopCollections.Count,
-            LocalCollections.Count,
             InstallOverrides.Count,
             ZombieBuddyChannels.Count,
-            HashCode.Combine(DefaultModCollections.Count, Modpacks.Count));
+            DefaultModCollections.Count);
 }
 
 public interface IPreferenceStore
@@ -144,10 +133,4 @@ public interface IPreferenceStore
 
     /// <inheritdoc cref="SaveLanguageAsync"/>
     Task SaveAfterLaunchAsync(AfterLaunchAction action, CancellationToken ct = default);
-
-    /// <inheritdoc cref="SaveLanguageAsync"/>
-    Task SaveLocalCollectionsAsync(IReadOnlyList<SavedLocalCollection> collections, CancellationToken ct = default);
-
-    /// <summary>An empty list removes this install's entry. <inheritdoc cref="SaveInstallOverridesAsync"/></summary>
-    Task SaveModpacksAsync(string installRoot, IReadOnlyList<Modpack> modpacks, CancellationToken ct = default);
 }

@@ -15,19 +15,6 @@
         <x:Static Member="design:DesignData.Modpacks" />
     </Design.DataContext>
 
-    <UserControl.Styles>
-        <Style Selector="Border.badge">
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="BorderBrush" Value="{DynamicResource Shell.Border}" />
-            <Setter Property="CornerRadius" Value="3" />
-            <Setter Property="Padding" Value="6,0" />
-            <Setter Property="VerticalAlignment" Value="Center" />
-        </Style>
-        <Style Selector="Border.badge > TextBlock">
-            <Setter Property="FontSize" Value="12" />
-        </Style>
-    </UserControl.Styles>
-
     <Grid ColumnDefinitions="260,16,*">
         <!-- The install's modpacks. Rows are buttons, not ListBox items: a click shows the modpack. -->
         <DockPanel Grid.Column="0">

@@ -99,4 +99,6 @@ Computed in Desktop from the install's `ModCollectionState.Installed` and the su
 ## Compatibility and rollback
 
 - New preference fields only; older launchers ignore them. Preset file format untouched.
+  Correction (10-26-modpack-review-fixes): older launchers drop unknown `preferences.json` fields when they save, so both
+  lists moved to their own file, `mod-library.json` (`.trellis/spec/desktop/mod-library.md`).
 - Existing share texts (preset line, favorites) unchanged. Rollback = revert the commits; leftover fields are ignored.

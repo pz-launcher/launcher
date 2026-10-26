@@ -1,10 +1,13 @@
+using PzLauncher.Core.Mod;
 using PzLauncher.Core.Mod.Collections;
+using PzLauncher.Desktop.Services.Mods.Library;
+using PzLauncher.Desktop.Services.Mods.LocalCollections;
+using PzLauncher.Desktop.Services.Mods.Modpacks;
 using PzLauncher.Desktop.Services.Mods;
-using PzLauncher.Desktop.Services.Preferences;
 using PzLauncher.Desktop.Tests.TestSupport;
 using PzLauncher.Desktop.Services.Preferences.Records;
 
-namespace PzLauncher.Desktop.Tests.Services.Mods;
+namespace PzLauncher.Desktop.Tests.Services.Mods.Modpacks;
 
 public class ModpackStoreTests
 {
@@ -13,14 +16,16 @@ public class ModpackStoreTests
 
     private static readonly Guid ListId = new("6f1c2b0e-4d3a-4f5e-9a8b-1c2d3e4f5a6b");
 
+    private static readonly Guid OtherListId = new("0a9b8c7d-6e5f-4a3b-8c2d-1e0f9a8b7c6d");
+
     private static readonly Modpack Server = new("Server", Preset("Survival", "Core", "Maps"), new ModpackCollection.Steam(9000), [1003]);
 
     private static readonly Modpack Night = new(
         "Night", Preset("Driving", "Cars"), new ModpackCollection.Local(ListId, "List", [new WorkshopEntry(1001, "Core")]), []);
 
-    private readonly FakePreferenceStore _store = new();
+    private readonly FakeModLibraryFile _file = new();
 
-    private LocalCollections _localCollections = TestWorkshop.LocalCollectionStore(
+    private LocalCollectionStore _localCollections = TestWorkshop.LocalCollectionStore(
         null, new SavedLocalCollection(ListId, "List", [new SavedWorkshopEntry(1001, "Core")]));
 
     private static ModpackPreset Preset(string name, params string[] ids) => new(name, ids, IsLinked: true);
@@ -28,20 +33,22 @@ public class ModpackStoreTests
     private static ModCollection Game(string name, params string[] ids) => new(name, ids, IsActive: false, IsActiveInOrder: false);
 
     private ModpackStore Create(StringComparison pathComparison = StringComparison.OrdinalIgnoreCase, params Modpack[] saved) =>
-        new(
-            _store,
-            new UserPreferences(null, null, null)
+        CreateWith(
+            new Dictionary<string, IReadOnlyList<Modpack>>
             {
-                Modpacks = new Dictionary<string, IReadOnlyList<Modpack>>
-                {
-                    [GameRoot] = saved.Length == 0 ? [Server, Night] : saved,
-                    [OtherRoot] = [Server with { Name = "Other install" }],
-                },
+                [GameRoot] = saved.Length == 0 ? [Server, Night] : saved,
+                [OtherRoot] = [Server with { Name = "Other install" }],
             },
-            new FakePlatformEnvironment { PathComparison = pathComparison },
-            _localCollections);
+            pathComparison: pathComparison);
+
+    private ModpackStore CreateWith(
+        Dictionary<string, IReadOnlyList<Modpack>> saved, bool localCollectionsComplete = true, StringComparison pathComparison = StringComparison.OrdinalIgnoreCase) =>
+        TestWorkshop.ModpackStoreOf(_localCollections, _file, saved, localCollectionsComplete, pathComparison);
 
     private static Modpack Find(ModpackStore store, string name) => Assert.Single(store.For(GameRoot), modpack => modpack.Name == name);
+
+    private static IReadOnlyList<Modpack> SavedFor(IReadOnlyDictionary<string, IReadOnlyList<SavedModpack>> saved, string root) =>
+        [.. saved[root].Select(Modpack.FromSaved)];
 
     [Theory]
     [InlineData(StringComparison.OrdinalIgnoreCase, new[] { "Server", "Night" })]
@@ -66,9 +73,10 @@ public class ModpackStoreTests
         store.Save(GameRoot.ToUpperInvariant(), Server with { Name = " New " });
 
         Assert.Equal(["Server", "Night", "New"], store.For(GameRoot).Select(modpack => modpack.Name));
-        var (root, saved) = Assert.Single(_store.SavedModpacks);
-        Assert.Equal(GameRoot, root);
-        Assert.Equal(store.For(GameRoot), saved);
+        var saved = Assert.Single(_file.SavedModpacks);
+        Assert.Equal([GameRoot, OtherRoot], saved.Keys);
+        Assert.Equal(store.For(GameRoot), SavedFor(saved, GameRoot));
+        Assert.Equal(store.For(OtherRoot), SavedFor(saved, OtherRoot));
     }
 
     [Fact]
@@ -91,7 +99,7 @@ public class ModpackStoreTests
 
         store.Save(GameRoot, Server, original: "Server");
 
-        Assert.Empty(_store.SavedModpacks);
+        Assert.Empty(_file.SavedModpacks);
         Assert.Equal(0, raised);
     }
 
@@ -106,7 +114,7 @@ public class ModpackStoreTests
 
         Assert.Throws<ArgumentException>(() => store.Save(GameRoot, Server with { Name = name }));
         Assert.Throws<ArgumentException>(() => store.Rename(GameRoot, "Server", name));
-        Assert.Empty(_store.SavedModpacks);
+        Assert.Empty(_file.SavedModpacks);
     }
 
     [Fact]
@@ -127,7 +135,7 @@ public class ModpackStoreTests
         store.Rename(GameRoot, "Server", "Server B42");
 
         Assert.Equal([Server with { Name = "Server B42" }, Night], store.For(GameRoot));
-        Assert.Single(_store.SavedModpacks);
+        Assert.Single(_file.SavedModpacks);
     }
 
     [Fact]
@@ -142,16 +150,14 @@ public class ModpackStoreTests
     }
 
     [Fact]
-    public void Delete_TheLastOne_SavesAnEmptyListForThatInstall()
+    public void Delete_TheLastOne_SavesNoEntryForThatInstall()
     {
         var store = Create();
 
         store.Delete(OtherRoot, ["Other install"]);
 
         Assert.Empty(store.For(OtherRoot));
-        var (root, saved) = Assert.Single(_store.SavedModpacks);
-        Assert.Equal(OtherRoot, root);
-        Assert.Empty(saved);
+        Assert.Equal([GameRoot], Assert.Single(_file.SavedModpacks).Keys);
     }
 
     [Fact]
@@ -160,12 +166,12 @@ public class ModpackStoreTests
         var independent = new Modpack("Copy", new ModpackPreset("Gone", ["Old"], IsLinked: false), new ModpackCollection.Steam(9000), []);
         var store = Create(saved: [Server, Night, independent]);
 
-        store.SyncPresets(GameRoot, [Game("Survival", "Core", "Maps", "Cars"), Game("Gone", "New")]);
+        store.SyncPresets(GameRoot, [Game("Survival", "Core", "Maps", "Cars"), Game("Gone", "New")], [], _ => null);
 
         Assert.Equal(Preset("Survival", "Core", "Maps", "Cars"), Find(store, "Server").Preset);
         Assert.Equal(Night.Preset with { IsLinked = false }, Find(store, "Night").Preset);
         Assert.Equal(independent.Preset, Find(store, "Copy").Preset);
-        Assert.Single(_store.SavedModpacks);
+        Assert.Single(_file.SavedModpacks);
     }
 
     [Fact]
@@ -173,9 +179,23 @@ public class ModpackStoreTests
     {
         var store = Create();
 
-        store.SyncPresets(GameRoot, [Game("Survival", "Core", "Maps"), Game("Driving", "Cars")]);
+        store.SyncPresets(GameRoot, [Game("Survival", "Core", "Maps"), Game("Driving", "Cars")], [], _ => [1001]);
 
-        Assert.Empty(_store.SavedModpacks);
+        Assert.Empty(_file.SavedModpacks);
+    }
+
+    [Fact]
+    public void SyncPresets_RecomputesTheExtraItemsWhereTheCollectionIsKnownInTheSameSave()
+    {
+        var store = Create(saved: [Server with { ExtraItems = [] }, Night, Server with { Name = "Unread", Collection = new ModpackCollection.Steam(9001), ExtraItems = [] }]);
+        IReadOnlyList<InstalledMod> installed = [TestMods.Mod("Core", workshopId: 1001), TestMods.Mod("Maps", workshopId: 1003), TestMods.Mod("Cars", workshopId: 1004)];
+
+        store.SyncPresets(GameRoot, [Game("Survival", "Core", "Maps"), Game("Driving", "Cars")], installed, id => id == 9000 ? [1001] : null);
+
+        Assert.Equal([1003UL], Find(store, "Server").ExtraItems);
+        Assert.Equal([1004UL], Find(store, "Night").ExtraItems);
+        Assert.Empty(Find(store, "Unread").ExtraItems);
+        Assert.Single(_file.SavedModpacks);
     }
 
     [Fact]
@@ -222,7 +242,7 @@ public class ModpackStoreTests
         Assert.Equal(
             new ModpackCollection.Local(ListId, "List B42", [new WorkshopEntry(1001, "Core"), new WorkshopEntry(1002, "Maps")]),
             Find(store, "Night").Collection);
-        Assert.Equal(2, _store.SavedModpacks.Count);
+        Assert.Equal(2, _file.SavedModpacks.Count);
     }
 
     [Fact]
@@ -247,12 +267,68 @@ public class ModpackStoreTests
     }
 
     [Fact]
+    public void Load_LocalCollectionsIncomplete_KeepsLinksToMissingOnesThroughLaterChanges()
+    {
+        _localCollections = TestWorkshop.LocalCollectionStore(null, new SavedLocalCollection(OtherListId, "Other", []));
+        var store = CreateWith(new Dictionary<string, IReadOnlyList<Modpack>> { [GameRoot] = [Server, Night] }, localCollectionsComplete: false);
+
+        _localCollections.Rename(OtherListId, "Other B42");
+        _localCollections.Create("New", []);
+
+        Assert.Equal(Night.Collection, Find(store, "Night").Collection);
+        Assert.Equal([new ModpackUser(GameRoot, "Night")], store.UsersOfLocalCollection(ListId));
+        Assert.Empty(_file.SavedModpacks);
+    }
+
+    [Fact]
+    public void Load_LocalCollectionsIncomplete_DeletingALoadedOneStillUnlinksItsUsers()
+    {
+        _localCollections = TestWorkshop.LocalCollectionStore(null, new SavedLocalCollection(OtherListId, "Other", []));
+        var other = Night with { Name = "Other", Collection = new ModpackCollection.Local(OtherListId, "Other", []) };
+        var store = CreateWith(new Dictionary<string, IReadOnlyList<Modpack>> { [GameRoot] = [Night, other] }, localCollectionsComplete: false);
+
+        _localCollections.Delete(OtherListId);
+
+        Assert.Equal(Night.Collection, Find(store, "Night").Collection);
+        Assert.Equal(new ModpackCollection.Local(null, "Other", []), Find(store, "Other").Collection);
+    }
+
+    [Fact]
+    public void LocalCollectionChange_UsedInSeveralInstalls_SavesAllOfThemOnce()
+    {
+        var store = Create();
+        store.Save(OtherRoot, Night);
+        _file.SavedModpacks.Clear();
+
+        _localCollections.Rename(ListId, "List B42");
+
+        var saved = Assert.Single(_file.SavedModpacks);
+        Assert.Equal("List B42", Assert.IsType<SavedModpackCollection.Local>(saved[GameRoot][1].Collection).Name);
+        Assert.Equal("List B42", Assert.IsType<SavedModpackCollection.Local>(saved[OtherRoot][1].Collection).Name);
+        Assert.Equal(store.For(OtherRoot), SavedFor(saved, OtherRoot));
+    }
+
+    [Fact]
     public void UsersOfLocalCollection_ListsThemInEveryInstall()
     {
         var store = Create();
         store.Save(OtherRoot, Night);
 
         Assert.Equal([new ModpackUser(GameRoot, "Night"), new ModpackUser(OtherRoot, "Night")], store.UsersOfLocalCollection(ListId));
+    }
+
+    [Fact]
+    public void DeleteUsersOfLocalCollection_DeletesThemInEveryInstallInOneSave()
+    {
+        var store = Create();
+        store.Save(OtherRoot, Night);
+        _file.SavedModpacks.Clear();
+
+        store.DeleteUsersOfLocalCollection(ListId);
+
+        Assert.Equal(["Server"], store.For(GameRoot).Select(modpack => modpack.Name));
+        Assert.Equal(["Other install"], store.For(OtherRoot).Select(modpack => modpack.Name));
+        Assert.Single(_file.SavedModpacks);
     }
 
     [Fact]
@@ -265,14 +341,40 @@ public class ModpackStoreTests
     }
 
     [Fact]
-    public void SetExtraItems_SavesThemForThatModpack()
+    public void RefreshExtraItems_Changed_SavesThemForThatModpackOnce()
     {
         var store = Create();
 
-        store.SetExtraItems(GameRoot, "Night", [1005, 1006]);
+        Assert.True(store.RefreshExtraItems(GameRoot, "Night", [TestMods.Mod("Cars", workshopId: 1003)], [1001]));
 
-        Assert.Equal([1005UL, 1006], Find(store, "Night").ExtraItems);
+        Assert.Equal([1003UL], Find(store, "Night").ExtraItems);
         Assert.Equal([1003UL], Find(store, "Server").ExtraItems);
+        Assert.Single(_file.SavedModpacks);
+    }
+
+    [Fact]
+    public void RefreshExtraItems_Unchanged_SavesNothing()
+    {
+        var store = Create();
+
+        Assert.False(store.RefreshExtraItems(GameRoot, "Server", [TestMods.Mod("Core", workshopId: 1001), TestMods.Mod("Maps", workshopId: 1003)], [1001]));
+        Assert.False(store.RefreshExtraItems(GameRoot, "Missing", [], []));
+
+        Assert.Empty(_file.SavedModpacks);
+    }
+
+    [Theory]
+    [InlineData("Night", null, false)]
+    [InlineData("Server", "Server", true)]
+    [InlineData("New", null, true)]
+    [InlineData(" ", null, false)]
+    public void TrySave_TakenOrInvalidName_ChangesNothing(string name, string? original, bool saved)
+    {
+        var store = Create();
+
+        Assert.Equal(saved, store.TrySave(GameRoot, Server with { Name = name, ExtraItems = [] }, original));
+
+        Assert.Equal(saved, _file.SavedModpacks.Count == 1);
     }
 
     [Fact]
@@ -284,11 +386,11 @@ public class ModpackStoreTests
 
         store.Save(GameRoot, Server with { Name = "New" });
         store.Rename(GameRoot, "New", "Renamed");
-        store.SetExtraItems(GameRoot, "Renamed", [1]);
+        store.RefreshExtraItems(GameRoot, "Renamed", [TestMods.Mod("Core", workshopId: 1001)], []);
         store.RenamePreset(GameRoot, "Survival", "Survival B42");
         store.Delete(GameRoot, ["Renamed"]);
 
         Assert.Equal(5, raised);
-        Assert.Equal(5, _store.SavedModpacks.Count);
+        Assert.Equal(5, _file.SavedModpacks.Count);
     }
 }

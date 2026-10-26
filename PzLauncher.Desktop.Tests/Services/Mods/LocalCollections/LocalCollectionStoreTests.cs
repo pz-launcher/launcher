@@ -1,25 +1,26 @@
+using PzLauncher.Desktop.Services.Mods.Library;
+using PzLauncher.Desktop.Services.Mods.LocalCollections;
 using PzLauncher.Desktop.Services.Mods;
-using PzLauncher.Desktop.Services.Preferences;
 using PzLauncher.Desktop.Tests.TestSupport;
 using PzLauncher.Desktop.Services.Preferences.Records;
 
-namespace PzLauncher.Desktop.Tests.Services.Mods;
+namespace PzLauncher.Desktop.Tests.Services.Mods.LocalCollections;
 
-public class LocalCollectionsTests
+public class LocalCollectionStoreTests
 {
     private static readonly Guid ServerId = new("6f1c2b0e-4d3a-4f5e-9a8b-1c2d3e4f5a6b");
 
     private static readonly Guid OtherId = new("0a9b8c7d-6e5f-4a3b-8c2d-1e0f9a8b7c6d");
 
-    private readonly FakePreferenceStore _store = new();
+    private readonly FakeModLibraryFile _store = new();
 
-    private LocalCollections Create(params SavedWorkshopEntry[] items) =>
+    private LocalCollectionStore Create(params SavedWorkshopEntry[] items) =>
         TestWorkshop.LocalCollectionStore(
             _store,
             new SavedLocalCollection(ServerId, "Server", items),
             new SavedLocalCollection(OtherId, "Other", [new SavedWorkshopEntry(2001, "Weather")]));
 
-    private static IEnumerable<ulong> Ids(LocalCollections collections, Guid id) => collections.Find(id)!.Items.Select(item => item.Id);
+    private static IEnumerable<ulong> Ids(LocalCollectionStore collections, Guid id) => collections.Find(id)!.Items.Select(item => item.Id);
 
     [Fact]
     public void Load_KeepsTheSavedCollectionsInOrder()
@@ -52,11 +53,13 @@ public class LocalCollectionsTests
     [InlineData("")]
     [InlineData("  ")]
     [InlineData("Two\nlines")]
-    public void Create_NameTakenOrInvalid_IsABug(string name)
+    public void Create_NameTakenOrInvalid_IsABugAndTryCreateChangesNothing(string name)
     {
         var collections = Create();
 
         Assert.Throws<ArgumentException>(() => collections.Create(name, []));
+        Assert.Null(collections.TryCreate(name, []));
+        Assert.Equal(2, collections.All.Count);
         Assert.Empty(_store.SavedLocalCollections);
     }
 

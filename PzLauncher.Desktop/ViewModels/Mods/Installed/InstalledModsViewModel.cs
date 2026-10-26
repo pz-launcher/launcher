@@ -91,8 +91,7 @@ public partial class InstalledModsViewModel : ViewModelBase
             return;
         }
 
-        if (await _page.WriteAsync((root, extraGameArgs) =>
-                _page.Service.SaveAsync(new SaveModCollectionRequest(root, extraGameArgs, name, name, ids))))
+        if (await _page.SavePresetAsync(name, ids, name))
         {
             ClearSelection();
         }

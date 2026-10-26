@@ -86,17 +86,6 @@ internal sealed class WorkshopModsService(
         return ids.ToHashSet(StringComparer.Ordinal);
     }
 
-    private static List<string> UsedBy(IReadOnlyList<InstalledMod> mods, IReadOnlyList<ModCollection> collections)
-    {
-        if (mods.Count == 0)
-        {
-            return [];
-        }
-
-        var ids = mods.Select(mod => mod.Id).ToHashSet(StringComparer.Ordinal);
-        return [.. collections.Where(collection => collection.ModIds.Any(ids.Contains)).Select(collection => collection.Name)];
-    }
-
     // An item lists every mod in its own folder, including ones the game loads from another copy.
     private async Task<List<WorkshopModItem>> JoinAsync(IReadOnlyList<WorkshopItem> items, ModCollectionState? state, CancellationToken ct)
     {
@@ -107,7 +96,7 @@ internal sealed class WorkshopModsService(
             var mods = item.Installed is { } installed
                 ? await ModCatalog.ReadRootAsync(ModLocator.ModRoot.ForWorkshopItem(installed.Folder), logger, ct).ConfigureAwait(false)
                 : [];
-            joined.Add(new WorkshopModItem(item, mods, UsedBy(mods, modCollections)));
+            joined.Add(new WorkshopModItem(item, mods, WorkshopModItem.UsedBy(mods, modCollections)));
         }
 
         return joined;

@@ -16,39 +16,13 @@
         <x:Static Member="design:DesignData.ModCollections" />
     </Design.DataContext>
 
-    <UserControl.Styles>
-        <Style Selector="Border.badge">
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="BorderBrush" Value="{DynamicResource Shell.Border}" />
-            <Setter Property="CornerRadius" Value="3" />
-            <Setter Property="Padding" Value="6,0" />
-            <Setter Property="VerticalAlignment" Value="Center" />
-        </Style>
-        <Style Selector="Border.badge > TextBlock">
-            <Setter Property="FontSize" Value="12" />
-        </Style>
-        <Style Selector="Border.dragHandle">
-            <Setter Property="Background" Value="Transparent" />
-            <Setter Property="Cursor" Value="SizeNorthSouth" />
-            <Setter Property="Padding" Value="4,0" />
-        </Style>
-        <Style Selector="Border.dragHandle:disabled">
-            <Setter Property="Cursor" Value="Arrow" />
-            <Setter Property="Opacity" Value="0.4" />
-        </Style>
-        <Style Selector="ContentControl.lifted Border.entryRow">
-            <Setter Property="Background" Value="{DynamicResource Shell.ListRowHoverBackground}" />
-            <Setter Property="BoxShadow" Value="{DynamicResource Shell.LiftedShadow}" />
-        </Style>
-    </UserControl.Styles>
-
     <UserControl.Resources>
         <!-- Shared by the list and the lifted copy of a dragged row, so commands bind through the view, not the ItemsControl. -->
         <DataTemplate x:Key="EntryRowTemplate" x:DataType="vm:ModCollectionEntryRow">
             <Panel Height="{x:Static local:ModCollectionsView.EntryRowHeight}">
-                <Border Classes="entryRow" Padding="4,4,8,4" Margin="0,0,0,4" CornerRadius="4" BorderThickness="1" BorderBrush="{DynamicResource Shell.Border}">
+                <Border Classes="reorderRow" Padding="4,4,8,4" Margin="0,0,0,4" CornerRadius="4" BorderThickness="1" BorderBrush="{DynamicResource Shell.Border}">
                     <Grid ColumnDefinitions="Auto,40,*,Auto,Auto">
-                        <Border Grid.Column="0" Classes="dragHandle" ToolTip.Tip="{x:Static lang:UiText.ModCollections_DragHint}"
+                        <Border Grid.Column="0" Classes="dragHandle" Padding="4,0" ToolTip.Tip="{x:Static lang:UiText.ModCollections_DragHint}"
                                 IsEnabled="{Binding $parent[UserControl].((vm:ModCollectionsViewModel)DataContext).CanReorder}">
                             <ic:FluentIcon Icon="ReOrderDotsVertical" IconVariant="Regular" FontSize="16" VerticalAlignment="Center"
                                            Foreground="{DynamicResource Shell.TextMuted}" />
