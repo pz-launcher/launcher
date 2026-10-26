@@ -1,0 +1,3 @@
+{"file": ".trellis/spec/common/test-strategy.md", "reason": "Where and how the new VM tests belong"}
+{"file": ".trellis/spec/desktop/localization.md", "reason": "Verify the new strings exist in every locale"}
+{"file": ".trellis/spec/common/coding-rules.md", "reason": "General C# rules"}
